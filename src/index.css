@@ -223,8 +223,16 @@
     color: hsl(var(--foreground));
   }
 
+  .table-row-hover {
+    transition: transform 0.2s ease, background 0.15s ease, box-shadow 0.2s ease;
+  }
+
   .table-row-hover:hover {
     background: hsl(var(--card));
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px -4px hsla(0, 0%, 0%, 0.3);
+    position: relative;
+    z-index: 1;
   }
 
   .table-row-hover:hover td {
