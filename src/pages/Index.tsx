@@ -76,7 +76,7 @@ const Index = () => {
           <span className="nav-link" onClick={() => setNewProductOpen(true)}>New Product &nbsp;<Plus size={13} className="inline -mt-0.5" /></span>
           <span className="nav-link" onClick={() => setFullListOpen(true)}>Full Product List &nbsp;<ArrowRight size={13} className="inline -mt-0.5" /></span>
           <span className={`nav-link ${store.saveFlash ? "!text-green" : ""}`} onClick={store.saveData}>
-            {store.saveFlash ? "✓ Saved" : <>Save &nbsp;<Lock size={13} className="inline -mt-0.5" /></>}
+            {store.saveFlash ? "✓ Saved" : "Save"} &nbsp;<Lock size={13} className="inline -mt-0.5" />
           </span>
           <span className="nav-link" onClick={store.exportExcel}>Export &nbsp;<Download size={13} className="inline -mt-0.5" /></span>
         </div>
