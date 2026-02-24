@@ -42,9 +42,12 @@ const Index = () => {
       {/* Top bar */}
       <div className="w-full max-w-[760px] flex justify-between items-start mb-16">
         <div>
-          <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1.5">
-            Boudoir Product Database
-          </h1>
+          <div className="flex items-center gap-5 mb-1.5">
+            <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim">
+              Boudoir Product Database
+            </h1>
+            <ThemeToggle theme={theme} toggle={toggle} />
+          </div>
           <p className="text-[28px] font-light tracking-tight">Price Lookup</p>
           <p className="text-2xl font-light tracking-tight text-foreground mt-1">
             1 RM = ¥
@@ -70,7 +73,6 @@ const Index = () => {
           </p>
         </div>
         <div className="flex flex-col items-end gap-2.5 mt-2">
-          <ThemeToggle theme={theme} toggle={toggle} />
           <span className="nav-link" onClick={() => setNewProductOpen(true)}>New Product &nbsp;<Plus size={13} className="inline -mt-0.5" /></span>
           <span className="nav-link" onClick={() => setFullListOpen(true)}>Full Product List &nbsp;<ArrowRight size={13} className="inline -mt-0.5" /></span>
           <span className={`nav-link ${store.saveFlash ? "!text-green" : ""}`} onClick={store.saveData}>
