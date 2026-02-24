@@ -9,11 +9,10 @@ export default function ThemeToggle({ theme, toggle }: ThemeToggleProps) {
   return (
     <span
       onClick={toggle}
-      className="nav-link flex items-center gap-1.5"
+      className="cursor-pointer text-dim hover:text-foreground transition-colors"
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
-      {theme === "dark" ? "Light Mode" : "Dark Mode"}
-      &nbsp;{theme === "dark" ? <Sun size={13} className="inline -mt-0.5" /> : <Moon size={13} className="inline -mt-0.5" />}
+      {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
     </span>
   );
 }
