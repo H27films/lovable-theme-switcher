@@ -22,9 +22,9 @@ function getCellScales(hoveredCol: number | null): number[] {
   if (hoveredCol === null) return Array(TOTAL_COLS).fill(1);
   return Array.from({ length: TOTAL_COLS }, (_, i) => {
     const dist = Math.abs(i - hoveredCol);
-    if (dist === 0) return 1.12;
-    if (dist === 1) return 1.07;
-    if (dist === 2) return 1.03;
+    if (dist === 0) return 1.20;
+    if (dist === 1) return 1.10;
+    if (dist === 2) return 1.05;
     return 1.0;
   });
 }
