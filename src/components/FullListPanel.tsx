@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { X } from "lucide-react";
 
 interface FullListPanelProps {
@@ -9,15 +9,60 @@ interface FullListPanelProps {
   onImport: (file: File) => void;
 }
 
+const TOTAL_COLS_MAX = 10;
+
+function getCellScales(hoveredCol: number | null, totalCols: number): number[] {
+  if (hoveredCol === null) return Array(totalCols).fill(1);
+  return Array.from({ length: totalCols }, (_, i) => {
+    const dist = Math.abs(i - hoveredCol);
+    if (dist === 0) return 1.20;
+    if (dist === 1) return 1.10;
+    if (dist === 2) return 1.05;
+    return 1.0;
+  });
+}
+
+function fmtRM(v: string) {
+  const n = parseFloat(v);
+  return !isNaN(n) ? "RM " + n.toFixed(2) : "—";
+}
+
+function fmtCNY(v: string) {
+  const n = parseFloat(v);
+  return !isNaN(n) ? "¥ " + n.toFixed(2) : "—";
+}
+
+// Column format rules: index 1 = RM, index 2 = CNY, others with numbers stay plain
+function formatCell(value: string, colIndex: number): string {
+  if (!value || value === "—") return "—";
+  if (colIndex === 1) return fmtRM(value);
+  if (colIndex === 2) return fmtCNY(value);
+  return value;
+}
+
 export default function FullListPanel({ open, onClose, headers, data, onImport }: FullListPanelProps) {
   const [search, setSearch] = useState("");
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredCol, setHoveredCol] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const totalCols = headers.length || 1;
+  const cellScales = hoveredRow !== null ? getCellScales(hoveredCol, totalCols) : Array(totalCols).fill(1);
+
+  const tdStyle = useCallback((colIdx: number, rowIdx: number) => ({
+    transition: "transform 0.2s ease, color 0.15s ease",
+    transform: hoveredRow === rowIdx ? `scale(${cellScales[colIdx]})` : "scale(1)",
+    display: "inline-block" as const,
+  }), [hoveredRow, cellScales]);
 
   const filtered = search
     ? data.filter(row => row[0]?.toLowerCase().includes(search.toLowerCase()))
     : data;
 
   if (!open) return null;
+
+  // Sub-labels for columns
+  const colSubs: Record<number, string> = { 1: "RM", 2: "CNY" };
 
   return (
     <>
@@ -45,15 +90,29 @@ export default function FullListPanel({ open, onClose, headers, data, onImport }
               <thead>
                 <tr className="border-b border-border-active">
                   {headers.map((h, i) => (
-                    <th key={i} className={`label-uppercase font-normal pb-3 pt-4 ${i > 0 ? "text-center" : "text-left"}`}>{h}</th>
+                    <th key={i} className={`label-uppercase font-normal pb-3 pt-4 ${i > 0 ? "text-center" : "text-left"}`}>
+                      {h}
+                      {colSubs[i] && <><br /><span className="text-[9px] tracking-wider text-muted-foreground">{colSubs[i]}</span></>}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((row, ri) => (
-                  <tr key={ri} className="border-b border-border">
+                  <tr
+                    key={ri}
+                    className="border-b border-border table-row-hover"
+                    onMouseEnter={() => setHoveredRow(ri)}
+                    onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
+                  >
                     {row.map((cell, ci) => (
-                      <td key={ci} className={`text-xs font-light text-dim py-3 ${ci > 0 ? "text-center" : ""}`}>{cell || "—"}</td>
+                      <td
+                        key={ci}
+                        className={`text-[13px] font-light text-dim py-3.5 ${ci > 0 ? "text-center" : ""}`}
+                        onMouseEnter={() => setHoveredCol(ci)}
+                      >
+                        <span style={tdStyle(ci, ri)}>{formatCell(cell, ci)}</span>
+                      </td>
                     ))}
                   </tr>
                 ))}
