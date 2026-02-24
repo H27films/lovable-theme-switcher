@@ -7,13 +7,13 @@ interface ThemeToggleProps {
 
 export default function ThemeToggle({ theme, toggle }: ThemeToggleProps) {
   return (
-    <button
+    <span
       onClick={toggle}
-      className="minimal-btn flex items-center gap-2"
+      className="nav-link flex items-center gap-1.5"
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
-      {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />}
-      {theme === "dark" ? "Light" : "Dark"}
-    </button>
+      {theme === "dark" ? "Light Mode" : "Dark Mode"}
+      &nbsp;{theme === "dark" ? <Sun size={13} className="inline -mt-0.5" /> : <Moon size={13} className="inline -mt-0.5" />}
+    </span>
   );
 }
