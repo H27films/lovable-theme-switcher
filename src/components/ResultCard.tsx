@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { type ProductRow } from "@/hooks/usePriceLookup";
+import { X } from "lucide-react";
 
 interface ResultCardProps {
   row: ProductRow | null;
@@ -76,8 +77,11 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
   return (
     <div className="animate-slide-in mb-0">
       {/* Product name */}
-      <div className="text-[22px] font-light tracking-tight mb-8 pb-5 border-b border-border">
-        {row.name}
+      <div className="flex items-center justify-between mb-8 pb-5 border-b border-border">
+        <span className="text-[22px] font-light tracking-tight">{row.name}</span>
+        <button onClick={onDone} className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Close">
+          <X size={18} />
+        </button>
       </div>
 
       {/* Price cards */}
