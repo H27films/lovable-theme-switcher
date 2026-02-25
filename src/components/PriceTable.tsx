@@ -96,8 +96,9 @@ export default function PriceTable({
                 { col: "qty", label: "Qty" },
                 { col: "totalRM", label: "Total Value", sub: "RM" },
               ].map(h => (
-                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""}`}>
-                  {h.label}{h.sub && <><br /><span className="text-[9px] tracking-wider text-muted-foreground">{h.sub}</span></>}
+                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top`}>
+                  <span className="block">{h.label}</span>
+                  {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
                 </th>
               ))}
               <th></th>
