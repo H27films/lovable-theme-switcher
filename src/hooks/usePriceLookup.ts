@@ -18,6 +18,7 @@ export function usePriceLookup() {
   const [rate, setRate] = useState(1.77);
   const [data, setData] = useState<ProductRow[]>([]);
   const [overrideCNY, setOverrideCNY] = useState<Record<string, string>>({});
+  const [overrideQty, setOverrideQty] = useState<Record<string, number>>({});
   const [newProducts, setNewProducts] = useState<Set<string>>(new Set());
   const [fullListHeaders, setFullListHeaders] = useState<string[]>([]);
   const [fullListData, setFullListData] = useState<string[][]>([]);
@@ -46,6 +47,7 @@ export function usePriceLookup() {
         combined.forEach((r: ProductRow) => seen.set(r.name, r));
         setData([...seen.values()]);
         if (payload.overrideCNY) setOverrideCNY(payload.overrideCNY);
+        if (payload.overrideQty) setOverrideQty(payload.overrideQty);
       } catch {}
     } else {
       setData(SAMPLE_DATA);
@@ -73,18 +75,18 @@ export function usePriceLookup() {
     return overrideCNY[row.name] !== undefined ? overrideCNY[row.name] : "";
   }, [overrideCNY]);
 
-  const persistData = useCallback((d: ProductRow[], oc: Record<string, string>, np: Set<string>) => {
+  const persistData = useCallback((d: ProductRow[], oc: Record<string, string>, np: Set<string>, oq?: Record<string, number>) => {
     const importedData = d.filter(r => !np.has(r.name));
     const manualData = d.filter(r => np.has(r.name));
-    localStorage.setItem("priceLookupData", JSON.stringify({ importedData, manualData, overrideCNY: oc }));
+    localStorage.setItem("priceLookupData", JSON.stringify({ importedData, manualData, overrideCNY: oc, overrideQty: oq || {} }));
     localStorage.setItem("newProducts", JSON.stringify([...np]));
   }, []);
 
   const saveData = useCallback(() => {
-    persistData(data, overrideCNY, newProducts);
+    persistData(data, overrideCNY, newProducts, overrideQty);
     setSaveFlash(true);
     setTimeout(() => setSaveFlash(false), 2000);
-  }, [data, overrideCNY, newProducts, persistData]);
+  }, [data, overrideCNY, newProducts, overrideQty, persistData]);
 
   const updateRate = useCallback((newRate: number) => {
     if (!isNaN(newRate) && newRate > 0) {
@@ -98,9 +100,12 @@ export function usePriceLookup() {
     if (priceMode === "bundle" && bundleQty > 0) storeCNY = storeCNY / bundleQty;
     if (delivery > 0 && qty > 0) storeCNY = storeCNY + (delivery / qty);
     const newOverride = { ...overrideCNY, [name]: storeCNY.toFixed(2) };
+    const effectiveQty = priceMode === "bundle" ? bundleQty : qty;
+    const newQtyMap = { ...overrideQty, ...(effectiveQty > 0 ? { [name]: effectiveQty } : {}) };
     setOverrideCNY(newOverride);
-    persistData(data, newOverride, newProducts);
-  }, [overrideCNY, data, newProducts, persistData]);
+    setOverrideQty(newQtyMap);
+    persistData(data, newOverride, newProducts, newQtyMap);
+  }, [overrideCNY, overrideQty, data, newProducts, persistData]);
 
   const clearPrice = useCallback((name: string) => {
     const newOverride = { ...overrideCNY };
@@ -175,19 +180,21 @@ export function usePriceLookup() {
   }, []);
 
   const exportExcel = useCallback(() => {
-    const headers = ["Product Name", "Old Price (RM)", "China Price (CNY)", "New Price (CNY)", "New Price (RM)", "Savings (RM)"];
+    const headers = ["Product Name", "Old Price (RM)", "China Price (CNY)", "New Price (CNY)", "New Price (RM)", "Savings (RM)", "Qty", "Total Value (RM)"];
     const rows = data.map(row => {
       const cny = getRowCNY(row);
       const rm = cny ? toRM(cny) : null;
       const sav = rm ? getSavings(row.oldPrice, rm) : null;
-      return [row.name, row.oldPrice || "", row.cnyPrice || "", cny ? parseFloat(cny).toFixed(2) : "", rm || "", sav || ""];
+      const qty = overrideQty[row.name] || 0;
+      const totalRM = rm && qty > 0 ? (parseFloat(rm) * qty).toFixed(2) : "";
+      return [row.name, row.oldPrice || "", row.cnyPrice || "", cny ? parseFloat(cny).toFixed(2) : "", rm || "", sav || "", qty > 0 ? qty : "", totalRM];
     });
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    ws["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 13 }];
+    ws["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 13 }, { wch: 8 }, { wch: 16 }];
     XLSX.utils.book_append_sheet(wb, ws, "New Product Prices");
     XLSX.writeFile(wb, "New Product Prices.xlsx");
-  }, [data, getRowCNY, toRM, getSavings]);
+  }, [data, getRowCNY, toRM, getSavings, overrideQty]);
 
   const sortData = useCallback((col: string, dir: number) => {
     setData(prev => {
@@ -215,6 +222,15 @@ export function usePriceLookup() {
             const bSav = bCNY ? parseFloat(b.oldPrice) - bRM2 : -Infinity;
             return (aSav - bSav) * dir;
           }
+          case "qty":
+            return ((overrideQty[a.name] || 0) - (overrideQty[b.name] || 0)) * dir;
+          case "totalRM": {
+            const aRM3 = aCNY ? parseFloat(aCNY) / rate : 0;
+            const bRM3 = bCNY ? parseFloat(bCNY) / rate : 0;
+            const aTotal = aRM3 * (overrideQty[a.name] || 0);
+            const bTotal = bRM3 * (overrideQty[b.name] || 0);
+            return (aTotal - bTotal) * dir;
+          }
           default: return 0;
         }
       });
@@ -231,7 +247,7 @@ export function usePriceLookup() {
   }, []);
 
   return {
-    rate, data, overrideCNY, newProducts, fullListHeaders, fullListData, saveFlash,
+    rate, data, overrideCNY, overrideQty, newProducts, fullListHeaders, fullListData, saveFlash,
     toRM, getSavings, getRowCNY, saveData, updateRate, commitPrice, clearPrice,
     removeProduct, addNewProduct, importExcel, importFullList, exportExcel, sortData, clearAllData,
   };

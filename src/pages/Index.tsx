@@ -100,6 +100,7 @@ const Index = () => {
         data={store.data}
         rate={store.rate}
         overrideCNY={store.overrideCNY}
+        overrideQty={store.overrideQty}
         newProducts={store.newProducts}
         onRowClick={handleSelectProduct}
         onClearPrice={store.clearPrice}
