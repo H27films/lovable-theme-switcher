@@ -52,6 +52,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport }
   const tdStyle = useCallback((colIdx: number, rowIdx: number) => ({
     transition: "transform 0.2s ease, color 0.15s ease",
     transform: hoveredRow === rowIdx ? `scale(${cellScales[colIdx]})` : "scale(1)",
+    transformOrigin: colIdx === 0 ? "left center" : "center center",
     display: "inline-block" as const,
   }), [hoveredRow, cellScales]);
 

@@ -79,8 +79,8 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
       {/* Product name */}
       <div className="flex items-center justify-between mb-8 pb-5 border-b border-border">
         <span className="text-[22px] font-light tracking-tight">{row.name}</span>
-        <button onClick={onDone} className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Close">
-          <X size={18} />
+        <button onClick={onDone} className="text-foreground/70 hover:text-foreground transition-colors p-1.5" aria-label="Close">
+          <X size={22} strokeWidth={2.5} />
         </button>
       </div>
 
