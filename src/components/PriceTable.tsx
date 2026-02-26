@@ -133,7 +133,7 @@ export default function PriceTable({
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(5)}><span style={tdStyle(5, row.name)}>—</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(6)}><span style={tdStyle(6, row.name)}>{qty > 0 ? qty : "—"}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(7)}><span style={tdStyle(7, row.name)}>{newTotalRM ? "RM " + newTotalRM : "—"}</span></td>
-                    <td className="text-[13px] py-3.5 text-center" onMouseEnter={() => setHoveredCol(8)}>
+                    <td className="text-[13px] py-3.5 text-center w-8 min-w-8" onMouseEnter={() => setHoveredCol(8)}>
                       <button onClick={e => { e.stopPropagation(); setConfirmName(row.name); }} className="text-muted-foreground hover:text-red transition-colors text-xs">›</button>
                     </td>
                   </tr>
@@ -154,7 +154,7 @@ export default function PriceTable({
                   <td className={`text-[13px] font-light py-3.5 text-center ${sav ? (parseFloat(sav) > 0 ? "text-green" : "text-red") : ""}`} onMouseEnter={() => setHoveredCol(5)}><span style={tdStyle(5, row.name)}>{sav ? "RM " + sav : "—"}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(6)}><span style={tdStyle(6, row.name)}>{qty > 0 ? qty : "—"}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(7)}><span style={tdStyle(7, row.name)}>{totalRM ? "RM " + totalRM : "—"}</span></td>
-                  <td className="text-[13px] py-3.5 text-center" onMouseEnter={() => setHoveredCol(8)}>
+                  <td className="text-[13px] py-3.5 text-center w-8 min-w-8" onMouseEnter={() => setHoveredCol(8)}>
                     {hasEntry && (
                       <button onClick={e => { e.stopPropagation(); onClearPrice(row.name); }} className="text-muted-foreground hover:text-red transition-colors">
                         <X size={12} />

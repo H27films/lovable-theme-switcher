@@ -110,8 +110,12 @@ export function usePriceLookup() {
   const clearPrice = useCallback((name: string) => {
     const newOverride = { ...overrideCNY };
     delete newOverride[name];
+    const newQtyMap = { ...overrideQty };
+    delete newQtyMap[name];
     setOverrideCNY(newOverride);
-  }, [overrideCNY]);
+    setOverrideQty(newQtyMap);
+    persistData(data, newOverride, newProducts, newQtyMap);
+  }, [overrideCNY, overrideQty, data, newProducts, persistData]);
 
   const removeProduct = useCallback((name: string) => {
     const newData = data.filter(r => r.name !== name);
