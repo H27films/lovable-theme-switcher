@@ -17,7 +17,7 @@ interface PriceTableProps {
   expanded: boolean;
 }
 
-const TOTAL_COLS = 9;
+const TOTAL_COLS = 10;
 
 function getCellScales(hoveredCol: number | null): number[] {
   if (hoveredCol === null) return Array(TOTAL_COLS).fill(1);
@@ -84,7 +84,7 @@ export default function PriceTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse" style={{ minWidth: "900px" }}>
+        <table className="w-full border-collapse" style={{ minWidth: "1050px" }}>
           <thead>
             <tr className="border-b border-border-active">
               {[
@@ -96,6 +96,7 @@ export default function PriceTable({
                 { col: "savings", label: "Savings", sub: "RM" },
                 { col: "qty", label: "Qty" },
                 { col: "totalRM", label: "Total Value", sub: "RM" },
+                { col: "officeStock", label: "Office Stock" },
               ].map(h => (
                 <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top`}>
                   <span className="block">{h.label}</span>
@@ -133,7 +134,8 @@ export default function PriceTable({
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(5)}><span style={tdStyle(5, row.name)}>—</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(6)}><span style={tdStyle(6, row.name)}>{qty > 0 ? qty : "—"}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(7)}><span style={tdStyle(7, row.name)}>{newTotalRM ? "RM " + newTotalRM : "—"}</span></td>
-                    <td className="text-[13px] py-3.5 text-center w-8 min-w-8" onMouseEnter={() => setHoveredCol(8)}>
+                    <td className="text-[13px] font-light py-3.5 text-center text-dim" onMouseEnter={() => setHoveredCol(8)}><span style={tdStyle(8, row.name)}>{row.officeStock || "—"}</span></td>
+                    <td className="text-[13px] py-3.5 text-center w-8 min-w-8" onMouseEnter={() => setHoveredCol(9)}>
                       <button onClick={e => { e.stopPropagation(); setConfirmName(row.name); }} className="text-muted-foreground hover:text-red transition-colors text-xs">›</button>
                     </td>
                   </tr>
@@ -154,7 +156,8 @@ export default function PriceTable({
                   <td className={`text-[13px] font-light py-3.5 text-center ${sav ? (parseFloat(sav) > 0 ? "text-green" : "text-red") : ""}`} onMouseEnter={() => setHoveredCol(5)}><span style={tdStyle(5, row.name)}>{sav ? "RM " + sav : "—"}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(6)}><span style={tdStyle(6, row.name)}>{qty > 0 ? qty : "—"}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(7)}><span style={tdStyle(7, row.name)}>{totalRM ? "RM " + totalRM : "—"}</span></td>
-                  <td className="text-[13px] py-3.5 text-center w-8 min-w-8" onMouseEnter={() => setHoveredCol(8)}>
+                  <td className="text-[13px] font-light py-3.5 text-center text-dim" onMouseEnter={() => setHoveredCol(8)}><span style={tdStyle(8, row.name)}>{row.officeStock || "—"}</span></td>
+                  <td className="text-[13px] py-3.5 text-center w-8 min-w-8" onMouseEnter={() => setHoveredCol(9)}>
                     {hasEntry && (
                       <button onClick={e => { e.stopPropagation(); onClearPrice(row.name); }} className="text-muted-foreground hover:text-red transition-colors">
                         <X size={12} />

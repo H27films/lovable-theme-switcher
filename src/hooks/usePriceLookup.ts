@@ -5,13 +5,14 @@ export interface ProductRow {
   name: string;
   oldPrice: string;
   cnyPrice: string;
+  officeStock: string;
   _isNew?: boolean;
 }
 
 const SAMPLE_DATA: ProductRow[] = [
-  { name: "Sample Product A", oldPrice: "12.50", cnyPrice: "22.10" },
-  { name: "Sample Product B", oldPrice: "8.90", cnyPrice: "15.80" },
-  { name: "Sample Product C", oldPrice: "34.00", cnyPrice: "60.20" },
+  { name: "Sample Product A", oldPrice: "12.50", cnyPrice: "22.10", officeStock: "0" },
+  { name: "Sample Product B", oldPrice: "8.90", cnyPrice: "15.80", officeStock: "0" },
+  { name: "Sample Product C", oldPrice: "34.00", cnyPrice: "60.20", officeStock: "0" },
 ];
 
 export function usePriceLookup() {
@@ -131,7 +132,7 @@ export function usePriceLookup() {
 
   const addNewProduct = useCallback((name: string, finalCNY: number) => {
     const finalRM = finalCNY / rate;
-    const newRow: ProductRow = { name, oldPrice: finalRM.toFixed(2), cnyPrice: finalCNY.toFixed(2) };
+    const newRow: ProductRow = { name, oldPrice: finalRM.toFixed(2), cnyPrice: finalCNY.toFixed(2), officeStock: "0" };
     const newData = [...data, newRow];
     const newOverride = { ...overrideCNY, [name]: finalCNY.toFixed(2) };
     const np = new Set(newProducts);
@@ -154,6 +155,7 @@ export function usePriceLookup() {
           name: String(vals[0] || "").trim(),
           oldPrice: String(vals[1] || "").trim(),
           cnyPrice: String(vals[2] || "").trim(),
+          officeStock: String(vals[3] || "0").trim(),
         };
       }).filter(r => r.name);
       const np = new Set(newProducts);
@@ -184,18 +186,18 @@ export function usePriceLookup() {
   }, []);
 
   const exportExcel = useCallback(() => {
-    const headers = ["Product Name", "Old Price (RM)", "China Price (CNY)", "New Price (CNY)", "New Price (RM)", "Savings (RM)", "Qty", "Total Value (RM)"];
+    const headers = ["Product Name", "Old Price (RM)", "China Price (CNY)", "New Price (CNY)", "New Price (RM)", "Savings (RM)", "Qty", "Total Value (RM)", "Office Stock"];
     const rows = data.map(row => {
       const cny = getRowCNY(row);
       const rm = cny ? toRM(cny) : null;
       const sav = rm ? getSavings(row.oldPrice, rm) : null;
       const qty = overrideQty[row.name] || 0;
       const totalRM = rm && qty > 0 ? (parseFloat(rm) * qty).toFixed(2) : "";
-      return [row.name, row.oldPrice || "", row.cnyPrice || "", cny ? parseFloat(cny).toFixed(2) : "", rm || "", sav || "", qty > 0 ? qty : "", totalRM];
+      return [row.name, row.oldPrice || "", row.cnyPrice || "", cny ? parseFloat(cny).toFixed(2) : "", rm || "", sav || "", qty > 0 ? qty : "", totalRM, row.officeStock || ""];
     });
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    ws["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 13 }, { wch: 8 }, { wch: 16 }];
+    ws["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 13 }, { wch: 8 }, { wch: 16 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws, "New Product Prices");
     XLSX.writeFile(wb, "New Product Prices.xlsx");
   }, [data, getRowCNY, toRM, getSavings, overrideQty]);
@@ -235,6 +237,8 @@ export function usePriceLookup() {
             const bTotal = bRM3 * (overrideQty[b.name] || 0);
             return (aTotal - bTotal) * dir;
           }
+          case "officeStock":
+            return ((parseFloat(a.officeStock) || 0) - (parseFloat(b.officeStock) || 0)) * dir;
           default: return 0;
         }
       });
