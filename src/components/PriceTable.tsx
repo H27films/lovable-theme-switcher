@@ -46,8 +46,9 @@ export default function PriceTable({
   const tdStyle = useCallback((colIdx: number, rowName: string) => ({
     transition: "transform 0.2s ease, color 0.15s ease",
     transform: hoveredRow === rowName ? `scale(${cellScales[colIdx]})` : "scale(1)",
-    transformOrigin: colIdx === 0 ? "left center" : "center center",
+    transformOrigin: colIdx === 0 ? "0% center" : "center center",
     display: "inline-block" as const,
+    whiteSpace: "nowrap" as const,
   }), [hoveredRow, cellScales]);
 
   const handleSort = (col: string) => {
@@ -124,7 +125,7 @@ export default function PriceTable({
                     onMouseEnter={() => setHoveredRow(row.name)}
                     onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
                   >
-                    <td className="text-[13px] font-light py-3.5 text-dim overflow-hidden" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
+                    <td className="text-[13px] font-light py-3.5 text-dim overflow-hidden pl-2" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(1)}><span style={tdStyle(1, row.name)}>{unitRM ? "RM " + unitRM : "—"}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(2)}><span style={tdStyle(2, row.name)}>{unitCNY ? "¥ " + unitCNY.toFixed(2) : "—"}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(3)}><span style={tdStyle(3, row.name)}>{unitCNY ? "¥ " + unitCNY.toFixed(2) : "—"}</span></td>
@@ -145,7 +146,7 @@ export default function PriceTable({
                   onMouseEnter={() => setHoveredRow(row.name)}
                   onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
                 >
-                  <td className="text-[13px] font-light py-3.5 text-dim overflow-hidden" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
+                  <td className="text-[13px] font-light py-3.5 text-dim overflow-hidden pl-2" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center text-dim" onMouseEnter={() => setHoveredCol(1)}><span style={tdStyle(1, row.name)}>{fmtRM(row.oldPrice)}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center text-dim" onMouseEnter={() => setHoveredCol(2)}><span style={tdStyle(2, row.name)}>{fmtCNY(row.cnyPrice)}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(3)}><span style={tdStyle(3, row.name)}>{hasEntry ? "¥ " + parseFloat(cny).toFixed(2) : "—"}</span></td>
