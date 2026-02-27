@@ -7,6 +7,8 @@ interface FullListPanelProps {
   headers: string[];
   data: string[][];
   onImport: (file: File) => void;
+  onUpdate: (productName: string, newCNY: string) => void;
+  rate: number;
 }
 
 const TOTAL_COLS_MAX = 10;
@@ -40,10 +42,12 @@ function formatCell(value: string, colIndex: number): string {
   return value;
 }
 
-export default function FullListPanel({ open, onClose, headers, data, onImport }: FullListPanelProps) {
+export default function FullListPanel({ open, onClose, headers, data, onImport, onUpdate, rate }: FullListPanelProps) {
   const [search, setSearch] = useState("");
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<string[] | null>(null);
+  const [newCNY, setNewCNY] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const totalCols = headers.length || 1;
@@ -59,6 +63,27 @@ export default function FullListPanel({ open, onClose, headers, data, onImport }
   const filtered = search
     ? data.filter(row => row[0]?.toLowerCase().includes(search.toLowerCase()))
     : data;
+
+  const handleRowClick = (row: string[]) => {
+    setSelectedProduct(row);
+    setNewCNY(row[3] || ""); // Pre-fill with existing New Price CNY
+  };
+
+  const handleCommit = () => {
+    if (selectedProduct && newCNY) {
+      onUpdate(selectedProduct[0], newCNY);
+      setSelectedProduct(null);
+      setNewCNY("");
+    }
+  };
+
+  const calculatedNewRM = newCNY && !isNaN(parseFloat(newCNY)) 
+    ? (parseFloat(newCNY) / rate).toFixed(2) 
+    : "";
+  
+  const calculatedSavings = selectedProduct && calculatedNewRM
+    ? (parseFloat(selectedProduct[1]) - parseFloat(calculatedNewRM)).toFixed(2)
+    : "";
 
   if (!open) return null;
 
@@ -102,7 +127,8 @@ export default function FullListPanel({ open, onClose, headers, data, onImport }
                 {filtered.map((row, ri) => (
                   <tr
                     key={ri}
-                    className="border-b border-border table-row-hover"
+                    className="border-b border-border table-row-hover cursor-pointer"
+                    onClick={() => handleRowClick(row)}
                     onMouseEnter={() => setHoveredRow(ri)}
                     onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
                   >
@@ -121,6 +147,69 @@ export default function FullListPanel({ open, onClose, headers, data, onImport }
             </table>
           )}
         </div>
+
+        {/* Edit Product Popup */}
+        {selectedProduct && (
+          <div className="fixed inset-0 panel-overlay z-[300] flex items-center justify-center" onClick={() => setSelectedProduct(null)}>
+            <div className="surface-box p-9 max-w-[420px] w-[90%]" onClick={e => e.stopPropagation()}>
+              <h3 className="text-sm font-light tracking-[0.15em] uppercase text-dim mb-6">Edit Product</h3>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Product Name</label>
+                  <div className="text-[15px] font-light text-foreground">{selectedProduct[0]}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Old Price</label>
+                    <div className="text-[15px] font-light text-dim">RM {parseFloat(selectedProduct[1]).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">China Price</label>
+                    <div className="text-[15px] font-light text-dim">¥ {parseFloat(selectedProduct[2]).toFixed(2)}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">New Price (CNY)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="minimal-input text-[15px] font-light w-full"
+                    value={newCNY}
+                    onChange={e => setNewCNY(e.target.value)}
+                    autoFocus
+                    placeholder="Enter new CNY price"
+                  />
+                </div>
+
+                {calculatedNewRM && (
+                  <>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">New Price (RM)</label>
+                      <div className="text-[15px] font-light text-foreground">RM {calculatedNewRM}</div>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Savings</label>
+                      <div className={`text-[15px] font-light ${parseFloat(calculatedSavings) > 0 ? 'text-green' : parseFloat(calculatedSavings) < 0 ? 'text-red' : 'text-foreground'}`}>
+                        RM {calculatedSavings}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 justify-end">
+                <button onClick={() => setSelectedProduct(null)} className="minimal-btn">Cancel</button>
+                <button onClick={handleCommit} className="minimal-btn !border-foreground !text-foreground hover:!bg-foreground hover:!text-background" disabled={!newCNY || isNaN(parseFloat(newCNY))}>
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
