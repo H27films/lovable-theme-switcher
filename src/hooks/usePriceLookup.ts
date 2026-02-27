@@ -157,11 +157,25 @@ export function usePriceLookup() {
     }
   };
 
-  const saveData = useCallback(() => {
+  const saveData = useCallback(async () => {
+    // Save to localStorage
     persistData(data, overrideCNY, newProducts, overrideQty);
+    
+    // Save all products with prices to Supabase
+    const savePromises = data.map(async (row) => {
+      const cny = overrideCNY[row.name];
+      const qty = overrideQty[row.name] || 0;
+      
+      if (cny && !isNaN(parseFloat(cny))) {
+        await saveToSupabase(row.name, cny, qty, row.oldPrice, rate);
+      }
+    });
+    
+    await Promise.all(savePromises);
+    
     setSaveFlash(true);
     setTimeout(() => setSaveFlash(false), 2000);
-  }, [data, overrideCNY, newProducts, overrideQty, persistData]);
+  }, [data, overrideCNY, newProducts, overrideQty, persistData, rate]);
 
   const updateRate = useCallback((newRate: number) => {
     if (!isNaN(newRate) && newRate > 0) {
