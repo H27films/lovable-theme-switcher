@@ -202,7 +202,7 @@ export function usePriceLookup() {
     }
   }, [overrideCNY, overrideQty, data, newProducts, persistData, rate]);
 
-  const clearPrice = useCallback((name: string) => {
+  const clearPrice = useCallback(async (name: string) => {
     const newOverride = { ...overrideCNY };
     delete newOverride[name];
     const newQtyMap = { ...overrideQty };
@@ -210,6 +210,22 @@ export function usePriceLookup() {
     setOverrideCNY(newOverride);
     setOverrideQty(newQtyMap);
     persistData(data, newOverride, newProducts, newQtyMap);
+    
+    // Also clear from Supabase
+    try {
+      await supabase
+        .from("Inputhalflist")
+        .update({
+          "New Price (CNY)": null,
+          "New Price (RM)": null,
+          "Savings": null,
+          "Order Qty": null,
+          "Order Value (RM)": null,
+        })
+        .eq("Product Name", name);
+    } catch (err) {
+      console.error("Supabase clear error:", err);
+    }
   }, [overrideCNY, overrideQty, data, newProducts, persistData]);
 
   const removeProduct = useCallback((name: string) => {
