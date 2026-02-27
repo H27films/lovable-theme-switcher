@@ -61,6 +61,7 @@ export function usePriceLookup() {
 
     // Then fetch from Supabase and override
     fetchFromSupabase();
+    fetchFullListFromSupabase();
   }, []);
 
   const fetchFromSupabase = async () => {
@@ -111,6 +112,44 @@ export function usePriceLookup() {
 
     } catch (err) {
       console.error("Supabase fetch error:", err);
+    }
+  };
+
+  const fetchFullListFromSupabase = async () => {
+    try {
+      const { data: rows, error } = await supabase
+        .from("InputFullTable")
+        .select("*");
+
+      if (error) throw error;
+      if (!rows || rows.length === 0) return;
+
+      // Sort by Product Name alphabetically
+      rows.sort((a: any, b: any) => {
+        const aName = String(a["Product Name"] || "").toLowerCase();
+        const bName = String(b["Product Name"] || "").toLowerCase();
+        return aName.localeCompare(bName);
+      });
+
+      const headers = ["Product Name", "Old Price (RM)", "China Price (CNY)", "New Price (CNY)", "New Price (RM)", "Savings"];
+      const rowData = rows.map((r: any) => [
+        String(r["Product Name"] || ""),
+        String(r["Old Price (RM)"] || ""),
+        String(r["China Price (CNY)"] || ""),
+        String(r["New Price (CNY)"] || ""),
+        String(r["New Price (RM)"] || ""),
+        String(r["Savings"] || ""),
+      ]);
+
+      setFullListHeaders(headers);
+      setFullListData(rowData);
+
+      // Also save to localStorage as backup
+      localStorage.setItem("fullListHeaders", JSON.stringify(headers));
+      localStorage.setItem("fullListData", JSON.stringify(rowData));
+
+    } catch (err) {
+      console.error("Supabase full list fetch error:", err);
     }
   };
 
@@ -333,6 +372,48 @@ export function usePriceLookup() {
     XLSX.writeFile(wb, "New Product Prices.xlsx");
   }, [data, getRowCNY, toRM, getSavings, overrideQty]);
 
+  const updateFullListProduct = useCallback(async (productName: string, newCNY: string) => {
+    const newCNYNum = parseFloat(newCNY);
+    if (isNaN(newCNYNum)) return;
+
+    const newRM = (newCNYNum / rate).toFixed(2);
+    
+    // Find the product in fullListData
+    const productIndex = fullListData.findIndex(row => row[0] === productName);
+    if (productIndex === -1) return;
+    
+    const oldRM = fullListData[productIndex][1];
+    const savings = (parseFloat(oldRM) - parseFloat(newRM)).toFixed(2);
+
+    // Update local data
+    const updatedData = [...fullListData];
+    updatedData[productIndex] = [
+      productName,
+      oldRM,
+      updatedData[productIndex][2], // Keep China Price
+      newCNYNum.toFixed(2),
+      newRM,
+      savings,
+    ];
+    
+    setFullListData(updatedData);
+    localStorage.setItem("fullListData", JSON.stringify(updatedData));
+
+    // Save to Supabase
+    try {
+      await supabase
+        .from("InputFullTable")
+        .update({
+          "New Price (CNY)": newCNYNum,
+          "New Price (RM)": parseFloat(newRM),
+          "Savings": parseFloat(savings),
+        })
+        .eq("Product Name", productName);
+    } catch (err) {
+      console.error("Supabase full list update error:", err);
+    }
+  }, [fullListData, rate]);
+
   const sortData = useCallback((col: string, dir: number) => {
     setData(prev => {
       const sorted = [...prev].sort((a, b) => {
@@ -389,5 +470,6 @@ export function usePriceLookup() {
     rate, data, overrideCNY, overrideQty, newProducts, fullListHeaders, fullListData, saveFlash,
     toRM, getSavings, getRowCNY, saveData, updateRate, commitPrice, clearPrice,
     removeProduct, addNewProduct, importExcel, importFullList, exportExcel, sortData, clearAllData,
+    updateFullListProduct,
   };
 }
