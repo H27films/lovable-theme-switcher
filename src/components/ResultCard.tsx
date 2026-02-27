@@ -129,13 +129,13 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground whitespace-nowrap">CNY ¥</span>
           <input
-            type="number"
-            className="minimal-input text-[22px] font-light py-1"
-            placeholder="0.00"
-            step="0.01"
-            value={newPriceInput}
-            onChange={e => { setNewPriceInput(e.target.value); setCommitted(false); }}
-            onKeyDown={e => e.key === "Enter" && handleCommit()}
+           type="text"
+           inputMode="decimal"
+           className="minimal-input text-[22px] font-light py-1"
+           placeholder="0.00"
+           value={newPriceInput}
+           onChange={e => { setNewPriceInput(e.target.value); setCommitted(false); }}
+          onKeyDown={e => e.key === "Enter" && handleCommit()}
           />
           <span className="text-[15px] font-light text-dim whitespace-nowrap">{liveRM}</span>
           <button onClick={handleCommit} className={`minimal-btn h-11 flex-shrink-0 ${committed ? "!border-green !text-green" : ""}`}>
