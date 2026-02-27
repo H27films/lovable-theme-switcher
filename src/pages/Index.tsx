@@ -112,7 +112,7 @@ const Index = () => {
       />
 
       <NewProductPanel open={newProductOpen} onClose={() => setNewProductOpen(false)} rate={store.rate} onAdd={store.addNewProduct} />
-      <FullListPanel open={fullListOpen} onClose={() => setFullListOpen(false)} headers={store.fullListHeaders} data={store.fullListData} onImport={store.importFullList} />
+      <FullListPanel open={fullListOpen} onClose={() => setFullListOpen(false)} headers={store.fullListHeaders} data={store.fullListData} onImport={store.importFullList} onUpdate={store.updateFullListProduct} rate={store.rate} />
     </div>
   );
 };
