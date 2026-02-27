@@ -143,19 +143,13 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
         <div className="text-[13px] text-dim mt-2.5">
           {newPriceInput ? `¥${parseFloat(newPriceInput).toFixed(2)} ÷ ${rate} = RM ${(parseFloat(newPriceInput) / rate).toFixed(2)}` : "Enter CNY price — RM and Savings will calculate automatically"}
         </div>
-        {priceMode === "bundle" && (
-          <div className="mt-5 pt-4 border-t border-border">
-            <span className="label-uppercase block mb-2">Quantity in Bundle</span>
-            <input type="number" className="minimal-input text-base font-light py-1" placeholder="0" step="1" min="1" value={bundleQty} onChange={e => { setBundleQty(e.target.value); setQty(e.target.value); }} />
-          </div>
-        )}
+      
       </div>
 
       {/* Quantity input (optional) */}
       <div className="surface-box border-t-0 p-5 pb-7">
         <span className="label-uppercase block mb-2.5">Quantity <span className="text-muted-foreground">(optional)</span></span>
-        <input type="number" className="minimal-input text-base font-light py-1" placeholder="0" step="1" min="1" value={qty} onChange={e => setQty(e.target.value)} />
-        <div className="text-xs text-muted-foreground mt-1.5">Number of units</div>
+      <input type="number" className="minimal-input text-base font-light py-1" placeholder="0" step="1" min="1" value={qty} onChange={e => { setQty(e.target.value); setBundleQty(e.target.value); }} />        <div className="text-xs text-muted-foreground mt-1.5">Number of units</div>
       </div>
 
       {/* Unit result with optional Total Value */}
