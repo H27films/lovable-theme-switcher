@@ -28,7 +28,7 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
       setPriceMode("unit");
       setCommitted(false);
     }
-  }, [row, getRowCNY]);
+  }, [row?.name]);
 
   const calcValues = useCallback(() => {
     if (!row) return { cnyDisplay: "—", rmDisplay: "—", savDisplay: "—", savClass: "value-dim", totalRMDisplay: "—" };
