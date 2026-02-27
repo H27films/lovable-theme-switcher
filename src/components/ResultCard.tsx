@@ -169,13 +169,13 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
               <div className="currency-label">1 RM = ¥{rate.toFixed(2)}</div>
             </div>
             <div className="price-box-highlight p-4">
-              <span className="label-uppercase block mb-2">Unit Savings</span>
+              <span className="label-uppercase block mb-2">Unit Savings RM</span>
               <span className={`value-display text-[17px] ${vals.savClass}`}>{vals.savDisplay}</span>
               <div className="currency-label">RM</div>
             </div>
             {hasQty && (
             <div className="price-box-highlight p-4">
-             <span className="label-uppercase block mb-2">Total Value</span>
+             <span className="label-uppercase block mb-2">Total Value RM</span>
              <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
              <div className="currency-label">RM</div>
             </div>
