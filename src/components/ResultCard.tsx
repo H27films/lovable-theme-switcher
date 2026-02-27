@@ -68,7 +68,7 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
     setTimeout(() => onDone(), 300);
   };
 
-  const hasQty = parseFloat(qty) > 0 || (priceMode === "bundle" && parseFloat(bundleQty) > 0);
+  const hasQty = true;
   const showUnitResult = (priceMode === "bundle" && parseFloat(bundleQty) > 0);
 
   return (
@@ -173,10 +173,11 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
             </div>
             {hasQty && (
               <div className="price-box-highlight p-4">
-                <span className="label-uppercase block mb-2">Total Value</span>
-                <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
-                <div className="currency-label">RM</div>
-              </div>
+               <span className="label-uppercase block mb-2">Total Value</span>
+               <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
+               <div className="currency-label">RM</div>
+               <div className="currency-label mt-1">{vals.totalCNYDisplay}</div>
+            </div>
             )}
           </div>
         </div>
