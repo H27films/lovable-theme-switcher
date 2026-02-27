@@ -70,7 +70,7 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
     setTimeout(() => onDone(), 300);
   };
 
-  const hasQty = true;
+  const hasQty = !isNaN(rawCNY) && rawCNY > 0;
   const showUnitResult = (priceMode === "bundle" && parseFloat(bundleQty) > 0);
 
   return (
@@ -177,8 +177,7 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
             <div className="price-box-highlight p-4">
              <span className="label-uppercase block mb-2">Total Value</span>
              <div className="flex items-baseline gap-2">
-               <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
-               <span className="text-[13px] text-white font-light">({vals.totalCNYDisplay})</span>
+             <span className="value-display text-[17px]">{vals.totalRMDisplay}&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;{vals.totalCNYDisplay}</span>
              </div>
              <div className="currency-label">RM</div>
             </div>
