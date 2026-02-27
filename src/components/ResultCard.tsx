@@ -42,15 +42,17 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
 
     const unitRM = unitCNY / rate;
     const sav = parseFloat(row.oldPrice) - unitRM;
-    const effectiveQty = priceMode === "bundle" ? bq : q;
-    const totalRM = effectiveQty > 0 ? unitRM * effectiveQty : 0;
+    const effectiveQty = priceMode === "bundle" ? (bq > 0 ? bq : 1) : (q > 0 ? q : 1);
+    const totalRM = unitRM * effectiveQty;
+    const totalCNY = unitCNY * effectiveQty;
 
     return {
       cnyDisplay: "¥ " + unitCNY.toFixed(2),
       rmDisplay: "RM " + unitRM.toFixed(2),
       savDisplay: "RM " + sav.toFixed(2),
       savClass: sav >= 0 ? "value-green" : "value-red",
-      totalRMDisplay: totalRM > 0 ? "RM " + totalRM.toFixed(2) : "—",
+      totalRMDisplay: "RM " + totalRM.toFixed(2),
+      totalCNYDisplay: "¥ " + totalCNY.toFixed(2),
       unitCNY, unitRM, sav,
     };
   }, [row, newPriceInput, qty, bundleQty, priceMode, rate]);
