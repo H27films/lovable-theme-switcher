@@ -174,11 +174,13 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
               <div className="currency-label">RM</div>
             </div>
             {hasQty && (
-              <div className="price-box-highlight p-4">
-               <span className="label-uppercase block mb-2">Total Value</span>
+            <div className="price-box-highlight p-4">
+             <span className="label-uppercase block mb-2">Total Value</span>
+             <div className="flex items-baseline gap-2">
                <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
-               <div className="currency-label">RM</div>
-               <div className="currency-label mt-1">{vals.totalCNYDisplay}</div>
+               <span className="text-[13px] text-white font-light">({vals.totalCNYDisplay})</span>
+             </div>
+             <div className="currency-label">RM</div>
             </div>
             )}
           </div>
