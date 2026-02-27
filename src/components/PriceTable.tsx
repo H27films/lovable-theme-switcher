@@ -22,10 +22,11 @@ const TOTAL_COLS = 10;
 function getCellScales(hoveredCol: number | null): number[] {
   if (hoveredCol === null) return Array(TOTAL_COLS).fill(1);
   return Array.from({ length: TOTAL_COLS }, (_, i) => {
+    if (i === 0) return 1.0; // No scaling on product name column
     const dist = Math.abs(i - hoveredCol);
-    if (dist === 0) return 1.20;
-    if (dist === 1) return 1.10;
-    if (dist === 2) return 1.05;
+    if (dist === 0) return 1.12;
+    if (dist === 1) return 1.06;
+    if (dist === 2) return 1.03;
     return 1.0;
   });
 }
