@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import * as XLSX from "xlsx";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ProductRow {
   name: string;
@@ -8,12 +9,6 @@ export interface ProductRow {
   officeStock: string;
   _isNew?: boolean;
 }
-
-const SAMPLE_DATA: ProductRow[] = [
-  { name: "Sample Product A", oldPrice: "12.50", cnyPrice: "22.10", officeStock: "0" },
-  { name: "Sample Product B", oldPrice: "8.90", cnyPrice: "15.80", officeStock: "0" },
-  { name: "Sample Product C", oldPrice: "34.00", cnyPrice: "60.20", officeStock: "0" },
-];
 
 export function usePriceLookup() {
   const [rate, setRate] = useState(1.77);
@@ -30,10 +25,7 @@ export function usePriceLookup() {
     const savedRate = localStorage.getItem("exchangeRate");
     if (savedRate) setRate(parseFloat(savedRate));
 
-    const np = localStorage.getItem("newProducts");
-    const npSet = np ? new Set<string>(JSON.parse(np)) : new Set<string>();
-    setNewProducts(npSet);
-
+    // First load from localStorage instantly
     const raw = localStorage.getItem("priceLookupData");
     if (raw) {
       try {
@@ -50,9 +42,11 @@ export function usePriceLookup() {
         if (payload.overrideCNY) setOverrideCNY(payload.overrideCNY);
         if (payload.overrideQty) setOverrideQty(payload.overrideQty);
       } catch {}
-    } else {
-      setData(SAMPLE_DATA);
     }
+
+    const np = localStorage.getItem("newProducts");
+    const npSet = np ? new Set<string>(JSON.parse(np)) : new Set<string>();
+    setNewProducts(npSet);
 
     const fh = localStorage.getItem("fullListHeaders");
     const fd = localStorage.getItem("fullListData");
@@ -60,7 +54,58 @@ export function usePriceLookup() {
       setFullListHeaders(JSON.parse(fh));
       setFullListData(JSON.parse(fd));
     }
+
+    // Then fetch from Supabase and override
+    fetchFromSupabase();
   }, []);
+
+  const fetchFromSupabase = async () => {
+    try {
+      const { data: rows, error } = await supabase
+        .from("Inputhalflist")
+        .select("*");
+
+      if (error) throw error;
+      if (!rows || rows.length === 0) return;
+
+      const products: ProductRow[] = rows.map((r: any) => ({
+        name: r["Product Name"] || "",
+        oldPrice: r["Old Price (RM)"] ? String(r["Old Price (RM)"]) : "",
+        cnyPrice: r["China Price (CNY)"] ? String(r["China Price (CNY)"]) : "",
+        officeStock: r["Office Stock"] ? String(r["Office Stock"]) : "0",
+      }));
+
+      const newOverrides: Record<string, string> = {};
+      const newQtyMap: Record<string, number> = {};
+
+      rows.forEach((r: any) => {
+        const name = r["Product Name"];
+        if (name && r["New Price (CNY)"] && parseFloat(r["New Price (CNY)"]) > 0) {
+          newOverrides[name] = parseFloat(r["New Price (CNY)"]).toFixed(2);
+        }
+        if (name && r["Order Qty"] && parseInt(r["Order Qty"]) > 0) {
+          newQtyMap[name] = parseInt(r["Order Qty"]);
+        }
+      });
+
+      setData(products);
+      setOverrideCNY(newOverrides);
+      setOverrideQty(newQtyMap);
+
+      // Also save to localStorage as backup
+      const np = new Set<string>();
+      localStorage.setItem("priceLookupData", JSON.stringify({
+        importedData: products,
+        manualData: [],
+        overrideCNY: newOverrides,
+        overrideQty: newQtyMap
+      }));
+      setNewProducts(np);
+
+    } catch (err) {
+      console.error("Supabase fetch error:", err);
+    }
+  };
 
   const toRM = useCallback((cny: string | number) => {
     const v = parseFloat(String(cny));
@@ -82,6 +127,28 @@ export function usePriceLookup() {
     localStorage.setItem("priceLookupData", JSON.stringify({ importedData, manualData, overrideCNY: oc, overrideQty: oq || {} }));
     localStorage.setItem("newProducts", JSON.stringify([...np]));
   }, []);
+
+  const saveToSupabase = async (name: string, cny: string, qty: number, oldPrice: string, rate: number) => {
+    try {
+      const newRM = (parseFloat(cny) / rate).toFixed(2);
+      const savings = (parseFloat(oldPrice) - parseFloat(newRM)).toFixed(2);
+      const totalValue = (parseFloat(newRM) * qty).toFixed(2);
+
+      await supabase
+        .from("Inputhalflist")
+        .update({
+          "New Price (CNY)": parseFloat(cny),
+          "New Price (RM)": parseFloat(newRM),
+          "Savings": parseFloat(savings),
+          "Order Qty": qty,
+          "Order Value (RM)": parseFloat(totalValue),
+        })
+        .eq("Product Name", name);
+
+    } catch (err) {
+      console.error("Supabase save error:", err);
+    }
+  };
 
   const saveData = useCallback(() => {
     persistData(data, overrideCNY, newProducts, overrideQty);
@@ -106,7 +173,13 @@ export function usePriceLookup() {
     setOverrideCNY(newOverride);
     setOverrideQty(newQtyMap);
     persistData(data, newOverride, newProducts, newQtyMap);
-  }, [overrideCNY, overrideQty, data, newProducts, persistData]);
+
+    // Also save to Supabase
+    const row = data.find(r => r.name === name);
+    if (row) {
+      saveToSupabase(name, storeCNY.toFixed(2), effectiveQty, row.oldPrice, rate);
+    }
+  }, [overrideCNY, overrideQty, data, newProducts, persistData, rate]);
 
   const clearPrice = useCallback((name: string) => {
     const newOverride = { ...overrideCNY };
@@ -150,13 +223,10 @@ export function usePriceLookup() {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval: "", header: 1 }) as unknown[][];
       if (rows.length < 2) return;
-      // Skip header row (row 0), data starts at row 1
       const dataRows = rows.slice(1);
       const newOverrides: Record<string, string> = {};
       const newQtyMap: Record<string, number> = {};
       const imported = dataRows.map(vals => {
-        // Columns: 0=Product Name, 1=Old Price RM, 2=China Price CNY,
-        // 3=New Price CNY, 4=New Price RM, 5=Savings, 6=Qty, 7=Total Value, 8=Office Stock
         const name = String(vals[0] || "").trim();
         const newCNY = String(vals[3] || "").trim();
         const qty = parseInt(String(vals[6] || "0"), 10);
