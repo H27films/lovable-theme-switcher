@@ -149,21 +149,35 @@ export function usePriceLookup() {
       const wb = XLSX.read(ev.target?.result, { type: "array" });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const newOverrides: Record<string, string> = {};
+      const newQtyMap: Record<string, number> = {};
       const imported = (rows as Record<string, unknown>[]).map(r => {
         const vals = Object.values(r);
+        // Columns: 0=Product Name, 1=Old Price RM, 2=China Price CNY,
+        // 3=New Price CNY, 4=New Price RM, 5=Savings, 6=Qty, 7=Total Value, 8=Office Stock
+        const name = String(vals[0] || "").trim();
+        const newCNY = String(vals[3] || "").trim();
+        const qty = parseInt(String(vals[6] || "0"), 10);
+        if (name && newCNY && !isNaN(parseFloat(newCNY))) {
+          newOverrides[name] = parseFloat(newCNY).toFixed(2);
+        }
+        if (name && qty > 0) {
+          newQtyMap[name] = qty;
+        }
         return {
-          name: String(vals[0] || "").trim(),
+          name,
           oldPrice: String(vals[1] || "").trim(),
           cnyPrice: String(vals[2] || "").trim(),
-          officeStock: String(vals[3] || "0").trim(),
+          officeStock: String(vals[8] || "0").trim(),
         };
       }).filter(r => r.name);
       const np = new Set(newProducts);
       imported.forEach(r => np.delete(r.name));
       setData(imported);
-      setOverrideCNY({});
+      setOverrideCNY(newOverrides);
+      setOverrideQty(newQtyMap);
       setNewProducts(np);
-      persistData(imported, {}, np);
+      persistData(imported, newOverrides, np, newQtyMap);
     };
     reader.readAsArrayBuffer(file);
   }, [newProducts, persistData]);
