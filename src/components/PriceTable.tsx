@@ -79,7 +79,7 @@ export default function PriceTable({
         <span className="label-uppercase">{data.length} products</span>
         <label className="minimal-btn cursor-pointer">
           Import Excel
-          <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
+          <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onClick={e => { (e.target as HTMLInputElement).value = ""; }} onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
         </label>
       </div>
 
