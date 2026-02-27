@@ -101,9 +101,9 @@ export default function PriceTable({
                 { col: "totalRM", label: "Total Value", sub: "RM" },
                 { col: "officeStock", label: "Office Stock" },
               ].map(h => (
-                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top`}>
+                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top group`}>
                   <span className="block">{h.label}</span>
-                  {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
+                  {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground group-hover:text-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
                 </th>
               ))}
               <th></th>
