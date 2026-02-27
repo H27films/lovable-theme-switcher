@@ -8,6 +8,7 @@ interface FullListPanelProps {
   data: string[][];
   onImport: (file: File) => void;
   onUpdate: (productName: string, newCNY: string) => void;
+  onClear: (productName: string) => void;
   rate: number;
 }
 
@@ -42,7 +43,7 @@ function formatCell(value: string, colIndex: number): string {
   return value;
 }
 
-export default function FullListPanel({ open, onClose, headers, data, onImport, onUpdate, rate }: FullListPanelProps) {
+export default function FullListPanel({ open, onClose, headers, data, onImport, onUpdate, onClear, rate }: FullListPanelProps) {
   const [search, setSearch] = useState("");
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
@@ -121,28 +122,55 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                       {colSubs[i] && <><br /><span className="text-[9px] tracking-wider text-muted-foreground">{colSubs[i]}</span></>}
                     </th>
                   ))}
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((row, ri) => (
-                  <tr
-                    key={ri}
-                    className="border-b border-border table-row-hover cursor-pointer"
-                    onClick={() => handleRowClick(row)}
-                    onMouseEnter={() => setHoveredRow(ri)}
-                    onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
-                  >
-                    {row.map((cell, ci) => (
-                      <td
-                        key={ci}
-                        className={`text-[13px] font-light text-dim py-3.5 ${ci > 0 ? "text-center" : ""}`}
-                        onMouseEnter={() => setHoveredCol(ci)}
-                      >
-                        <span style={tdStyle(ci, ri)}>{formatCell(cell, ci)}</span>
+                {filtered.map((row, ri) => {
+                  const hasNewPrice = row[3] && parseFloat(row[3]) > 0; // Check if New Price CNY exists
+                  const savings = row[5] ? parseFloat(row[5]) : null;
+                  
+                  return (
+                    <tr
+                      key={ri}
+                      className="border-b border-border table-row-hover cursor-pointer"
+                      onClick={() => handleRowClick(row)}
+                      onMouseEnter={() => setHoveredRow(ri)}
+                      onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
+                    >
+                      {row.map((cell, ci) => {
+                        // Apply color to savings column (index 5)
+                        let colorClass = "text-dim";
+                        if (ci === 5 && savings !== null) {
+                          colorClass = savings > 0 ? "text-green" : savings < 0 ? "text-red" : "text-dim";
+                        }
+                        
+                        return (
+                          <td
+                            key={ci}
+                            className={`text-[13px] font-light ${colorClass} py-3.5 ${ci > 0 ? "text-center" : ""}`}
+                            onMouseEnter={() => setHoveredCol(ci)}
+                          >
+                            <span style={tdStyle(ci, ri)}>{formatCell(cell, ci)}</span>
+                          </td>
+                        );
+                      })}
+                      <td className="text-[13px] py-3.5 text-center w-8 min-w-8">
+                        {hasNewPrice && (
+                          <button 
+                            onClick={e => { 
+                              e.stopPropagation(); 
+                              onClear(row[0]); 
+                            }} 
+                            className="text-muted-foreground hover:text-red transition-colors"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
                       </td>
-                    ))}
-                  </tr>
-                ))}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
