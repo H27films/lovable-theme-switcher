@@ -148,17 +148,19 @@ export function usePriceLookup() {
     reader.onload = ev => {
       const wb = XLSX.read(ev.target?.result, { type: "array" });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "", header: 1 }) as unknown[][];
+      if (rows.length < 2) return;
+      // Skip header row (row 0), data starts at row 1
+      const dataRows = rows.slice(1);
       const newOverrides: Record<string, string> = {};
       const newQtyMap: Record<string, number> = {};
-      const imported = (rows as Record<string, unknown>[]).map(r => {
-        const vals = Object.values(r);
+      const imported = dataRows.map(vals => {
         // Columns: 0=Product Name, 1=Old Price RM, 2=China Price CNY,
         // 3=New Price CNY, 4=New Price RM, 5=Savings, 6=Qty, 7=Total Value, 8=Office Stock
         const name = String(vals[0] || "").trim();
         const newCNY = String(vals[3] || "").trim();
         const qty = parseInt(String(vals[6] || "0"), 10);
-        if (name && newCNY && !isNaN(parseFloat(newCNY))) {
+        if (name && newCNY && !isNaN(parseFloat(newCNY)) && parseFloat(newCNY) > 0) {
           newOverrides[name] = parseFloat(newCNY).toFixed(2);
         }
         if (name && qty > 0) {
