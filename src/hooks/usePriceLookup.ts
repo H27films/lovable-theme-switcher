@@ -38,7 +38,11 @@ export function usePriceLookup() {
         }
         const seen = new Map<string, ProductRow>();
         combined.forEach((r: ProductRow) => seen.set(r.name, r));
-        setData([...seen.values()]);
+        // Sort by Product Name alphabetically
+        const sortedData = [...seen.values()].sort((a, b) => 
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+        );
+        setData(sortedData);
         if (payload.overrideCNY) setOverrideCNY(payload.overrideCNY);
         if (payload.overrideQty) setOverrideQty(payload.overrideQty);
       } catch {}
@@ -74,6 +78,9 @@ export function usePriceLookup() {
         cnyPrice: r["China Price (CNY)"] ? String(r["China Price (CNY)"]) : "",
         officeStock: r["Office Stock"] ? String(r["Office Stock"]) : "0",
       }));
+
+      // Sort by Product Name alphabetically
+      products.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
       const newOverrides: Record<string, string> = {};
       const newQtyMap: Record<string, number> = {};
@@ -207,6 +214,10 @@ export function usePriceLookup() {
     const finalRM = finalCNY / rate;
     const newRow: ProductRow = { name, oldPrice: finalRM.toFixed(2), cnyPrice: finalCNY.toFixed(2), officeStock: "0" };
     const newData = [...data, newRow];
+    
+    // Sort by Product Name alphabetically
+    newData.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    
     const newOverride = { ...overrideCNY, [name]: finalCNY.toFixed(2) };
     const np = new Set(newProducts);
     np.add(name);
@@ -243,6 +254,10 @@ export function usePriceLookup() {
           officeStock: String(vals[8] || "0").trim(),
         };
       }).filter(r => r.name);
+      
+      // Sort by Product Name alphabetically
+      imported.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      
       const np = new Set(newProducts);
       imported.forEach(r => np.delete(r.name));
       setData(imported);
