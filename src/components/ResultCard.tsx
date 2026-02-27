@@ -157,8 +157,8 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
       {/* Unit result with optional Total Value */}
       {(showUnitResult || hasQty) && (
         <div className="border border-border border-t-0 p-0" style={{ background: "hsl(var(--card))" }}>
-          <div className={`grid ${hasQty ? "grid-cols-4" : "grid-cols-3"} gap-px price-grid-gap`}>
-            <div className="price-box-highlight p-4">
+         <div className={`grid ${hasQty ? "grid-cols-5" : "grid-cols-3"} gap-px price-grid-gap`}>            
+           <div className="price-box-highlight p-4">
               <span className="label-uppercase block mb-2">Unit Cost CNY</span>
               <span className="value-display text-[17px]">{vals.cnyDisplay}</span>
               <div className="currency-label">CNY</div>
@@ -176,11 +176,16 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
             {hasQty && (
             <div className="price-box-highlight p-4">
              <span className="label-uppercase block mb-2">Total Value</span>
-             <div className="flex items-baseline gap-2">
-             <span className="value-display text-[17px]">{vals.totalRMDisplay}&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;{vals.totalCNYDisplay}</span>
-             </div>
+             <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
              <div className="currency-label">RM</div>
             </div>
+            )}
+            {hasQty && (
+              <div className="price-box-highlight p-4">
+                <span className="label-uppercase block mb-2">Total Value CNY</span>
+                <span className="value-display text-[17px]">{vals.totalCNYDisplay}</span>
+                <div className="currency-label">CNY</div>
+              </div>
             )}
           </div>
         </div>
