@@ -5,7 +5,7 @@ interface NewProductPanelProps {
   open: boolean;
   onClose: () => void;
   rate: number;
-  onAdd: (name: string, finalCNY: number) => void;
+  onAdd: (name: string, finalCNY: number, qty: number) => void;
 }
 
 export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProductPanelProps) {
@@ -16,20 +16,18 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
   const [success, setSuccess] = useState(false);
 
   const cnyVal = parseFloat(cny) || 0;
-  const qtyVal = parseFloat(qty) || 0;
+  const qtyVal = parseInt(qty) || 0;
 
-  const unitCNY = cnyVal;
   const unitRM = cnyVal > 0 ? cnyVal / rate : 0;
   const totalRM = unitRM * (qtyVal > 0 ? qtyVal : 1);
-  const totalCNY = unitCNY * (qtyVal > 0 ? qtyVal : 1);
+  const totalCNY = cnyVal * (qtyVal > 0 ? qtyVal : 1);
 
-  // Live RM shown inline next to CNY input
   const liveRM = cnyVal > 0 ? `RM ${unitRM.toFixed(2)}` : "";
 
   const handleAdd = () => {
     if (!name.trim() || !cnyVal) { setError(true); return; }
     setError(false);
-    onAdd(name.trim(), unitCNY);
+    onAdd(name.trim(), cnyVal, qtyVal);
     setName(""); setCny(""); setQty("");
     setSuccess(true);
     setTimeout(() => setSuccess(false), 2500);
@@ -82,7 +80,7 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
             </div>
             <div className="text-[13px] text-dim mt-2.5">
               {cnyVal > 0
-                ? `¥${unitCNY.toFixed(2)} ÷ ${rate} = RM ${unitRM.toFixed(2)}`
+                ? `¥${cnyVal.toFixed(2)} ÷ ${rate} = RM ${unitRM.toFixed(2)}`
                 : "Enter CNY price — RM will calculate automatically"}
             </div>
           </div>
@@ -102,33 +100,33 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
             <div className="text-xs text-muted-foreground mt-1.5">Number of units</div>
           </div>
 
-          {/* Price boxes — appear once CNY is typed, matching main table style */}
+          {/* Price boxes — appear once CNY is typed */}
           {cnyVal > 0 && (
             <div className="mb-7">
               <div className="label-uppercase mb-3">Preview</div>
               <div className={`grid ${qtyVal > 0 ? "grid-cols-4" : "grid-cols-2"} gap-px price-grid-gap`}>
                 <div className="price-box-highlight p-4">
-                  <span className="label-uppercase block mb-2">Unit Cost CNY</span>
-                  <span className="value-display text-[17px]">¥ {unitCNY.toFixed(2)}</span>
+                  <span className="label-uppercase block mb-2">New Price CNY</span>
+                  <span className="value-display text-[17px]">¥ {cnyVal.toFixed(2)}</span>
                   <div className="currency-label">CNY</div>
                 </div>
                 <div className="price-box-highlight p-4">
-                  <span className="label-uppercase block mb-2">Unit Cost RM</span>
+                  <span className="label-uppercase block mb-2">New Price RM</span>
                   <span className="value-display text-[17px]">RM {unitRM.toFixed(2)}</span>
                   <div className="currency-label">1 RM = ¥{rate.toFixed(2)}</div>
                 </div>
                 {qtyVal > 0 && (
                   <div className="price-box-highlight p-4">
-                    <span className="label-uppercase block mb-2">Total Value RM</span>
-                    <span className="value-display text-[17px]">RM {totalRM.toFixed(2)}</span>
-                    <div className="currency-label">RM</div>
+                    <span className="label-uppercase block mb-2">Quantity</span>
+                    <span className="value-display text-[17px]">{qtyVal}</span>
+                    <div className="currency-label">Units</div>
                   </div>
                 )}
                 {qtyVal > 0 && (
                   <div className="price-box-highlight p-4">
-                    <span className="label-uppercase block mb-2">Total Value CNY</span>
-                    <span className="value-display text-[17px]">¥ {totalCNY.toFixed(2)}</span>
-                    <div className="currency-label">CNY</div>
+                    <span className="label-uppercase block mb-2">Total Value RM</span>
+                    <span className="value-display text-[17px]">RM {totalRM.toFixed(2)}</span>
+                    <div className="currency-label">RM</div>
                   </div>
                 )}
               </div>
@@ -142,7 +140,7 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
           <button onClick={handleAdd} className="minimal-btn">Add to Table</button>
 
           {success && (
-            <div className="text-green text-xs mt-4 tracking-wider">✓ Product added to table</div>
+            <div className="text-green text-xs mt-4 tracking-wider">✓ Product added to table and saved to database</div>
           )}
 
         </div>
