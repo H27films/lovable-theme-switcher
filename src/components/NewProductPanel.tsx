@@ -11,24 +11,26 @@ interface NewProductPanelProps {
 export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProductPanelProps) {
   const [name, setName] = useState("");
   const [cny, setCny] = useState("");
-  const [delivery, setDelivery] = useState("");
   const [qty, setQty] = useState("");
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const cnyVal = parseFloat(cny) || 0;
-  const deliveryVal = parseFloat(delivery) || 0;
   const qtyVal = parseFloat(qty) || 0;
 
-  let finalCNY = cnyVal;
-  if (deliveryVal > 0 && qtyVal > 0) finalCNY = cnyVal + deliveryVal / qtyVal;
-  const finalRM = finalCNY / rate;
+  const unitCNY = cnyVal;
+  const unitRM = cnyVal > 0 ? cnyVal / rate : 0;
+  const totalRM = unitRM * (qtyVal > 0 ? qtyVal : 1);
+  const totalCNY = unitCNY * (qtyVal > 0 ? qtyVal : 1);
+
+  // Live RM shown inline next to CNY input
+  const liveRM = cnyVal > 0 ? `RM ${unitRM.toFixed(2)}` : "";
 
   const handleAdd = () => {
     if (!name.trim() || !cnyVal) { setError(true); return; }
     setError(false);
-    onAdd(name.trim(), finalCNY);
-    setName(""); setCny(""); setDelivery(""); setQty("");
+    onAdd(name.trim(), unitCNY);
+    setName(""); setCny(""); setQty("");
     setSuccess(true);
     setTimeout(() => setSuccess(false), 2500);
   };
@@ -43,54 +45,106 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
           <h2 className="text-sm font-light tracking-[0.15em] uppercase text-dim">New Product</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors text-xl"><X size={18} /></button>
         </div>
+
         <div className="flex-1 overflow-y-auto p-10 scrollbar-thin">
+
+          {/* Product Name */}
           <div className="mb-8">
             <span className="label-uppercase block mb-2.5">Product Name</span>
-            <input type="text" className="minimal-input text-xl font-light py-2.5" placeholder="Enter product name..." value={name} onChange={e => setName(e.target.value)} />
+            <input
+              type="text"
+              className="minimal-input text-xl font-light py-2.5"
+              placeholder="Enter product name..."
+              value={name}
+              onChange={e => setName(e.target.value)}
+            />
           </div>
-          <div className="mb-6">
-            <span className="label-uppercase block mb-2.5">New Price CNY</span>
+
+          {/* CNY Price input with live RM conversion inline */}
+          <div className="surface-box p-5 mb-0">
+            <span className="text-[13px] font-light tracking-wider uppercase text-dim block mb-4">
+              New Price CNY
+            </span>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">CNY ¥</span>
-              <input type="number" className="minimal-input text-xl font-light py-2.5" placeholder="0.00" step="0.01" value={cny} onChange={e => setCny(e.target.value)} />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">CNY ¥</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                className="minimal-input text-[22px] font-light py-1"
+                placeholder="0.00"
+                value={cny}
+                onChange={e => setCny(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleAdd()}
+              />
+              {liveRM && (
+                <span className="text-[15px] font-light text-dim whitespace-nowrap">{liveRM}</span>
+              )}
+            </div>
+            <div className="text-[13px] text-dim mt-2.5">
+              {cnyVal > 0
+                ? `¥${unitCNY.toFixed(2)} ÷ ${rate} = RM ${unitRM.toFixed(2)}`
+                : "Enter CNY price — RM will calculate automatically"}
             </div>
           </div>
-          <div className="surface-box p-5 mb-6">
-            <div className="label-uppercase mb-4">Optional — Delivery & Quantity</div>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <span className="label-uppercase block mb-2">Delivery Charge <span className="text-muted-foreground">(CNY)</span></span>
-                <input type="number" className="minimal-input text-base font-light py-2" placeholder="0.00" step="0.01" value={delivery} onChange={e => setDelivery(e.target.value)} />
-              </div>
-              <div>
-                <span className="label-uppercase block mb-2">Quantity</span>
-                <input type="number" className="minimal-input text-base font-light py-2" placeholder="0" step="1" min="1" value={qty} onChange={e => setQty(e.target.value)} />
-              </div>
-            </div>
+
+          {/* Quantity */}
+          <div className="surface-box border-t-0 p-5 pb-7 mb-6">
+            <span className="label-uppercase block mb-2.5">Quantity <span className="text-muted-foreground">(optional)</span></span>
+            <input
+              type="number"
+              className="minimal-input text-base font-light py-1"
+              placeholder="0"
+              step="1"
+              min="1"
+              value={qty}
+              onChange={e => setQty(e.target.value)}
+            />
+            <div className="text-xs text-muted-foreground mt-1.5">Number of units</div>
           </div>
+
+          {/* Price boxes — appear once CNY is typed, matching main table style */}
           {cnyVal > 0 && (
             <div className="mb-7">
               <div className="label-uppercase mb-3">Preview</div>
-              <div className="grid grid-cols-2 gap-px price-grid-gap">
-                <div className="price-box p-4">
-                  <div className="label-uppercase mb-2">Unit Cost CNY</div>
-                  <div className="text-lg font-light">¥ {finalCNY.toFixed(2)}</div>
+              <div className={`grid ${qtyVal > 0 ? "grid-cols-4" : "grid-cols-2"} gap-px price-grid-gap`}>
+                <div className="price-box-highlight p-4">
+                  <span className="label-uppercase block mb-2">Unit Cost CNY</span>
+                  <span className="value-display text-[17px]">¥ {unitCNY.toFixed(2)}</span>
+                  <div className="currency-label">CNY</div>
                 </div>
-                <div className="price-box p-4">
-                  <div className="label-uppercase mb-2">Unit Cost RM</div>
-                  <div className="text-lg font-light">RM {finalRM.toFixed(2)}</div>
+                <div className="price-box-highlight p-4">
+                  <span className="label-uppercase block mb-2">Unit Cost RM</span>
+                  <span className="value-display text-[17px]">RM {unitRM.toFixed(2)}</span>
+                  <div className="currency-label">1 RM = ¥{rate.toFixed(2)}</div>
                 </div>
-              </div>
-              <div className="text-[11px] text-muted-foreground mt-2">
-                {deliveryVal > 0 && qtyVal > 0
-                  ? `¥${cnyVal.toFixed(2)} + (¥${deliveryVal.toFixed(2)} ÷ ${qtyVal}) = ¥${finalCNY.toFixed(2)} unit cost`
-                  : `¥${finalCNY.toFixed(2)} ÷ ${rate} = RM ${finalRM.toFixed(2)}`}
+                {qtyVal > 0 && (
+                  <div className="price-box-highlight p-4">
+                    <span className="label-uppercase block mb-2">Total Value RM</span>
+                    <span className="value-display text-[17px]">RM {totalRM.toFixed(2)}</span>
+                    <div className="currency-label">RM</div>
+                  </div>
+                )}
+                {qtyVal > 0 && (
+                  <div className="price-box-highlight p-4">
+                    <span className="label-uppercase block mb-2">Total Value CNY</span>
+                    <span className="value-display text-[17px]">¥ {totalCNY.toFixed(2)}</span>
+                    <div className="currency-label">CNY</div>
+                  </div>
+                )}
               </div>
             </div>
           )}
-          {error && <div className="text-red text-xs mb-4">Please enter at least a product name and new CNY price.</div>}
+
+          {error && (
+            <div className="text-red text-xs mb-4">Please enter at least a product name and new CNY price.</div>
+          )}
+
           <button onClick={handleAdd} className="minimal-btn">Add to Table</button>
-          {success && <div className="text-green text-xs mt-4 tracking-wider">✓ Product added to table</div>}
+
+          {success && (
+            <div className="text-green text-xs mt-4 tracking-wider">✓ Product added to table</div>
+          )}
+
         </div>
       </div>
     </>
