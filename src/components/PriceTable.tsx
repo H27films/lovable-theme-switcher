@@ -92,7 +92,7 @@ export default function PriceTable({
           <thead>
             <tr className="border-b border-border-active">
               {[
-                { col: "name", label: "  Product Name" },
+                { col: "name", label: "Product Name" },
                 { col: "oldPrice", label: "Old Price", sub: "RM" },
                 { col: "cnyPrice", label: "China Price", sub: "CNY" },
                 { col: "newCNY", label: "New Price", sub: "CNY" },
@@ -102,8 +102,7 @@ export default function PriceTable({
                 { col: "totalRM", label: "Total Value", sub: "RM" },
                 { col: "officeStock", label: "Office Stock" },
               ].map(h => (
-                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top group`}>
-                  <span className="block">{h.label}</span>
+              <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : "pl-3"} align-top group`}>                  <span className="block">{h.label}</span>
                   {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground group-hover:text-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
                 </th>
               ))}
