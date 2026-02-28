@@ -116,7 +116,7 @@ const Index = () => {
       />
 
       <NewProductPanel open={newProductOpen} onClose={() => setNewProductOpen(false)} rate={store.rate} onAdd={store.addNewProduct} />
-      <FullListPanel open={fullListOpen} onClose={() => setFullListOpen(false)} headers={store.fullListHeaders} data={store.fullListData} onImport={store.importFullList} onUpdate={store.updateFullListProduct} onClear={store.clearFullListProduct} rate={store.rate} />
+      <FullListPanel open={fullListOpen} onClose={() => setFullListOpen(false)} headers={store.fullListHeaders} data={store.fullListData} onImport={store.importFullList} onUpdate={store.updateFullListProduct} onClear={store.clearFullListProduct} onAddToMain={(name, cny) => store.addNewProduct(name, cny, 0)} rate={store.rate} />
       <OrderListPanel open={orderListOpen} onClose={() => setOrderListOpen(false)} data={store.data} overrideCNY={store.overrideCNY} overrideQty={store.overrideQty} rate={store.rate} onSelectProduct={(row) => { handleSelectProduct(row); setOrderListOpen(false); }} />
     </div>
   );
