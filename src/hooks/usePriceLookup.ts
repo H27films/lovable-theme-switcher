@@ -113,7 +113,7 @@ export function usePriceLookup() {
   const fetchFullListFromSupabase = async () => {
     try {
       const { data: rows, error } = await supabase
-        .from("InputFullTable")
+        .from("inputfulllist")
         .select("*");
 
       if (error) throw error;
@@ -449,11 +449,11 @@ export function usePriceLookup() {
 
     try {
       await supabase
-        .from("InputFullTable")
+        .from("inputfulllist")
         .update({
-          "New Price (CNY)": newCNYNum,
-          "New Price (RM)": parseFloat(newRM),
-          "Savings": parseFloat(savings),
+          "New Price (CNY)": String(newCNYNum),
+          "New Price (RM)": newRM,
+          "Savings": savings,
         })
         .eq("Product Name", productName);
     } catch (err) {
@@ -480,7 +480,7 @@ export function usePriceLookup() {
 
     try {
       await supabase
-        .from("InputFullTable")
+        .from("inputfulllist")
         .update({
           "New Price (CNY)": null,
           "New Price (RM)": null,
