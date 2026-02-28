@@ -80,7 +80,7 @@ export default function PriceTable({
   return (
     <div className={`w-full max-w-[760px] transition-all ${expanded ? "mt-12" : "mt-6"}`}>
       <div className="flex justify-between items-center mb-5">
-        <span className="label-uppercase pl-3 text-[11px]">{data.length} products</span>
+        <span className="label-uppercase">{data.length} products</span>
         <label className="minimal-btn cursor-pointer">
           Import Excel
           <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onClick={e => { (e.target as HTMLInputElement).value = ""; }} onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
@@ -102,8 +102,7 @@ export default function PriceTable({
                 { col: "totalRM", label: "Total Value", sub: "RM" },
                 { col: "officeStock", label: "Office Stock" },
               ].map(h => (
-              <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : "pl-3"} align-top group`}>                  <span className="block">{h.label}</span>
-                  {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground group-hover:text-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
+                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top group`}>                  {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground group-hover:text-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
                 </th>
               ))}
               <th></th>
