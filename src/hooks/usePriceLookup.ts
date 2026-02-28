@@ -283,6 +283,8 @@ export function usePriceLookup() {
       console.error("Supabase addFromFullList error:", err);
     }
   }, [data, overrideCNY, overrideQty, newProducts, persistData]);
+
+  const removeProduct = useCallback(async (name: string) => {
     const newData = data.filter(r => r.name !== name);
     const newOverride = { ...overrideCNY };
     delete newOverride[name];
