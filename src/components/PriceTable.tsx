@@ -48,9 +48,9 @@ export default function PriceTable({
   const tdStyle = useCallback((colIdx: number, rowName: string) => ({
     transition: "transform 0.2s ease, color 0.15s ease",
     transform: hoveredRow === rowName
-  ? (colIdx === 0 ? "translateX(0px) scale(1)" : `scale(${cellScales[colIdx]})`)
+  ? (colIdx === 0 ? "translateX(2px) scale(1)" : `scale(${cellScales[colIdx]})`)
   : "scale(1)",
-    transformOrigin: colIdx === 0 ? "0% center" : "center center",
+    transformOrigin: colIdx === 0 ? "10% center" : "center center",
     display: "inline-block" as const,
     whiteSpace: "nowrap" as const,
   }), [hoveredRow, cellScales]);
