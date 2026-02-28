@@ -38,8 +38,7 @@ export function usePriceLookup() {
         }
         const seen = new Map<string, ProductRow>();
         combined.forEach((r: ProductRow) => seen.set(r.name, r));
-        // Sort by Product Name alphabetically
-        const sortedData = [...seen.values()].sort((a, b) => 
+        const sortedData = [...seen.values()].sort((a, b) =>
           a.name.toLowerCase().localeCompare(b.name.toLowerCase())
         );
         setData(sortedData);
@@ -59,7 +58,6 @@ export function usePriceLookup() {
       setFullListData(JSON.parse(fd));
     }
 
-    // Then fetch from Supabase and override
     fetchFromSupabase();
     fetchFullListFromSupabase();
   }, []);
@@ -80,7 +78,6 @@ export function usePriceLookup() {
         officeStock: r["Office Stock"] ? String(r["Office Stock"]) : "0",
       }));
 
-      // Sort by Product Name alphabetically
       products.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
       const newOverrides: Record<string, string> = {};
@@ -100,15 +97,13 @@ export function usePriceLookup() {
       setOverrideCNY(newOverrides);
       setOverrideQty(newQtyMap);
 
-      // Also save to localStorage as backup
-      const np = new Set<string>();
       localStorage.setItem("priceLookupData", JSON.stringify({
         importedData: products,
         manualData: [],
         overrideCNY: newOverrides,
         overrideQty: newQtyMap
       }));
-      setNewProducts(np);
+      setNewProducts(new Set<string>());
 
     } catch (err) {
       console.error("Supabase fetch error:", err);
@@ -124,7 +119,6 @@ export function usePriceLookup() {
       if (error) throw error;
       if (!rows || rows.length === 0) return;
 
-      // Sort by Product Name alphabetically
       rows.sort((a: any, b: any) => {
         const aName = String(a["Product Name"] || "").toLowerCase();
         const bName = String(b["Product Name"] || "").toLowerCase();
@@ -144,7 +138,6 @@ export function usePriceLookup() {
       setFullListHeaders(headers);
       setFullListData(rowData);
 
-      // Also save to localStorage as backup
       localStorage.setItem("fullListHeaders", JSON.stringify(headers));
       localStorage.setItem("fullListData", JSON.stringify(rowData));
 
@@ -197,21 +190,18 @@ export function usePriceLookup() {
   };
 
   const saveData = useCallback(async () => {
-    // Save to localStorage
     persistData(data, overrideCNY, newProducts, overrideQty);
-    
-    // Save all products with prices to Supabase
+
     const savePromises = data.map(async (row) => {
       const cny = overrideCNY[row.name];
       const qty = overrideQty[row.name] || 0;
-      
       if (cny && !isNaN(parseFloat(cny))) {
         await saveToSupabase(row.name, cny, qty, row.oldPrice, rate);
       }
     });
-    
+
     await Promise.all(savePromises);
-    
+
     setSaveFlash(true);
     setTimeout(() => setSaveFlash(false), 2000);
   }, [data, overrideCNY, newProducts, overrideQty, persistData, rate]);
@@ -234,7 +224,6 @@ export function usePriceLookup() {
     setOverrideQty(newQtyMap);
     persistData(data, newOverride, newProducts, newQtyMap);
 
-    // Also save to Supabase
     const row = data.find(r => r.name === name);
     if (row) {
       saveToSupabase(name, storeCNY.toFixed(2), effectiveQty, row.oldPrice, rate);
@@ -249,8 +238,7 @@ export function usePriceLookup() {
     setOverrideCNY(newOverride);
     setOverrideQty(newQtyMap);
     persistData(data, newOverride, newProducts, newQtyMap);
-    
-    // Also clear from Supabase
+
     try {
       await supabase
         .from("Inputhalflist")
@@ -279,22 +267,53 @@ export function usePriceLookup() {
     persistData(newData, newOverride, np);
   }, [data, overrideCNY, newProducts, persistData]);
 
-  const addNewProduct = useCallback((name: string, finalCNY: number) => {
+  // Updated: now accepts qty so all fields go to Supabase immediately
+  const addNewProduct = useCallback(async (name: string, finalCNY: number, qty: number = 0) => {
     const finalRM = finalCNY / rate;
-    const newRow: ProductRow = { name, oldPrice: finalRM.toFixed(2), cnyPrice: finalCNY.toFixed(2), officeStock: "0" };
-    const newData = [...data, newRow];
-    
-    // Sort by Product Name alphabetically
-    newData.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-    
+    const totalValue = finalRM * (qty > 0 ? qty : 1);
+
+    const newRow: ProductRow = {
+      name,
+      oldPrice: finalRM.toFixed(2),
+      cnyPrice: finalCNY.toFixed(2),
+      officeStock: "0",
+      _isNew: true,
+    };
+
+    const newData = [...data, newRow].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+
     const newOverride = { ...overrideCNY, [name]: finalCNY.toFixed(2) };
+    const newQtyMap = { ...overrideQty, ...(qty > 0 ? { [name]: qty } : {}) };
     const np = new Set(newProducts);
     np.add(name);
+
     setData(newData);
     setOverrideCNY(newOverride);
+    setOverrideQty(newQtyMap);
     setNewProducts(np);
-    persistData(newData, newOverride, np);
-  }, [data, overrideCNY, newProducts, rate, persistData]);
+    persistData(newData, newOverride, np, newQtyMap);
+
+    // INSERT new row into Supabase immediately with all fields
+    try {
+      await supabase
+        .from("Inputhalflist")
+        .insert({
+          "Product Name": name,
+          "China Price (CNY)": finalCNY,
+          "Old Price (RM)": parseFloat(finalRM.toFixed(2)),
+          "New Price (CNY)": finalCNY,
+          "New Price (RM)": parseFloat(finalRM.toFixed(2)),
+          "Savings": 0,
+          "Order Qty": qty > 0 ? qty : null,
+          "Order Value (RM)": qty > 0 ? parseFloat(totalValue.toFixed(2)) : null,
+          "Office Stock": 0,
+        });
+    } catch (err) {
+      console.error("Supabase insert new product error:", err);
+    }
+  }, [data, overrideCNY, overrideQty, newProducts, rate, persistData]);
 
   const importExcel = useCallback((file: File) => {
     const reader = new FileReader();
@@ -323,10 +342,9 @@ export function usePriceLookup() {
           officeStock: String(vals[8] || "0").trim(),
         };
       }).filter(r => r.name);
-      
-      // Sort by Product Name alphabetically
+
       imported.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-      
+
       const np = new Set(newProducts);
       imported.forEach(r => np.delete(r.name));
       setData(imported);
@@ -377,29 +395,25 @@ export function usePriceLookup() {
     if (isNaN(newCNYNum)) return;
 
     const newRM = (newCNYNum / rate).toFixed(2);
-    
-    // Find the product in fullListData
     const productIndex = fullListData.findIndex(row => row[0] === productName);
     if (productIndex === -1) return;
-    
+
     const oldRM = fullListData[productIndex][1];
     const savings = (parseFloat(oldRM) - parseFloat(newRM)).toFixed(2);
 
-    // Update local data
     const updatedData = [...fullListData];
     updatedData[productIndex] = [
       productName,
       oldRM,
-      updatedData[productIndex][2], // Keep China Price
+      updatedData[productIndex][2],
       newCNYNum.toFixed(2),
       newRM,
       savings,
     ];
-    
+
     setFullListData(updatedData);
     localStorage.setItem("fullListData", JSON.stringify(updatedData));
 
-    // Save to Supabase
     try {
       await supabase
         .from("InputFullTable")
@@ -415,25 +429,22 @@ export function usePriceLookup() {
   }, [fullListData, rate]);
 
   const clearFullListProduct = useCallback(async (productName: string) => {
-    // Find the product in fullListData
     const productIndex = fullListData.findIndex(row => row[0] === productName);
     if (productIndex === -1) return;
 
-    // Update local data - clear New Price CNY, New Price RM, and Savings
     const updatedData = [...fullListData];
     updatedData[productIndex] = [
-      updatedData[productIndex][0], // Product Name
-      updatedData[productIndex][1], // Old Price RM
-      updatedData[productIndex][2], // China Price CNY
-      "", // Clear New Price CNY
-      "", // Clear New Price RM
-      "", // Clear Savings
+      updatedData[productIndex][0],
+      updatedData[productIndex][1],
+      updatedData[productIndex][2],
+      "",
+      "",
+      "",
     ];
-    
+
     setFullListData(updatedData);
     localStorage.setItem("fullListData", JSON.stringify(updatedData));
 
-    // Clear from Supabase
     try {
       await supabase
         .from("InputFullTable")
