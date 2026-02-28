@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { X } from "lucide-react";
+import { X, Upload } from "lucide-react";
 
 interface FullListPanelProps {
   open: boolean;
@@ -35,7 +35,6 @@ function fmtCNY(v: string) {
   return !isNaN(n) ? "¥ " + n.toFixed(2) : "—";
 }
 
-// Column format rules: index 1 = RM, index 2 = CNY, others with numbers stay plain
 function formatCell(value: string, colIndex: number): string {
   if (!value || value === "—") return "—";
   if (colIndex === 1) return fmtRM(value);
@@ -67,7 +66,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
 
   const handleRowClick = (row: string[]) => {
     setSelectedProduct(row);
-    setNewCNY(row[3] || ""); // Pre-fill with existing New Price CNY
+    setNewCNY(row[3] || "");
   };
 
   const handleCommit = () => {
@@ -78,101 +77,111 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
     }
   };
 
-  const calculatedNewRM = newCNY && !isNaN(parseFloat(newCNY)) 
-    ? (parseFloat(newCNY) / rate).toFixed(2) 
+  const calculatedNewRM = newCNY && !isNaN(parseFloat(newCNY))
+    ? (parseFloat(newCNY) / rate).toFixed(2)
     : "";
-  
+
   const calculatedSavings = selectedProduct && calculatedNewRM
     ? (parseFloat(selectedProduct[1]) - parseFloat(calculatedNewRM)).toFixed(2)
     : "";
 
   if (!open) return null;
 
-  // Sub-labels for columns
   const colSubs: Record<number, string> = { 1: "RM", 2: "CNY" };
 
   return (
     <>
       <div className="fixed inset-0 panel-overlay z-[200]" onClick={onClose} />
       <div className="fixed top-0 right-0 bottom-0 w-full max-w-[900px] panel-bg z-[201] flex flex-col">
+
+        {/* Header */}
         <div className="flex justify-between items-center px-10 py-8 border-b border-border flex-shrink-0">
-          <h2 className="text-sm font-light tracking-[0.15em] uppercase text-dim">Full Product List</h2>
+          <div>
+            <h2 className="text-sm font-light tracking-[0.15em] uppercase text-dim">Full Product List</h2>
+            <p className="text-[11px] text-muted-foreground mt-1">{data.length ? `${data.length} products` : "No products loaded"}</p>
+          </div>
           <div className="flex items-center gap-4">
-            <input type="text" className="minimal-input text-[13px] font-light py-1.5 w-[200px]" placeholder="Filter products..." value={search} onChange={e => setSearch(e.target.value)} />
+            <input
+              type="text"
+              className="minimal-input text-[13px] font-light py-1.5 w-[200px]"
+              placeholder="Filter products..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors"><X size={18} /></button>
           </div>
         </div>
-        <div className="px-10 py-5 border-b border-border flex-shrink-0 flex items-center gap-4">
-          <label className="minimal-btn cursor-pointer">
-            Import Excel
-            <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
-          </label>
-          <span className="text-[11px] text-muted-foreground">{data.length ? `${data.length} products` : "No file loaded"}</span>
-        </div>
+
+        {/* Table */}
         <div className="flex-1 overflow-y-auto px-10 pb-10 scrollbar-thin">
           {!filtered.length && !headers.length ? (
             <div className="text-center text-muted-foreground text-[13px] py-16 tracking-wider">Import an Excel file to view the full product list</div>
           ) : (
-            <table className="w-full border-collapse mt-6">
-              <thead>
-                <tr className="border-b border-border-active">
-                  {headers.map((h, i) => (
-                    <th key={i} className={`label-uppercase font-normal pb-3 pt-4 ${i > 0 ? "text-center" : "text-left"}`}>
-                      {h}
-                      {colSubs[i] && <><br /><span className="text-[9px] tracking-wider text-muted-foreground">{colSubs[i]}</span></>}
-                    </th>
-                  ))}
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((row, ri) => {
-                  const hasNewPrice = row[3] && parseFloat(row[3]) > 0; // Check if New Price CNY exists
-                  const savings = row[5] ? parseFloat(row[5]) : null;
-                  
-                  return (
-                    <tr
-                      key={ri}
-                      className="border-b border-border table-row-hover cursor-pointer"
-                      onClick={() => handleRowClick(row)}
-                      onMouseEnter={() => setHoveredRow(ri)}
-                      onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
-                    >
-                      {row.map((cell, ci) => {
-                        // Apply color to savings column (index 5)
-                        let colorClass = "text-dim";
-                        if (ci === 5 && savings !== null) {
-                          colorClass = savings > 0 ? "text-green" : savings < 0 ? "text-red" : "text-dim";
-                        }
-                        
-                        return (
-                          <td
-                            key={ci}
-                            className={`text-[13px] font-light ${colorClass} py-3.5 ${ci > 0 ? "text-center" : ""}`}
-                            onMouseEnter={() => setHoveredCol(ci)}
-                          >
-                            <span style={tdStyle(ci, ri)}>{formatCell(cell, ci)}</span>
-                          </td>
-                        );
-                      })}
-                      <td className="text-[13px] py-3.5 text-center w-8 min-w-8">
-                        {hasNewPrice && (
-                          <button 
-                            onClick={e => { 
-                              e.stopPropagation(); 
-                              onClear(row[0]); 
-                            }} 
-                            className="text-muted-foreground hover:text-red transition-colors"
-                          >
-                            <X size={12} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <>
+              <table className="w-full border-collapse mt-6">
+                <thead>
+                  <tr className="border-b border-border-active">
+                    {headers.map((h, i) => (
+                      <th key={i} className={`label-uppercase font-normal pb-3 pt-4 ${i > 0 ? "text-center" : "text-left"}`}>
+                        {h}
+                        {colSubs[i] && <><br /><span className="text-[9px] tracking-wider text-muted-foreground">{colSubs[i]}</span></>}
+                      </th>
+                    ))}
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((row, ri) => {
+                    const hasNewPrice = row[3] && parseFloat(row[3]) > 0;
+                    const savings = row[5] ? parseFloat(row[5]) : null;
+
+                    return (
+                      <tr
+                        key={ri}
+                        className="border-b border-border table-row-hover cursor-pointer"
+                        onClick={() => handleRowClick(row)}
+                        onMouseEnter={() => setHoveredRow(ri)}
+                        onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
+                      >
+                        {row.map((cell, ci) => {
+                          let colorClass = "text-dim";
+                          if (ci === 5 && savings !== null) {
+                            colorClass = savings > 0 ? "text-green" : savings < 0 ? "text-red" : "text-dim";
+                          }
+                          return (
+                            <td
+                              key={ci}
+                              className={`text-[13px] font-light ${colorClass} py-3.5 ${ci > 0 ? "text-center" : ""}`}
+                              onMouseEnter={() => setHoveredCol(ci)}
+                            >
+                              <span style={tdStyle(ci, ri)}>{formatCell(cell, ci)}</span>
+                            </td>
+                          );
+                        })}
+                        <td className="text-[13px] py-3.5 text-center w-8 min-w-8">
+                          {hasNewPrice && (
+                            <button
+                              onClick={e => { e.stopPropagation(); onClear(row[0]); }}
+                              className="text-muted-foreground hover:text-red transition-colors"
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Import at bottom */}
+              <div className="mt-6 pt-2">
+                <label className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors flex items-center gap-1.5">
+                  Import Excel <Upload size={11} className="-mt-0.5" />
+                  <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
+                </label>
+              </div>
+            </>
           )}
         </div>
 
@@ -181,13 +190,11 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
           <div className="fixed inset-0 panel-overlay z-[300] flex items-center justify-center" onClick={() => setSelectedProduct(null)}>
             <div className="surface-box p-9 max-w-[420px] w-[90%]" onClick={e => e.stopPropagation()}>
               <h3 className="text-sm font-light tracking-[0.15em] uppercase text-dim mb-6">Edit Product</h3>
-              
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Product Name</label>
                   <div className="text-[15px] font-light text-foreground">{selectedProduct[0]}</div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Old Price</label>
@@ -198,7 +205,6 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                     <div className="text-[15px] font-light text-dim">¥ {parseFloat(selectedProduct[2]).toFixed(2)}</div>
                   </div>
                 </div>
-
                 <div>
                   <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">New Price (CNY)</label>
                   <input
@@ -211,29 +217,24 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                     placeholder="Enter new CNY price"
                   />
                 </div>
-
                 {calculatedNewRM && (
                   <>
                     <div>
                       <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">New Price (RM)</label>
                       <div className="text-[15px] font-light text-foreground">RM {calculatedNewRM}</div>
                     </div>
-
                     <div>
                       <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Savings</label>
-                      <div className={`text-[15px] font-light ${parseFloat(calculatedSavings) > 0 ? 'text-green' : parseFloat(calculatedSavings) < 0 ? 'text-red' : 'text-foreground'}`}>
+                      <div className={`text-[15px] font-light ${parseFloat(calculatedSavings) > 0 ? "text-green" : parseFloat(calculatedSavings) < 0 ? "text-red" : "text-foreground"}`}>
                         RM {calculatedSavings}
                       </div>
                     </div>
                   </>
                 )}
               </div>
-
               <div className="flex gap-2.5 justify-end">
                 <button onClick={() => setSelectedProduct(null)} className="minimal-btn">Cancel</button>
-                <button onClick={handleCommit} className="minimal-btn !border-foreground !text-foreground hover:!bg-foreground hover:!text-background" disabled={!newCNY || isNaN(parseFloat(newCNY))}>
-                  Save
-                </button>
+                <button onClick={handleCommit} className="minimal-btn !border-foreground !text-foreground" disabled={!newCNY || isNaN(parseFloat(newCNY))}>Save</button>
               </div>
             </div>
           </div>
