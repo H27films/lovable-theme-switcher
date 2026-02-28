@@ -255,17 +255,25 @@ export function usePriceLookup() {
     }
   }, [overrideCNY, overrideQty, data, newProducts, persistData]);
 
-  const removeProduct = useCallback((name: string) => {
+  const removeProduct = useCallback(async (name: string) => {
     const newData = data.filter(r => r.name !== name);
     const newOverride = { ...overrideCNY };
     delete newOverride[name];
+    const newQtyMap = { ...overrideQty };
+    delete newQtyMap[name];
     const np = new Set(newProducts);
     np.delete(name);
     setData(newData);
     setOverrideCNY(newOverride);
+    setOverrideQty(newQtyMap);
     setNewProducts(np);
-    persistData(newData, newOverride, np);
-  }, [data, overrideCNY, newProducts, persistData]);
+    persistData(newData, newOverride, np, newQtyMap);
+    try {
+      await supabase.from("Inputhalflist").delete().eq("Product Name", name);
+    } catch (err) {
+      console.error("Supabase delete error:", err);
+    }
+  }, [data, overrideCNY, overrideQty, newProducts, persistData]);
 
   // Updated: now accepts qty so all fields go to Supabase immediately
   const addNewProduct = useCallback(async (name: string, finalCNY: number, qty: number = 0) => {
