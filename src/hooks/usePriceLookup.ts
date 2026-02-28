@@ -295,20 +295,16 @@ export function usePriceLookup() {
     setNewProducts(np);
     persistData(newData, newOverride, np, newQtyMap);
 
-    // INSERT new row into Supabase immediately with all fields
+    // INSERT new row into Supabase — only the 4 price columns, leave Old Price/China Price/Savings untouched
     try {
       await supabase
         .from("Inputhalflist")
         .insert({
           "Product Name": name,
-          "China Price (CNY)": finalCNY,
-          "Old Price (RM)": parseFloat(finalRM.toFixed(2)),
           "New Price (CNY)": finalCNY,
           "New Price (RM)": parseFloat(finalRM.toFixed(2)),
-          "Savings": 0,
           "Order Qty": qty > 0 ? qty : null,
           "Order Value (RM)": qty > 0 ? parseFloat(totalValue.toFixed(2)) : null,
-          "Office Stock": 0,
         });
     } catch (err) {
       console.error("Supabase insert new product error:", err);
