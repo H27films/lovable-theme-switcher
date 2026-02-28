@@ -57,18 +57,19 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
             />
           </div>
 
-          {/* CNY Price input with live RM conversion inline */}
+          {/* CNY Price input — inline RM conversion fixed by overriding w-full with inline style */}
           <div className="surface-box p-5 mb-0">
             <span className="text-[13px] font-light tracking-wider uppercase text-dim block mb-4">
               New Price CNY
             </span>
-            {/* Input row — flex with min-w-0 so input shrinks and RM stays visible */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">CNY ¥</span>
+              {/* Override the w-full that minimal-input applies so the RM value fits on the same line */}
               <input
                 type="text"
                 inputMode="decimal"
-                className="minimal-input text-[22px] font-light py-1 min-w-0 w-0 flex-1"
+                className="minimal-input text-[22px] font-light py-1"
+                style={{ width: "auto", flex: 1 }}
                 placeholder="0.00"
                 value={cny}
                 onChange={e => setCny(e.target.value)}
@@ -100,38 +101,45 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
             <div className="text-xs text-muted-foreground mt-1.5">Number of units</div>
           </div>
 
-          {/* Price boxes — shaded like main table result cards */}
+          {/* Preview price boxes — bordered container with gap-px so the border colour shows between cards */}
           {cnyVal > 0 && (
             <div className="mb-7">
               <div className="label-uppercase mb-3">Preview</div>
-              {/* Outer container with border + price-grid-gap background — same pattern as ResultCard */}
-              <div className="border border-border" style={{ background: "hsl(var(--card))" }}>
-                <div className={`grid ${qtyVal > 0 ? "grid-cols-4" : "grid-cols-2"} gap-px price-grid-gap`}>
-                  <div className="price-box-highlight p-4">
-                    <span className="label-uppercase block mb-2">New Price CNY</span>
-                    <span className="value-display text-[17px]">¥ {cnyVal.toFixed(2)}</span>
+              <div
+                className={`grid gap-px price-grid-gap ${qtyVal > 0 ? "grid-cols-5" : "grid-cols-2"}`}
+                style={{ border: "1px solid hsl(var(--border-active))" }}
+              >
+                <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                  <span className="label-uppercase block mb-2">New Price CNY</span>
+                  <span className="value-display text-[17px]">¥ {cnyVal.toFixed(2)}</span>
+                  <div className="currency-label">CNY</div>
+                </div>
+                <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                  <span className="label-uppercase block mb-2">New Price RM</span>
+                  <span className="value-display text-[17px]">RM {unitRM.toFixed(2)}</span>
+                  <div className="currency-label">1 RM = ¥{rate.toFixed(2)}</div>
+                </div>
+                {qtyVal > 0 && (
+                  <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                    <span className="label-uppercase block mb-2">Quantity</span>
+                    <span className="value-display text-[17px]">{qtyVal}</span>
+                    <div className="currency-label">Units</div>
+                  </div>
+                )}
+                {qtyVal > 0 && (
+                  <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                    <span className="label-uppercase block mb-2">Total Value RM</span>
+                    <span className="value-display text-[17px]">RM {totalRM.toFixed(2)}</span>
+                    <div className="currency-label">RM</div>
+                  </div>
+                )}
+                {qtyVal > 0 && (
+                  <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                    <span className="label-uppercase block mb-2">Total Value CNY</span>
+                    <span className="value-display text-[17px]">¥ {(cnyVal * qtyVal).toFixed(2)}</span>
                     <div className="currency-label">CNY</div>
                   </div>
-                  <div className="price-box-highlight p-4">
-                    <span className="label-uppercase block mb-2">New Price RM</span>
-                    <span className="value-display text-[17px]">RM {unitRM.toFixed(2)}</span>
-                    <div className="currency-label">1 RM = ¥{rate.toFixed(2)}</div>
-                  </div>
-                  {qtyVal > 0 && (
-                    <div className="price-box-highlight p-4">
-                      <span className="label-uppercase block mb-2">Quantity</span>
-                      <span className="value-display text-[17px]">{qtyVal}</span>
-                      <div className="currency-label">Units</div>
-                    </div>
-                  )}
-                  {qtyVal > 0 && (
-                    <div className="price-box-highlight p-4">
-                      <span className="label-uppercase block mb-2">Total Value RM</span>
-                      <span className="value-display text-[17px]">RM {totalRM.toFixed(2)}</span>
-                      <div className="currency-label">RM</div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           )}
