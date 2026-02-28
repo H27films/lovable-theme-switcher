@@ -92,6 +92,7 @@ const Index = () => {
           getSavings={store.getSavings}
           onCommit={handleCommit}
           onDone={handleDone}
+          onDelete={store.removeProduct}
         />
       </div>
 
