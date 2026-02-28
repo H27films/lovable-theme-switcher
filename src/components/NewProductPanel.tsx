@@ -64,19 +64,19 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
             </span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">CNY ¥</span>
-              {/* Override the w-full that minimal-input applies so the RM value fits on the same line */}
+              {/* Input capped at 160px so RM conversion sits right next to the number, not at the far right */}
               <input
                 type="text"
                 inputMode="decimal"
                 className="minimal-input text-[22px] font-light py-1"
-                style={{ width: "auto", flex: 1 }}
+                style={{ width: "160px", flex: "none" }}
                 placeholder="0.00"
                 value={cny}
                 onChange={e => setCny(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleAdd()}
               />
               {liveRM && (
-                <span className="text-[15px] font-light text-dim whitespace-nowrap flex-shrink-0">{liveRM}</span>
+                <span className="text-[18px] font-light text-dim whitespace-nowrap flex-shrink-0">{liveRM}</span>
               )}
             </div>
             <div className="text-[13px] text-dim mt-2.5">
