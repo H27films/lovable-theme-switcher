@@ -97,6 +97,54 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Sand / Taupe theme */
+  .sand {
+    --background: 36 25% 88%;
+    --foreground: 30 15% 18%;
+
+    --card: 34 22% 82%;
+    --card-foreground: 30 15% 18%;
+
+    --popover: 34 22% 85%;
+    --popover-foreground: 30 15% 18%;
+
+    --primary: 30 15% 18%;
+    --primary-foreground: 36 25% 88%;
+
+    --secondary: 34 20% 78%;
+    --secondary-foreground: 30 15% 25%;
+
+    --muted: 34 20% 80%;
+    --muted-foreground: 30 12% 45%;
+
+    --accent: 33 18% 74%;
+    --accent-foreground: 30 15% 18%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 33 18% 76%;
+    --input: 33 18% 76%;
+    --ring: 30 15% 30%;
+
+    --radius: 0rem;
+
+    --surface: 34 22% 84%;
+    --border-active: 28 20% 62%;
+    --dim: 30 12% 42%;
+    --green: 150 35% 38%;
+    --red: 0 60% 50%;
+
+    --sidebar-background: 36 25% 86%;
+    --sidebar-foreground: 30 15% 25%;
+    --sidebar-primary: 30 15% 18%;
+    --sidebar-primary-foreground: 36 25% 88%;
+    --sidebar-accent: 34 20% 78%;
+    --sidebar-accent-foreground: 30 15% 18%;
+    --sidebar-border: 33 18% 74%;
+    --sidebar-ring: 28 20% 55%;
+  }
 }
 
 @layer base {
