@@ -9,7 +9,7 @@ interface FullListPanelProps {
   onImport: (file: File) => void;
   onUpdate: (productName: string, newCNY: string) => void;
   onClear: (productName: string) => void;
-  onAddToMain: (name: string, cny: number) => void;
+  onAddToMain: (name: string, oldPriceRM: number, cnyPrice: number) => void;
   rate: number;
 }
 
@@ -53,6 +53,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
   const [selectedProduct, setSelectedProduct] = useState<string[] | null>(null);
   const [newCNY, setNewCNY] = useState("");
   const [addedToMain, setAddedToMain] = useState(false);
+  const [showAddConfirm, setShowAddConfirm] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const totalCols = headers.length || 1;
@@ -73,6 +74,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
     setSelectedProduct(row);
     setNewCNY(row[3] || "");
     setAddedToMain(false);
+    setShowAddConfirm(false);
   };
 
   const handleCommit = () => {
@@ -85,9 +87,11 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
 
   const handleAddToMain = () => {
     if (!selectedProduct) return;
-    const cny = parseFloat(selectedProduct[2]) || 0;
-    onAddToMain(selectedProduct[0], cny);
+    const oldPriceRM = parseFloat(selectedProduct[1]) || 0;
+    const cnyPrice = parseFloat(selectedProduct[2]) || 0;
+    onAddToMain(selectedProduct[0], oldPriceRM, cnyPrice);
     setAddedToMain(true);
+    setShowAddConfirm(false);
   };
 
   const calculatedNewRM = newCNY && !isNaN(parseFloat(newCNY))
@@ -203,14 +207,28 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
           <div className="fixed inset-0 panel-overlay z-[300] flex items-center justify-center" onClick={() => setSelectedProduct(null)}>
             <div className="surface-box p-9 max-w-[420px] w-[90%] relative" onClick={e => e.stopPropagation()}>
 
-              {/* + Add to Main Table button — top right */}
+              {/* + Add to Main Table button — moved down from top edge */}
               <button
-                onClick={handleAddToMain}
-                className={`absolute top-5 right-5 transition-colors ${addedToMain ? "text-green" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => !addedToMain && setShowAddConfirm(true)}
+                className={`absolute top-9 right-9 transition-colors ${addedToMain ? "text-green" : "text-muted-foreground hover:text-foreground"}`}
                 title="Add to main table"
               >
                 {addedToMain ? <span className="text-[11px] tracking-wider uppercase">✓ Added</span> : <Plus size={18} />}
               </button>
+
+              {/* Add to main table confirmation */}
+              {showAddConfirm && (
+                <div className="fixed inset-0 panel-overlay z-[400] flex items-center justify-center" onClick={() => setShowAddConfirm(false)}>
+                  <div className="surface-box p-9 max-w-[360px] w-[90%] text-center" onClick={e => e.stopPropagation()}>
+                    <p className="text-[13px] font-light text-dim mb-2">Add this product to the main table?</p>
+                    <p className="text-base font-light text-foreground mb-7">{selectedProduct?.[0]}</p>
+                    <div className="flex gap-2.5 justify-center">
+                      <button onClick={handleAddToMain} className="minimal-btn !border-foreground !text-foreground">Add</button>
+                      <button onClick={() => setShowAddConfirm(false)} className="minimal-btn">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <h3 className="text-sm font-light tracking-[0.15em] uppercase text-dim mb-6">Edit Product</h3>
               <div className="space-y-4 mb-6">
