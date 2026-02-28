@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { X, Upload } from "lucide-react";
+import { X, Upload, Plus } from "lucide-react";
 
 interface FullListPanelProps {
   open: boolean;
@@ -9,10 +9,9 @@ interface FullListPanelProps {
   onImport: (file: File) => void;
   onUpdate: (productName: string, newCNY: string) => void;
   onClear: (productName: string) => void;
+  onAddToMain: (name: string, cny: number) => void;
   rate: number;
 }
-
-const TOTAL_COLS_MAX = 10;
 
 function getCellScales(hoveredCol: number | null, totalCols: number): number[] {
   if (hoveredCol === null) return Array(totalCols).fill(1);
@@ -42,12 +41,18 @@ function formatCell(value: string, colIndex: number): string {
   return value;
 }
 
-export default function FullListPanel({ open, onClose, headers, data, onImport, onUpdate, onClear, rate }: FullListPanelProps) {
+// Strip "(RM)", "(CNY)" etc from header labels
+function cleanHeader(h: string): string {
+  return h.replace(/\s*\(RM\)|\s*\(CNY\)/gi, "").trim();
+}
+
+export default function FullListPanel({ open, onClose, headers, data, onImport, onUpdate, onClear, onAddToMain, rate }: FullListPanelProps) {
   const [search, setSearch] = useState("");
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string[] | null>(null);
   const [newCNY, setNewCNY] = useState("");
+  const [addedToMain, setAddedToMain] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const totalCols = headers.length || 1;
@@ -67,6 +72,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
   const handleRowClick = (row: string[]) => {
     setSelectedProduct(row);
     setNewCNY(row[3] || "");
+    setAddedToMain(false);
   };
 
   const handleCommit = () => {
@@ -75,6 +81,13 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
       setSelectedProduct(null);
       setNewCNY("");
     }
+  };
+
+  const handleAddToMain = () => {
+    if (!selectedProduct) return;
+    const cny = parseFloat(selectedProduct[2]) || 0;
+    onAddToMain(selectedProduct[0], cny);
+    setAddedToMain(true);
   };
 
   const calculatedNewRM = newCNY && !isNaN(parseFloat(newCNY))
@@ -123,7 +136,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                   <tr className="border-b border-border-active">
                     {headers.map((h, i) => (
                       <th key={i} className={`label-uppercase font-normal pb-3 pt-4 ${i > 0 ? "text-center" : "text-left"}`}>
-                        {h}
+                        {cleanHeader(h)}
                         {colSubs[i] && <><br /><span className="text-[9px] tracking-wider text-muted-foreground">{colSubs[i]}</span></>}
                       </th>
                     ))}
@@ -188,7 +201,17 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
         {/* Edit Product Popup */}
         {selectedProduct && (
           <div className="fixed inset-0 panel-overlay z-[300] flex items-center justify-center" onClick={() => setSelectedProduct(null)}>
-            <div className="surface-box p-9 max-w-[420px] w-[90%]" onClick={e => e.stopPropagation()}>
+            <div className="surface-box p-9 max-w-[420px] w-[90%] relative" onClick={e => e.stopPropagation()}>
+
+              {/* + Add to Main Table button — top right */}
+              <button
+                onClick={handleAddToMain}
+                className={`absolute top-5 right-5 transition-colors ${addedToMain ? "text-green" : "text-muted-foreground hover:text-foreground"}`}
+                title="Add to main table"
+              >
+                {addedToMain ? <span className="text-[11px] tracking-wider uppercase">✓ Added</span> : <Plus size={18} />}
+              </button>
+
               <h3 className="text-sm font-light tracking-[0.15em] uppercase text-dim mb-6">Edit Product</h3>
               <div className="space-y-4 mb-6">
                 <div>
