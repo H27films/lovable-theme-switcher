@@ -69,7 +69,7 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
                 type="text"
                 inputMode="decimal"
                 className="minimal-input text-[22px] font-light py-1"
-                style={{ width: "360px", flex: "none" }}
+                style={{ width: "160px", flex: "none" }}
                 placeholder="0.00"
                 value={cny}
                 onChange={e => setCny(e.target.value)}
@@ -105,36 +105,33 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
           {cnyVal > 0 && (
             <div className="mb-7">
               <div className="label-uppercase mb-3">Preview</div>
-              <div
-                className={`grid gap-px price-grid-gap ${qtyVal > 0 ? "grid-cols-5" : "grid-cols-2"}`}
-                style={{ border: "1px solid hsl(var(--border-active))" }}
-              >
-                <div style={{ background: "hsl(var(--card))" }} className="p-4">
+              <div className={`grid gap-px price-grid-gap ${qtyVal > 0 ? "grid-cols-5" : "grid-cols-2"}`}>
+                <div className="price-box">
                   <span className="label-uppercase block mb-2">New Price CNY</span>
                   <span className="value-display text-[17px]">¥ {cnyVal.toFixed(2)}</span>
                   <div className="currency-label">CNY</div>
                 </div>
-                <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                <div className="price-box">
                   <span className="label-uppercase block mb-2">New Price RM</span>
                   <span className="value-display text-[17px]">RM {unitRM.toFixed(2)}</span>
                   <div className="currency-label">1 RM = ¥{rate.toFixed(2)}</div>
                 </div>
                 {qtyVal > 0 && (
-                  <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                  <div className="price-box">
                     <span className="label-uppercase block mb-2">Quantity</span>
                     <span className="value-display text-[17px]">{qtyVal}</span>
                     <div className="currency-label">Units</div>
                   </div>
                 )}
                 {qtyVal > 0 && (
-                  <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                  <div className="price-box">
                     <span className="label-uppercase block mb-2">Total Value RM</span>
                     <span className="value-display text-[17px]">RM {totalRM.toFixed(2)}</span>
                     <div className="currency-label">RM</div>
                   </div>
                 )}
                 {qtyVal > 0 && (
-                  <div style={{ background: "hsl(var(--card))" }} className="p-4">
+                  <div className="price-box">
                     <span className="label-uppercase block mb-2">Total Value CNY</span>
                     <span className="value-display text-[17px]">¥ {(cnyVal * qtyVal).toFixed(2)}</span>
                     <div className="currency-label">CNY</div>
