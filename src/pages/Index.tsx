@@ -7,7 +7,8 @@ import ResultCard from "@/components/ResultCard";
 import PriceTable from "@/components/PriceTable";
 import NewProductPanel from "@/components/NewProductPanel";
 import FullListPanel from "@/components/FullListPanel";
-import { Lock, Plus, ArrowRight } from "lucide-react";
+import OrderListPanel from "@/components/OrderListPanel";
+import { Lock, Plus, ArrowRight, FileText } from "lucide-react";
 
 const Index = () => {
   const { theme, toggle } = useTheme();
@@ -17,6 +18,7 @@ const Index = () => {
   const [rateInput, setRateInput] = useState("");
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [fullListOpen, setFullListOpen] = useState(false);
+  const [orderListOpen, setOrderListOpen] = useState(false);
 
   const handleSelectProduct = useCallback((row: ProductRow) => {
     setSelectedRow(row);
@@ -75,6 +77,7 @@ const Index = () => {
         <div className="flex flex-col items-end gap-2.5 mt-2">
           <span className="nav-link" onClick={() => setNewProductOpen(true)}>New Product &nbsp;<Plus size={13} className="inline -mt-0.5" /></span>
           <span className="nav-link" onClick={() => setFullListOpen(true)}>Full Product List &nbsp;<ArrowRight size={13} className="inline -mt-0.5" /></span>
+          <span className="nav-link" onClick={() => setOrderListOpen(true)}>Order List &nbsp;<FileText size={13} className="inline -mt-0.5" /></span>
           <span className={`nav-link ${store.saveFlash ? "!text-green" : ""}`} onClick={store.saveData}>
             {store.saveFlash ? "✓ Saved" : "Save"} &nbsp;<Lock size={13} className="inline -mt-0.5" />
           </span>
@@ -114,6 +117,7 @@ const Index = () => {
 
       <NewProductPanel open={newProductOpen} onClose={() => setNewProductOpen(false)} rate={store.rate} onAdd={store.addNewProduct} />
       <FullListPanel open={fullListOpen} onClose={() => setFullListOpen(false)} headers={store.fullListHeaders} data={store.fullListData} onImport={store.importFullList} onUpdate={store.updateFullListProduct} onClear={store.clearFullListProduct} rate={store.rate} />
+      <OrderListPanel open={orderListOpen} onClose={() => setOrderListOpen(false)} data={store.data} overrideCNY={store.overrideCNY} overrideQty={store.overrideQty} rate={store.rate} />
     </div>
   );
 };
