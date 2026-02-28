@@ -11,7 +11,7 @@ import OrderListPanel from "@/components/OrderListPanel";
 import { Lock, Plus, ArrowRight, FileText } from "lucide-react";
 
 const Index = () => {
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, font, cycleFont } = useTheme();
   const store = usePriceLookup();
   const [selectedRow, setSelectedRow] = useState<ProductRow | null>(null);
   const [editingRate, setEditingRate] = useState(false);
@@ -48,7 +48,7 @@ const Index = () => {
             <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim">
               Boudoir Product Database
             </h1>
-            <ThemeToggle theme={theme} toggle={toggle} />
+            <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
           </div>
           <p className="text-[28px] font-light tracking-tight">Price Lookup</p>
           <p className="text-2xl font-light tracking-tight text-foreground mt-1">
