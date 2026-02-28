@@ -7,7 +7,7 @@ import ResultCard from "@/components/ResultCard";
 import PriceTable from "@/components/PriceTable";
 import NewProductPanel from "@/components/NewProductPanel";
 import FullListPanel from "@/components/FullListPanel";
-import { Download, Lock, Plus, ArrowRight } from "lucide-react";
+import { Lock, Plus, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const { theme, toggle } = useTheme();
@@ -78,7 +78,6 @@ const Index = () => {
           <span className={`nav-link ${store.saveFlash ? "!text-green" : ""}`} onClick={store.saveData}>
             {store.saveFlash ? "✓ Saved" : "Save"} &nbsp;<Lock size={13} className="inline -mt-0.5" />
           </span>
-          <span className="nav-link" onClick={store.exportExcel}>Export &nbsp;<Download size={13} className="inline -mt-0.5" /></span>
         </div>
       </div>
 
@@ -108,6 +107,7 @@ const Index = () => {
         onSort={store.sortData}
         onImport={store.importExcel}
         onClearAll={store.clearAllData}
+        onExport={store.exportExcel}
         expanded={!!selectedRow}
       />
 
