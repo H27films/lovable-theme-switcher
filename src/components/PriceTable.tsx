@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { type ProductRow } from "@/hooks/usePriceLookup";
-import { X } from "lucide-react";
+import { X, Download } from "lucide-react";
 
 interface PriceTableProps {
   data: ProductRow[];
@@ -14,6 +14,7 @@ interface PriceTableProps {
   onSort: (col: string, dir: number) => void;
   onImport: (file: File) => void;
   onClearAll: () => void;
+  onExport: () => void;
   expanded: boolean;
 }
 
@@ -22,7 +23,7 @@ const TOTAL_COLS = 10;
 function getCellScales(hoveredCol: number | null): number[] {
   if (hoveredCol === null) return Array(TOTAL_COLS).fill(1);
   return Array.from({ length: TOTAL_COLS }, (_, i) => {
-    if (i === 0) return 1.0; // No scaling on product name column
+    if (i === 0) return 1.0;
     const dist = Math.abs(i - hoveredCol);
     if (dist === 0) return 1.12;
     if (dist === 1) return 1.06;
@@ -33,7 +34,7 @@ function getCellScales(hoveredCol: number | null): number[] {
 
 export default function PriceTable({
   data, rate, overrideCNY, overrideQty, newProducts, onRowClick, onClearPrice,
-  onRemoveProduct, onSort, onImport, onClearAll, expanded,
+  onRemoveProduct, onSort, onImport, onClearAll, onExport, expanded,
 }: PriceTableProps) {
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState(1);
@@ -174,13 +175,15 @@ export default function PriceTable({
         </table>
       </div>
 
-      <div className="text-right mt-6 pb-2">
+      <div className="flex justify-between items-center mt-6 pb-2">
+        <span onClick={onExport} className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors flex items-center gap-1.5">
+          Export <Download size={11} className="inline -mt-0.5" />
+        </span>
         <span onClick={() => { if (confirm("Clear all saved data?")) onClearAll(); }} className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors">
           Reset saved data
         </span>
       </div>
 
-      {/* Confirm remove popup */}
       {confirmName && (
         <div className="fixed inset-0 panel-overlay z-[300] flex items-center justify-center" onClick={() => setConfirmName(null)}>
           <div className="surface-box p-9 max-w-[360px] w-[90%] text-center" onClick={e => e.stopPropagation()}>
