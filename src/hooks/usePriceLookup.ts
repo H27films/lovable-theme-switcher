@@ -112,8 +112,8 @@ export function usePriceLookup() {
 
   const fetchFullListFromSupabase = async () => {
     try {
-      const { data: rows, error } = await supabase
-        .from("inputfulllist")
+      const { data: rows, error } = await (supabase as any)
+        .from("InputFullTable")
         .select("*");
 
       if (error) throw error;
@@ -448,8 +448,8 @@ export function usePriceLookup() {
     localStorage.setItem("fullListData", JSON.stringify(updatedData));
 
     try {
-      await supabase
-        .from("inputfulllist")
+      await (supabase as any)
+        .from("InputFullTable")
         .update({
           "New Price (CNY)": String(newCNYNum),
           "New Price (RM)": newRM,
@@ -479,8 +479,8 @@ export function usePriceLookup() {
     localStorage.setItem("fullListData", JSON.stringify(updatedData));
 
     try {
-      await supabase
-        .from("inputfulllist")
+      await (supabase as any)
+        .from("InputFullTable")
         .update({
           "New Price (CNY)": null,
           "New Price (RM)": null,
