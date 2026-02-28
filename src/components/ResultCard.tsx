@@ -10,14 +10,16 @@ interface ResultCardProps {
   getSavings: (oldRM: string, newRM: string) => string | null;
   onCommit: (name: string, cnyValue: string, mode: "unit" | "bundle", bundleQty: number, delivery: number, qty: number) => void;
   onDone: () => void;
+  onDelete: (name: string) => void;
 }
 
-export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onCommit, onDone }: ResultCardProps) {
+export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onCommit, onDone, onDelete }: ResultCardProps) {
   const [priceMode, setPriceMode] = useState<"unit" | "bundle">("unit");
   const [newPriceInput, setNewPriceInput] = useState("");
   const [qty, setQty] = useState("");
   const [bundleQty, setBundleQty] = useState("");
   const [committed, setCommitted] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (row) {
@@ -27,6 +29,7 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
       setBundleQty("");
       setPriceMode("unit");
       setCommitted(false);
+      setShowDeleteConfirm(false);
     }
   }, [row?.name]);
 
@@ -129,13 +132,13 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground whitespace-nowrap">CNY ¥</span>
           <input
-           type="text"
-           inputMode="decimal"
-           className="minimal-input text-[22px] font-light py-1"
-           placeholder="0.00"
-           value={newPriceInput}
-           onChange={e => { setNewPriceInput(e.target.value); setCommitted(false); }}
-          onKeyDown={e => e.key === "Enter" && handleCommit()}
+            type="text"
+            inputMode="decimal"
+            className="minimal-input text-[22px] font-light py-1"
+            placeholder="0.00"
+            value={newPriceInput}
+            onChange={e => { setNewPriceInput(e.target.value); setCommitted(false); }}
+            onKeyDown={e => e.key === "Enter" && handleCommit()}
           />
           <span className="text-[15px] font-light text-dim whitespace-nowrap">{liveRM}</span>
           <button onClick={handleCommit} className={`minimal-btn h-11 flex-shrink-0 ${committed ? "!border-green !text-green" : ""}`}>
@@ -145,20 +148,20 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
         <div className="text-[13px] text-dim mt-2.5">
           {newPriceInput ? `¥${parseFloat(newPriceInput).toFixed(2)} ÷ ${rate} = RM ${(parseFloat(newPriceInput) / rate).toFixed(2)}` : "Enter CNY price — RM and Savings will calculate automatically"}
         </div>
-      
       </div>
 
       {/* Quantity input (optional) */}
       <div className="surface-box border-t-0 p-5 pb-7">
         <span className="label-uppercase block mb-2.5">Quantity <span className="text-muted-foreground">(optional)</span></span>
-      <input type="number" className="minimal-input text-base font-light py-1" placeholder="0" step="1" min="1" value={qty} onChange={e => { setQty(e.target.value); setBundleQty(e.target.value); }} />        <div className="text-xs text-muted-foreground mt-1.5">Number of units</div>
+        <input type="number" className="minimal-input text-base font-light py-1" placeholder="0" step="1" min="1" value={qty} onChange={e => { setQty(e.target.value); setBundleQty(e.target.value); }} />
+        <div className="text-xs text-muted-foreground mt-1.5">Number of units</div>
       </div>
 
       {/* Unit result with optional Total Value */}
       {(showUnitResult || hasQty) && (
         <div className="border border-border border-t-0 p-0" style={{ background: "hsl(var(--card))" }}>
-         <div className={`grid ${hasQty ? "grid-cols-5" : "grid-cols-3"} gap-px price-grid-gap`}>            
-           <div className="price-box-highlight p-4">
+          <div className={`grid ${hasQty ? "grid-cols-5" : "grid-cols-3"} gap-px price-grid-gap`}>
+            <div className="price-box-highlight p-4">
               <span className="label-uppercase block mb-2">Unit Cost CNY</span>
               <span className="value-display text-[17px]">{vals.cnyDisplay}</span>
               <div className="currency-label">CNY</div>
@@ -174,11 +177,11 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
               <div className="currency-label">RM</div>
             </div>
             {hasQty && (
-            <div className="price-box-highlight p-4">
-             <span className="label-uppercase block mb-2">Total Value RM</span>
-             <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
-             <div className="currency-label">RM</div>
-            </div>
+              <div className="price-box-highlight p-4">
+                <span className="label-uppercase block mb-2">Total Value RM</span>
+                <span className="value-display text-[17px]">{vals.totalRMDisplay}</span>
+                <div className="currency-label">RM</div>
+              </div>
             )}
             {hasQty && (
               <div className="price-box-highlight p-4">
@@ -187,6 +190,33 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
                 <div className="currency-label">CNY</div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete product — bottom right */}
+      <div className="flex justify-end mt-4">
+        <span
+          onClick={() => setShowDeleteConfirm(true)}
+          className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-red transition-colors flex items-center gap-1"
+        >
+          <X size={10} /> Delete Product
+        </span>
+      </div>
+
+      {/* Delete confirmation popup */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 panel-overlay z-[300] flex items-center justify-center" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="surface-box p-9 max-w-[360px] w-[90%] text-center" onClick={e => e.stopPropagation()}>
+            <p className="text-[13px] font-light text-dim mb-2">Are you sure you want to delete this product?</p>
+            <p className="text-base font-light text-foreground mb-7">{row.name}</p>
+            <div className="flex gap-2.5 justify-center">
+              <button
+                onClick={() => { onDelete(row.name); setShowDeleteConfirm(false); onDone(); }}
+                className="minimal-btn !border-red !text-red"
+              >Delete</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="minimal-btn">Cancel</button>
+            </div>
           </div>
         </div>
       )}
