@@ -72,7 +72,7 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
                 type="text"
                 inputMode="decimal"
                 className="minimal-input text-[22px] font-light py-1"
-                style={{ width: "360px", flex: "none" }}
+                style={{ width: "660px", flex: "none" }}
                 placeholder="0.00"
                 value={cny}
                 onChange={e => setCny(e.target.value)}
