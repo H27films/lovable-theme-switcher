@@ -9,6 +9,7 @@ interface OrderListPanelProps {
   overrideCNY: Record<string, string>;
   overrideQty: Record<string, number>;
   rate: number;
+  onSelectProduct: (row: ProductRow) => void;
 }
 
 const TOTAL_COLS = 5;
@@ -24,7 +25,7 @@ function getCellScales(hoveredCol: number | null): number[] {
   });
 }
 
-export default function OrderListPanel({ open, onClose, data, overrideCNY, overrideQty, rate }: OrderListPanelProps) {
+export default function OrderListPanel({ open, onClose, data, overrideCNY, overrideQty, rate, onSelectProduct }: OrderListPanelProps) {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
 
@@ -38,7 +39,6 @@ export default function OrderListPanel({ open, onClose, data, overrideCNY, overr
     whiteSpace: "nowrap" as const,
   }), [hoveredRow, cellScales]);
 
-  // Only show rows where both QTY and Total Value RM are present
   const orderRows = data.filter(row => {
     const qty = overrideQty[row.name] || 0;
     const cny = overrideCNY[row.name];
@@ -52,6 +52,11 @@ export default function OrderListPanel({ open, onClose, data, overrideCNY, overr
     const rm = cny ? parseFloat(cny) / rate : 0;
     return sum + rm * qty;
   }, 0);
+
+  const handleRowClick = (row: ProductRow) => {
+    onSelectProduct(row);
+    onClose();
+  };
 
   if (!open) return null;
 
@@ -100,7 +105,8 @@ export default function OrderListPanel({ open, onClose, data, overrideCNY, overr
                     return (
                       <tr
                         key={row.name}
-                        className="border-b border-border table-row-hover"
+                        className="border-b border-border table-row-hover cursor-pointer"
+                        onClick={() => handleRowClick(row)}
                         onMouseEnter={() => setHoveredRow(row.name)}
                         onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
                       >
@@ -125,7 +131,6 @@ export default function OrderListPanel({ open, onClose, data, overrideCNY, overr
                 </tbody>
               </table>
 
-              {/* Total order value summary */}
               <div className="flex justify-end mt-8 pt-5 border-t border-border">
                 <div className="text-right">
                   <div className="label-uppercase mb-1">Total Order Value</div>
