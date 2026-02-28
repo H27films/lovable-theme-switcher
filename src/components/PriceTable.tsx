@@ -80,7 +80,7 @@ export default function PriceTable({
   return (
     <div className={`w-full max-w-[760px] transition-all ${expanded ? "mt-12" : "mt-6"}`}>
       <div className="flex justify-between items-center mb-5">
-        <span className="label-uppercase pl-3">{data.length} products</span>
+        <span className="label-uppercase pl-3 text-[11px]">{data.length} products</span>
         <label className="minimal-btn cursor-pointer">
           Import Excel
           <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onClick={e => { (e.target as HTMLInputElement).value = ""; }} onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
