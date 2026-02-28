@@ -140,7 +140,7 @@ export default function ResultCard({ row, rate, getRowCNY, toRM, getSavings, onC
             onChange={e => { setNewPriceInput(e.target.value); setCommitted(false); }}
             onKeyDown={e => e.key === "Enter" && handleCommit()}
           />
-          <span className="text-[15px] font-light text-dim whitespace-nowrap">{liveRM}</span>
+          
           <button onClick={handleCommit} className={`minimal-btn h-11 flex-shrink-0 ${committed ? "!border-green !text-green" : ""}`}>
             {committed ? "✓" : "Enter"}
           </button>
