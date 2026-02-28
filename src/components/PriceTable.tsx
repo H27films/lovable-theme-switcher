@@ -92,7 +92,7 @@ export default function PriceTable({
           <thead>
             <tr className="border-b border-border-active">
               {[
-                { col: "name", label: "Product Name" },
+                { col: "name", label: "  Product Name" },
                 { col: "oldPrice", label: "Old Price", sub: "RM" },
                 { col: "cnyPrice", label: "China Price", sub: "CNY" },
                 { col: "newCNY", label: "New Price", sub: "CNY" },
