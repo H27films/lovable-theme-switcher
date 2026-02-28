@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { type ProductRow } from "@/hooks/usePriceLookup";
-import { X, Download } from "lucide-react";
+import { X, Download, Upload } from "lucide-react";
 
 interface PriceTableProps {
   data: ProductRow[];
@@ -79,12 +79,8 @@ export default function PriceTable({
 
   return (
     <div className={`w-full max-w-[760px] transition-all ${expanded ? "mt-12" : "mt-6"}`}>
-      <div className="flex justify-between items-center mb-5">
+      <div className="mb-5">
         <span className="label-uppercase">{data.length} products</span>
-        <label className="minimal-btn cursor-pointer">
-          Import Excel
-          <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onClick={e => { (e.target as HTMLInputElement).value = ""; }} onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
-        </label>
       </div>
 
       <div className="overflow-x-auto">
@@ -130,7 +126,7 @@ export default function PriceTable({
                     onMouseEnter={() => setHoveredRow(row.name)}
                     onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
                   >
-                    <td className="text-[13px] font-light py-3.5 text-dim pl-3" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
+                    <td className="text-[13px] font-light py-3.5 text-dim" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(1)}><span style={tdStyle(1, row.name)}>{unitRM ? "RM " + unitRM : "—"}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(2)}><span style={tdStyle(2, row.name)}>{unitCNY ? "¥ " + unitCNY.toFixed(2) : "—"}</span></td>
                     <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(3)}><span style={tdStyle(3, row.name)}>{unitCNY ? "¥ " + unitCNY.toFixed(2) : "—"}</span></td>
@@ -152,7 +148,7 @@ export default function PriceTable({
                   onMouseEnter={() => setHoveredRow(row.name)}
                   onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
                 >
-                  <td className="text-[13px] font-light py-3.5 text-dim pl-3" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
+                  <td className="text-[13px] font-light py-3.5 text-dim" onMouseEnter={() => setHoveredCol(0)}><span style={tdStyle(0, row.name)}>{row.name}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center text-dim" onMouseEnter={() => setHoveredCol(1)}><span style={tdStyle(1, row.name)}>{fmtRM(row.oldPrice)}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center text-dim" onMouseEnter={() => setHoveredCol(2)}><span style={tdStyle(2, row.name)}>{fmtCNY(row.cnyPrice)}</span></td>
                   <td className="text-[13px] font-light py-3.5 text-center" onMouseEnter={() => setHoveredCol(3)}><span style={tdStyle(3, row.name)}>{hasEntry ? "¥ " + parseFloat(cny).toFixed(2) : "—"}</span></td>
@@ -176,9 +172,15 @@ export default function PriceTable({
       </div>
 
       <div className="flex justify-between items-center mt-6 pb-2">
-        <span onClick={onExport} className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors flex items-center gap-1.5">
-          Export <Download size={11} className="inline -mt-0.5" />
-        </span>
+        <div className="flex flex-col gap-2">
+          <span onClick={onExport} className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors flex items-center gap-1.5">
+            Export <Download size={11} className="-mt-0.5" />
+          </span>
+          <label className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors flex items-center gap-1.5">
+            Import Excel <Upload size={11} className="-mt-0.5" />
+            <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onClick={e => { (e.target as HTMLInputElement).value = ""; }} onChange={e => e.target.files?.[0] && onImport(e.target.files[0])} />
+          </label>
+        </div>
         <span onClick={() => { if (confirm("Clear all saved data?")) onClearAll(); }} className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors">
           Reset saved data
         </span>
