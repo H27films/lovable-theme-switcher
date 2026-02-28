@@ -78,9 +78,7 @@ export default function NewProductPanel({ open, onClose, rate, onAdd }: NewProdu
                 onChange={e => setCny(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleAdd()}
               />
-              {liveRM && (
-                <span className="text-[18px] font-light text-dim whitespace-nowrap flex-shrink-0">{liveRM}</span>
-              )}
+          
             </div>
             <div className="text-[13px] text-dim mt-2.5">
               {cnyVal > 0
