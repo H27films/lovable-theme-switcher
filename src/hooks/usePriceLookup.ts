@@ -255,7 +255,34 @@ export function usePriceLookup() {
     }
   }, [overrideCNY, overrideQty, data, newProducts, persistData]);
 
-  const removeProduct = useCallback(async (name: string) => {
+  const addFromFullList = useCallback(async (name: string, oldPriceRM: number, cnyPrice: number) => {
+    const newRow: ProductRow = {
+      name,
+      oldPrice: oldPriceRM.toFixed(2),
+      cnyPrice: cnyPrice.toFixed(2),
+      officeStock: "",
+      _isNew: false,
+    };
+
+    const newData = [...data, newRow].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+
+    setData(newData);
+    persistData(newData, overrideCNY, newProducts, overrideQty);
+
+    try {
+      await supabase
+        .from("Inputhalflist")
+        .insert({
+          "Product Name": name,
+          "Old Price (RM)": oldPriceRM,
+          "China Price (CNY)": cnyPrice,
+        });
+    } catch (err) {
+      console.error("Supabase addFromFullList error:", err);
+    }
+  }, [data, overrideCNY, overrideQty, newProducts, persistData]);
     const newData = data.filter(r => r.name !== name);
     const newOverride = { ...overrideCNY };
     delete newOverride[name];
@@ -518,7 +545,7 @@ export function usePriceLookup() {
   return {
     rate, data, overrideCNY, overrideQty, newProducts, fullListHeaders, fullListData, saveFlash,
     toRM, getSavings, getRowCNY, saveData, updateRate, commitPrice, clearPrice,
-    removeProduct, addNewProduct, importExcel, importFullList, exportExcel, sortData, clearAllData,
+    removeProduct, addNewProduct, addFromFullList, importExcel, importFullList, exportExcel, sortData, clearAllData,
     updateFullListProduct, clearFullListProduct,
   };
 }
