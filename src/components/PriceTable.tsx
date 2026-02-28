@@ -75,7 +75,9 @@ export default function PriceTable({
   const fmtRM = (v: string) => v && !isNaN(parseFloat(v)) ? "RM " + parseFloat(v).toFixed(2) : "—";
   const fmtCNY = (v: string) => v && !isNaN(parseFloat(v)) ? "¥ " + parseFloat(v).toFixed(2) : "—";
 
-    const thClass = "text-[10px] tracking-[0.12em] uppercase font-normal text-left py-0 pb-4 cursor-pointer transition-all hover:text-foreground";  return (
+  const thClass = "label-uppercase font-normal text-left py-0 pb-4 cursor-pointer transition-all hover:text-foreground";
+
+  return (
     <div className={`w-full max-w-[760px] transition-all ${expanded ? "mt-12" : "mt-6"}`}>
       <div className="flex justify-between items-center mb-5">
         <span className="label-uppercase">{data.length} products</span>
@@ -100,7 +102,9 @@ export default function PriceTable({
                 { col: "totalRM", label: "Total Value", sub: "RM" },
                 { col: "officeStock", label: "Office Stock" },
               ].map(h => (
-                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top group`}>                  {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground group-hover:text-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
+                <th key={h.col} onClick={() => handleSort(h.col)} className={`${thClass} ${h.col !== "name" ? "text-center" : ""} align-top group`}>
+                  <span className="block">{h.label}</span>
+                  {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground group-hover:text-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
                 </th>
               ))}
               <th></th>
