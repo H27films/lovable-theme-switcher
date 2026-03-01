@@ -16,14 +16,12 @@ const nextThemeLabel: Record<Theme, string> = {
 
 const fontLabel: Record<Font, string> = {
   inter: "Inter",
-  tenor: "Tenor Sans",
   raleway: "Raleway",
 };
 
 export default function ThemeToggle({ theme, toggle, font, cycleFont }: ThemeToggleProps) {
   return (
     <div className="flex items-center gap-3">
-      {/* Font cycler */}
       <span
         onClick={cycleFont}
         className="cursor-pointer text-dim hover:text-foreground transition-colors flex items-center gap-1"
@@ -31,7 +29,6 @@ export default function ThemeToggle({ theme, toggle, font, cycleFont }: ThemeTog
       >
         <Type size={14} />
       </span>
-      {/* Theme toggler */}
       <span
         onClick={toggle}
         className="cursor-pointer text-dim hover:text-foreground transition-colors"
