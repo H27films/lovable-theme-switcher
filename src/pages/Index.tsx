@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePriceLookup, type ProductRow } from "@/hooks/usePriceLookup";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -8,10 +9,11 @@ import PriceTable from "@/components/PriceTable";
 import NewProductPanel from "@/components/NewProductPanel";
 import FullListPanel from "@/components/FullListPanel";
 import OrderListPanel from "@/components/OrderListPanel";
-import { Lock, Plus, ArrowRight, FileText } from "lucide-react";
+import { Lock, Plus, ArrowRight, FileText, Boxes } from "lucide-react";
 
 const Index = () => {
   const { theme, toggle, font, cycleFont } = useTheme();
+  const navigate = useNavigate();
   const store = usePriceLookup();
   const [selectedRow, setSelectedRow] = useState<ProductRow | null>(null);
   const [editingRate, setEditingRate] = useState(false);
@@ -78,6 +80,7 @@ const Index = () => {
           <span className="nav-link" onClick={() => setNewProductOpen(true)}>New Product &nbsp;<Plus size={13} className="inline -mt-0.5" /></span>
           <span className="nav-link" onClick={() => setFullListOpen(true)}>Full Product List &nbsp;<ArrowRight size={13} className="inline -mt-0.5" /></span>
           <span className="nav-link" onClick={() => setOrderListOpen(true)}>Order List &nbsp;<FileText size={13} className="inline -mt-0.5" /></span>
+          <span className="nav-link" onClick={() => navigate("/stock")}>Stock &nbsp;<Boxes size={13} className="inline -mt-0.5" /></span>
           <span className={`nav-link ${store.saveFlash ? "!text-green" : ""}`} onClick={store.saveData}>
             {store.saveFlash ? "✓ Saved" : "Save"} &nbsp;<Lock size={13} className="inline -mt-0.5" />
           </span>
