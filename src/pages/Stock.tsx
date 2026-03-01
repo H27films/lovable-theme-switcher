@@ -54,15 +54,20 @@ export default function Stock() {
 
   const fetchBalances = useCallback(async () => {
     try {
-      const { data, error } = await (supabase as any)
+      console.log("Fetching from Boudoir Balance...");
+      const result = await (supabase as any)
         .from("Boudoir Balance")
-        .select("Product Name, Starting Balance")
-        .order("Product Name");
-      console.log("Boudoir Balance fetch:", { data, error });
-      if (error) console.error("Fetch balances error:", error);
-      if (data) setBalances(data);
+        .select("*");
+      console.log("RAW RESULT:", JSON.stringify(result));
+      if (result.error) console.error("Fetch balances error:", result.error);
+      if (result.data) {
+        const sorted = result.data.sort((a: BalanceRow, b: BalanceRow) =>
+          a["Product Name"].localeCompare(b["Product Name"])
+        );
+        setBalances(sorted);
+      }
     } catch (err) {
-      console.error("Error fetching balances:", err);
+      console.error("CATCH Error fetching balances:", err);
     }
   }, []);
 
@@ -70,14 +75,18 @@ export default function Stock() {
     try {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 14);
+      const cutoffStr = cutoff.toISOString().split("T")[0];
       const { data, error } = await (supabase as any)
         .from("BoudoirLog")
         .select("*")
-        .gte("Date", cutoff.toISOString().split("T")[0])
-        .order("Date", { ascending: false })
-        .order("id", { ascending: false });
+        .gte("Date", cutoffStr);
       if (error) console.error("Fetch log error:", error);
-      if (data) setLog(data);
+      if (data) {
+        const sorted = data.sort((a: LogRow, b: LogRow) =>
+          b.Date.localeCompare(a.Date) || b.id - a.id
+        );
+        setLog(sorted);
+      }
     } catch (err) {
       console.error("Error fetching log:", err);
     }
