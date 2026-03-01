@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, Star } from "lucide-react";
 
 interface BalanceRow {
   "Product Name": string;
   "Starting Balance": number;
+  "Favourite": string | null;
 }
 
 interface LogRow {
@@ -97,9 +98,26 @@ export default function Stock() {
     fetchLog();
   }, [fetchBalances, fetchLog]);
 
+  const toggleFavourite = async (productName: string, current: string | null) => {
+    const newVal = current === "Yes" ? null : "Yes";
+    await (supabase as any)
+      .from("Boudoir Balance")
+      .update({ "Favourite": newVal })
+      .eq("Product Name", productName);
+    await fetchBalances();
+    // Update selectedProduct state to reflect change immediately
+    setSelectedProduct(prev => prev ? { ...prev, "Favourite": newVal } : null);
+  };
+
+  // Favourites first, then rest — both groups alphabetical
+  const sortedBalances = [
+    ...balances.filter(b => b["Favourite"] === "Yes"),
+    ...balances.filter(b => b["Favourite"] !== "Yes"),
+  ];
+
   const filteredProducts = stockSearch.length > 0
-    ? balances.filter(b => b["Product Name"].toLowerCase().includes(stockSearch.toLowerCase()))
-    : balances;
+    ? sortedBalances.filter(b => b["Product Name"].toLowerCase().includes(stockSearch.toLowerCase()))
+    : sortedBalances;
 
   const handleSelectProduct = (row: BalanceRow) => {
     setSelectedProduct(row);
@@ -244,7 +262,10 @@ export default function Stock() {
                     onMouseEnter={e => (e.currentTarget.style.background = cardBg)}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <span className="text-[13px] font-light">{row["Product Name"]}</span>
+                  <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-light">{row["Product Name"]}</span>
+                      {row["Favourite"] === "Yes" && <Star size={10} fill="currentColor" style={dim} />}
+                    </div>
                     <span className="text-[12px]" style={dim}>bal. {row["Starting Balance"]}</span>
                   </div>
                 ))}
@@ -259,17 +280,29 @@ export default function Stock() {
                 <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
                 <p className="text-[15px] font-light">{selectedProduct["Product Name"]}</p>
               </div>
-              <div className="text-right">
-                <p className="text-[32px] font-light leading-none" style={{
-                  color: selectedProduct["Starting Balance"] <= 0
-                    ? "hsl(var(--red))"
-                    : selectedProduct["Starting Balance"] <= 3
-                      ? "hsl(var(--green))"
-                      : "hsl(var(--foreground))"
-                }}>
-                  {selectedProduct["Starting Balance"]}
-                </p>
-                <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
+              <div className="flex items-center gap-5">
+                <button
+                  onClick={() => toggleFavourite(selectedProduct["Product Name"], selectedProduct["Favourite"])}
+                  title={selectedProduct["Favourite"] === "Yes" ? "Remove from favourites" : "Add to favourites"}
+                  className="transition-colors"
+                  style={{ color: selectedProduct["Favourite"] === "Yes" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                  onMouseLeave={e => (e.currentTarget.style.color = selectedProduct["Favourite"] === "Yes" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+                >
+                  <Star size={16} fill={selectedProduct["Favourite"] === "Yes" ? "currentColor" : "none"} />
+                </button>
+                <div className="text-right">
+                  <p className="text-[32px] font-light leading-none" style={{
+                    color: selectedProduct["Starting Balance"] <= 0
+                      ? "hsl(var(--red))"
+                      : selectedProduct["Starting Balance"] <= 3
+                        ? "hsl(var(--green))"
+                        : "hsl(var(--foreground))"
+                  }}>
+                    {selectedProduct["Starting Balance"]}
+                  </p>
+                  <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
+                </div>
               </div>
             </div>
           )}
@@ -298,8 +331,8 @@ export default function Stock() {
                   }}
                 >
                   <option value="">Select product...</option>
-                  {balances.map(b => (
-                    <option key={b["Product Name"]} value={b["Product Name"]}>{b["Product Name"]}</option>
+                  {sortedBalances.map(b => (
+                    <option key={b["Product Name"]} value={b["Product Name"]}>{b["Product Name"]}{b["Favourite"] === "Yes" ? " ★" : ""}</option>
                   ))}
                 </select>
 
