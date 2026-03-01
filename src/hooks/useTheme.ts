@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 
 export type Theme = "dark" | "light" | "sand";
-export type Font = "inter" | "tenor" | "raleway";
+export type Font = "inter" | "raleway";
 
 const fontFamilies: Record<Font, string> = {
   inter: "'Inter', sans-serif",
-  tenor: "'Tenor Sans', sans-serif",
   raleway: "'Raleway', sans-serif",
 };
 
@@ -17,7 +16,7 @@ export function useTheme() {
 
   const [font, setFont] = useState<Font>(() => {
     const saved = localStorage.getItem("font");
-    return (saved === "tenor" || saved === "raleway" ? saved : "inter") as Font;
+    return (saved === "raleway" ? saved : "inter") as Font;
   });
 
   useEffect(() => {
@@ -40,11 +39,7 @@ export function useTheme() {
     return "dark";
   });
 
-  const cycleFont = () => setFont(f => {
-    if (f === "inter") return "tenor";
-    if (f === "tenor") return "raleway";
-    return "inter";
-  });
+  const cycleFont = () => setFont(f => f === "inter" ? "raleway" : "inter");
 
   return { theme, toggle, font, cycleFont };
 }
