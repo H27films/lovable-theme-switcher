@@ -9,7 +9,7 @@ interface FullListPanelProps {
   onImport: (file: File) => void;
   onUpdate: (productName: string, newCNY: string) => void;
   onClear: (productName: string) => void;
-  onAddToMain: (name: string, oldPriceRM: number, cnyPrice: number) => void;
+  onAddToMain: (name: string, oldPriceRM: number, cnyPrice: number, newCNY?: number, qty?: number) => void;
   rate: number;
 }
 
@@ -41,7 +41,6 @@ function formatCell(value: string, colIndex: number): string {
   return value;
 }
 
-// Strip "(RM)", "(CNY)" etc from header labels
 function cleanHeader(h: string): string {
   return h.replace(/\s*\(RM\)|\s*\(CNY\)/gi, "").trim();
 }
@@ -52,6 +51,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string[] | null>(null);
   const [newCNY, setNewCNY] = useState("");
+  const [newQty, setNewQty] = useState("");
   const [addedToMain, setAddedToMain] = useState(false);
   const [showAddConfirm, setShowAddConfirm] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -73,23 +73,33 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
   const handleRowClick = (row: string[]) => {
     setSelectedProduct(row);
     setNewCNY(row[3] || "");
+    setNewQty("");
     setAddedToMain(false);
     setShowAddConfirm(false);
   };
 
+  // Save: updates new price AND adds full product to main table
   const handleCommit = () => {
-    if (selectedProduct && newCNY) {
-      onUpdate(selectedProduct[0], newCNY);
-      setSelectedProduct(null);
-      setNewCNY("");
-    }
+    if (!selectedProduct || !newCNY) return;
+    const oldPriceRM = parseFloat(selectedProduct[1]) || 0;
+    const cnyPrice = parseFloat(selectedProduct[2]) || 0;
+    const cnyVal = parseFloat(newCNY);
+    const qtyVal = parseInt(newQty) || 0;
+    onUpdate(selectedProduct[0], newCNY);
+    onAddToMain(selectedProduct[0], oldPriceRM, cnyPrice, cnyVal, qtyVal);
+    setSelectedProduct(null);
+    setNewCNY("");
+    setNewQty("");
   };
 
+  // + button: shows confirm popup first
   const handleAddToMain = () => {
     if (!selectedProduct) return;
     const oldPriceRM = parseFloat(selectedProduct[1]) || 0;
     const cnyPrice = parseFloat(selectedProduct[2]) || 0;
-    onAddToMain(selectedProduct[0], oldPriceRM, cnyPrice);
+    const cnyVal = newCNY ? parseFloat(newCNY) : undefined;
+    const qtyVal = newQty ? parseInt(newQty) : undefined;
+    onAddToMain(selectedProduct[0], oldPriceRM, cnyPrice, cnyVal, qtyVal);
     setAddedToMain(true);
     setShowAddConfirm(false);
   };
@@ -100,6 +110,10 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
 
   const calculatedSavings = selectedProduct && calculatedNewRM
     ? (parseFloat(selectedProduct[1]) - parseFloat(calculatedNewRM)).toFixed(2)
+    : "";
+
+  const calculatedTotalRM = calculatedNewRM && newQty && parseInt(newQty) > 0
+    ? (parseFloat(calculatedNewRM) * parseInt(newQty)).toFixed(2)
     : "";
 
   if (!open) return null;
@@ -151,7 +165,6 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                   {filtered.map((row, ri) => {
                     const hasNewPrice = row[3] && parseFloat(row[3]) > 0;
                     const savings = row[5] ? parseFloat(row[5]) : null;
-
                     return (
                       <tr
                         key={ri}
@@ -166,21 +179,14 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                             colorClass = savings > 0 ? "text-green" : savings < 0 ? "text-red" : "text-dim";
                           }
                           return (
-                            <td
-                              key={ci}
-                              className={`text-[13px] font-light ${colorClass} py-3.5 ${ci > 0 ? "text-center" : ""}`}
-                              onMouseEnter={() => setHoveredCol(ci)}
-                            >
+                            <td key={ci} className={`text-[13px] font-light ${colorClass} py-3.5 ${ci > 0 ? "text-center" : ""}`} onMouseEnter={() => setHoveredCol(ci)}>
                               <span style={tdStyle(ci, ri)}>{formatCell(cell, ci)}</span>
                             </td>
                           );
                         })}
                         <td className="text-[13px] py-3.5 text-center w-8 min-w-8">
                           {hasNewPrice && (
-                            <button
-                              onClick={e => { e.stopPropagation(); onClear(row[0]); }}
-                              className="text-muted-foreground hover:text-red transition-colors"
-                            >
+                            <button onClick={e => { e.stopPropagation(); onClear(row[0]); }} className="text-muted-foreground hover:text-red transition-colors">
                               <X size={12} />
                             </button>
                           )}
@@ -191,7 +197,6 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                 </tbody>
               </table>
 
-              {/* Import at bottom */}
               <div className="mt-6 pt-2">
                 <label className="text-[10px] text-muted-foreground cursor-pointer tracking-wider uppercase select-none hover:text-dim transition-colors flex items-center gap-1.5">
                   Import Excel <Upload size={11} className="-mt-0.5" />
@@ -205,9 +210,9 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
         {/* Edit Product Popup */}
         {selectedProduct && (
           <div className="fixed inset-0 panel-overlay z-[300] flex items-center justify-center" onClick={() => setSelectedProduct(null)}>
-            <div className="surface-box p-9 max-w-[420px] w-[90%] relative" onClick={e => e.stopPropagation()}>
+            <div className="surface-box p-9 max-w-[460px] w-[90%] relative" onClick={e => e.stopPropagation()}>
 
-              {/* + Add to Main Table button — moved down from top edge */}
+              {/* + button */}
               <button
                 onClick={() => !addedToMain && setShowAddConfirm(true)}
                 className={`absolute top-9 right-9 transition-colors ${addedToMain ? "text-green" : "text-muted-foreground hover:text-foreground"}`}
@@ -216,7 +221,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                 {addedToMain ? <span className="text-[11px] tracking-wider uppercase">✓ Added</span> : <Plus size={18} />}
               </button>
 
-              {/* Add to main table confirmation */}
+              {/* Add confirm popup */}
               {showAddConfirm && (
                 <div className="fixed inset-0 panel-overlay z-[400] flex items-center justify-center" onClick={() => setShowAddConfirm(false)}>
                   <div className="surface-box p-9 max-w-[360px] w-[90%] text-center" onClick={e => e.stopPropagation()}>
@@ -231,6 +236,7 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
               )}
 
               <h3 className="text-sm font-light tracking-[0.15em] uppercase text-dim mb-6">Edit Product</h3>
+
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Product Name</label>
@@ -258,24 +264,51 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                     placeholder="Enter new CNY price"
                   />
                 </div>
+                <div>
+                  <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Quantity <span className="text-muted-foreground">(optional)</span></label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    className="minimal-input text-[15px] font-light w-full"
+                    value={newQty}
+                    onChange={e => setNewQty(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
                 {calculatedNewRM && (
                   <>
-                    <div>
-                      <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">New Price (RM)</label>
-                      <div className="text-[15px] font-light text-foreground">RM {calculatedNewRM}</div>
-                    </div>
-                    <div>
-                      <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Savings</label>
-                      <div className={`text-[15px] font-light ${parseFloat(calculatedSavings) > 0 ? "text-green" : parseFloat(calculatedSavings) < 0 ? "text-red" : "text-foreground"}`}>
-                        RM {calculatedSavings}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">New Price (RM)</label>
+                        <div className="text-[15px] font-light text-foreground">RM {calculatedNewRM}</div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Savings</label>
+                        <div className={`text-[15px] font-light ${parseFloat(calculatedSavings) > 0 ? "text-green" : parseFloat(calculatedSavings) < 0 ? "text-red" : "text-foreground"}`}>
+                          RM {calculatedSavings}
+                        </div>
                       </div>
                     </div>
+                    {calculatedTotalRM && (
+                      <div>
+                        <label className="text-[11px] text-muted-foreground tracking-wider uppercase block mb-1.5">Total Value (RM)</label>
+                        <div className="text-[15px] font-light text-foreground">RM {calculatedTotalRM}</div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
+
               <div className="flex gap-2.5 justify-end">
                 <button onClick={() => setSelectedProduct(null)} className="minimal-btn">Cancel</button>
-                <button onClick={handleCommit} className="minimal-btn !border-foreground !text-foreground" disabled={!newCNY || isNaN(parseFloat(newCNY))}>Save</button>
+                <button
+                  onClick={handleCommit}
+                  className="minimal-btn !border-foreground !text-foreground"
+                  disabled={!newCNY || isNaN(parseFloat(newCNY))}
+                >
+                  Save & Add to Main Table
+                </button>
               </div>
             </div>
           </div>
