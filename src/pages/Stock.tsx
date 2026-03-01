@@ -12,11 +12,11 @@ interface BalanceRow {
 
 interface LogRow {
   id: number;
-  date: string;
-  product_name: string;
-  type: string;
-  qty: number;
-  ending_balance: number;
+  Date: string;
+  "Product Name": string;
+  Type: string;
+  Qty: number;
+  "Ending Balance": number;
 }
 
 interface EntryLine {
@@ -73,8 +73,8 @@ export default function Stock() {
       const { data, error } = await (supabase as any)
         .from("BoudoirLog")
         .select("*")
-        .gte("date", cutoff.toISOString().split("T")[0])
-        .order("date", { ascending: false })
+        .gte("Date", cutoff.toISOString().split("T")[0])
+        .order("Date", { ascending: false })
         .order("id", { ascending: false });
       if (error) console.error("Fetch log error:", error);
       if (data) setLog(data);
@@ -127,11 +127,11 @@ export default function Stock() {
         const endingBalance = currentBalance - entry.qty;
 
         await (supabase as any).from("BoudoirLog").insert({
-          date: today,
-          product_name: entry.productName,
-          type: entry.type,
-          qty: entry.qty,
-          ending_balance: endingBalance,
+          "Date": today,
+          "Product Name": entry.productName,
+          "Type": entry.type,
+          "Qty": entry.qty,
+          "Ending Balance": endingBalance,
         });
 
         await (supabase as any)
@@ -145,7 +145,7 @@ export default function Stock() {
       await (supabase as any)
         .from("BoudoirLog")
         .delete()
-        .lt("date", cutoff.toISOString().split("T")[0]);
+        .lt("Date", cutoff.toISOString().split("T")[0]);
 
       await fetchBalances();
       await fetchLog();
@@ -379,17 +379,17 @@ export default function Stock() {
                 {log.map(row => (
                   <tr key={row.id} className="border-b table-row-hover" style={{ borderColor: border }}>
                     <td className="text-[12px] font-light py-3 text-dim">
-                      {new Date(row.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      {new Date(row.Date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                     </td>
-                    <td className="text-[13px] font-light py-3 text-dim">{row.product_name}</td>
-                    <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.type}</td>
-                    <td className="text-[13px] font-light py-3 text-center" style={dim}>−{row.qty}</td>
+                    <td className="text-[13px] font-light py-3 text-dim">{row["Product Name"]}</td>
+                    <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.Type}</td>
+                    <td className="text-[13px] font-light py-3 text-center" style={dim}>−{row.Qty}</td>
                     <td className="text-[13px] font-light py-3 text-center">
                       <span style={{
-                        color: row.ending_balance <= 0 ? "hsl(var(--red))"
-                          : row.ending_balance <= 3 ? "hsl(var(--green))"
+                        color: row["Ending Balance"] <= 0 ? "hsl(var(--red))"
+                          : row["Ending Balance"] <= 3 ? "hsl(var(--green))"
                           : "hsl(var(--foreground))"
-                      }}>{row.ending_balance}</span>
+                      }}>{row["Ending Balance"]}</span>
                     </td>
                   </tr>
                 ))}
