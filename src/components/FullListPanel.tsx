@@ -7,42 +7,34 @@ interface FullListPanelProps {
   headers: string[];
   data: string[][];
   onImport: (file: File) => void;
-  onUpdate: (productName: string, newCNY: string) => void;
+  onUpdate: (productName: string, newCNY: string, qty?: number) => void;
   onClear: (productName: string) => void;
   onAddToMain: (name: string, oldPriceRM: number, cnyPrice: number, newCNY?: number, qty?: number) => void;
   rate: number;
 }
 
-function getCellScales(hoveredCol: number | null, totalCols: number): number[] {
-  if (hoveredCol === null) return Array(totalCols).fill(1);
-  return Array.from({ length: totalCols }, (_, i) => {
+const TOTAL_COLS = 10; // 9 data + 1 action
+
+function getCellScales(hoveredCol: number | null): number[] {
+  if (hoveredCol === null) return Array(TOTAL_COLS).fill(1);
+  return Array.from({ length: TOTAL_COLS }, (_, i) => {
+    if (i === 0) return 1.0;
     const dist = Math.abs(i - hoveredCol);
-    if (dist === 0) return 1.20;
-    if (dist === 1) return 1.10;
-    if (dist === 2) return 1.05;
+    if (dist === 0) return 1.12;
+    if (dist === 1) return 1.06;
+    if (dist === 2) return 1.03;
     return 1.0;
   });
 }
 
 function fmtRM(v: string) {
   const n = parseFloat(v);
-  return !isNaN(n) ? "RM " + n.toFixed(2) : "—";
+  return !isNaN(n) && n !== 0 ? "RM " + n.toFixed(2) : "—";
 }
 
 function fmtCNY(v: string) {
   const n = parseFloat(v);
-  return !isNaN(n) ? "¥ " + n.toFixed(2) : "—";
-}
-
-function formatCell(value: string, colIndex: number): string {
-  if (!value || value === "—") return "—";
-  if (colIndex === 1) return fmtRM(value);
-  if (colIndex === 2) return fmtCNY(value);
-  return value;
-}
-
-function cleanHeader(h: string): string {
-  return h.replace(/\s*\(RM\)|\s*\(CNY\)/gi, "").trim();
+  return !isNaN(n) && n !== 0 ? "¥ " + n.toFixed(2) : "—";
 }
 
 export default function FullListPanel({ open, onClose, headers, data, onImport, onUpdate, onClear, onAddToMain, rate }: FullListPanelProps) {
@@ -56,14 +48,16 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
   const [showAddConfirm, setShowAddConfirm] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const totalCols = headers.length || 1;
-  const cellScales = hoveredRow !== null ? getCellScales(hoveredCol, totalCols) : Array(totalCols).fill(1);
+  const cellScales = hoveredRow !== null ? getCellScales(hoveredCol) : Array(TOTAL_COLS).fill(1);
 
   const tdStyle = useCallback((colIdx: number, rowIdx: number) => ({
     transition: "transform 0.2s ease, color 0.15s ease",
-    transform: hoveredRow === rowIdx ? `scale(${cellScales[colIdx]})` : "scale(1)",
+    transform: hoveredRow === rowIdx
+      ? (colIdx === 0 ? "scale(1)" : `scale(${cellScales[colIdx]})`)
+      : "scale(1)",
     transformOrigin: colIdx === 0 ? "left center" : "center center",
     display: "inline-block" as const,
+    whiteSpace: "nowrap" as const,
   }), [hoveredRow, cellScales]);
 
   const filtered = search
@@ -73,26 +67,24 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
   const handleRowClick = (row: string[]) => {
     setSelectedProduct(row);
     setNewCNY(row[3] || "");
-    setNewQty("");
+    setNewQty(row[6] || "");
     setAddedToMain(false);
     setShowAddConfirm(false);
   };
 
-  // Save: updates new price AND adds full product to main table
   const handleCommit = () => {
     if (!selectedProduct || !newCNY) return;
     const oldPriceRM = parseFloat(selectedProduct[1]) || 0;
     const cnyPrice = parseFloat(selectedProduct[2]) || 0;
     const cnyVal = parseFloat(newCNY);
     const qtyVal = parseInt(newQty) || 0;
-    onUpdate(selectedProduct[0], newCNY);
+    onUpdate(selectedProduct[0], newCNY, qtyVal > 0 ? qtyVal : undefined);
     onAddToMain(selectedProduct[0], oldPriceRM, cnyPrice, cnyVal, qtyVal);
     setSelectedProduct(null);
     setNewCNY("");
     setNewQty("");
   };
 
-  // + button: shows confirm popup first
   const handleAddToMain = () => {
     if (!selectedProduct) return;
     const oldPriceRM = parseFloat(selectedProduct[1]) || 0;
@@ -118,12 +110,38 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
 
   if (!open) return null;
 
-  const colSubs: Record<number, string> = { 1: "RM", 2: "CNY" };
+  // Column definitions matching PriceTable exactly
+  const columns = [
+    { label: "Product Name", sub: "" },
+    { label: "Old Price", sub: "RM" },
+    { label: "China Price", sub: "CNY" },
+    { label: "New Price", sub: "CNY" },
+    { label: "New Price", sub: "RM" },
+    { label: "Savings", sub: "RM" },
+    { label: "Qty", sub: "" },
+    { label: "Total Value", sub: "RM" },
+    { label: "Office Stock", sub: "" },
+  ];
+
+  const thClass = "label-uppercase font-normal text-left py-0 pb-4 transition-all";
+
+  const formatCellValue = (value: string, colIdx: number): string => {
+    if (!value || value === "—" || value === "0") return "—";
+    const n = parseFloat(value);
+    if (isNaN(n)) return value;
+    // RM columns: 1 (old price), 4 (new RM), 5 (savings), 7 (total value)
+    if ([1, 4, 5, 7].includes(colIdx)) return "RM " + n.toFixed(2);
+    // CNY columns: 2 (china price), 3 (new CNY)
+    if ([2, 3].includes(colIdx)) return "¥ " + n.toFixed(2);
+    // Qty, Office Stock: integer
+    if ([6, 8].includes(colIdx)) return String(Math.round(n));
+    return value;
+  };
 
   return (
     <>
       <div className="fixed inset-0 panel-overlay z-[200]" onClick={onClose} />
-      <div className="fixed top-0 right-0 bottom-0 w-full max-w-[900px] panel-bg z-[201] flex flex-col">
+      <div className="fixed top-0 right-0 bottom-0 w-full max-w-[1100px] panel-bg z-[201] flex flex-col">
 
         {/* Header */}
         <div className="flex justify-between items-center px-10 py-8 border-b border-border flex-shrink-0">
@@ -144,18 +162,18 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
         </div>
 
         {/* Table */}
-        <div className="flex-1 overflow-y-auto px-10 pb-10 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto overflow-x-auto px-10 pb-10 scrollbar-thin">
           {!filtered.length && !headers.length ? (
             <div className="text-center text-muted-foreground text-[13px] py-16 tracking-wider">Import an Excel file to view the full product list</div>
           ) : (
             <>
-              <table className="w-full border-collapse mt-6">
+              <table className="w-full border-collapse mt-6" style={{ minWidth: "1050px" }}>
                 <thead>
                   <tr className="border-b border-border-active">
-                    {headers.map((h, i) => (
-                      <th key={i} className={`label-uppercase font-normal pb-3 pt-4 ${i > 0 ? "text-center" : "text-left"}`}>
-                        {cleanHeader(h)}
-                        {colSubs[i] && <><br /><span className="text-[9px] tracking-wider text-muted-foreground">{colSubs[i]}</span></>}
+                    {columns.map((h, i) => (
+                      <th key={i} className={`${thClass} ${i > 0 ? "text-center" : ""} align-top group`}>
+                        <span className="block">{h.label}</span>
+                        {h.sub ? <span className="block text-[9px] tracking-wider text-muted-foreground mt-0.5">{h.sub}</span> : <span className="block text-[9px] mt-0.5">&nbsp;</span>}
                       </th>
                     ))}
                     <th></th>
@@ -168,19 +186,21 @@ export default function FullListPanel({ open, onClose, headers, data, onImport, 
                     return (
                       <tr
                         key={ri}
-                        className="border-b border-border table-row-hover cursor-pointer"
+                        className={`border-b border-border table-row-hover cursor-pointer ${hasNewPrice ? "font-normal" : ""}`}
                         onClick={() => handleRowClick(row)}
                         onMouseEnter={() => setHoveredRow(ri)}
                         onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}
                       >
-                        {row.map((cell, ci) => {
+                        {columns.map((_, ci) => {
+                          const cellValue = row[ci] || "";
                           let colorClass = "text-dim";
                           if (ci === 5 && savings !== null) {
                             colorClass = savings > 0 ? "text-green" : savings < 0 ? "text-red" : "text-dim";
                           }
+                          if ([3, 4].includes(ci) && hasNewPrice) colorClass = "";
                           return (
-                            <td key={ci} className={`text-[13px] font-light ${colorClass} py-3.5 ${ci > 0 ? "text-center" : ""}`} onMouseEnter={() => setHoveredCol(ci)}>
-                              <span style={tdStyle(ci, ri)}>{formatCell(cell, ci)}</span>
+                            <td key={ci} className={`text-[13px] font-light ${colorClass} py-3.5 ${ci > 0 ? "text-center" : "pl-3"}`} onMouseEnter={() => setHoveredCol(ci)}>
+                              <span style={tdStyle(ci, ri)}>{formatCellValue(cellValue, ci)}</span>
                             </td>
                           );
                         })}
