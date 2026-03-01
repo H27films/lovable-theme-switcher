@@ -112,7 +112,7 @@ export function usePriceLookup() {
 
   const fetchFullListFromSupabase = async () => {
     try {
-      const { data: rows, error } = await (supabase as any)
+      const { data: rows, error } = await supabase
         .from("InputFullTable")
         .select("*");
 
@@ -255,7 +255,7 @@ export function usePriceLookup() {
     }
   }, [overrideCNY, overrideQty, data, newProducts, persistData]);
 
-  const addFromFullList = useCallback(async (name: string, oldPriceRM: number, cnyPrice: number) => {
+  const addFromFullList = useCallback(async (name: string, oldPriceRM: number, cnyPrice: number, newCNY?: number, qty?: number) => {
     const newRow: ProductRow = {
       name,
       oldPrice: oldPriceRM.toFixed(2),
@@ -268,8 +268,17 @@ export function usePriceLookup() {
       a.name.toLowerCase().localeCompare(b.name.toLowerCase())
     );
 
+    const newOverride = newCNY ? { ...overrideCNY, [name]: newCNY.toFixed(2) } : { ...overrideCNY };
+    const newQtyMap = qty && qty > 0 ? { ...overrideQty, [name]: qty } : { ...overrideQty };
+
     setData(newData);
-    persistData(newData, overrideCNY, newProducts, overrideQty);
+    if (newCNY) setOverrideCNY(newOverride);
+    if (qty && qty > 0) setOverrideQty(newQtyMap);
+    persistData(newData, newOverride, newProducts, newQtyMap);
+
+    const newRM = newCNY ? newCNY / rate : null;
+    const totalValue = newRM && qty && qty > 0 ? newRM * qty : null;
+    const savings = newRM ? oldPriceRM - newRM : null;
 
     try {
       await supabase
@@ -278,13 +287,15 @@ export function usePriceLookup() {
           "Product Name": name,
           "Old Price (RM)": oldPriceRM,
           "China Price (CNY)": cnyPrice,
+          ...(newCNY ? { "New Price (CNY)": newCNY, "New Price (RM)": newRM } : {}),
+          ...(savings !== null ? { "Savings": parseFloat(savings.toFixed(2)) } : {}),
+          ...(qty && qty > 0 ? { "Order Qty": qty } : {}),
+          ...(totalValue ? { "Order Value (RM)": parseFloat(totalValue.toFixed(2)) } : {}),
         });
     } catch (err) {
       console.error("Supabase addFromFullList error:", err);
     }
-  }, [data, overrideCNY, overrideQty, newProducts, persistData]);
-
-  const removeProduct = useCallback(async (name: string) => {
+  }, [data, overrideCNY, overrideQty, newProducts, rate, persistData]);
     const newData = data.filter(r => r.name !== name);
     const newOverride = { ...overrideCNY };
     delete newOverride[name];
@@ -448,12 +459,12 @@ export function usePriceLookup() {
     localStorage.setItem("fullListData", JSON.stringify(updatedData));
 
     try {
-      await (supabase as any)
+      await supabase
         .from("InputFullTable")
         .update({
-          "New Price (CNY)": String(newCNYNum),
-          "New Price (RM)": newRM,
-          "Savings": savings,
+          "New Price (CNY)": newCNYNum,
+          "New Price (RM)": parseFloat(newRM),
+          "Savings": parseFloat(savings),
         })
         .eq("Product Name", productName);
     } catch (err) {
@@ -479,7 +490,7 @@ export function usePriceLookup() {
     localStorage.setItem("fullListData", JSON.stringify(updatedData));
 
     try {
-      await (supabase as any)
+      await supabase
         .from("InputFullTable")
         .update({
           "New Price (CNY)": null,
