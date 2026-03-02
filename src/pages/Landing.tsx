@@ -102,7 +102,7 @@ export default function Landing() {
         className="flex justify-between items-center px-8 py-6 border-b"
         style={{ borderColor: "hsl(var(--border))" }}
       >
-        <span className="text-[11px] font-light tracking-tight" style={{ color: "hsl(var(--muted-foreground))" }}>
+        <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
           Boudoir
         </span>
         <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
