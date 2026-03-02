@@ -1,0 +1,302 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Raleway:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 96%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 98%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 93%;
+    --secondary-foreground: 0 0% 20%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 15%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 0 0% 20%;
+
+    --radius: 0rem;
+
+    --surface: 0 0% 95%;
+    --border-active: 0 0% 78%;
+    --dim: 0 0% 40%;
+    --green: 150 40% 45%;
+    --red: 0 60% 55%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 80%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 33%;
+
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 10%;
+    --input: 0 0% 10%;
+    --ring: 0 0% 80%;
+
+    --surface: 0 0% 6%;
+    --border-active: 0 0% 20%;
+    --dim: 0 0% 60%;
+    --green: 150 40% 50%;
+    --red: 0 60% 55%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Sand / Taupe theme */
+  .sand {
+    --background: 36 25% 88%;
+    --foreground: 30 15% 18%;
+
+    --card: 34 22% 82%;
+    --card-foreground: 30 15% 18%;
+
+    --popover: 34 22% 85%;
+    --popover-foreground: 30 15% 18%;
+
+    --primary: 30 15% 18%;
+    --primary-foreground: 36 25% 88%;
+
+    --secondary: 34 20% 78%;
+    --secondary-foreground: 30 15% 25%;
+
+    --muted: 34 20% 80%;
+    --muted-foreground: 30 12% 45%;
+
+    --accent: 33 18% 74%;
+    --accent-foreground: 30 15% 18%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 33 18% 76%;
+    --input: 33 18% 76%;
+    --ring: 30 15% 30%;
+
+    --radius: 0rem;
+
+    --surface: 34 22% 84%;
+    --border-active: 28 20% 62%;
+    --dim: 30 12% 42%;
+    --green: 150 35% 38%;
+    --red: 0 60% 50%;
+
+    --sidebar-background: 36 25% 86%;
+    --sidebar-foreground: 30 15% 25%;
+    --sidebar-primary: 30 15% 18%;
+    --sidebar-primary-foreground: 36 25% 88%;
+    --sidebar-accent: 34 20% 78%;
+    --sidebar-accent-foreground: 30 15% 18%;
+    --sidebar-border: 33 18% 74%;
+    --sidebar-ring: 28 20% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 300;
+  }
+
+  /* Hide number input spinners */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  .label-uppercase {
+    @apply text-[9px] tracking-[0.18em] uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .value-display {
+    @apply text-xl font-light tracking-tight;
+    color: hsl(var(--foreground));
+  }
+
+  .value-dim {
+    color: hsl(var(--dim));
+  }
+
+  .value-green {
+    color: hsl(var(--green));
+  }
+
+  .value-red {
+    color: hsl(var(--red));
+  }
+
+  .currency-label {
+    @apply text-[10px] mt-1;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .minimal-input {
+    @apply w-full bg-transparent border-none outline-none font-light;
+    color: hsl(var(--foreground));
+    border-bottom: 1px solid hsl(var(--border-active));
+    transition: border-color 0.2s;
+  }
+
+  .minimal-input::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .minimal-input:focus {
+    border-bottom-color: hsl(var(--foreground));
+  }
+
+  .minimal-btn {
+    @apply bg-transparent font-light text-[10px] tracking-[0.15em] uppercase px-4 py-2.5 cursor-pointer transition-all;
+    border: 1px solid hsl(var(--border-active));
+    color: hsl(var(--dim));
+    font-family: inherit;
+  }
+
+  .minimal-btn:hover {
+    border-color: hsl(var(--foreground));
+    color: hsl(var(--foreground));
+  }
+
+  .nav-link {
+    @apply text-[15px] font-light tracking-wider cursor-pointer transition-colors select-none;
+    color: hsl(var(--dim));
+  }
+
+  .nav-link:hover {
+    color: hsl(var(--foreground));
+  }
+
+  .price-grid-gap {
+    background: hsl(var(--border));
+  }
+
+  .price-box {
+    background: hsl(var(--background));
+    @apply py-6 px-4;
+  }
+
+  .price-box-highlight {
+    background: hsl(var(--card));
+  }
+
+  .surface-box {
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--border-active));
+  }
+
+  .dropdown-menu-custom {
+    background: hsl(var(--popover));
+    border: 1px solid hsl(var(--border-active));
+  }
+
+  .dropdown-item-custom {
+    @apply py-3 px-4 text-sm font-light cursor-pointer transition-all flex justify-between items-center gap-4;
+    color: hsl(var(--dim));
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .dropdown-item-custom:last-child {
+    border-bottom: none;
+  }
+
+  .dropdown-item-custom:hover {
+    background: hsl(var(--accent));
+    color: hsl(var(--foreground));
+  }
+
+  .table-row-hover {
+    transition: transform 0.2s ease, background 0.15s ease, box-shadow 0.2s ease;
+  }
+
+  .table-row-hover:hover {
+    background: hsl(var(--card));
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px -4px hsla(0, 0%, 0%, 0.3);
+    position: relative;
+    z-index: 1;
+  }
+
+  .table-row-hover:hover td {
+    color: hsl(var(--foreground));
+  }
+
+  .panel-overlay {
+    background: hsla(0, 0%, 0%, 0.7);
+  }
+
+  .panel-bg {
+    background: hsl(var(--card));
+    border-left: 1px solid hsl(var(--border-active));
+  }
+
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border-active)); }
+}
