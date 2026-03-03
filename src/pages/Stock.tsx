@@ -878,33 +878,33 @@ export default function Stock() {
 
                 {/* Recent Orders — last 14 days by default, or all data */}
                 <div className="mt-10">
-                  <div className="mb-5 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="mb-5">
+                    <div className="flex items-center gap-3">
                       <h2 className="text-[22px] font-light tracking-tight">Recent Orders</h2>
-                      <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
-                        {activityRange === "all" ? "All data" : "Last 14 days"}
-                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setActivityRange(prev => prev === "all" ? "14" : "all")}
+                        className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border transition-colors"
+                        style={{
+                          borderColor: "hsl(var(--border))",
+                          color: "hsl(var(--muted-foreground))",
+                          backgroundColor: "transparent",
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.color = "hsl(var(--foreground))";
+                          e.currentTarget.style.backgroundColor = "hsl(var(--card))";
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        {activityRange === "all" ? "14 DAYS" : "ALL DATA"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setActivityRange(prev => prev === "all" ? "14" : "all")}
-                      className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border transition-colors"
-                      style={{
-                        borderColor: "hsl(var(--border))",
-                        color: "hsl(var(--muted-foreground))",
-                        backgroundColor: "transparent",
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.color = "hsl(var(--foreground))";
-                        e.currentTarget.style.backgroundColor = "hsl(var(--card))";
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.color = "hsl(var(--muted-foreground))";
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }}
-                    >
-                      {activityRange === "all" ? "14 DAYS" : "ALL DATA"}
-                    </button>
+                    <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
+                      {activityRange === "all" ? "All data" : "Last 14 days"}
+                    </p>
                   </div>
                   {recentOrdersLog.length === 0 ? (
                     <p className="text-[13px]" style={dim}>No orders yet</p>
