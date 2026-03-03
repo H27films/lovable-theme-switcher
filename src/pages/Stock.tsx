@@ -891,11 +891,19 @@ export default function Stock() {
                       className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border transition-colors"
                       style={{
                         borderColor: "hsl(var(--border))",
-                        color: activityRange === "all" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                        backgroundColor: activityRange === "all" ? "hsl(var(--card))" : "transparent",
+                        color: "hsl(var(--muted-foreground))",
+                        backgroundColor: "transparent",
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.color = "hsl(var(--foreground))";
+                        e.currentTarget.style.backgroundColor = "hsl(var(--card))";
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                        e.currentTarget.style.backgroundColor = "transparent";
                       }}
                     >
-                      ALL DATA
+                      {activityRange === "all" ? "14 DAYS" : "ALL DATA"}
                     </button>
                   </div>
                   {recentOrdersLog.length === 0 ? (
@@ -945,11 +953,19 @@ export default function Stock() {
                   className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border transition-colors"
                   style={{
                     borderColor: "hsl(var(--border))",
-                    color: activityRange === "all" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                    backgroundColor: activityRange === "all" ? "hsl(var(--card))" : "transparent",
+                    color: "hsl(var(--muted-foreground))",
+                    backgroundColor: "transparent",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = "hsl(var(--foreground))";
+                    e.currentTarget.style.backgroundColor = "hsl(var(--card))";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                    e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  ALL DATA
+                  {activityRange === "all" ? "14 DAYS" : "ALL DATA"}
                 </button>
               </div>
               {activityLog.length === 0 ? (
