@@ -200,6 +200,7 @@ export default function Stock() {
   const [reversing, setReversing] = useState<number | null>(null);
   const [showOrderSummaryPanel, setShowOrderSummaryPanel] = useState(false);
   const [activityRange, setActivityRange] = useState<"14" | "all">("14");
+  const [dateSortAsc, setDateSortAsc] = useState(false);
 
   const [stockSearch, setStockSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<BalanceRow | null>(null);
@@ -421,12 +422,18 @@ export default function Stock() {
   const allTodayOrders = log.filter(r => r.Type === "Order" && r.Date === today);
   const hasOrderNotification = allTodayOrders.length > 0;
 
-  const activityLog = activityRange === "all"
+  const activityLogUnsorted = activityRange === "all"
     ? log
     : log.filter(r => r.Date >= cutoff14Str);
+  const activityLog = [...activityLogUnsorted].sort((a, b) =>
+    dateSortAsc ? a.Date.localeCompare(b.Date) : b.Date.localeCompare(a.Date)
+  );
 
-  const recentOrdersLog = log.filter(r =>
+  const recentOrdersLogUnsorted = log.filter(r =>
     r.Type === "Order" && (activityRange === "all" || r.Date >= cutoff14Str)
+  );
+  const recentOrdersLog = [...recentOrdersLogUnsorted].sort((a, b) =>
+    dateSortAsc ? a.Date.localeCompare(b.Date) : b.Date.localeCompare(a.Date)
   );
 
   const exportToExcel = () => {
@@ -912,7 +919,13 @@ export default function Stock() {
                     <table className="w-full border-collapse">
                       <thead>
                         <tr className="border-b" style={{ borderColor: borderActive }}>
-                          <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
+                          <th
+                            className="label-uppercase font-normal text-left pb-3 pt-2 cursor-pointer select-none transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            onClick={() => setDateSortAsc(prev => !prev)}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >Date {dateSortAsc ? "↑" : "↓"}</th>
                           <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal.</th>
@@ -974,7 +987,13 @@ export default function Stock() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b" style={{ borderColor: borderActive }}>
-                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
+                      <th
+                        className="label-uppercase font-normal text-left pb-3 pt-2 cursor-pointer select-none transition-colors"
+                        style={{ color: "hsl(var(--muted-foreground))" }}
+                        onClick={() => setDateSortAsc(prev => !prev)}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                      >Date {dateSortAsc ? "↑" : "↓"}</th>
                       <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
