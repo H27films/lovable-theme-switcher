@@ -925,7 +925,7 @@ export default function Stock() {
                             onClick={() => setDateSortAsc(prev => !prev)}
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                          >Date {dateSortAsc ? "↑" : "↓"}</th>
+                          >Date</th>
                           <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal.</th>
@@ -993,7 +993,7 @@ export default function Stock() {
                         onClick={() => setDateSortAsc(prev => !prev)}
                         onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                         onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                      >Date {dateSortAsc ? "↑" : "↓"}</th>
+                      >Date</th>
                       <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
