@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, Star, ChevronDown, FileText, Download, Home } from "lucide-react";
+import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, Star, ChevronDown, FileText, Download, Chrome as Home } from "lucide-react";
 
 interface BalanceRow {
   "Product Name": string;
