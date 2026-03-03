@@ -886,27 +886,56 @@ export default function Stock() {
                 {/* Recent Orders — last 14 days by default, or all data */}
                 <div className="mt-10">
                   <div className="mb-5">
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-[22px] font-light tracking-tight">Recent Orders</h2>
+                    <div className="flex items-center gap-5">
                       <button
                         type="button"
-                        onClick={() => setActivityRange(prev => prev === "all" ? "14" : "all")}
-                        className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border transition-colors"
+                        onClick={() => setActivityRange("14")}
+                        className="transition-all duration-200"
                         style={{
-                          borderColor: "hsl(var(--border))",
-                          color: "hsl(var(--muted-foreground))",
-                          backgroundColor: "transparent",
+                          fontSize: activityRange === "14" ? "22px" : "18px",
+                          fontWeight: 300,
+                          letterSpacing: "-0.02em",
+                          color: activityRange === "14" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                         }}
                         onMouseEnter={e => {
-                          e.currentTarget.style.color = "hsl(var(--foreground))";
-                          e.currentTarget.style.backgroundColor = "hsl(var(--card))";
+                          if (activityRange !== "14") {
+                            e.currentTarget.style.color = "hsl(var(--foreground))";
+                            e.currentTarget.style.fontSize = "20px";
+                          }
                         }}
                         onMouseLeave={e => {
-                          e.currentTarget.style.color = "hsl(var(--muted-foreground))";
-                          e.currentTarget.style.backgroundColor = "transparent";
+                          if (activityRange !== "14") {
+                            e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                            e.currentTarget.style.fontSize = "18px";
+                          }
                         }}
                       >
-                        {activityRange === "all" ? "14 DAYS" : "ALL DATA"}
+                        Recent Activity
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActivityRange("all")}
+                        className="transition-all duration-200"
+                        style={{
+                          fontSize: activityRange === "all" ? "22px" : "18px",
+                          fontWeight: 300,
+                          letterSpacing: "-0.02em",
+                          color: activityRange === "all" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        }}
+                        onMouseEnter={e => {
+                          if (activityRange !== "all") {
+                            e.currentTarget.style.color = "hsl(var(--foreground))";
+                            e.currentTarget.style.fontSize = "20px";
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (activityRange !== "all") {
+                            e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                            e.currentTarget.style.fontSize = "18px";
+                          }
+                        }}
+                      >
+                        All Data
                       </button>
                     </div>
                     <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
@@ -954,27 +983,56 @@ export default function Stock() {
           {mode === "usage" && (
             <div>
               <div className="mb-5">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-[22px] font-light tracking-tight">Recent Activity</h2>
+                <div className="flex items-center gap-5">
                   <button
                     type="button"
-                    onClick={() => setActivityRange(prev => prev === "all" ? "14" : "all")}
-                    className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border transition-colors"
+                    onClick={() => setActivityRange("14")}
+                    className="transition-all duration-200"
                     style={{
-                      borderColor: "hsl(var(--border))",
-                      color: "hsl(var(--muted-foreground))",
-                      backgroundColor: "transparent",
+                      fontSize: activityRange === "14" ? "22px" : "18px",
+                      fontWeight: 300,
+                      letterSpacing: "-0.02em",
+                      color: activityRange === "14" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.color = "hsl(var(--foreground))";
-                      e.currentTarget.style.backgroundColor = "hsl(var(--card))";
+                      if (activityRange !== "14") {
+                        e.currentTarget.style.color = "hsl(var(--foreground))";
+                        e.currentTarget.style.fontSize = "20px";
+                      }
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.color = "hsl(var(--muted-foreground))";
-                      e.currentTarget.style.backgroundColor = "transparent";
+                      if (activityRange !== "14") {
+                        e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                        e.currentTarget.style.fontSize = "18px";
+                      }
                     }}
                   >
-                    {activityRange === "all" ? "14 DAYS" : "ALL DATA"}
+                    Recent Activity
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivityRange("all")}
+                    className="transition-all duration-200"
+                    style={{
+                      fontSize: activityRange === "all" ? "22px" : "18px",
+                      fontWeight: 300,
+                      letterSpacing: "-0.02em",
+                      color: activityRange === "all" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                    }}
+                    onMouseEnter={e => {
+                      if (activityRange !== "all") {
+                        e.currentTarget.style.color = "hsl(var(--foreground))";
+                        e.currentTarget.style.fontSize = "20px";
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (activityRange !== "all") {
+                        e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                        e.currentTarget.style.fontSize = "18px";
+                      }
+                    }}
+                  >
+                    All Data
                   </button>
                 </div>
                 <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
