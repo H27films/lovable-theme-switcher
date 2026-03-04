@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, Star, ChevronDown, FileText, Download, Home } from "lucide-react";
+import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, Star, ChevronDown, FileText, Download, Home, Lock } from "lucide-react";
 import jsPDF from "jspdf";
 
 interface BalanceRow {
@@ -344,6 +344,7 @@ export default function Stock() {
   const [savingOrderEdit, setSavingOrderEdit] = useState<number | null>(null);
   const [activityRange, setActivityRange] = useState<"14" | "all">("14");
   const [dateSortAsc, setDateSortAsc] = useState(false);
+  const [saveFlash, setSaveFlash] = useState(false);
 
   const [stockSearch, setStockSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<BalanceRow | null>(null);
@@ -403,6 +404,13 @@ export default function Stock() {
   }, []);
 
   useEffect(() => { fetchBalances(); fetchLog(); fetchShopPrices(); }, [fetchBalances, fetchLog, fetchShopPrices]);
+
+  const handleSave = async () => {
+    await fetchBalances();
+    await fetchLog();
+    setSaveFlash(true);
+    setTimeout(() => setSaveFlash(false), 2000);
+  };
 
   const toggleFavourite = async (productName: string, current: string | null) => {
     const newVal = current === "Yes" ? null : "Yes";
@@ -916,32 +924,36 @@ export default function Stock() {
           {/* ── SECTION 1: Current Stock ── */}
           <div className="mb-12">
             <div className="mb-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-end justify-between">
                 <div>
-                  <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1" style={dim}>Current Stock</h1>
+                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">Current Stock</h1>
                   <p className="text-[28px] font-light tracking-tight">
                     {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
                   </p>
                 </div>
+                <span
+                  className="nav-link mb-1"
+                  style={{ color: saveFlash ? "hsl(var(--green))" : "hsl(var(--foreground))" }}
+                  onClick={handleSave}
+                >
+                  {saveFlash ? "✓ Saved" : "Save"} &nbsp;<Lock size={13} className="inline -mt-0.5" />
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-[11px] tracking-wider uppercase" style={dim}>{balances.length} products · Boudoir</p>
                 {mode === "order" && (
-                  <button
+                  <span
+                    className="nav-link relative"
+                    style={{ color: "hsl(var(--foreground))" }}
                     onClick={() => setShowOrderSummaryPanel(true)}
-                    className="flex items-center gap-2 transition-colors relative"
-                    style={{ color: "hsl(var(--muted-foreground))" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                   >
-                    <div className="relative">
-                      <FileText size={14} />
-                      {hasOrderNotification && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: "hsl(var(--green))" }} />
-                      )}
-                    </div>
-                    <span className="text-[11px] tracking-wider uppercase">Order Summary</span>
-                  </button>
+                    Order Summary &nbsp;<FileText size={13} className="inline -mt-0.5" />
+                    {hasOrderNotification && (
+                      <span className="absolute -top-1 -right-0 w-2 h-2 rounded-full" style={{ background: "hsl(var(--green))" }} />
+                    )}
+                  </span>
                 )}
               </div>
-              <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>{balances.length} products · Boudoir</p>
             </div>
 
             {/* Stock search bar with keyboard nav */}
@@ -1572,24 +1584,21 @@ export default function Stock() {
                           <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["Starting Balance"]}</td>
                           <td className="text-[13px] font-light py-3 text-center">
                             {isEditing ? (
-                              <div className="flex items-center justify-center gap-1.5">
-                                <input
-                                  autoFocus
-                                  type="number"
-                                  min={1}
-                                  className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                  style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
-                                  value={editingOrderQty}
-                                  onChange={e => setEditingOrderQty(e.target.value)}
-                                  onClick={e => (e.target as HTMLInputElement).select()}
-                                  onKeyDown={e => {
-                                    if (e.key === "Enter") handleOrderQtyEdit(row, parsedEdit);
-                                    if (e.key === "Escape") setEditingOrderRow(null);
-                                  }}
-                                />
-                                <button onClick={() => handleOrderQtyEdit(row, parsedEdit)} style={{ color: "hsl(var(--green))", fontSize: "13px" }}>✓</button>
-                                <button onClick={() => setEditingOrderRow(null)} style={dim}>✕</button>
-                              </div>
+                              <input
+                                autoFocus
+                                type="number"
+                                min={1}
+                                className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
+                                value={editingOrderQty}
+                                onChange={e => setEditingOrderQty(e.target.value)}
+                                onClick={e => (e.target as HTMLInputElement).select()}
+                                onBlur={() => handleOrderQtyEdit(row, parsedEdit)}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter") handleOrderQtyEdit(row, parsedEdit);
+                                  if (e.key === "Escape") setEditingOrderRow(null);
+                                }}
+                              />
                             ) : (
                               <span
                                 className="cursor-pointer"
