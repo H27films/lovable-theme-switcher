@@ -12,12 +12,6 @@ interface BalanceRow {
   "Favourite": string | null;
 }
 
-interface ShopPriceRow {
-  "Product Name": string;
-  "Staff Price": number | null;
-  "Customer Price": number | null;
-}
-
 interface LogRow {
   id: number;
   Date: string;
@@ -26,7 +20,6 @@ interface LogRow {
   Qty: number;
   "Starting Balance": number;
   "Ending Balance": number;
-  GRN?: string;
 }
 
 interface EntryLine {
@@ -259,67 +252,6 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose }: {
   );
 }
 
-function DatePicker({ value, onChange }: {
-  value: "today" | "yesterday" | "tomorrow";
-  onChange: (v: "today" | "yesterday" | "tomorrow") => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
-  const borderActive = "hsl(var(--border-active))";
-  const cardBg = "hsl(var(--card))";
-  const border = "hsl(var(--border))";
-  const OPTIONS: { value: "today" | "yesterday" | "tomorrow"; label: string }[] = [
-    { value: "yesterday", label: "Yesterday" },
-    { value: "today", label: "Today" },
-    { value: "tomorrow", label: "Tomorrow" },
-  ];
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    if (open) document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative flex-shrink-0">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 h-[28px] px-3 text-[11px] tracking-wider uppercase transition-colors"
-        style={{ border: `1px solid ${value !== "today" ? borderActive : border}`, background: cardBg, color: value !== "today" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-      >
-        {OPTIONS.find(o => o.value === value)?.label}
-        <ChevronDown size={10} />
-      </button>
-      {open && (
-        <div
-          className="absolute top-full right-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "110px" }}
-        >
-          {OPTIONS.map(opt => (
-            <div
-              key={opt.value}
-              className="px-3 py-2 text-[11px] tracking-wider uppercase cursor-pointer transition-colors"
-              style={{
-                borderBottom: `1px solid ${border}`,
-                color: value === opt.value ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                background: value === opt.value ? cardBg : "transparent",
-              }}
-              onMouseDown={() => { onChange(opt.value); setOpen(false); }}
-              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-              onMouseLeave={e => (e.currentTarget.style.color = value === opt.value ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
-            >
-              {opt.label}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function Stock() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
@@ -327,7 +259,6 @@ export default function Stock() {
   const [mode, setMode] = useState<"usage" | "order">("usage");
 
   const [balances, setBalances] = useState<BalanceRow[]>([]);
-  const [shopPrices, setShopPrices] = useState<ShopPriceRow[]>([]);
   const [log, setLog] = useState<LogRow[]>([]);
   const [entries, setEntries] = useState<EntryLine[]>(makeEntries());
   const [submitting, setSubmitting] = useState(false);
@@ -339,10 +270,6 @@ export default function Stock() {
   const [reversing, setReversing] = useState<number | null>(null);
   const [showOrderSummaryPanel, setShowOrderSummaryPanel] = useState(false);
   const [grnNotes, setGrnNotes] = useState("");
-  const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
-  const [editingOrderRow, setEditingOrderRow] = useState<number | null>(null);
-  const [editingOrderQty, setEditingOrderQty] = useState<string>("");
-  const [savingOrderEdit, setSavingOrderEdit] = useState<number | null>(null);
   const [activityRange, setActivityRange] = useState<"14" | "all">("14");
   const [dateSortAsc, setDateSortAsc] = useState(false);
 
@@ -353,15 +280,6 @@ export default function Stock() {
   const stockListRef = useRef<HTMLDivElement>(null);
 
   const today = new Date().toISOString().split("T")[0];
-  const [usageDate, setUsageDate] = useState<"today" | "yesterday" | "tomorrow">("today");
-  const [orderDate, setOrderDate] = useState<"today" | "yesterday" | "tomorrow">("today");
-
-  const getDateStr = (rel: "today" | "yesterday" | "tomorrow") => {
-    const d = new Date();
-    if (rel === "yesterday") d.setDate(d.getDate() - 1);
-    if (rel === "tomorrow") d.setDate(d.getDate() + 1);
-    return d.toISOString().split("T")[0];
-  };
 
   const fetchBalances = useCallback(async () => {
     try {
@@ -395,15 +313,7 @@ export default function Stock() {
     }
   }, []);
 
-  const fetchShopPrices = useCallback(async () => {
-    try {
-      const { data, error } = await (supabase as any).from("BoudoirShopPrice").select("*");
-      if (error) console.error("Fetch shop prices error:", error);
-      if (data) setShopPrices(data);
-    } catch (err) { console.error("Error fetching shop prices:", err); }
-  }, []);
-
-  useEffect(() => { fetchBalances(); fetchLog(); fetchShopPrices(); }, [fetchBalances, fetchLog, fetchShopPrices]);
+  useEffect(() => { fetchBalances(); fetchLog(); }, [fetchBalances, fetchLog]);
 
   const toggleFavourite = async (productName: string, current: string | null) => {
     const newVal = current === "Yes" ? null : "Yes";
@@ -489,7 +399,7 @@ export default function Stock() {
         const currentBalance = Number(balance?.["Starting Balance"] ?? 0);
         const endingBalance = currentBalance - Number(entry.qty);
         await (supabase as any).from("BoudoirLog").insert({
-          "Date": getDateStr(usageDate),
+          "Date": today,
           "Product Name": entry.productName,
           "Type": entry.type,
           "Qty": -Number(entry.qty),
@@ -580,11 +490,11 @@ export default function Stock() {
     if (!valid.length) return;
     setOrderSubmitting(true);
 
-    // Generate GRN: BOU DDMMYY based on selected date
-    const orderDateObj = new Date(getDateStr(orderDate));
-    const dd = String(orderDateObj.getDate()).padStart(2, "0");
-    const mm = String(orderDateObj.getMonth() + 1).padStart(2, "0");
-    const yy = String(orderDateObj.getFullYear()).slice(-2);
+    // Generate GRN: BOU DDMMYY
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = String(d.getFullYear()).slice(-2);
     const grn = `BOU ${dd}${mm}${yy}`;
 
     try {
@@ -593,7 +503,7 @@ export default function Stock() {
         const currentBalance = Number(balance?.["Starting Balance"] ?? 0);
         const endingBalance = currentBalance + Number(entry.qty);
         await (supabase as any).from("BoudoirLog").insert({
-          "Date": getDateStr(orderDate),
+          "Date": today,
           "Product Name": entry.productName,
           "Type": "Order",
           "Qty": Number(entry.qty),
@@ -614,74 +524,13 @@ export default function Stock() {
     setOrderSubmitting(false);
   };
 
-  const handleOrderQtyEdit = async (row: LogRow, newQty: number) => {
-    if (isNaN(newQty) || newQty < 1) return;
-    setSavingOrderEdit(row.id);
-    try {
-      const newEndingBalance = row["Starting Balance"] + newQty;
-      await (supabase as any).from("BoudoirLog")
-        .update({ "Qty": newQty, "Ending Balance": newEndingBalance })
-        .eq("id", row.id);
-      await (supabase as any).from("Boudoir Balance")
-        .update({ "Starting Balance": newEndingBalance })
-        .eq("Product Name", row["Product Name"]);
-      await fetchBalances();
-      await fetchLog();
-    } catch (err) { console.error("Edit order qty error:", err); }
-    setSavingOrderEdit(null);
-    setEditingOrderRow(null);
-  };
-
-  const handleOrderRowDelete = async (row: LogRow) => {
-    setSavingOrderEdit(row.id);
-    try {
-      await (supabase as any).from("Boudoir Balance")
-        .update({ "Starting Balance": row["Starting Balance"] })
-        .eq("Product Name", row["Product Name"]);
-      await (supabase as any).from("BoudoirLog").delete().eq("id", row.id);
-      await fetchBalances();
-      await fetchLog();
-    } catch (err) { console.error("Delete order row error:", err); }
-    setSavingOrderEdit(null);
-  };
-
-  const toggleGRN = (key: string) => {
-    setExpandedGRNs(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
-
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
   const border = "hsl(var(--border))";
   const borderActive = "hsl(var(--border-active))";
   const cardBg = "hsl(var(--card))";
 
-  // Find the most future/recent date that has order data (could be tomorrow, today, or a past date)
-  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
-  const allOrderDates = [...new Set(log.filter(r => r.Type === "Order").map(r => r.Date))].sort((a, b) => b.localeCompare(a));
-  const latestOrderDate = allOrderDates[0] ?? today;
-  const allTodayOrders = log.filter(r => r.Type === "Order" && r.Date === latestOrderDate);
-  const hasOrderNotification = log.filter(r => r.Type === "Order" && (r.Date === today || r.Date === tomorrow)).length > 0;
-
-  // Group ALL orders by date+GRN — including the latest/editable date
-  const allOrderGroups = (() => {
-    const allOrders = log.filter(r => r.Type === "Order");
-    const seen = new Map<string, LogRow[]>();
-    allOrders.forEach(r => {
-      const grn = (r as any).GRN || r.Date;
-      const key = `${r.Date}__${grn}`;
-      if (!seen.has(key)) seen.set(key, []);
-      seen.get(key)!.push(r);
-    });
-    const groups: { key: string; date: string; grn: string; rows: LogRow[] }[] = [];
-    seen.forEach((rows, key) => {
-      const [date, grn] = key.split("__");
-      groups.push({ key, date, grn, rows });
-    });
-    return groups.sort((a, b) => b.date.localeCompare(a.date));
-  })();
+  const allTodayOrders = log.filter(r => r.Type === "Order" && r.Date === today);
+  const hasOrderNotification = allTodayOrders.length > 0;
 
   const activityLogUnsorted = activityRange === "all"
     ? log
@@ -996,11 +845,6 @@ export default function Stock() {
 
             {selectedProduct && (() => {
               const productLog = log.filter(r => r["Product Name"] === selectedProduct["Product Name"]);
-              const shopPrice = shopPrices.find(p => p["Product Name"] === selectedProduct["Product Name"]);
-              const fmtPrice = (val: number | null | undefined) => {
-                if (!val || val < 0.01) return "—";
-                return `RM ${val.toFixed(2)}`;
-              };
               return (
                 <div className="surface-box p-6">
                   {/* Balance + favourite row */}
@@ -1027,18 +871,6 @@ export default function Stock() {
                     </div>
                   </div>
 
-                  {/* Staff & Customer prices */}
-                  <div className="flex items-center gap-6 mb-6 pt-4 border-t" style={{ borderColor: border }}>
-                    <div>
-                      <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
-                      <p className="text-[15px] font-light">{fmtPrice(shopPrice?.["Staff Price"])}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
-                      <p className="text-[15px] font-light">{fmtPrice(shopPrice?.["Customer Price"])}</p>
-                    </div>
-                  </div>
-
                   {/* Recent activity for this product */}
                   {productLog.length > 0 && (
                     <table className="w-full border-collapse">
@@ -1054,7 +886,7 @@ export default function Stock() {
                       <tbody>
                         {productLog.map(row => (
                           <tr key={row.id} className="border-b" style={{ borderColor: border }}>
-                            <td className="text-[12px] font-light py-2">
+                            <td className="text-[12px] font-light py-2" style={dim}>
                               {new Date(row.Date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </td>
                             <td className="text-[11px] font-light py-2 text-center tracking-wider uppercase" style={dim}>{row.Type}</td>
@@ -1108,10 +940,7 @@ export default function Stock() {
             {/* ── Daily Usage panel ── */}
             {mode === "usage" && (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[11px] tracking-wider uppercase" style={dim}>Enter today's stock movements</p>
-                  <DatePicker value={usageDate} onChange={setUsageDate} />
-                </div>
+                <p className="text-[11px] tracking-wider uppercase mb-4" style={dim}>Enter today's stock movements</p>
                 {/* Column headers */}
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-4 flex-shrink-0" />
@@ -1186,10 +1015,7 @@ export default function Stock() {
             {/* ── Order panel ── */}
             {mode === "order" && (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[11px] tracking-wider uppercase" style={dim}>Add stock from a new order</p>
-                  <DatePicker value={orderDate} onChange={setOrderDate} />
-                </div>
+                <p className="text-[11px] tracking-wider uppercase mb-4" style={dim}>Add stock from a new order</p>
                 {/* Column headers */}
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-4 flex-shrink-0" />
@@ -1391,21 +1217,27 @@ export default function Stock() {
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                           >Date</th>
                           <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
+                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Starting Bal.</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal.</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {recentOrdersLog.map(row => (
-                          <tr key={row.id} className="border-b table-row-hover" style={{ borderColor: border }}>
-                            <td className="text-[12px] font-light py-3" style={dim}>
+                        {recentOrdersLog.map((row, idx) => {
+                          const nextRow = recentOrdersLog[idx + 1];
+                          const isDateBreak = nextRow && nextRow.Date !== row.Date;
+                          return (
+                          <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
+                            <td className="text-[12px] font-light py-3">
                               {new Date(row.Date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </td>
                             <td className="text-[13px] font-light py-3">{row["Product Name"]}</td>
+                            <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["Starting Balance"]}</td>
                             <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>{row.Qty > 0 ? "+" : ""}{row.Qty}</td>
                             <td className="text-[13px] font-light py-3 text-center">{row["Ending Balance"]}</td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   )}
@@ -1475,11 +1307,13 @@ export default function Stock() {
                     </tr>
                   </thead>
                   <tbody>
-                    {activityLog.map(row => {
+                    {activityLog.map((row, idx) => {
                       const canReverse = row.Date === today || row.Date === yesterdayStr;
+                      const nextRow = activityLog[idx + 1];
+                      const isDateBreak = nextRow && nextRow.Date !== row.Date;
                       return (
-                        <tr key={row.id} className="border-b table-row-hover" style={{ borderColor: border }}>
-                          <td className="text-[12px] font-light py-3 text-dim">
+                        <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
+                          <td className="text-[12px] font-light py-3">
                             {new Date(row.Date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                           </td>
                           <td className="text-[13px] font-light py-3 text-dim">{row["Product Name"]}</td>
@@ -1525,8 +1359,7 @@ export default function Stock() {
               <div>
                 <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
                 <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
-                  {latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  {allTodayOrders.length > 0 && ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}`}
+                  {today} · {allTodayOrders.length} {allTodayOrders.length === 1 ? "item" : "items"}
                 </p>
               </div>
               <button onClick={() => setShowOrderSummaryPanel(false)} style={dim}
@@ -1536,12 +1369,10 @@ export default function Stock() {
               </button>
             </div>
 
-            {/* ── Most recent order date (editable) ── */}
             {allTodayOrders.length === 0 ? (
-              <p className="text-[13px]" style={dim}>No orders submitted yet.</p>
+              <p className="text-[13px]" style={dim}>No orders submitted today.</p>
             ) : (
               <>
-                <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Click qty to edit · × to remove line</p>
                 <table className="w-full border-collapse mb-8">
                   <thead>
                     <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
@@ -1549,65 +1380,17 @@ export default function Stock() {
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Prev Bal</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">New Bal</th>
-                      <th className="w-6" />
                     </tr>
                   </thead>
                   <tbody>
-                    {allTodayOrders.map(row => {
-                      const isEditing = editingOrderRow === row.id;
-                      const isSaving = savingOrderEdit === row.id;
-                      const parsedEdit = parseInt(editingOrderQty);
-                      const previewBal = isEditing && !isNaN(parsedEdit)
-                        ? row["Starting Balance"] + parsedEdit
-                        : row["Ending Balance"];
-                      return (
-                        <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))", opacity: isSaving ? 0.4 : 1, transition: "opacity 0.15s" }}>
-                          <td className="text-[13px] font-light py-3">{row["Product Name"]}</td>
-                          <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["Starting Balance"]}</td>
-                          <td className="text-[13px] font-light py-3 text-center">
-                            {isEditing ? (
-                              <div className="flex items-center justify-center gap-1.5">
-                                <input
-                                  autoFocus
-                                  type="number"
-                                  min={1}
-                                  className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                  style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
-                                  value={editingOrderQty}
-                                  onChange={e => setEditingOrderQty(e.target.value)}
-                                  onClick={e => (e.target as HTMLInputElement).select()}
-                                  onKeyDown={e => {
-                                    if (e.key === "Enter") handleOrderQtyEdit(row, parsedEdit);
-                                    if (e.key === "Escape") setEditingOrderRow(null);
-                                  }}
-                                />
-                                <button onClick={() => handleOrderQtyEdit(row, parsedEdit)} style={{ color: "hsl(var(--green))", fontSize: "13px" }}>✓</button>
-                                <button onClick={() => setEditingOrderRow(null)} style={dim}>✕</button>
-                              </div>
-                            ) : (
-                              <span
-                                className="cursor-pointer"
-                                style={{ color: "hsl(var(--green))" }}
-                                title="Click to edit"
-                                onClick={() => { setEditingOrderRow(row.id); setEditingOrderQty(String(row.Qty)); }}
-                                onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-                                onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-                              >+{row.Qty}</span>
-                            )}
-                          </td>
-                          <td className="text-[13px] font-light py-3 text-center" style={isEditing ? dim : {}}>{previewBal}</td>
-                          <td className="py-3 text-center">
-                            <button
-                              onClick={() => handleOrderRowDelete(row)}
-                              disabled={isSaving}
-                              style={dim}
-                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                            ><X size={13} /></button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {allTodayOrders.map(row => (
+                      <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))" }}>
+                        <td className="text-[13px] font-light py-3">{row["Product Name"]}</td>
+                        <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["Starting Balance"]}</td>
+                        <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>{row.Qty > 0 ? "+" : ""}{row.Qty}</td>
+                        <td className="text-[13px] font-light py-3 text-center">{row["Ending Balance"]}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
 
@@ -1617,13 +1400,17 @@ export default function Stock() {
                   <textarea
                     rows={3}
                     className="w-full bg-transparent outline-none text-[13px] font-light resize-none"
-                    style={{ borderBottom: "1px solid hsl(var(--border-active))", padding: "6px 0", color: "hsl(var(--foreground))" }}
+                    style={{
+                      borderBottom: "1px solid hsl(var(--border-active))",
+                      padding: "6px 0",
+                      color: "hsl(var(--foreground))",
+                    }}
                     placeholder="Example: No Argan Stock..."
                     value={grnNotes}
                     onChange={e => setGrnNotes(e.target.value)}
                   />
                 </div>
-                <div className="flex items-center gap-6 mb-12">
+                <div className="flex items-center gap-6">
                   <button
                     onClick={generateGRNPdf}
                     className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
@@ -1646,75 +1433,6 @@ export default function Stock() {
                   </button>
                 </div>
               </>
-            )}
-
-            {/* ── All Orders ── */}
-            {allOrderGroups.length > 0 && (
-              <div>
-                <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))" }}>
-                  <h3 className="text-[13px] font-light tracking-tight mb-1">All Orders</h3>
-                  <p className="text-[10px] tracking-wider uppercase" style={dim}>Last 31 days</p>
-                </div>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
-                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">GRN</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Items</th>
-                      <th className="w-8" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allOrderGroups.map(group => (
-                      <>
-                        <tr
-                          key={group.key}
-                          className="border-b cursor-pointer"
-                          style={{ borderColor: "hsl(var(--border))" }}
-                          onClick={() => toggleGRN(group.key)}
-                          onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                        >
-                          <td className="text-[13px] font-light py-3" style={dim}>
-                            {new Date(group.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                          </td>
-                          <td className="text-[13px] font-light py-3 text-center">{group.grn !== group.date ? group.grn : "—"}</td>
-                          <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.rows.length}</td>
-                          <td className="py-3 text-center">
-                            <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
-                          </td>
-                        </tr>
-                        {expandedGRNs.has(group.key) && (
-                          <tr key={`${group.key}-detail`} style={{ borderBottom: `1px solid hsl(var(--border))` }}>
-                            <td colSpan={4} className="pb-4 pt-1 px-0">
-                              <table className="w-full border-collapse">
-                                <thead>
-                                  <tr style={{ borderBottom: `1px solid hsl(var(--border))` }}>
-                                    <th className="label-uppercase font-normal text-left py-2 pl-4" style={dim}>Product</th>
-                                    <th className="label-uppercase font-normal text-center py-2" style={dim}>Prev Bal</th>
-                                    <th className="label-uppercase font-normal text-center py-2" style={dim}>Qty</th>
-                                    <th className="label-uppercase font-normal text-center py-2 pr-4" style={dim}>New Bal</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {group.rows.map(r => (
-                                    <tr key={r.id} style={{ borderBottom: `1px solid hsl(var(--border))` }}>
-                                      <td className="text-[12px] font-light py-2 pl-4">{r["Product Name"]}</td>
-                                      <td className="text-[12px] font-light py-2 text-center" style={dim}>{r["Starting Balance"]}</td>
-                                      <td className="text-[12px] font-light py-2 text-center" style={{ color: "hsl(var(--green))" }}>+{r.Qty}</td>
-                                      <td className="text-[12px] font-light py-2 text-center pr-4">{r["Ending Balance"]}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             )}
           </div>
         </div>
