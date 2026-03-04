@@ -1302,7 +1302,7 @@ export default function Stock() {
                       <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal.</th>
+                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
                       <th className="w-6" />
                     </tr>
                   </thead>
