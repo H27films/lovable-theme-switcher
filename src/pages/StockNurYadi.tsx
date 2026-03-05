@@ -671,6 +671,45 @@ export default function StockNurYadi() {
         await (supabase as any).from("Nur Yadi Balance")
           .update({ "Starting Balance": endingBalance })
           .eq("Product Name", entry.productName);
+
+        // Deduct from OfficeBalance and log to OfficeLog
+        try {
+          const { data: officeData, error: officeSelectError } = await (supabase as any)
+            .from("OfficeBalance")
+            .select("id, \"OFFICE BALANCE\"")
+            .eq("PRODUCT NAME", entry.productName)
+            .maybeSingle();
+          if (officeSelectError) {
+            console.error("OfficeBalance select error:", officeSelectError);
+          } else if (officeData) {
+            const officeCurrentBalance = Number(officeData["OFFICE BALANCE"] ?? 0);
+            const officeEndingBalance = officeCurrentBalance - Number(entry.qty);
+            const { error: officeUpdateError } = await (supabase as any)
+              .from("OfficeBalance")
+              .update({ "OFFICE BALANCE": officeEndingBalance })
+              .eq("id", officeData.id);
+            if (officeUpdateError) {
+              console.error("OfficeBalance update error:", officeUpdateError);
+            } else {
+              // Log to OfficeLog separately — don't let this failure affect the balance update
+              try {
+                await (supabase as any).from("OfficeLog").insert({
+                  "Date": getDateStr(orderDate),
+                  "Product Name": entry.productName,
+                  "Type": "Branch Order",
+                  "Branch": "Nur Yadi",
+                  "Qty": Number(entry.qty),
+                  "Starting Balance": officeCurrentBalance,
+                  "Ending Balance": officeEndingBalance,
+                });
+              } catch (logErr) {
+                console.error("OfficeLog insert error (non-critical):", logErr);
+              }
+            }
+          }
+        } catch (officeErr) {
+          console.error("OfficeBalance sync error:", officeErr);
+        }
       }
       await fetchBalances();
       await fetchLog();

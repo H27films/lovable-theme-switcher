@@ -23,6 +23,22 @@ interface OfficeProduct {
 type SortKey = "PRODUCT NAME" | "SUPPLIER" | null;
 type SortDir = "asc" | "desc";
 
+interface OfficeLogRow {
+  id: number;
+  Date: string;
+  "Product Name": string;
+  Type: string;
+  Branch: string | null;
+  Qty: number;
+  "Starting Balance": number;
+  "Ending Balance": number;
+}
+
+const fmtActivityDate = (d: string) => {
+  const dt = new Date(d + "T00:00:00");
+  return dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+};
+
 const getBranchPrice = (supplierPrice: number | null): number | null => {
   if (supplierPrice === null || supplierPrice === undefined) return null;
   if (supplierPrice <= 10) return supplierPrice + 0.50;
@@ -62,8 +78,14 @@ const Index = () => {
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
+  // Recent activity state
+  const [recentActivity, setRecentActivity] = useState<OfficeLogRow[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderSupplierFilter, setOrderSupplierFilter] = useState<string>("all");
   const [orderLines, setOrderLines] = useState<{ product: OfficeProduct; supplierChoice: string | null; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
@@ -115,6 +137,64 @@ const Index = () => {
   }, [activeIndex]);
 
   useEffect(() => { setPage(0); }, [search, filterLowStock, filterColour, sortKey, sortDir]);
+
+  // Fetch recent activity from OfficeLog when a product is selected
+  useEffect(() => {
+    if (!selectedProduct) { setRecentActivity([]); return; }
+    const fetchActivity = async () => {
+      setActivityLoading(true);
+      try {
+        const { data, error } = await (supabase as any)
+          .from("OfficeLog")
+          .select("*")
+          .eq("Product Name", selectedProduct["PRODUCT NAME"])
+          .order("Date", { ascending: false })
+          .limit(20);
+        if (!error && data) setRecentActivity(data);
+      } catch (err) { console.error("Activity fetch error:", err); }
+      setActivityLoading(false);
+    };
+    fetchActivity();
+  }, [selectedProduct]);
+
+  // Confirm supplier order from office order panel
+  const handleOrderConfirm = async () => {
+    if (orderLines.length === 0) return;
+    const hasUnresolved = orderLines.some(
+      l => l.supplierChoice === null &&
+        products.filter(s => s["PRODUCT NAME"] === l.product["PRODUCT NAME"] && s.id !== l.product.id).length > 0
+    );
+    if (hasUnresolved) return;
+    setOrderSubmitting(true);
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      for (const line of orderLines) {
+        const chosenProduct = line.supplierChoice
+          ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
+          : line.product;
+        const currentBalance = Number(chosenProduct["OFFICE BALANCE"] ?? 0);
+        const endingBalance = currentBalance + line.qty;
+        await (supabase as any)
+          .from("OfficeBalance")
+          .update({ "OFFICE BALANCE": endingBalance })
+          .eq("id", chosenProduct.id);
+        await (supabase as any).from("OfficeLog").insert({
+          "Date": today,
+          "Product Name": chosenProduct["PRODUCT NAME"],
+          "Type": "Supplier Order",
+          "Branch": null,
+          "Qty": line.qty,
+          "Starting Balance": currentBalance,
+          "Ending Balance": endingBalance,
+        });
+      }
+      await fetchProducts();
+      setOrderLines([]);
+      setOrderSuccess(true);
+      setTimeout(() => { setOrderSuccess(false); setShowOrderPanel(false); }, 2000);
+    } catch (err) { console.error("Order confirm error:", err); }
+    setOrderSubmitting(false);
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -386,7 +466,7 @@ const Index = () => {
                 </button>
               </div>
 
-              {/* Balance + Par Level */}
+              {/* Balance */}
               <div className="flex items-center gap-8 mb-5 pb-5 border-b" style={{ borderColor: border }}>
                 <div>
                   <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Office Balance</p>
@@ -399,10 +479,6 @@ const Index = () => {
                       <AlertTriangle size={14} className="inline ml-2 mb-1" style={{ color: "hsl(var(--red))" }} />
                     )}
                   </p>
-                </div>
-                <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Par Level</p>
-                  <p className="text-[22px] font-light">{selectedProduct["PAR LEVEL"] ?? "—"}</p>
                 </div>
               </div>
 
@@ -424,6 +500,45 @@ const Index = () => {
                   <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
                   <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
                 </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="pt-4 pb-5 border-t border-b mb-5" style={{ borderColor: border }}>
+                <p className="text-[10px] tracking-wider uppercase mb-3" style={dim}>Recent Activity</p>
+                {activityLoading ? (
+                  <p className="text-[12px]" style={dim}>Loading…</p>
+                ) : recentActivity.length === 0 ? (
+                  <p className="text-[12px]" style={dim}>No activity recorded yet</p>
+                ) : (
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: border }}>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Date</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>From / To</th>
+                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>QTY</th>
+                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 font-normal" style={dim}>Office Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentActivity.map((a, i) => {
+                        const isSupplier = a.Type === "Supplier Order";
+                        const label = isSupplier
+                          ? (selectedProduct["SUPPLIER"] ?? "Supplier")
+                          : (a.Branch ?? "Branch");
+                        const qtySign = isSupplier ? `+${a.Qty}` : `-${a.Qty}`;
+                        const qtyColor = isSupplier ? "hsl(var(--green, 142 71% 45%))" : "hsl(var(--red))";
+                        return (
+                          <tr key={i} className="border-b last:border-0" style={{ borderColor: border }}>
+                            <td className="text-[12px] font-light py-2 pr-5">{fmtActivityDate(a.Date)}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{label}</td>
+                            <td className="text-[12px] font-light py-2 pr-5 text-center" style={{ color: qtyColor }}>{qtySign}</td>
+                            <td className="text-[12px] font-light py-2 text-center">{a["Ending Balance"]}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               {/* Multi-supplier price comparison */}
@@ -854,7 +969,7 @@ const Index = () => {
                   })}
                 </div>
 
-                {/* Summary */}
+                {/* Summary + Confirm */}
                 <div className="mt-6 pt-4 border-t" style={{ borderColor: border }}>
                   <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>
                     {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {orderLines.reduce((s, l) => s + l.qty, 0)} units total
@@ -863,6 +978,20 @@ const Index = () => {
                     <p className="text-[11px] mt-1" style={{ color: "hsl(var(--red))" }}>
                       Please select a supplier for all items before submitting
                     </p>
+                  )}
+                  {orderSuccess ? (
+                    <p className="text-[11px] mt-3" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
+                      ✓ Order confirmed — office balances updated
+                    </p>
+                  ) : (
+                    <button
+                      className="minimal-btn mt-3"
+                      style={{ opacity: (orderLines.length === 0 || orderSubmitting) ? 0.4 : 1 }}
+                      disabled={orderLines.length === 0 || orderSubmitting}
+                      onClick={handleOrderConfirm}
+                    >
+                      {orderSubmitting ? "Confirming…" : "Confirm Order"}
+                    </button>
                   )}
                 </div>
               </div>
