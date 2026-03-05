@@ -104,7 +104,7 @@ export default function Landing() {
         style={{ borderColor: "hsl(var(--border))" }}
       >
         <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
-          Boudoir
+          Branches
         </span>
         <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
       </div>
@@ -118,7 +118,7 @@ export default function Landing() {
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(12px)" }}
         >
           <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
-            Boudoir Product Database
+            Product Database
           </p>
           <h1 className="text-[42px] font-light tracking-tight">Select a section</h1>
         </div>
