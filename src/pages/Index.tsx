@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus } from "lucide-react";
+import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, RefreshCw } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -272,33 +272,33 @@ const Index = () => {
         <div className="py-12">
 
           {/* ── Page header ── */}
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase mb-1" style={dim}>Office Database</h1>
-              <p className="text-[28px] font-light tracking-tight">Stock Inventory</p>
-              <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
+          <div className="mb-8">
+            <div className="flex items-end justify-between">
+              <div>
+                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase mb-1" style={dim}>Office Database</h1>
+                <p className="text-[28px] font-light tracking-tight">Stock Inventory</p>
+              </div>
+              <span
+                className="nav-link flex items-center gap-0.5 mb-1"
+                style={{ color: "hsl(var(--foreground))" }}
+                onClick={() => { setShowOrderPanel(true); setOrderLines([]); setOrderSearch(""); setOrderSupplierFilter("all"); }}
+              >
+                Order <ClipboardList size={13} className="inline -mt-0.5" />
+              </span>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] tracking-wider uppercase" style={dim}>
                 {products.length} products
                 {lowStockCount > 0 && (
                   <span className="ml-3" style={{ color: "hsl(var(--red))" }}>· {lowStockCount} below par</span>
                 )}
               </p>
-            </div>
-            <div className="flex flex-col items-end gap-1 mt-1">
-              <span
-                className="nav-link flex items-center gap-1.5"
-                style={{ color: "hsl(var(--foreground))", fontSize: "13px" }}
-                onClick={() => { setShowOrderPanel(true); setOrderLines([]); setOrderSearch(""); setOrderSupplierFilter("all"); }}
-              >
-                Order &nbsp;<ClipboardList size={13} className="inline -mt-0.5" />
-              </span>
               <button
                 onClick={fetchProducts}
-                className="text-[13px] transition-colors"
+                className="nav-link flex items-center gap-1"
                 style={{ color: "hsl(var(--foreground))" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               >
-                Refresh
+                Refresh <RefreshCw size={13} className="inline -mt-0.5" />
               </button>
             </div>
           </div>
