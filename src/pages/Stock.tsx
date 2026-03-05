@@ -26,6 +26,7 @@ interface LogRow {
   Qty: number;
   "Starting Balance": number;
   "Ending Balance": number;
+  GRN?: string;
 }
 
 interface EntryLine {
@@ -572,32 +573,37 @@ export default function Stock() {
       await (supabase as any).from("BoudoirLog").delete().eq("id", row.id);
       // Restore Office Balance
       try {
+        console.log("reverseOrder: looking up PRODUCT NAME =", row["Product Name"]);
         const { data: officeData, error: officeSelectErr } = await (supabase as any)
           .from("OfficeBalance")
           .select("id, \"OFFICE BALANCE\"")
           .eq("PRODUCT NAME", row["Product Name"])
           .maybeSingle();
+        console.log("reverseOrder: officeData =", officeData, "err =", officeSelectErr);
         if (officeSelectErr) {
           console.error("OfficeBalance select error (reverseOrder):", officeSelectErr);
         } else if (officeData) {
           const restoredBalance = Number(officeData["OFFICE BALANCE"] ?? 0) + Number(row["Qty"] ?? 0);
+          console.log("reverseOrder: restoring balance to", restoredBalance);
           const { error: officeUpdateErr } = await (supabase as any).from("OfficeBalance")
             .update({ "OFFICE BALANCE": restoredBalance })
             .eq("id", officeData.id);
           if (officeUpdateErr) console.error("OfficeBalance update error (reverseOrder):", officeUpdateErr);
+          else console.log("reverseOrder: OfficeBalance updated successfully");
         } else {
-          console.warn("OfficeBalance row not found for product:", row["Product Name"]);
+          console.warn("reverseOrder: OfficeBalance row NOT FOUND for product:", row["Product Name"]);
         }
       } catch (officeErr) { console.error("Office balance restore error:", officeErr); }
       // Remove matching OfficeLog entry
       try {
-        const { error: logDelErr } = await (supabase as any).from("OfficeLog")
+        console.log("reverseOrder: deleting OfficeLog for", row["Product Name"], "date:", row["Date"], "GRN:", row.GRN);
+        let officeLogQuery = (supabase as any).from("OfficeLog")
           .delete()
           .eq("Product Name", row["Product Name"])
-          .eq("Type", "Branch Order")
-          .eq("Branch", "Boudoir")
-          .eq("Qty", row["Qty"])
           .eq("Date", row["Date"]);
+        if (row.GRN) officeLogQuery = officeLogQuery.eq("GRN", row.GRN);
+        const { data: logDelData, error: logDelErr } = await officeLogQuery.select();
+        console.log("reverseOrder: OfficeLog delete result =", logDelData, "err =", logDelErr);
         if (logDelErr) console.error("OfficeLog delete error (reverseOrder):", logDelErr);
       } catch (logErr) { console.error("OfficeLog delete error:", logErr); }
       await fetchBalances();
@@ -635,32 +641,37 @@ export default function Stock() {
       await (supabase as any).from("BoudoirLog").delete().eq("id", row.id);
       // Restore Office Balance
       try {
+        console.log("handleOrderRowDelete: looking up PRODUCT NAME =", row["Product Name"]);
         const { data: officeData, error: officeSelectErr } = await (supabase as any)
           .from("OfficeBalance")
           .select("id, \"OFFICE BALANCE\"")
           .eq("PRODUCT NAME", row["Product Name"])
           .maybeSingle();
+        console.log("handleOrderRowDelete: officeData =", officeData, "err =", officeSelectErr);
         if (officeSelectErr) {
           console.error("OfficeBalance select error (handleOrderRowDelete):", officeSelectErr);
         } else if (officeData) {
           const restoredBalance = Number(officeData["OFFICE BALANCE"] ?? 0) + Number(row["Qty"] ?? 0);
+          console.log("handleOrderRowDelete: restoring balance to", restoredBalance);
           const { error: officeUpdateErr } = await (supabase as any).from("OfficeBalance")
             .update({ "OFFICE BALANCE": restoredBalance })
             .eq("id", officeData.id);
           if (officeUpdateErr) console.error("OfficeBalance update error (handleOrderRowDelete):", officeUpdateErr);
+          else console.log("handleOrderRowDelete: OfficeBalance updated successfully");
         } else {
-          console.warn("OfficeBalance row not found for product:", row["Product Name"]);
+          console.warn("handleOrderRowDelete: OfficeBalance row NOT FOUND for product:", row["Product Name"]);
         }
       } catch (officeErr) { console.error("Office balance restore error:", officeErr); }
       // Remove matching OfficeLog entry
       try {
-        const { error: logDelErr } = await (supabase as any).from("OfficeLog")
+        console.log("handleOrderRowDelete: deleting OfficeLog for", row["Product Name"], "date:", row["Date"], "GRN:", row.GRN);
+        let officeLogQuery2 = (supabase as any).from("OfficeLog")
           .delete()
           .eq("Product Name", row["Product Name"])
-          .eq("Type", "Branch Order")
-          .eq("Branch", "Boudoir")
-          .eq("Qty", row["Qty"])
           .eq("Date", row["Date"]);
+        if (row.GRN) officeLogQuery2 = officeLogQuery2.eq("GRN", row.GRN);
+        const { data: logDelData, error: logDelErr } = await officeLogQuery2.select();
+        console.log("handleOrderRowDelete: OfficeLog delete result =", logDelData, "err =", logDelErr);
         if (logDelErr) console.error("OfficeLog delete error (handleOrderRowDelete):", logDelErr);
       } catch (logErr) { console.error("OfficeLog delete error:", logErr); }
       await fetchBalances();
@@ -765,6 +776,7 @@ export default function Stock() {
                   "Qty": Number(entry.qty),
                   "Starting Balance": officeCurrentBalance,
                   "Ending Balance": officeEndingBalance,
+                  "GRN": grn,
                 });
               } catch (logErr) {
                 console.error("OfficeLog insert error (non-critical):", logErr);
@@ -1703,7 +1715,7 @@ export default function Stock() {
                             <td className="py-3 text-center">
                               {canReverse && (
                                 <button
-                                  onClick={() => reverseUsage(row)}
+                                  onClick={() => row.Type === "Order" ? reverseOrder(row) : reverseUsage(row)}
                                   disabled={reversing === row.id}
                                   className="transition-colors"
                                   style={{ color: "hsl(var(--muted-foreground))", opacity: reversing === row.id ? 0.4 : 1 }}

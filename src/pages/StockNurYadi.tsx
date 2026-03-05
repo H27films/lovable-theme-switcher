@@ -26,6 +26,7 @@ interface LogRow {
   Qty: number;
   "Starting Balance": number;
   "Ending Balance": number;
+  GRN?: string;
 }
 
 interface EntryLine {
@@ -591,13 +592,12 @@ export default function StockNurYadi() {
       } catch (officeErr) { console.error("Office balance restore error:", officeErr); }
       // Remove matching OfficeLog entry
       try {
-        const { error: logDelErr } = await (supabase as any).from("OfficeLog")
+        let officeLogQuery = (supabase as any).from("OfficeLog")
           .delete()
           .eq("Product Name", row["Product Name"])
-          .eq("Type", "Branch Order")
-          .eq("Branch", "Nur Yadi")
-          .eq("Qty", row["Qty"])
           .eq("Date", row["Date"]);
+        if (row.GRN) officeLogQuery = officeLogQuery.eq("GRN", row.GRN);
+        const { error: logDelErr } = await officeLogQuery;
         if (logDelErr) console.error("OfficeLog delete error (reverseOrder):", logDelErr);
       } catch (logErr) { console.error("OfficeLog delete error:", logErr); }
       await fetchBalances();
@@ -654,13 +654,12 @@ export default function StockNurYadi() {
       } catch (officeErr) { console.error("Office balance restore error:", officeErr); }
       // Remove matching OfficeLog entry
       try {
-        const { error: logDelErr } = await (supabase as any).from("OfficeLog")
+        let officeLogQuery2 = (supabase as any).from("OfficeLog")
           .delete()
           .eq("Product Name", row["Product Name"])
-          .eq("Type", "Branch Order")
-          .eq("Branch", "Nur Yadi")
-          .eq("Qty", row["Qty"])
           .eq("Date", row["Date"]);
+        if (row.GRN) officeLogQuery2 = officeLogQuery2.eq("GRN", row.GRN);
+        const { error: logDelErr } = await officeLogQuery2;
         if (logDelErr) console.error("OfficeLog delete error (handleOrderRowDelete):", logDelErr);
       } catch (logErr) { console.error("OfficeLog delete error:", logErr); }
       await fetchBalances();
@@ -765,6 +764,7 @@ export default function StockNurYadi() {
                   "Qty": Number(entry.qty),
                   "Starting Balance": officeCurrentBalance,
                   "Ending Balance": officeEndingBalance,
+                  "GRN": grn,
                 });
               } catch (logErr) {
                 console.error("OfficeLog insert error (non-critical):", logErr);
@@ -1694,7 +1694,7 @@ export default function StockNurYadi() {
                             <td className="py-3 text-center">
                               {canReverse && (
                                 <button
-                                  onClick={() => reverseUsage(row)}
+                                  onClick={() => row.Type === "Order" ? reverseOrder(row) : reverseUsage(row)}
                                   disabled={reversing === row.id}
                                   className="transition-colors"
                                   style={{ color: "hsl(var(--muted-foreground))", opacity: reversing === row.id ? 0.4 : 1 }}
