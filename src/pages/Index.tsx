@@ -53,7 +53,7 @@ const Index = () => {
               className="text-[11px] tracking-[0.2em] uppercase"
               style={{ color: "hsl(var(--foreground))" }}
             >
-              Boudoir
+              OFFICE
             </span>
             <button
               onClick={() => navigate("/")}
@@ -78,7 +78,7 @@ const Index = () => {
         <div>
           <div className="flex items-center gap-5 mb-1.5">
             <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim">
-              Boudoir Product Database
+              office Product Database
             </h1>
           </div>
           <p className="text-[28px] font-light tracking-tight">Price Lookup</p>
