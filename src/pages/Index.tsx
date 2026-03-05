@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -61,6 +61,16 @@ const Index = () => {
   const [filterColour, setFilterColour] = useState<"all" | "yes" | "no">("all");
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  // Order panel state
+  const [showOrderPanel, setShowOrderPanel] = useState(false);
+  const [orderSupplierFilter, setOrderSupplierFilter] = useState<string>("all");
+  const [orderLines, setOrderLines] = useState<{ product: OfficeProduct; supplierChoice: string | null; qty: number }[]>([]);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [showOrderDropdown, setShowOrderDropdown] = useState(false);
+  const [orderActiveIndex, setOrderActiveIndex] = useState(-1);
+  const orderSearchRef = useRef<HTMLDivElement>(null);
+  const orderListRef = useRef<HTMLDivElement>(null);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -157,6 +167,65 @@ const Index = () => {
     } else if (e.key === "Escape") { setShowDropdown(false); setActiveIndex(-1); }
   };
 
+  // All unique suppliers
+  const allSuppliers = [...new Set(products.map(p => p["SUPPLIER"]).filter(Boolean))].sort();
+
+  // Products filtered by supplier for order panel
+  const orderPanelProducts = orderSupplierFilter === "all"
+    ? products
+    : products.filter(p => p["SUPPLIER"] === orderSupplierFilter);
+
+  // Unique product names in order panel (after supplier filter)
+  const orderDropdownResults = orderSearch.length > 0
+    ? orderPanelProducts.filter(p =>
+        p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase()) &&
+        !orderLines.some(l => l.product.id === p.id)
+      ).slice(0, 30)
+    : [];
+
+  // When adding a product to order — check if same name exists with multiple suppliers
+  const addToOrder = (p: OfficeProduct) => {
+    const siblings = products.filter(s => s["PRODUCT NAME"] === p["PRODUCT NAME"] && s.id !== p.id);
+    setOrderLines(prev => [...prev, {
+      product: p,
+      supplierChoice: siblings.length > 0 ? null : p["SUPPLIER"], // null = needs supplier choice
+      qty: 1,
+    }]);
+    setOrderSearch("");
+    setShowOrderDropdown(false);
+    setOrderActiveIndex(-1);
+  };
+
+  const handleOrderKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showOrderDropdown || orderDropdownResults.length === 0) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setOrderActiveIndex(i => (i + 1) % orderDropdownResults.length); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setOrderActiveIndex(i => (i <= 0 ? orderDropdownResults.length - 1 : i - 1)); }
+    else if (e.key === "Enter") {
+      e.preventDefault();
+      const target = orderActiveIndex >= 0 ? orderDropdownResults[orderActiveIndex] : orderDropdownResults[0];
+      if (target) addToOrder(target);
+    } else if (e.key === "Escape") { setShowOrderDropdown(false); setOrderActiveIndex(-1); }
+  };
+
+  // Close order dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (orderSearchRef.current && !orderSearchRef.current.contains(e.target as Node)) {
+        setShowOrderDropdown(false);
+        setOrderActiveIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (orderActiveIndex >= 0 && orderListRef.current) {
+      const items = orderListRef.current.querySelectorAll("[data-item]");
+      items[orderActiveIndex]?.scrollIntoView({ block: "nearest" });
+    }
+  }, [orderActiveIndex]);
+
   const SortIcon = ({ col }: { col: SortKey }) => {
     if (sortKey !== col) return <ChevronUp size={10} style={{ opacity: 0.25, display: "inline", marginLeft: "3px" }} />;
     return sortDir === "asc"
@@ -203,9 +272,9 @@ const Index = () => {
         <div className="py-12">
 
           {/* ── Page header ── */}
-          <div className="flex items-end justify-between mb-8">
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">Office Database</h1>
+              <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase mb-1" style={dim}>Office Database</h1>
               <p className="text-[28px] font-light tracking-tight">Stock Inventory</p>
               <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
                 {products.length} products
@@ -214,15 +283,24 @@ const Index = () => {
                 )}
               </p>
             </div>
-            <button
-              onClick={fetchProducts}
-              className="text-[11px] tracking-wider uppercase transition-colors"
-              style={dim}
-              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-            >
-              Refresh
-            </button>
+            <div className="flex flex-col items-end gap-1 mt-1">
+              <span
+                className="nav-link flex items-center gap-1.5"
+                style={{ color: "hsl(var(--foreground))", fontSize: "13px" }}
+                onClick={() => { setShowOrderPanel(true); setOrderLines([]); setOrderSearch(""); setOrderSupplierFilter("all"); }}
+              >
+                Order &nbsp;<ClipboardList size={13} className="inline -mt-0.5" />
+              </span>
+              <button
+                onClick={fetchProducts}
+                className="text-[13px] transition-colors"
+                style={{ color: "hsl(var(--foreground))" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+              >
+                Refresh
+              </button>
+            </div>
           </div>
 
           {/* ── Search bar — large style ── */}
@@ -452,13 +530,6 @@ const Index = () => {
                         Balance
                       </th>
 
-                      {/* Par */}
-                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Par
-                      </th>
-
                       {/* Supplier Price — dim header, bright white data */}
                       <th className={`${thBase} text-center pr-4 align-top`} style={dim}
                         onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -501,6 +572,13 @@ const Index = () => {
                         Type
                       </th>
 
+                      {/* Par */}
+                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                        Par
+                      </th>
+
                       {/* Units/Order */}
                       <th className={`${thBase} text-center align-top`} style={dim}
                         onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -529,7 +607,6 @@ const Index = () => {
                             {p["OFFICE BALANCE"] ?? "—"}
                             {belowPar && <AlertTriangle size={10} className="inline ml-1 mb-0.5" />}
                           </td>
-                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{p["PAR LEVEL"] ?? "—"}</td>
                           <td className="text-[12px] font-light py-3 pr-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{fmtPrice(p["SUPPLIER PRICE"])}</td>
                           <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(branchPrice)}</td>
                           <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["STAFF PRICE"])}</td>
@@ -538,6 +615,7 @@ const Index = () => {
                           <td className="text-[11px] font-light py-3 pr-4 text-center tracking-wider uppercase" style={dim}>
                             {p["COLOUR"]?.toLowerCase() === "yes" ? "Colour" : "Product"}
                           </td>
+                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{p["PAR LEVEL"] ?? "—"}</td>
                           <td className="text-[12px] font-light py-3 text-center" style={dim}>{p["UNITS PER ORDER"] ?? "—"}</td>
                         </tr>
                       );
@@ -580,6 +658,222 @@ const Index = () => {
           )}
         </div>
       </div>
+
+      {/* ── Order Panel ── */}
+      {showOrderPanel && (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
+          <div
+            className="h-full w-full max-w-[520px] overflow-y-auto p-8"
+            style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Panel header */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-[22px] font-light tracking-tight">New Order</h2>
+                <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>Office stock order</p>
+              </div>
+              <button onClick={() => setShowOrderPanel(false)} style={dim}
+                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Supplier filter */}
+            <div className="mb-6">
+              <p className="text-[10px] tracking-wider uppercase mb-3" style={dim}>Filter by Supplier</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setOrderSupplierFilter("all")}
+                  className="px-3 py-1.5 text-[11px] tracking-wider uppercase transition-colors"
+                  style={{
+                    border: `1px solid ${orderSupplierFilter === "all" ? borderActive : border}`,
+                    color: orderSupplierFilter === "all" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                    background: orderSupplierFilter === "all" ? cardBg : "transparent",
+                  }}
+                >All</button>
+                {allSuppliers.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setOrderSupplierFilter(s)}
+                    className="px-3 py-1.5 text-[11px] tracking-wider uppercase transition-colors"
+                    style={{
+                      border: `1px solid ${orderSupplierFilter === s ? borderActive : border}`,
+                      color: orderSupplierFilter === s ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      background: orderSupplierFilter === s ? cardBg : "transparent",
+                    }}
+                  >{s}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Add product search */}
+            <div ref={orderSearchRef} className="relative mb-6">
+              <p className="text-[10px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
+              <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
+                <input
+                  type="text"
+                  className="flex-1 bg-transparent outline-none text-[13px] font-light"
+                  placeholder="Search to add..."
+                  value={orderSearch}
+                  onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); setOrderActiveIndex(-1); }}
+                  onFocus={() => setShowOrderDropdown(true)}
+                  onKeyDown={handleOrderKeyDown}
+                  style={{ color: "hsl(var(--foreground))" }}
+                />
+                {orderSearch && (
+                  <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); }} style={dim}>
+                    <X size={12} />
+                  </button>
+                )}
+                <Plus size={12} style={dim} />
+              </div>
+              {showOrderDropdown && orderDropdownResults.length > 0 && (
+                <div
+                  ref={orderListRef}
+                  className="absolute top-full left-0 right-0 z-50 border max-h-[200px] overflow-y-auto scrollbar-thin"
+                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+                >
+                  {orderDropdownResults.map((p, i) => (
+                    <div
+                      key={p.id}
+                      data-item
+                      className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
+                      style={{ borderBottom: `1px solid ${border}`, background: i === orderActiveIndex ? cardBg : "transparent" }}
+                      onMouseDown={() => addToOrder(p)}
+                      onMouseEnter={() => setOrderActiveIndex(i)}
+                    >
+                      <div>
+                        <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
+                        {orderSupplierFilter === "all" && p["SUPPLIER"] && (
+                          <span className="text-[11px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
+                        )}
+                      </div>
+                      <span className="text-[12px] font-light" style={{
+                        color: checkBelowPar(p["OFFICE BALANCE"], p["PAR LEVEL"])
+                          ? "hsl(var(--red))" : "hsl(var(--muted-foreground))"
+                      }}>
+                        {p["OFFICE BALANCE"] ?? "—"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Order lines */}
+            {orderLines.length > 0 && (
+              <div>
+                <p className="text-[10px] tracking-wider uppercase mb-3" style={dim}>Order Items</p>
+                <div className="space-y-3">
+                  {orderLines.map((line, idx) => {
+                    const siblings = products.filter(
+                      s => s["PRODUCT NAME"] === line.product["PRODUCT NAME"] && s.id !== line.product.id
+                    );
+                    const needsChoice = siblings.length > 0 && line.supplierChoice === null;
+                    const chosenSupplier = line.supplierChoice
+                      ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice)
+                      : line.product;
+                    return (
+                      <div key={idx} className="p-3" style={{ border: `1px solid ${needsChoice ? borderActive : border}` }}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="text-[13px] font-light">{line.product["PRODUCT NAME"]}</p>
+                            {/* Supplier choice prompt */}
+                            {siblings.length > 0 && (
+                              <div className="flex items-center gap-2 mt-1.5">
+                                {[line.product, ...siblings].map(s => (
+                                  <button
+                                    key={s.id}
+                                    onClick={() => setOrderLines(prev => prev.map((l, i) =>
+                                      i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
+                                    ))}
+                                    className="text-[10px] tracking-wider uppercase px-2 py-1 transition-colors"
+                                    style={{
+                                      border: `1px solid ${line.supplierChoice === s["SUPPLIER"] ? borderActive : border}`,
+                                      color: line.supplierChoice === s["SUPPLIER"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                                      background: line.supplierChoice === s["SUPPLIER"] ? cardBg : "transparent",
+                                    }}
+                                  >
+                                    {s["SUPPLIER"] || "Unknown"}
+                                    {s["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(s["SUPPLIER PRICE"])}`}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {/* Single supplier — show supplier name + price */}
+                            {siblings.length === 0 && (
+                              <p className="text-[11px] mt-0.5" style={dim}>
+                                {line.product["SUPPLIER"]}
+                                {line.product["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(line.product["SUPPLIER PRICE"])}`}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))}
+                            style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                        {/* Balance + Qty */}
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-[11px]" style={dim}>
+                            Balance: <span style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR LEVEL"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
+                              {chosenSupplier?.["OFFICE BALANCE"] ?? line.product["OFFICE BALANCE"] ?? "—"}
+                            </span>
+                          </span>
+                          {/* Qty stepper */}
+                          <div className="flex items-center" style={{ border: `1px solid ${borderActive}` }}>
+                            <button
+                              className="px-2 py-1.5 transition-colors text-[13px]"
+                              style={dim}
+                              onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: Math.max(1, l.qty - 1) } : l))}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                            >
+                              <ChevronLeft size={12} />
+                            </button>
+                            <span className="text-[13px] font-light px-3 min-w-[32px] text-center">{line.qty}</span>
+                            <button
+                              className="px-2 py-1.5 transition-colors text-[13px]"
+                              style={dim}
+                              onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                            >
+                              <ChevronRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Summary */}
+                <div className="mt-6 pt-4 border-t" style={{ borderColor: border }}>
+                  <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>
+                    {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {orderLines.reduce((s, l) => s + l.qty, 0)} units total
+                  </p>
+                  {orderLines.some(l => l.supplierChoice === null && products.filter(s => s["PRODUCT NAME"] === l.product["PRODUCT NAME"] && s.id !== l.product.id).length > 0) && (
+                    <p className="text-[11px] mt-1" style={{ color: "hsl(var(--red))" }}>
+                      Please select a supplier for all items before submitting
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {orderLines.length === 0 && (
+              <p className="text-[13px]" style={dim}>No items added yet</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

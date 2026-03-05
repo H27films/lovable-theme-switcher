@@ -140,7 +140,7 @@ export default function Landing() {
               </svg>
             }
             label="Inventory"
-            title="Stock"
+            title="Branch Stock"
             subtitle="Track usage, orders & balances"
           />
 
@@ -197,9 +197,9 @@ export default function Landing() {
                 <line x1="10" y1="26" x2="16" y2="32" strokeOpacity="0.4" />
               </svg>
             }
-            label="Products"
-            title="Prices"
-            subtitle="Lookup & manage product pricing"
+            label="Prices & Suppliers"
+            title="Office Database"
+            subtitle="Manage product pricing & suppliers"
           />
         </div>
       </div>
