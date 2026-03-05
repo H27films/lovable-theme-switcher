@@ -397,7 +397,7 @@ export default function StockNurYadi() {
 
   const fetchShopPrices = useCallback(async () => {
     try {
-      const { data, error } = await (supabase as any).from("BoudoirShopPrice").select("*");
+      const { data, error } = await (supabase as any).from("NurYadiShopPrice").select("*");
       if (error) console.error("Fetch shop prices error:", error);
       if (data) setShopPrices(data);
     } catch (err) { console.error("Error fetching shop prices:", err); }
