@@ -8,6 +8,7 @@ export default function Landing() {
   const { theme, toggle, font, cycleFont } = useTheme();
   const [visible, setVisible] = useState(false);
   const [hoverStock, setHoverStock] = useState(false);
+  const [showStockChoice, setShowStockChoice] = useState(false);
   const [hoverPrices, setHoverPrices] = useState(false);
 
   useEffect(() => {
@@ -125,7 +126,7 @@ export default function Landing() {
         {/* Cards */}
         <div className="flex flex-col gap-4 w-full max-w-[560px]">
           <Card
-            onClick={() => navigate("/stock")}
+            onClick={() => setShowStockChoice(prev => !prev)}
             delay="120ms"
             hover={hoverStock}
             onEnter={() => setHoverStock(true)}
@@ -142,6 +143,46 @@ export default function Landing() {
             title="Stock"
             subtitle="Track usage, orders & balances"
           />
+
+          {/* Stock sub-choices */}
+          {showStockChoice && (
+            <div
+              className="flex gap-3 w-full transition-all duration-300"
+              style={{
+                opacity: showStockChoice ? 1 : 0,
+                transform: showStockChoice ? "translateY(0)" : "translateY(-8px)",
+              }}
+            >
+              <button
+                onClick={() => navigate("/stock")}
+                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
+                style={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  color: "hsl(var(--foreground))",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
+              >
+                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
+                <p className="text-[18px] font-light tracking-tight">Boudoir</p>
+              </button>
+              <button
+                onClick={() => navigate("/stocknuryadi")}
+                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
+                style={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  color: "hsl(var(--foreground))",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
+              >
+                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
+                <p className="text-[18px] font-light tracking-tight">Nur Yadi</p>
+              </button>
+            </div>
+          )}
 
           <Card
             onClick={() => navigate("/prices")}
