@@ -90,9 +90,14 @@ const Index = () => {
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  // Recent activity state
+  // Recent activity state (product popup)
   const [recentActivity, setRecentActivity] = useState<AllFileLogRow[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
+
+  // All-orders recent activity (main page, 14 days)
+  const [allActivity, setAllActivity] = useState<AllFileLogRow[]>([]);
+  const [allActivityLoading, setAllActivityLoading] = useState(false);
+  const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
@@ -192,6 +197,28 @@ const Index = () => {
     };
     fetchActivity();
   }, [selectedProduct]);
+
+  // Fetch 14-day all-orders activity for main page
+  useEffect(() => {
+    const fetchAllActivity = async () => {
+      setAllActivityLoading(true);
+      try {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 14);
+        const cutoffStr = cutoff.toISOString().split("T")[0];
+        const { data, error } = await (supabase as any)
+          .from("AllFileLog")
+          .select("*")
+          .gte("DATE", cutoffStr)
+          .eq("TYPE", "Order")
+          .order("DATE", { ascending: false })
+          .order("id", { ascending: false });
+        if (!error && data) setAllActivity(data);
+      } catch (err) { console.error("All activity fetch error:", err); }
+      setAllActivityLoading(false);
+    };
+    fetchAllActivity();
+  }, []);
 
   // Confirm supplier order from office order panel
   const handleOrderConfirm = async () => {
@@ -563,6 +590,97 @@ const Index = () => {
               </div>
             )}
           </div>
+
+          {/* ── Recent Activity (14 days) ── */}
+          {(() => {
+            // Group allActivity by GRN
+            const groups: { grn: string; rows: AllFileLogRow[] }[] = [];
+            const seen = new Map<string, AllFileLogRow[]>();
+            allActivity.forEach(row => {
+              const key = row.GRN ?? "—";
+              if (!seen.has(key)) { seen.set(key, []); groups.push({ grn: key, rows: seen.get(key)! }); }
+              seen.get(key)!.push(row);
+            });
+
+            return (
+              <div className="mb-8">
+                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Recent Activity · Last 14 Days</p>
+                {allActivityLoading ? (
+                  <p className="text-[12px]" style={dim}>Loading…</p>
+                ) : groups.length === 0 ? (
+                  <p className="text-[12px]" style={dim}>No order activity in the last 14 days</p>
+                ) : (
+                  <div className="border-t" style={{ borderColor: border }}>
+                    {groups.map(({ grn, rows }) => {
+                      const first = rows[0];
+                      const isSupplierOrder = first.BRANCH === "Office";
+                      const typeLabel = isSupplierOrder ? "Supplier Order" : "Branch Order";
+                      const counterparty = isSupplierOrder ? (first.SUPPLIER ?? "—") : (first.BRANCH ?? "—");
+                      const uniqueProducts = new Set(rows.map(r => r["PRODUCT NAME"])).size;
+                      const totalUnits = rows.reduce((s, r) => s + Math.abs(r.QTY ?? 0), 0);
+                      const expanded = expandedGRNs.has(grn);
+                      const dateStr = first.DATE ? (() => {
+                        const d = new Date(first.DATE);
+                        return d.getDate() + " " + d.toLocaleString("en-GB", { month: "short" });
+                      })() : "—";
+
+                      return (
+                        <div key={grn} className="border-b" style={{ borderColor: border }}>
+                          {/* Collapsed row */}
+                          <div
+                            className="flex items-center gap-4 py-2.5 cursor-pointer select-none"
+                            onClick={() => setExpandedGRNs(prev => {
+                              const next = new Set(prev);
+                              next.has(grn) ? next.delete(grn) : next.add(grn);
+                              return next;
+                            })}
+                            onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
+                            onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                          >
+                            <span style={dim}>{expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}</span>
+                            <span className="text-[12px] font-light w-16 shrink-0">{dateStr}</span>
+                            <span className="text-[11px] tracking-wide uppercase w-28 shrink-0" style={dim}>{grn}</span>
+                            <span className="text-[12px] font-light w-28 shrink-0">{typeLabel}</span>
+                            <span className="text-[12px] font-light flex-1">{counterparty}</span>
+                            <span className="text-[11px] shrink-0" style={dim}>{uniqueProducts} {uniqueProducts === 1 ? "product" : "products"}</span>
+                            <span className="text-[12px] font-light w-20 text-right shrink-0" style={{ color: isSupplierOrder ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
+                              {isSupplierOrder ? "+" : "−"}{totalUnits} units
+                            </span>
+                          </div>
+
+                          {/* Expanded product lines */}
+                          {expanded && (
+                            <div className="pb-3 pl-6">
+                              <table className="w-full border-collapse">
+                                <thead>
+                                  <tr style={{ borderBottom: `1px solid ${border}` }}>
+                                    <th className="text-left text-[10px] tracking-wider uppercase pb-1.5 pr-6 font-normal" style={dim}>Product</th>
+                                    <th className="text-right text-[10px] tracking-wider uppercase pb-1.5 pr-6 font-normal" style={dim}>QTY</th>
+                                    <th className="text-right text-[10px] tracking-wider uppercase pb-1.5 font-normal" style={dim}>Office Balance</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rows.map((r, ri) => (
+                                    <tr key={ri} className="border-b last:border-0" style={{ borderColor: border }}>
+                                      <td className="text-[12px] font-light py-1.5 pr-6">{r["PRODUCT NAME"] ?? "—"}</td>
+                                      <td className="text-[12px] font-light py-1.5 pr-6 text-right" style={{ color: isSupplierOrder ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
+                                        {isSupplierOrder ? "+" : "−"}{r.QTY ?? 0}
+                                      </td>
+                                      <td className="text-[12px] font-light py-1.5 text-right">{r["OFFICE BALANCE"] ?? "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ── Selected product card ── */}
           {selectedProduct && (
