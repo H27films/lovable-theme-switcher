@@ -181,6 +181,20 @@ export default function Landing() {
                 <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
                 <p className="text-[18px] font-light tracking-tight">Nur Yadi</p>
               </button>
+              <button
+                onClick={() => navigate("/stockchicnailspa")}
+                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
+                style={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  color: "hsl(var(--foreground))",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
+              >
+                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
+                <p className="text-[18px] font-light tracking-tight">Chic Nailspa</p>
+              </button>
             </div>
           )}
 

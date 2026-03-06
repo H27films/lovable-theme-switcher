@@ -14,7 +14,7 @@ interface AllFileProduct {
   "BRANCH PRICE": number | null;
   "STAFF PRICE": number | null;
   "CUSTOMER PRICE": number | null;
-  "NUR YADI BALANCE": number;
+  "CHIC NAILSPA BALANCE": number;
   "NUR YADI BALANCE": number;
   "CHIC NAILSPA BALANCE": number;
   "OFFICE BALANCE": number;
@@ -170,7 +170,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
                 onMouseEnter={() => setActiveIndex(i)}
               >
                 <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
-                {showBalance && <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>{p["NUR YADI BALANCE"]}</span>}
+                {showBalance && <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>{p["CHIC NAILSPA BALANCE"]}</span>}
               </div>
             ))}
           </div>
@@ -326,7 +326,7 @@ function DatePicker({ value, onChange }: {
   );
 }
 
-export default function StockNurYadi() {
+export default function StockChicNailspa() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
 
@@ -404,7 +404,7 @@ export default function StockNurYadi() {
       const { data, error } = await (supabase as any)
         .from("AllFileLog")
         .select("*")
-        .eq("BRANCH", "Nur Yadi")
+        .eq("BRANCH", "Chic Nailspa")
         .gte("DATE", cutoff.toISOString().split("T")[0])
         .order("DATE", { ascending: false });
       if (error) console.error("Fetch log error:", error);
@@ -494,14 +494,14 @@ export default function StockNurYadi() {
     try {
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBalance = Number(product?.["NUR YADI BALANCE"] ?? 0);
+        const currentBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
         const endingBalance = currentBalance - Number(entry.qty);
 
         // Log to AllFileLog
         await (supabase as any).from("AllFileLog").insert({
           "DATE": getDateStr(usageDate),
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Nur Yadi",
+          "BRANCH": "Chic Nailspa",
           "SUPPLIER": null,
           "TYPE": entry.type,
           "STARTING BALANCE": currentBalance,
@@ -513,7 +513,7 @@ export default function StockNurYadi() {
 
         // Update ALL AllFileProducts rows for this product
         await (supabase as any).from("AllFileProducts")
-          .update({ "NUR YADI BALANCE": endingBalance })
+          .update({ "CHIC NAILSPA BALANCE": endingBalance })
           .eq("PRODUCT NAME", entry.productName);
       }
       await fetchProducts();
@@ -557,7 +557,7 @@ export default function StockNurYadi() {
     try {
       // Restore branch balance (back to starting balance before this entry)
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": row["STARTING BALANCE"] })
+        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
       // Delete from AllFileLog
       await (supabase as any).from("AllFileLog").delete().eq("id", row.id);
@@ -572,7 +572,7 @@ export default function StockNurYadi() {
     try {
       // Restore branch balance
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": row["STARTING BALANCE"] })
+        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
 
       // Restore office balance: the log stores office balance AFTER deduction
@@ -601,7 +601,7 @@ export default function StockNurYadi() {
         .update({ "QTY": newQty, "ENDING BALANCE": newEndingBalance })
         .eq("id", row.id);
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": newEndingBalance })
+        .update({ "CHIC NAILSPA BALANCE": newEndingBalance })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
       await fetchProducts();
       await fetchLog();
@@ -615,7 +615,7 @@ export default function StockNurYadi() {
     try {
       // Restore branch balance
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": row["STARTING BALANCE"] })
+        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
 
       // Restore office balance
@@ -666,7 +666,7 @@ export default function StockNurYadi() {
     .filter(e => e.productName)
     .map(e => {
       const product = products.find(p => p["PRODUCT NAME"] === e.productName);
-      const current = Number(product?.["NUR YADI BALANCE"] ?? 0);
+      const current = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
       const orderQty = Number(e.qty);
       return { productName: e.productName, current, orderQty, ending: current + orderQty };
     });
@@ -681,12 +681,12 @@ export default function StockNurYadi() {
     const dd = String(orderDateObj.getDate()).padStart(2, "0");
     const mm = String(orderDateObj.getMonth() + 1).padStart(2, "0");
     const yy = String(orderDateObj.getFullYear()).slice(-2);
-    const grn = `NUR ${dd}${mm}${yy}`;
+    const grn = `CHIC ${dd}${mm}${yy}`;
 
     try {
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBranchBalance = Number(product?.["NUR YADI BALANCE"] ?? 0);
+        const currentBranchBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
         const endingBranchBalance = currentBranchBalance + Number(entry.qty);
         const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
         const endingOfficeBalance = currentOfficeBalance - Number(entry.qty);
@@ -695,7 +695,7 @@ export default function StockNurYadi() {
         await (supabase as any).from("AllFileLog").insert({
           "DATE": getDateStr(orderDate),
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Nur Yadi",
+          "BRANCH": "Chic Nailspa",
           "SUPPLIER": "Office",
           "TYPE": "Order",
           "STARTING BALANCE": currentBranchBalance,
@@ -707,7 +707,7 @@ export default function StockNurYadi() {
 
         // Update branch balance in AllFileProducts (ALL rows for this product)
         await (supabase as any).from("AllFileProducts")
-          .update({ "NUR YADI BALANCE": endingBranchBalance })
+          .update({ "CHIC NAILSPA BALANCE": endingBranchBalance })
           .eq("PRODUCT NAME", entry.productName);
 
         // Update office balance in AllFileProducts (ALL rows for this product)
@@ -780,7 +780,7 @@ export default function StockNurYadi() {
       const dd = String(d.getDate()).padStart(2, "0");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yy = String(d.getFullYear()).slice(-2);
-      return `NYD ${dd}${mm}${yy}`;
+      return `CHC ${dd}${mm}${yy}`;
     })();
 
     const dateStr = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
@@ -789,7 +789,7 @@ export default function StockNurYadi() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(26, 26, 26);
-    doc.text("NUR YADI", margin, 58);
+    doc.text("CHIC NAILSPA", margin, 58);
     doc.text("GOODS RECEIVED NOTE", W - margin, 58, { align: "right" });
 
     // Divider
@@ -963,7 +963,7 @@ export default function StockNurYadi() {
                 className="text-[11px] tracking-[0.2em] uppercase"
                 style={{ color: "hsl(var(--foreground))" }}
               >
-                Nur Yadi
+                Chic Nailspa
               </span>
               <button
                 onClick={() => navigate("/")}
@@ -1007,7 +1007,7 @@ export default function StockNurYadi() {
                 </span>
               </div>
               <div className="flex items-center justify-between mt-1">
-                <p className="text-[11px] tracking-wider uppercase" style={dim}>{products.length} products · Nur Yadi</p>
+                <p className="text-[11px] tracking-wider uppercase" style={dim}>{products.length} products · Chic Nailspa</p>
                 {mode === "order" && (
                   <span
                     className="nav-link relative"
@@ -1059,7 +1059,7 @@ export default function StockNurYadi() {
                       onMouseEnter={() => setStockActiveIndex(i)}
                     >
                       <span className="text-[13px] font-light">{row["PRODUCT NAME"]}</span>
-                      <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{row["NUR YADI BALANCE"]}</span>
+                      <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{row["CHIC NAILSPA BALANCE"]}</span>
                     </div>
                   ))}
                 </div>
@@ -1082,8 +1082,8 @@ export default function StockNurYadi() {
                     </div>
                     <div className="text-right">
                       <p className="text-[32px] font-light leading-none" style={{
-                        color: selectedProduct["NUR YADI BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                      }}>{selectedProduct["NUR YADI BALANCE"]}</p>
+                        color: selectedProduct["CHIC NAILSPA BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                      }}>{selectedProduct["CHIC NAILSPA BALANCE"]}</p>
                       <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
                     </div>
                   </div>
@@ -1266,7 +1266,7 @@ export default function StockNurYadi() {
                 <div className="space-y-3 mb-5">
                   {orderEntries.map((entry, idx) => {
                     const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-                    const currentBal = product?.["NUR YADI BALANCE"] ?? null;
+                    const currentBal = product?.["CHIC NAILSPA BALANCE"] ?? null;
                     return (
                       <div key={entry.id} className="flex items-stretch gap-2">
                         <span className="text-[10px] w-4 text-right flex-shrink-0 pt-2.5" style={dim}>{idx + 1}</span>

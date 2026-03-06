@@ -8,30 +8,33 @@ import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronU
 interface OfficeProduct {
   id: number;
   "PRODUCT NAME": string;
-  "SUPPLIER": string;
-  "UNITS PER ORDER": number | null;
+  "SUPPLIER": string | null;
+  "UNITS/ORDER": number | null;
   "SUPPLIER PRICE": number | null;
   "BRANCH PRICE": number | null;
   "STAFF PRICE": number | null;
   "CUSTOMER PRICE": number | null;
   "OFFICE BALANCE": number | null;
-  "PAR LEVEL": number | null;
-  "COLOUR": string | null;
+  "PAR": number | null;
+  "COLOUR": boolean | null;
   "OFFICE SECTION": string | null;
 }
 
 type SortKey = "PRODUCT NAME" | "SUPPLIER" | null;
 type SortDir = "asc" | "desc";
 
-interface OfficeLogRow {
+interface AllFileLogRow {
   id: number;
-  Date: string;
-  "Product Name": string;
-  Type: string;
-  Branch: string | null;
-  Qty: number;
-  "Starting Balance": number;
-  "Ending Balance": number;
+  DATE: string;
+  "PRODUCT NAME": string;
+  BRANCH: string | null;
+  SUPPLIER: string | null;
+  TYPE: string;
+  "STARTING BALANCE": number;
+  QTY: number;
+  "ENDING BALANCE": number;
+  GRN?: string | null;
+  "OFFICE BALANCE"?: number | null;
 }
 
 const fmtActivityDate = (d: string) => {
@@ -79,14 +82,16 @@ const Index = () => {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   // Recent activity state
-  const [recentActivity, setRecentActivity] = useState<OfficeLogRow[]>([]);
+  const [recentActivity, setRecentActivity] = useState<AllFileLogRow[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [orderSupplierFilter, setOrderSupplierFilter] = useState<string>("all");
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [orderSupplierFilter, setOrderSupplierFilter] = useState<string[]>([]);
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
   const [orderLines, setOrderLines] = useState<{ product: OfficeProduct; supplierChoice: string | null; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
@@ -96,6 +101,7 @@ const Index = () => {
 
   const searchRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const supplierDropdownRef = useRef<HTMLDivElement>(null);
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
   const border = "hsl(var(--border))";
@@ -110,7 +116,7 @@ const Index = () => {
       const batchSize = 1000;
       while (true) {
         const { data, error } = await (supabase as any)
-          .from("OfficeBalance")
+          .from("AllFileProducts")
           .select("*")
           .range(from, from + batchSize - 1);
         if (error) { console.error("Fetch error:", error); break; }
@@ -122,10 +128,15 @@ const Index = () => {
           break;
         }
       }
-      console.log(`OfficeBalance fetched: ${allData.length} products`);
       setProducts(allData);
+      // Refresh selectedProduct with latest balance if one is selected
+      setSelectedProduct(prev => {
+        if (!prev) return prev;
+        const updated = allData.find((p: any) => p.id === prev.id);
+        return updated ?? prev;
+      });
     } catch (err) {
-      console.error("Error fetching office products:", err);
+      console.error("Error fetching products:", err);
     }
     setLoading(false);
   }, []);
@@ -152,17 +163,19 @@ const Index = () => {
 
   useEffect(() => { setPage(0); }, [search, filterLowStock, filterColour, sortKey, sortDir]);
 
-  // Fetch recent activity from OfficeLog when a product is selected
+  // Fetch recent activity from AllFileLog when a product is selected
+  // Only show Order-type entries (supplier orders IN and branch orders OUT)
   useEffect(() => {
     if (!selectedProduct) { setRecentActivity([]); return; }
     const fetchActivity = async () => {
       setActivityLoading(true);
       try {
         const { data, error } = await (supabase as any)
-          .from("OfficeLog")
+          .from("AllFileLog")
           .select("*")
-          .eq("Product Name", selectedProduct["PRODUCT NAME"])
-          .order("Date", { ascending: false })
+          .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
+          .eq("TYPE", "Order")
+          .order("DATE", { ascending: false })
           .limit(20);
         if (!error && data) setRecentActivity(data);
       } catch (err) { console.error("Activity fetch error:", err); }
@@ -179,29 +192,58 @@ const Index = () => {
         products.filter(s => s["PRODUCT NAME"] === l.product["PRODUCT NAME"] && s.id !== l.product.id).length > 0
     );
     if (hasUnresolved) return;
+    setConfirmError(null);
     setOrderSubmitting(true);
     try {
       const today = new Date().toISOString().split("T")[0];
+      const dd = today.slice(8,10), mm = today.slice(5,7), yy = today.slice(2,4);
+      const baseGRN = `OFFICE ${dd}${mm}${yy}`;
+
+      // Resolve each line to its chosen product and supplier
+      type ResolvedLine = { chosenProduct: typeof products[0]; qty: number };
+      const supplierGroups: Record<string, ResolvedLine[]> = {};
       for (const line of orderLines) {
         const chosenProduct = line.supplierChoice
           ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
           : line.product;
-        const currentBalance = Number(chosenProduct["OFFICE BALANCE"] ?? 0);
-        const endingBalance = currentBalance + line.qty;
-        await (supabase as any)
-          .from("OfficeBalance")
-          .update({ "OFFICE BALANCE": endingBalance })
-          .eq("id", chosenProduct.id);
-        const { error: logError } = await (supabase as any).from("OfficeLog").insert({
-          "Date": today,
-          "Product Name": chosenProduct["PRODUCT NAME"],
-          "Type": "Supplier Order",
-          "Branch": null,
-          "Qty": line.qty,
-          "Starting Balance": currentBalance,
-          "Ending Balance": endingBalance,
-        });
-        if (logError) console.error("OfficeLog insert error (supplier order):", logError);
+        const supplierKey = chosenProduct["SUPPLIER"] ?? "Unknown";
+        if (!supplierGroups[supplierKey]) supplierGroups[supplierKey] = [];
+        supplierGroups[supplierKey].push({ chosenProduct, qty: line.qty });
+      }
+
+      const supplierKeys = Object.keys(supplierGroups);
+      const multiSupplier = supplierKeys.length > 1;
+
+      for (let gi = 0; gi < supplierKeys.length; gi++) {
+        const supplierKey = supplierKeys[gi];
+        const grn = multiSupplier ? `${baseGRN} (${gi + 1})` : baseGRN;
+        for (const { chosenProduct, qty } of supplierGroups[supplierKey]) {
+          const unitsPerOrder = chosenProduct["UNITS/ORDER"] ?? 1;
+          const actualQty = qty * unitsPerOrder;
+          const currentBalance = Number(chosenProduct["OFFICE BALANCE"] ?? 0);
+          const endingBalance = currentBalance + actualQty;
+
+          // Update ALL rows for this product name
+          await (supabase as any)
+            .from("AllFileProducts")
+            .update({ "OFFICE BALANCE": endingBalance })
+            .eq("PRODUCT NAME", chosenProduct["PRODUCT NAME"]);
+
+          // Log to AllFileLog
+          const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+            "DATE": today,
+            "PRODUCT NAME": chosenProduct["PRODUCT NAME"],
+            "BRANCH": "Office",
+            "SUPPLIER": chosenProduct["SUPPLIER"] ?? null,
+            "TYPE": "Order",
+            "STARTING BALANCE": currentBalance,
+            "QTY": actualQty,
+            "ENDING BALANCE": endingBalance,
+            "OFFICE BALANCE": endingBalance,
+            "GRN": grn,
+          });
+          if (logErr) { console.error("AllFileLog confirm error:", logErr); setConfirmError(logErr.message || "Log write failed — check console"); }
+        }
       }
       await fetchProducts();
       setOrderLines([]);
@@ -222,11 +264,11 @@ const Index = () => {
         p["PRODUCT NAME"]?.toLowerCase().includes(search.toLowerCase()) ||
         p["SUPPLIER"]?.toLowerCase().includes(search.toLowerCase()) ||
         p["OFFICE SECTION"]?.toLowerCase().includes(search.toLowerCase());
-      const matchLow = !filterLowStock || checkBelowPar(p["OFFICE BALANCE"], p["PAR LEVEL"]);
+      const matchLow = !filterLowStock || checkBelowPar(p["OFFICE BALANCE"], p["PAR"]);
       const matchColour =
         filterColour === "all" ? true :
-        filterColour === "yes" ? p["COLOUR"]?.toLowerCase() === "yes" :
-        p["COLOUR"]?.toLowerCase() !== "yes";
+        filterColour === "yes" ? p["COLOUR"] === true :
+        p["COLOUR"] !== true;
       return matchSearch && matchLow && matchColour;
     })
     .sort((a, b) => {
@@ -245,7 +287,7 @@ const Index = () => {
 
   const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
   const pagedProducts = filteredProducts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const lowStockCount = products.filter(p => checkBelowPar(p["OFFICE BALANCE"], p["PAR LEVEL"])).length;
+  const lowStockCount = products.filter(p => checkBelowPar(p["OFFICE BALANCE"], p["PAR"])).length;
 
   const dropdownResults = search.length > 0
     ? products.filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(search.toLowerCase())).slice(0, 30)
@@ -263,24 +305,37 @@ const Index = () => {
   };
 
   // All unique suppliers
-  const allSuppliers = [...new Set(products.map(p => p["SUPPLIER"]).filter(Boolean))].sort();
+  const allSuppliers = [...new Set(products.map(p => p["SUPPLIER"]).filter(Boolean))].sort() as string[];
 
   // Products filtered by supplier for order panel
-  const orderPanelProducts = orderSupplierFilter === "all"
+  const orderPanelProducts = orderSupplierFilter.length === 0
     ? products
-    : products.filter(p => p["SUPPLIER"] === orderSupplierFilter);
+    : products.filter(p => orderSupplierFilter.includes(p["SUPPLIER"] ?? ""));
 
   // Unique product names in order panel (after supplier filter)
   const orderDropdownResults = orderSearch.length > 0
-    ? orderPanelProducts.filter(p =>
-        p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase()) &&
-        !orderLines.some(l => l.product.id === p.id)
-      ).slice(0, 30)
+    ? (() => {
+        const matched = orderPanelProducts.filter(p =>
+          p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase()) &&
+          !orderLines.some(l => l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"])
+        );
+        // Deduplicate: for same PRODUCT NAME + SUPPLIER, keep only the row with smallest UNITS/ORDER (prefer 1)
+        const seen = new Map<string, typeof matched[0]>();
+        for (const p of matched) {
+          const key = `${p["PRODUCT NAME"]}|||${p["SUPPLIER"]}`;
+          const existing = seen.get(key);
+          if (!existing || (p["UNITS/ORDER"] ?? 1) < (existing["UNITS/ORDER"] ?? 1)) {
+            seen.set(key, p);
+          }
+        }
+        return Array.from(seen.values()).slice(0, 30);
+      })()
     : [];
 
   // When adding a product to order — check if same name exists with multiple suppliers
   const addToOrder = (p: OfficeProduct) => {
-    const siblings = products.filter(s => s["PRODUCT NAME"] === p["PRODUCT NAME"] && s.id !== p.id);
+    // Only consider siblings with a DIFFERENT supplier (same supplier = different pack sizes, no choice needed)
+    const siblings = products.filter(s => s["PRODUCT NAME"] === p["PRODUCT NAME"] && s.id !== p.id && s["SUPPLIER"] !== p["SUPPLIER"]);
     setOrderLines(prev => [...prev, {
       product: p,
       supplierChoice: siblings.length > 0 ? null : p["SUPPLIER"], // null = needs supplier choice
@@ -308,6 +363,17 @@ const Index = () => {
       if (orderSearchRef.current && !orderSearchRef.current.contains(e.target as Node)) {
         setShowOrderDropdown(false);
         setOrderActiveIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Close supplier dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (supplierDropdownRef.current && !supplierDropdownRef.current.contains(e.target as Node)) {
+        setShowSupplierDropdown(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -376,7 +442,7 @@ const Index = () => {
               <span
                 className="nav-link flex items-center gap-0.5 mb-1"
                 style={{ color: "hsl(var(--foreground))" }}
-                onClick={() => { setShowOrderPanel(true); setOrderLines([]); setOrderSearch(""); setOrderSupplierFilter("all"); }}
+                onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
               >
                 Order <ClipboardList size={13} className="inline -mt-0.5" />
               </span>
@@ -441,16 +507,21 @@ const Index = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
                       {p["SUPPLIER"] && <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>}
-                      {p["COLOUR"]?.toLowerCase() === "yes" && (
+                      {p["COLOUR"] === true && (
                         <span className="text-[10px] tracking-wider uppercase" style={dim}>Colour</span>
                       )}
                     </div>
-                    <span className="text-[12px] font-light" style={{
-                      color: checkBelowPar(p["OFFICE BALANCE"], p["PAR LEVEL"])
-                        ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                    }}>
-                      {p["OFFICE BALANCE"] ?? "—"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {(p["UNITS/ORDER"] ?? 1) > 1 && (
+                        <span className="text-[11px]" style={dim}>{p["UNITS/ORDER"]} units</span>
+                      )}
+                      <span className="text-[12px] font-light" style={{
+                        color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
+                          ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                      }}>
+                        {p["OFFICE BALANCE"] ?? "—"}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -463,7 +534,7 @@ const Index = () => {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>
-                    {selectedProduct["COLOUR"]?.toLowerCase() === "yes" ? "Colour Product" : "Product"}
+                    {selectedProduct["COLOUR"] === true ? "Colour Product" : "Product"}
                     {selectedProduct["OFFICE SECTION"] && ` · Section ${selectedProduct["OFFICE SECTION"]}`}
                   </p>
                   <p className="text-[20px] font-light tracking-tight">{selectedProduct["PRODUCT NAME"]}</p>
@@ -486,15 +557,21 @@ const Index = () => {
                 <div>
                   <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Office Balance</p>
                   <p className="text-[22px] font-light" style={{
-                    color: checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR LEVEL"])
+                    color: checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR"])
                       ? "hsl(var(--red))" : "hsl(var(--foreground))"
                   }}>
                     {selectedProduct["OFFICE BALANCE"] ?? "—"}
-                    {checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR LEVEL"]) && (
+                    {checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR"]) && (
                       <AlertTriangle size={14} className="inline ml-2 mb-1" style={{ color: "hsl(var(--red))" }} />
                     )}
                   </p>
                 </div>
+                {selectedProduct["OFFICE SECTION"] && (
+                  <div>
+                    <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Section</p>
+                    <p className="text-[15px] font-light">{selectedProduct["OFFICE SECTION"]}</p>
+                  </div>
+                )}
               </div>
 
               {/* Prices */}
@@ -502,6 +579,11 @@ const Index = () => {
                 <div>
                   <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Supplier Price</p>
                   <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["SUPPLIER PRICE"])}</p>
+                  {(selectedProduct["UNITS/ORDER"] ?? 1) > 1 && (
+                    <p className="text-[11px] mt-1" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
+                      × {selectedProduct["UNITS/ORDER"]} units/order
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
@@ -529,25 +611,29 @@ const Index = () => {
                     <thead>
                       <tr className="border-b" style={{ borderColor: border }}>
                         <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Date</th>
-                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>From / To</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Product</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Branch</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Supplier</th>
                         <th className="text-center text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>QTY</th>
-                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 font-normal" style={dim}>Office Balance</th>
+                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Office Balance</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 font-normal" style={dim}>GRN</th>
                       </tr>
                     </thead>
                     <tbody>
                       {recentActivity.map((a, i) => {
-                        const isSupplier = a.Type === "Supplier Order";
-                        const label = isSupplier
-                          ? (selectedProduct["SUPPLIER"] ?? "Supplier")
-                          : (a.Branch ?? "Branch");
-                        const qtySign = isSupplier ? `+${a.Qty}` : `-${a.Qty}`;
-                        const qtyColor = isSupplier ? "hsl(var(--green, 142 71% 45%))" : "hsl(var(--red))";
+                        const isSupplierOrder = a.BRANCH === "Office";
+                        const label = isSupplierOrder ? (a.SUPPLIER ?? "Supplier") : (a.BRANCH ?? "Branch");
+                        const qtySign = isSupplierOrder ? `+${a.QTY}` : `-${a.QTY}`;
+                        const qtyColor = isSupplierOrder ? "hsl(var(--green, 142 71% 45%))" : "hsl(var(--red))";
                         return (
                           <tr key={i} className="border-b last:border-0" style={{ borderColor: border }}>
-                            <td className="text-[12px] font-light py-2 pr-5">{fmtActivityDate(a.Date)}</td>
-                            <td className="text-[12px] font-light py-2 pr-5">{label}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{fmtActivityDate(a.DATE)}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{a["PRODUCT NAME"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{a["BRANCH"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{a["SUPPLIER"] ?? "—"}</td>
                             <td className="text-[12px] font-light py-2 pr-5 text-center" style={{ color: qtyColor }}>{qtySign}</td>
-                            <td className="text-[12px] font-light py-2 text-center">{a["Ending Balance"]}</td>
+                            <td className="text-[12px] font-light py-2 pr-5 text-center">{a["OFFICE BALANCE"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2">{a["GRN"] ?? "—"}</td>
                           </tr>
                         );
                       })}
@@ -562,14 +648,14 @@ const Index = () => {
                   p => p["PRODUCT NAME"] === selectedProduct["PRODUCT NAME"] && p.id !== selectedProduct.id
                 );
                 if (sameProduct.length === 0) return null;
-                const allSuppliers = [selectedProduct, ...sameProduct];
+                const allSupplierRows = [selectedProduct, ...sameProduct];
                 return (
                   <div className="pt-4 border-t" style={{ borderColor: border }}>
                     <p className="text-[10px] tracking-wider uppercase mb-3" style={dim}>
-                      Supplier Comparison · {allSuppliers.length} suppliers
+                      Supplier Comparison · {allSupplierRows.length} suppliers
                     </p>
                     <div className="flex items-center gap-6">
-                      {allSuppliers.map(s => (
+                      {allSupplierRows.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
                           <div
                             className="px-3 py-2"
@@ -577,6 +663,9 @@ const Index = () => {
                           >
                             <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>{s["SUPPLIER"] || "Unknown"}</p>
                             <p className="text-[15px] font-light">RM {fmtPrice(s["SUPPLIER PRICE"])}</p>
+                            {(s["UNITS/ORDER"] ?? 1) > 1 && (
+                              <p className="text-[10px] mt-0.5 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {s["UNITS/ORDER"]} units/order</p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -720,7 +809,7 @@ const Index = () => {
                   </thead>
                   <tbody>
                     {pagedProducts.map(p => {
-                      const belowPar = checkBelowPar(p["OFFICE BALANCE"], p["PAR LEVEL"]);
+                      const belowPar = checkBelowPar(p["OFFICE BALANCE"], p["PAR"]);
                       const branchPrice = getBranchPrice(p["SUPPLIER PRICE"]);
                       return (
                         <tr
@@ -743,10 +832,12 @@ const Index = () => {
                           <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["CUSTOMER PRICE"])}</td>
                           <td className="text-[12px] font-light py-3 pr-4" style={dim}>{p["OFFICE SECTION"] || "—"}</td>
                           <td className="text-[11px] font-light py-3 pr-4 text-center tracking-wider uppercase" style={dim}>
-                            {p["COLOUR"]?.toLowerCase() === "yes" ? "Colour" : "Product"}
+                            {p["COLOUR"] === true ? "Colour" : "Product"}
                           </td>
-                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{p["PAR LEVEL"] ?? "—"}</td>
-                          <td className="text-[12px] font-light py-3 text-center" style={dim}>{p["UNITS PER ORDER"] ?? "—"}</td>
+                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{p["PAR"] ?? "—"}</td>
+                          <td className="text-[12px] font-light py-3 text-center" style={(p["UNITS/ORDER"] ?? 1) > 1 ? { color: "hsl(var(--foreground))", fontWeight: 500 } : dim}>
+                            {(p["UNITS/ORDER"] ?? 1) > 1 ? `${p["UNITS/ORDER"]} units` : "—"}
+                          </td>
                         </tr>
                       );
                     })}
@@ -793,15 +884,15 @@ const Index = () => {
       {showOrderPanel && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
           <div
-            className="h-full w-full max-w-[520px] overflow-y-auto p-8"
+            className="h-full w-full max-w-[650px] overflow-y-auto p-10"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
             {/* Panel header */}
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-[22px] font-light tracking-tight">New Order</h2>
-                <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>Office stock order</p>
+                <h2 className="text-[24px] font-light tracking-tight">New Order</h2>
+                <p className="text-[14.5px] tracking-wider uppercase mt-1" style={dim}>Office stock order</p>
               </div>
               <button onClick={() => setShowOrderPanel(false)} style={dim}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -810,41 +901,70 @@ const Index = () => {
               </button>
             </div>
 
-            {/* Supplier filter */}
-            <div className="mb-6">
-              <p className="text-[10px] tracking-wider uppercase mb-3" style={dim}>Filter by Supplier</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setOrderSupplierFilter("all")}
-                  className="px-3 py-1.5 text-[11px] tracking-wider uppercase transition-colors"
-                  style={{
-                    border: `1px solid ${orderSupplierFilter === "all" ? borderActive : border}`,
-                    color: orderSupplierFilter === "all" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                    background: orderSupplierFilter === "all" ? cardBg : "transparent",
-                  }}
-                >All</button>
-                {allSuppliers.map(s => (
+            {/* Supplier filter — compact multi-select dropdown */}
+            <div className="mb-4 relative" ref={supplierDropdownRef}>
+              <button
+                onClick={() => setShowSupplierDropdown(v => !v)}
+                onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setShowSupplierDropdown(false); }}
+                className="flex items-center gap-2 text-[14.5px] tracking-wider uppercase transition-colors px-3 py-1.5"
+                style={{
+                  border: `1px solid ${borderActive}`,
+                  color: "hsl(var(--foreground))",
+                  minWidth: "180px",
+                  background: "transparent",
+                }}
+              >
+                <span className="flex-1 text-left">
+                  {orderSupplierFilter.length === 0
+                    ? "All Suppliers"
+                    : orderSupplierFilter.length === 1
+                      ? orderSupplierFilter[0]
+                      : `${orderSupplierFilter.length} suppliers`}
+                </span>
+                <ChevronRight size={10} style={{ transform: showSupplierDropdown ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }} />
+              </button>
+              {showSupplierDropdown && (
+                <div
+                  className="absolute top-full left-0 z-50 border min-w-[180px] py-1 max-h-[220px] overflow-y-auto scrollbar-thin"
+                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+                >
+                  {/* Clear all */}
                   <button
-                    key={s}
-                    onClick={() => setOrderSupplierFilter(s)}
-                    className="px-3 py-1.5 text-[11px] tracking-wider uppercase transition-colors"
-                    style={{
-                      border: `1px solid ${orderSupplierFilter === s ? borderActive : border}`,
-                      color: orderSupplierFilter === s ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                      background: orderSupplierFilter === s ? cardBg : "transparent",
-                    }}
-                  >{s}</button>
-                ))}
-              </div>
+                    className="w-full text-left px-3 py-2 text-[14.5px] tracking-wider uppercase transition-colors flex items-center gap-2"
+                    style={{ color: "hsl(var(--foreground))", background: orderSupplierFilter.length === 0 ? cardBg : "transparent", borderBottom: `1px solid ${border}` }}
+                    onClick={() => setOrderSupplierFilter([])}
+                  >
+                    <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: orderSupplierFilter.length === 0 ? "hsl(var(--foreground))" : "transparent", flexShrink: 0 }} />
+                    All Suppliers
+                  </button>
+                  {allSuppliers.map(s => {
+                    const isAllMode = orderSupplierFilter.length === 0;
+                    const selected = isAllMode || orderSupplierFilter.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        className="w-full text-left px-3 py-2 text-[14.5px] tracking-wider uppercase transition-colors flex items-center gap-2"
+                        style={{ color: "hsl(var(--foreground))", background: selected ? cardBg : "transparent" }}
+                        onClick={() => setOrderSupplierFilter(prev =>
+                          prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
+                        )}
+                      >
+                        <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: selected ? "hsl(var(--foreground))" : "transparent", flexShrink: 0 }} />
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Add product search */}
             <div ref={orderSearchRef} className="relative mb-6">
-              <p className="text-[10px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
+              <p className="text-[14.5px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
               <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
                 <input
                   type="text"
-                  className="flex-1 bg-transparent outline-none text-[13px] font-light"
+                  className="flex-1 bg-transparent outline-none text-[14.5px] font-light"
                   placeholder="Search to add..."
                   value={orderSearch}
                   onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); setOrderActiveIndex(-1); }}
@@ -875,13 +995,16 @@ const Index = () => {
                       onMouseEnter={() => setOrderActiveIndex(i)}
                     >
                       <div>
-                        <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
-                        {orderSupplierFilter === "all" && p["SUPPLIER"] && (
-                          <span className="text-[11px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
+                        <span className="text-[14.5px] font-light">{p["PRODUCT NAME"]}</span>
+                        {orderSupplierFilter.length === 0 && p["SUPPLIER"] && (
+                          <span className="text-[14.5px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
+                        )}
+                        {(p["UNITS/ORDER"] ?? 1) > 1 && (
+                          <span className="text-[14.5px] ml-2 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {p["UNITS/ORDER"]} units/order</span>
                         )}
                       </div>
-                      <span className="text-[12px] font-light" style={{
-                        color: checkBelowPar(p["OFFICE BALANCE"], p["PAR LEVEL"])
+                      <span className="text-[14.5px] font-light" style={{
+                        color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
                           ? "hsl(var(--red))" : "hsl(var(--muted-foreground))"
                       }}>
                         {p["OFFICE BALANCE"] ?? "—"}
@@ -895,11 +1018,24 @@ const Index = () => {
             {/* Order lines */}
             {orderLines.length > 0 && (
               <div>
-                <p className="text-[10px] tracking-wider uppercase mb-3" style={dim}>Order Items</p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[14.5px] tracking-wider uppercase" style={dim}>Order Items</p>
+                  {orderLines.length > 0 && (
+                    <button
+                      onClick={() => setOrderLines([])}
+                      className="text-[11px] tracking-wider uppercase px-2 py-0.5 rounded transition-colors"
+                      style={{ color: "hsl(var(--muted-foreground))", border: `1px solid ${border}` }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-3">
                   {orderLines.map((line, idx) => {
                     const siblings = products.filter(
                       s => s["PRODUCT NAME"] === line.product["PRODUCT NAME"] && s.id !== line.product.id
+                        && s["SUPPLIER"] !== line.product["SUPPLIER"]
+                        && (s["UNITS/ORDER"] ?? 1) <= 1
                     );
                     const needsChoice = siblings.length > 0 && line.supplierChoice === null;
                     const chosenSupplier = line.supplierChoice
@@ -909,7 +1045,7 @@ const Index = () => {
                       <div key={idx} className="p-3" style={{ border: `1px solid ${needsChoice ? borderActive : border}` }}>
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="text-[13px] font-light">{line.product["PRODUCT NAME"]}</p>
+                            <p className="text-[14.5px] font-light">{line.product["PRODUCT NAME"]}</p>
                             {/* Supplier choice prompt */}
                             {siblings.length > 0 && (
                               <div className="flex items-center gap-2 mt-1.5">
@@ -919,7 +1055,7 @@ const Index = () => {
                                     onClick={() => setOrderLines(prev => prev.map((l, i) =>
                                       i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
                                     ))}
-                                    className="text-[10px] tracking-wider uppercase px-2 py-1 transition-colors"
+                                    className="text-[11.5px] tracking-wider uppercase px-2 py-1 transition-colors"
                                     style={{
                                       border: `1px solid ${line.supplierChoice === s["SUPPLIER"] ? borderActive : border}`,
                                       color: line.supplierChoice === s["SUPPLIER"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
@@ -934,9 +1070,15 @@ const Index = () => {
                             )}
                             {/* Single supplier — show supplier name + price */}
                             {siblings.length === 0 && (
-                              <p className="text-[11px] mt-0.5" style={dim}>
+                              <p className="text-[14.5px] mt-0.5" style={dim}>
                                 {line.product["SUPPLIER"]}
                                 {line.product["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(line.product["SUPPLIER PRICE"])}`}
+                              </p>
+                            )}
+                            {/* Units/Order badge */}
+                            {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
+                              <p className="text-[14.5px] mt-0.5" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
+                                × {line.product["UNITS/ORDER"]} units/order
                               </p>
                             )}
                           </div>
@@ -951,15 +1093,15 @@ const Index = () => {
                         </div>
                         {/* Balance + Qty */}
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-[11px]" style={dim}>
-                            Balance: <span style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR LEVEL"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
+                          <span className="text-[14.5px]" style={dim}>
+                            Balance: <span style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
                               {chosenSupplier?.["OFFICE BALANCE"] ?? line.product["OFFICE BALANCE"] ?? "—"}
                             </span>
                           </span>
                           {/* Qty stepper */}
                           <div className="flex items-center" style={{ border: `1px solid ${borderActive}` }}>
                             <button
-                              className="px-2 py-1.5 transition-colors text-[13px]"
+                              className="px-2 py-1.5 transition-colors text-[14.5px]"
                               style={dim}
                               onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: Math.max(1, l.qty - 1) } : l))}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -967,9 +1109,16 @@ const Index = () => {
                             >
                               <ChevronLeft size={12} />
                             </button>
-                            <span className="text-[13px] font-light px-3 min-w-[32px] text-center">{line.qty}</span>
+                            <span className="text-[14.5px] font-light px-3 min-w-[32px] text-center">
+              {line.qty}
+              {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
+                <span className="text-[14.5px] ml-1" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
+                  ({line.qty * (line.product["UNITS/ORDER"] ?? 1)} units)
+                </span>
+              )}
+            </span>
                             <button
-                              className="px-2 py-1.5 transition-colors text-[13px]"
+                              className="px-2 py-1.5 transition-colors text-[14.5px]"
                               style={dim}
                               onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -986,21 +1135,18 @@ const Index = () => {
 
                 {/* Summary + Confirm */}
                 <div className="mt-6 pt-4 border-t" style={{ borderColor: border }}>
-                  <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>
-                    {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {orderLines.reduce((s, l) => s + l.qty, 0)} units total
-                  </p>
                   {orderLines.some(l => l.supplierChoice === null && products.filter(s => s["PRODUCT NAME"] === l.product["PRODUCT NAME"] && s.id !== l.product.id).length > 0) && (
-                    <p className="text-[11px] mt-1" style={{ color: "hsl(var(--red))" }}>
+                    <p className="text-[14.5px] mb-2" style={{ color: "hsl(var(--red))" }}>
                       Please select a supplier for all items before submitting
                     </p>
                   )}
                   {orderSuccess ? (
-                    <p className="text-[11px] mt-3" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
+                    <p className="text-[14.5px]" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
                       ✓ Order confirmed — office balances updated
                     </p>
                   ) : (
                     <button
-                      className="minimal-btn mt-3"
+                      className="minimal-btn"
                       style={{ opacity: (orderLines.length === 0 || orderSubmitting) ? 0.4 : 1 }}
                       disabled={orderLines.length === 0 || orderSubmitting}
                       onClick={handleOrderConfirm}
@@ -1008,12 +1154,132 @@ const Index = () => {
                       {orderSubmitting ? "Confirming…" : "Confirm Order"}
                     </button>
                   )}
+                  {confirmError && (
+                    <p className="text-[14.5px] mt-2" style={{ color: "hsl(var(--red))" }}>✗ {confirmError}</p>
+                  )}
+
+                  {/* Order Summary grouped by supplier / GRN */}
+                  {orderLines.length > 0 && (() => {
+                    const today = new Date();
+                    const dd = String(today.getDate()).padStart(2, "0");
+                    const mm = String(today.getMonth() + 1).padStart(2, "0");
+                    const yy = String(today.getFullYear()).slice(-2);
+                    const dateStr = `${dd}${mm}${yy}`;
+
+                    // Group lines by resolved supplier
+                    const groups: Record<string, typeof orderLines> = {};
+                    orderLines.forEach(line => {
+                      const sup = line.supplierChoice ?? line.product["SUPPLIER"] ?? "Unknown";
+                      if (!groups[sup]) groups[sup] = [];
+                      groups[sup].push(line);
+                    });
+                    const supplierNames = Object.keys(groups);
+                    const multi = supplierNames.length > 1;
+
+                    const grandTotal = orderLines.reduce((sum, line) => {
+                      const rp = line.supplierChoice
+                        ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
+                        : line.product;
+                      return sum + (rp["SUPPLIER PRICE"] ?? 0) * line.qty;
+                    }, 0);
+                    const grandUnits = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1), 0);
+
+                    return (
+                      <div className="mt-5">
+                        <p className="text-[14.5px] tracking-widest uppercase mb-3" style={dim}>Order Summary</p>
+
+                        {supplierNames.map((supplier, sIdx) => {
+                          const grpLines = groups[supplier];
+                          const grn = multi ? `OFFICE ${dateStr} (${sIdx + 1})` : `OFFICE ${dateStr}`;
+                          const subtotal = grpLines.reduce((s, l) => {
+                            const rp = l.supplierChoice
+                              ? products.find(p => p["PRODUCT NAME"] === l.product["PRODUCT NAME"] && p["SUPPLIER"] === l.supplierChoice) ?? l.product
+                              : l.product;
+                            return s + (rp["SUPPLIER PRICE"] ?? 0) * l.qty;
+                          }, 0);
+
+                          return (
+                            <div key={supplier} className={sIdx > 0 ? "mb-5 mt-8 pt-6 border-t" : "mb-5"} style={sIdx > 0 ? { borderColor: border } : {}}>
+                              {/* Supplier header */}
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[14.5px] font-semibold tracking-wide" style={{ color: "hsl(var(--foreground))" }}>{supplier}</span>
+                                <span className="text-[14.5px] tracking-wider font-mono" style={dim}>{grn}</span>
+                              </div>
+
+                              {/* Product lines */}
+                              {grpLines.map((line, lIdx) => {
+                                const rp = line.supplierChoice
+                                  ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
+                                  : line.product;
+                                const unitPrice = rp["SUPPLIER PRICE"] ?? 0;
+                                const unitsPerOrder = line.product["UNITS/ORDER"] ?? 1;
+                                const lineTotal = unitPrice * line.qty;
+                                const globalIdx = orderLines.indexOf(line);
+
+                                return (
+                                  <div key={lIdx} className="flex items-center gap-2 py-1.5 border-b" style={{ borderColor: border }}>
+                                    {/* Name */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-[14.5px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
+                                      {unitsPerOrder > 1 && (
+                                        <p className="text-[14.5px]" style={dim}>{line.qty * unitsPerOrder} units received</p>
+                                      )}
+                                    </div>
+                                    {/* Qty editor */}
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <button
+                                        className="w-5 h-5 flex items-center justify-center rounded text-[14.5px]"
+                                        style={dim}
+                                        onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx && ol.qty > 1 ? { ...ol, qty: ol.qty - 1 } : ol))}
+                                      >−</button>
+                                      <span className="text-[14.5px] w-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{line.qty}</span>
+                                      <button
+                                        className="w-5 h-5 flex items-center justify-center rounded text-[14.5px]"
+                                        style={dim}
+                                        onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx ? { ...ol, qty: ol.qty + 1 } : ol))}
+                                      >+</button>
+                                    </div>
+                                    {/* Line total */}
+                                    <span className="text-[14.5px] w-16 text-right shrink-0" style={dim}>RM {lineTotal.toFixed(2)}</span>
+                                    {/* Remove */}
+                                    <button
+                                      className="shrink-0 text-[14.5px] leading-none ml-1"
+                                      style={{ color: "hsl(var(--red))" }}
+                                      onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== globalIdx))}
+                                    >×</button>
+                                  </div>
+                                );
+                              })}
+
+                              {/* Subtotal */}
+                              <div className="flex justify-between mt-1.5">
+                                <span className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                                  {grpLines.reduce((s, l) => s + l.qty, 0)} orders
+                                </span>
+                                <span className="text-[14.5px] font-medium" style={{ color: "hsl(var(--foreground))" }}>RM {subtotal.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Grand total */}
+                        <div className="pt-3 mt-2 border-t" style={{ borderColor: border }}>
+                          <div className="flex justify-between">
+                            <span className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                              {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {grandUnits} units{multi ? ` · ${supplierNames.length} suppliers` : ""}
+                            </span>
+                            <span className="text-[14.5px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>RM {grandTotal.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}
 
             {orderLines.length === 0 && (
-              <p className="text-[13px]" style={dim}>No items added yet</p>
+              <p className="text-[14.5px]" style={dim}>No items added yet</p>
             )}
           </div>
         </div>
