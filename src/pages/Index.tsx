@@ -640,10 +640,9 @@ const Index = () => {
                             <span style={dim}>{expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}</span>
                             <span className="text-[12px] font-light w-16 shrink-0">{dateStr}</span>
                             <span className="text-[11px] tracking-wide uppercase w-28 shrink-0" style={dim}>{grn}</span>
-                            <span className="text-[12px] font-light w-28 shrink-0">{typeLabel}</span>
                             <span className="text-[12px] font-light flex-1">{counterparty}</span>
                             <span className="text-[11px] shrink-0" style={dim}>{uniqueProducts} {uniqueProducts === 1 ? "product" : "products"}</span>
-                            <span className="text-[12px] font-light w-20 text-right shrink-0" style={{ color: isSupplierOrder ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
+                            <span className="text-[12px] font-light w-20 text-right shrink-0" style={{ color: isSupplierOrder ? "#4ade80" : "#f87171" }}>
                               {isSupplierOrder ? "+" : "−"}{totalUnits} units
                             </span>
                           </div>
