@@ -335,9 +335,13 @@ const Index = () => {
     ? products
         .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => {
-          const af = a["OFFICE FAVOURITE"] ? 1 : 0;
-          const bf = b["OFFICE FAVOURITE"] ? 1 : 0;
-          return bf - af;
+          const af = a["OFFICE FAVOURITE"] ? 0 : 1;
+          const bf = b["OFFICE FAVOURITE"] ? 0 : 1;
+          if (af !== bf) return af - bf;
+          const isColourA = a["COLOUR"] === true || (a["COLOUR"] as any) === "YES" || (a["COLOUR"] as any) === "yes" ? 1 : 0;
+          const isColourB = b["COLOUR"] === true || (b["COLOUR"] as any) === "YES" || (b["COLOUR"] as any) === "yes" ? 1 : 0;
+          if (isColourA !== isColourB) return isColourA - isColourB;
+          return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
         })
         .slice(0, 30)
     : [];
@@ -393,10 +397,14 @@ const Index = () => {
         }
         return Array.from(seen.values())
           .sort((a, b) => {
-            const af = a["OFFICE FAVOURITE"] ? 1 : 0;
-            const bf = b["OFFICE FAVOURITE"] ? 1 : 0;
-            return bf - af;
-          })
+          const af = a["OFFICE FAVOURITE"] ? 0 : 1;
+          const bf = b["OFFICE FAVOURITE"] ? 0 : 1;
+          if (af !== bf) return af - bf;
+          const isColourA = a["COLOUR"] === true || (a["COLOUR"] as any) === "YES" || (a["COLOUR"] as any) === "yes" ? 1 : 0;
+          const isColourB = b["COLOUR"] === true || (b["COLOUR"] as any) === "YES" || (b["COLOUR"] as any) === "yes" ? 1 : 0;
+          if (isColourA !== isColourB) return isColourA - isColourB;
+          return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+        })
           .slice(0, 30);
       })()
     : [];
@@ -750,7 +758,7 @@ const Index = () => {
                     title={selectedProduct["OFFICE FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
                   >
                     <Star
-                      size={16}
+                      size={20}
                       style={{
                         fill: selectedProduct["OFFICE FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
                         color: selectedProduct["OFFICE FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",

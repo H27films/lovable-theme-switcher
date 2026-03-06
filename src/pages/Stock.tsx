@@ -89,9 +89,13 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
     ? sortedProducts.filter(p => p["PRODUCT NAME"].toLowerCase().includes(entry.productSearch.toLowerCase()))
     : sortedProducts
   ).slice().sort((a, b) => {
-    const af = (a as any)["BOUDOIR FAVOURITE"] ? 1 : 0;
-    const bf = (b as any)["BOUDOIR FAVOURITE"] ? 1 : 0;
-    return bf - af;
+    const af = (a as any)["BOUDOIR FAVOURITE"] ? 0 : 1;
+    const bf = (b as any)["BOUDOIR FAVOURITE"] ? 0 : 1;
+    if (af !== bf) return af - bf;
+    const isColourA = (a as any)["COLOUR"] === true || (a as any)["COLOUR"] === "YES" || (a as any)["COLOUR"] === "yes" ? 1 : 0;
+    const isColourB = (b as any)["COLOUR"] === true || (b as any)["COLOUR"] === "YES" || (b as any)["COLOUR"] === "yes" ? 1 : 0;
+    if (isColourA !== isColourB) return isColourA - isColourB;
+    return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
   });
 
   useEffect(() => {
@@ -433,9 +437,12 @@ export default function Stock() {
   };
 
   const sortedProducts = [...products].sort((a, b) => {
-    const af = a["BOUDOIR FAVOURITE"] ? 1 : 0;
-    const bf = b["BOUDOIR FAVOURITE"] ? 1 : 0;
-    if (bf !== af) return bf - af;
+    const af = a["BOUDOIR FAVOURITE"] ? 0 : 1;
+    const bf = b["BOUDOIR FAVOURITE"] ? 0 : 1;
+    if (af !== bf) return af - bf;
+    const isColourA = a["COLOUR"] === true || (a["COLOUR"] as any) === "YES" || (a["COLOUR"] as any) === "yes" ? 1 : 0;
+    const isColourB = b["COLOUR"] === true || (b["COLOUR"] as any) === "YES" || (b["COLOUR"] as any) === "yes" ? 1 : 0;
+    if (isColourA !== isColourB) return isColourA - isColourB;
     return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
   });
 
@@ -1120,7 +1127,7 @@ export default function Stock() {
                           title={selectedProduct["BOUDOIR FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
                         >
                           <Star
-                            size={14}
+                            size={20}
                             style={{
                               fill: selectedProduct["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
                               color: selectedProduct["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
