@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, RefreshCw } from "lucide-react";
+import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -520,13 +520,7 @@ const Index = () => {
                   <span className="ml-3" style={{ color: "hsl(var(--red))" }}>· {lowStockCount} below par</span>
                 )}
               </p>
-              <button
-                onClick={fetchProducts}
-                className="nav-link flex items-center gap-1"
-                style={{ color: "hsl(var(--foreground))" }}
-              >
-                Refresh <RefreshCw size={13} className="inline -mt-0.5" />
-              </button>
+
             </div>
           </div>
 
