@@ -304,10 +304,12 @@ const Index = () => {
         p["SUPPLIER"]?.toLowerCase().includes(search.toLowerCase()) ||
         p["OFFICE SECTION"]?.toLowerCase().includes(search.toLowerCase());
       const matchLow = !filterLowStock || checkBelowPar(p["OFFICE BALANCE"], p["PAR"]);
+      const colourVal = p["COLOUR"];
+      const isColour = colourVal === true || (colourVal as unknown as string) === "YES" || (colourVal as unknown as string) === "yes" || (colourVal as unknown as string) === "true";
       const matchColour =
         filterColour === "all" ? true :
-        filterColour === "yes" ? p["COLOUR"] === true :
-        p["COLOUR"] !== true;
+        filterColour === "yes" ? isColour :
+        !isColour;
       return matchSearch && matchLow && matchColour;
     })
     .sort((a, b) => {
@@ -567,7 +569,7 @@ const Index = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
                       {p["SUPPLIER"] && <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>}
-                      {p["COLOUR"] === true && (
+                      {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
                         <span className="text-[10px] tracking-wider uppercase" style={dim}>Colour</span>
                       )}
                     </div>
