@@ -502,7 +502,7 @@ const Index = () => {
           <div className="mb-8">
             <div className="flex items-end justify-between">
               <div>
-                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase mb-1" style={dim}>Office Database</h1>
+                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">Office Database</h1>
                 <p className="text-[28px] font-light tracking-tight">Stock Inventory</p>
               </div>
               <span
