@@ -94,6 +94,9 @@ const Index = () => {
   const [recentActivity, setRecentActivity] = useState<AllFileLogRow[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
 
+  // Tab toggle: activity vs table
+  const [activeTab, setActiveTab] = useState<"activity" | "table">("activity");
+
   // All-orders recent activity (main page, 14 days)
   const [allActivity, setAllActivity] = useState<AllFileLogRow[]>([]);
   const [allActivityLoading, setAllActivityLoading] = useState(false);
@@ -591,8 +594,27 @@ const Index = () => {
             )}
           </div>
 
+          {/* ── Tab switcher ── */}
+          <div className="flex items-center gap-8 mb-8 border-b" style={{ borderColor: border }}>
+            {(["activity", "table"] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="text-[11px] tracking-[0.15em] uppercase pb-3 transition-colors relative"
+                style={{ color: activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+              >
+                {tab === "activity" ? "Recent Activity" : "Table"}
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "hsl(var(--foreground))" }} />
+                )}
+              </button>
+            ))}
+          </div>
+
           {/* ── Recent Activity (14 days) ── */}
-          {(() => {
+          {activeTab === "activity" && ((() => {
             // Group allActivity by GRN
             const groups: { grn: string; rows: AllFileLogRow[] }[] = [];
             const seen = new Map<string, AllFileLogRow[]>();
@@ -679,7 +701,9 @@ const Index = () => {
                 )}
               </div>
             );
-          })()}
+          })())}
+
+          {activeTab === "table" && (<>
 
           {/* ── Selected product card ── */}
           {selectedProduct && (
@@ -1030,6 +1054,8 @@ const Index = () => {
               )}
             </>
           )}
+
+          </>)}
         </div>
       </div>
 
