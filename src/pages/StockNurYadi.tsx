@@ -126,7 +126,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
   };
 
   return (
-    <div ref={ref} className="relative flex-1">
+    <div ref={ref} className="relative flex-1 max-w-[460px]">
       <div
         className="flex items-center justify-between px-3 py-2 cursor-pointer h-[34px]"
         style={{ background: cardBg, border: `1px solid ${borderActive}` }}
@@ -230,7 +230,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose }: {
     <div
       ref={ref}
       className="relative flex-shrink-0"
-      style={{ width: "110px" }}
+      style={{ width: "150px" }}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
@@ -1178,16 +1178,16 @@ export default function StockNurYadi() {
                   <DatePicker value={usageDate} onChange={setUsageDate} />
                 </div>
                 {/* Column headers */}
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-5 mb-1">
                   <div className="w-4 flex-shrink-0" />
                   <div className="flex-1"><span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span></div>
-                  <div className="flex-shrink-0 text-center" style={{width:"110px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Type</span></div>
-                  <div className="flex-shrink-0 text-center" style={{width:"106px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Qty</span></div>
+                  <div className="flex-shrink-0 text-center" style={{width:"150px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Type</span></div>
+                  <div className="flex-shrink-0 text-center" style={{width:"130px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Qty</span></div>
                   <div className="w-[13px] flex-shrink-0" />
                 </div>
                 <div className="space-y-3 mb-5">
                   {entries.map((entry, idx) => (
-                    <div key={entry.id} className="flex items-stretch gap-2">
+                    <div key={entry.id} className="flex items-stretch gap-5">
                       <span className="text-[10px] w-4 text-right flex-shrink-0 pt-2.5" style={dim}>{idx + 1}</span>
                       <ProductDropdown
                         entry={entry}
@@ -1256,11 +1256,11 @@ export default function StockNurYadi() {
                   <DatePicker value={orderDate} onChange={setOrderDate} />
                 </div>
                 {/* Column headers */}
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-5 mb-1">
                   <div className="w-4 flex-shrink-0" />
                   <div className="flex-1"><span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span></div>
                   <div className="flex-shrink-0" style={{width:"60px", textAlign:"center"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span></div>
-                  <div className="flex-shrink-0 text-center" style={{width:"106px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Order Qty</span></div>
+                  <div className="flex-shrink-0 text-center" style={{width:"130px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Order Qty</span></div>
                   <div className="w-[13px] flex-shrink-0" />
                 </div>
                 <div className="space-y-3 mb-5">
@@ -1268,7 +1268,7 @@ export default function StockNurYadi() {
                     const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
                     const currentBal = product?.["NUR YADI BALANCE"] ?? null;
                     return (
-                      <div key={entry.id} className="flex items-stretch gap-2">
+                      <div key={entry.id} className="flex items-stretch gap-5">
                         <span className="text-[10px] w-4 text-right flex-shrink-0 pt-2.5" style={dim}>{idx + 1}</span>
                         <ProductDropdown
                           entry={entry}
@@ -1291,7 +1291,7 @@ export default function StockNurYadi() {
                           </span>
                         </div>
                         {/* Qty stepper */}
-                        <div className="flex items-center flex-shrink-0 h-[34px]" style={{ width: "106px", border: `1px solid ${borderActive}`, background: cardBg }}>
+                        <div className="flex items-center flex-shrink-0 h-[34px]" style={{ width: "130px", border: `1px solid ${borderActive}`, background: cardBg }}>
                           <button onClick={() => updateOrderEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
                             className="px-2 py-2 transition-colors" style={dim}
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
