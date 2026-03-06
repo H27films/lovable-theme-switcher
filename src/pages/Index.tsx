@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus } from "lucide-react";
+import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, Star } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -18,6 +18,7 @@ interface OfficeProduct {
   "PAR": number | null;
   "COLOUR": boolean | null;
   "OFFICE SECTION": string | null;
+  "OFFICE FAVOURITE": boolean | null;
 }
 
 type SortKey = "PRODUCT NAME" | "SUPPLIER" | null;
@@ -331,8 +332,29 @@ const Index = () => {
   const lowStockCount = products.filter(p => checkBelowPar(p["OFFICE BALANCE"], p["PAR"])).length;
 
   const dropdownResults = search.length > 0
-    ? products.filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(search.toLowerCase())).slice(0, 30)
+    ? products
+        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+          const af = a["OFFICE FAVOURITE"] ? 1 : 0;
+          const bf = b["OFFICE FAVOURITE"] ? 1 : 0;
+          return bf - af;
+        })
+        .slice(0, 30)
     : [];
+
+  const toggleFavourite = async (product: OfficeProduct) => {
+    const newVal = !(product["OFFICE FAVOURITE"]);
+    await supabase
+      .from("AllFileProducts")
+      .update({ "OFFICE FAVOURITE": newVal })
+      .eq("PRODUCT NAME", product["PRODUCT NAME"]);
+    setProducts(prev => prev.map(p =>
+      p["PRODUCT NAME"] === product["PRODUCT NAME"]
+        ? { ...p, "OFFICE FAVOURITE": newVal }
+        : p
+    ));
+    setSelectedProduct(prev => prev ? { ...prev, "OFFICE FAVOURITE": newVal } : null);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!showDropdown || dropdownResults.length === 0) return;
@@ -369,7 +391,13 @@ const Index = () => {
             seen.set(key, p);
           }
         }
-        return Array.from(seen.values()).slice(0, 30);
+        return Array.from(seen.values())
+          .sort((a, b) => {
+            const af = a["OFFICE FAVOURITE"] ? 1 : 0;
+            const bf = b["OFFICE FAVOURITE"] ? 1 : 0;
+            return bf - af;
+          })
+          .slice(0, 30);
       })()
     : [];
 
@@ -567,6 +595,7 @@ const Index = () => {
                     onMouseEnter={() => setActiveIndex(i)}
                   >
                     <div className="flex items-center gap-3">
+                      {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                       <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
                       {p["SUPPLIER"] && <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>}
                       {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
@@ -715,14 +744,29 @@ const Index = () => {
                     <p className="text-[12px] mt-0.5" style={dim}>{selectedProduct["SUPPLIER"]}</p>
                   )}
                 </div>
-                <button
-                  onClick={() => { setSelectedProduct(null); setSearch(""); }}
-                  style={dim}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                >
-                  <X size={15} />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggleFavourite(selectedProduct)}
+                    title={selectedProduct["OFFICE FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
+                  >
+                    <Star
+                      size={16}
+                      style={{
+                        fill: selectedProduct["OFFICE FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
+                        color: selectedProduct["OFFICE FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        transition: "all 0.15s"
+                      }}
+                    />
+                  </button>
+                  <button
+                    onClick={() => { setSelectedProduct(null); setSearch(""); }}
+                    style={dim}
+                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
               </div>
 
               {/* Balance */}
@@ -1170,7 +1214,10 @@ const Index = () => {
                       onMouseEnter={() => setOrderActiveIndex(i)}
                     >
                       <div>
-                        <span className="text-[14.5px] font-light">{p["PRODUCT NAME"]}</span>
+                        <div className="flex items-center gap-1.5">
+                          {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                          <span className="text-[14.5px] font-light">{p["PRODUCT NAME"]}</span>
+                        </div>
                         {orderSupplierFilter.length === 0 && p["SUPPLIER"] && (
                           <span className="text-[14.5px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
                         )}

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, ChevronDown, FileText, Download, Home, Lock } from "lucide-react";
+import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, ChevronDown, FileText, Download, Home, Lock, Star } from "lucide-react";
 import jsPDF from "jspdf";
 
 interface AllFileProduct {
@@ -22,6 +22,7 @@ interface AllFileProduct {
   "UNITS/ORDER": number | null;
   "COLOUR": boolean | null;
   "OFFICE SECTION": string | null;
+  "BOUDOIR FAVOURITE": boolean | null;
 }
 
 interface LogRow {
@@ -84,9 +85,14 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
   const cardBg = "hsl(var(--card))";
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
-  const filtered = entry.productSearch
+  const filtered = (entry.productSearch
     ? sortedProducts.filter(p => p["PRODUCT NAME"].toLowerCase().includes(entry.productSearch.toLowerCase()))
-    : sortedProducts;
+    : sortedProducts
+  ).slice().sort((a, b) => {
+    const af = (a as any)["BOUDOIR FAVOURITE"] ? 1 : 0;
+    const bf = (b as any)["BOUDOIR FAVOURITE"] ? 1 : 0;
+    return bf - af;
+  });
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -169,7 +175,10 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
                 onMouseDown={() => { onSelect(p["PRODUCT NAME"]); setActiveIndex(-1); }}
                 onMouseEnter={() => setActiveIndex(i)}
               >
-                <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
+                <div className="flex items-center gap-1.5">
+                  {(p as any)["BOUDOIR FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                  <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
+                </div>
                 {showBalance && <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>{p["BOUDOIR BALANCE"]}</span>}
               </div>
             ))}
@@ -423,13 +432,30 @@ export default function Stock() {
     setTimeout(() => setSaveFlash(false), 2000);
   };
 
-  const sortedProducts = [...products].sort((a, b) =>
-    a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"])
-  );
+  const sortedProducts = [...products].sort((a, b) => {
+    const af = a["BOUDOIR FAVOURITE"] ? 1 : 0;
+    const bf = b["BOUDOIR FAVOURITE"] ? 1 : 0;
+    if (bf !== af) return bf - af;
+    return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+  });
 
   const filteredStockProducts = stockSearch.length > 0
     ? sortedProducts.filter(p => p["PRODUCT NAME"].toLowerCase().includes(stockSearch.toLowerCase()))
     : sortedProducts;
+
+  const toggleFavourite = async (product: AllFileProduct) => {
+    const newVal = !(product["BOUDOIR FAVOURITE"]);
+    await supabase
+      .from("AllFileProducts")
+      .update({ "BOUDOIR FAVOURITE": newVal })
+      .eq("PRODUCT NAME", product["PRODUCT NAME"]);
+    setProducts(prev => prev.map(p =>
+      p["PRODUCT NAME"] === product["PRODUCT NAME"]
+        ? { ...p, "BOUDOIR FAVOURITE": newVal }
+        : p
+    ));
+    setSelectedProduct(prev => prev ? { ...prev, "BOUDOIR FAVOURITE": newVal } : null);
+  };
 
   const handleSelectProduct = (row: AllFileProduct) => {
     setSelectedProduct(row);
@@ -1064,7 +1090,10 @@ export default function Stock() {
                       onMouseDown={() => handleSelectProduct(row)}
                       onMouseEnter={() => setStockActiveIndex(i)}
                     >
-                      <span className="text-[13px] font-light">{row["PRODUCT NAME"]}</span>
+                      <div className="flex items-center gap-1.5">
+                        {row["BOUDOIR FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                        <span className="text-[13px] font-light">{row["PRODUCT NAME"]}</span>
+                      </div>
                       <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{row["BOUDOIR BALANCE"]}</span>
                     </div>
                   ))}
@@ -1084,7 +1113,22 @@ export default function Stock() {
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
-                      <p className="text-[15px] font-light">{selectedProduct["PRODUCT NAME"]}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[15px] font-light">{selectedProduct["PRODUCT NAME"]}</p>
+                        <button
+                          onClick={() => toggleFavourite(selectedProduct)}
+                          title={selectedProduct["BOUDOIR FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
+                        >
+                          <Star
+                            size={14}
+                            style={{
+                              fill: selectedProduct["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
+                              color: selectedProduct["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                              transition: "all 0.15s"
+                            }}
+                          />
+                        </button>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-[32px] font-light leading-none" style={{
