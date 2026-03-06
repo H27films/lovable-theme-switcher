@@ -95,9 +95,9 @@ const Index = () => {
   const [activityLoading, setActivityLoading] = useState(false);
 
   // Tab toggle: activity vs table
-  const [activeTab, setActiveTab] = useState<"activity" | "table">("activity");
+  const [activeTab, setActiveTab] = useState<"activity" | "table">("table");
 
-  // All-orders recent activity (main page, 14 days)
+  // All-orders recent activity (main page, 60 days)
   const [allActivity, setAllActivity] = useState<AllFileLogRow[]>([]);
   const [allActivityLoading, setAllActivityLoading] = useState(false);
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
@@ -201,13 +201,13 @@ const Index = () => {
     fetchActivity();
   }, [selectedProduct]);
 
-  // Fetch 14-day all-orders activity for main page
+  // Fetch 60-day all-orders activity for main page
   useEffect(() => {
     const fetchAllActivity = async () => {
       setAllActivityLoading(true);
       try {
         const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - 14);
+        cutoff.setDate(cutoff.getDate() - 60);
         const cutoffStr = cutoff.toISOString().split("T")[0];
         const { data, error } = await (supabase as any)
           .from("AllFileLog")
@@ -626,11 +626,11 @@ const Index = () => {
 
             return (
               <div className="mb-8">
-                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Recent Activity · Last 14 Days</p>
+                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Recent Activity · Last 60 Days</p>
                 {allActivityLoading ? (
                   <p className="text-[12px]" style={dim}>Loading…</p>
                 ) : groups.length === 0 ? (
-                  <p className="text-[12px]" style={dim}>No order activity in the last 14 days</p>
+                  <p className="text-[12px]" style={dim}>No order activity in the last 60 days</p>
                 ) : (
                   <div className="border-t" style={{ borderColor: border }}>
                     {groups.map(({ grn, rows }) => {
