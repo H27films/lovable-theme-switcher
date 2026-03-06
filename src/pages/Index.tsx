@@ -539,7 +539,7 @@ const Index = () => {
                 className="flex-1 bg-transparent outline-none text-[22px] font-light"
                 placeholder="Type product name..."
                 value={search}
-                onChange={e => { setSearch(e.target.value); setSelectedProduct(null); setShowDropdown(true); }}
+                onChange={e => { setSearch(e.target.value); setSelectedProduct(null); setShowDropdown(true); setActiveTab("table"); }}
                 onFocus={() => setShowDropdown(true)}
                 onKeyDown={handleKeyDown}
                 style={{ color: search ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
