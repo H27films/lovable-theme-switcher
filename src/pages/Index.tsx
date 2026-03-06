@@ -600,7 +600,7 @@ const Index = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="text-[11px] tracking-[0.15em] uppercase pb-3 transition-colors relative"
+                className="text-[13px] tracking-[0.15em] uppercase pb-3 transition-colors relative"
                 style={{ color: activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
