@@ -596,7 +596,7 @@ const Index = () => {
 
           {/* ── Tab switcher ── */}
           <div className="flex items-center gap-8 mb-8 border-b" style={{ borderColor: border }}>
-            {(["activity", "table"] as const).map(tab => (
+            {(["table", "activity"] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
