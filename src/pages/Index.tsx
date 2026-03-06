@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +68,15 @@ const PAGE_SIZE = 200;
 const Index = () => {
   const { theme, toggle, font, cycleFont } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromBranch = (location.state as { fromBranch?: string } | null)?.fromBranch ?? null;
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false);
+
+  const branchRoutes: Record<string, string> = {
+    "Boudoir": "/stock",
+    "Nur Yadi": "/stocknuryadi",
+    "Chic Nailspa": "/stockchicnailspa",
+  };
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -420,14 +429,41 @@ const Index = () => {
               </button>
             </div>
           </div>
-          <button
-            onClick={() => navigate("/stock")}
-            className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase transition-colors"
-            style={{ color: "hsl(var(--foreground))" }}
-          >
-            <span>STOCK</span>
-            <ArrowRight size={15} />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (fromBranch && branchRoutes[fromBranch]) {
+                  navigate(branchRoutes[fromBranch]);
+                } else {
+                  setShowBranchDropdown(prev => !prev);
+                }
+              }}
+              className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase transition-colors"
+              style={{ color: "hsl(var(--foreground))" }}
+            >
+              <span>STOCK</span>
+              <ArrowRight size={15} />
+            </button>
+            {showBranchDropdown && (
+              <div
+                className="absolute right-0 top-8 z-50 flex flex-col gap-1 p-2 rounded-xl"
+                style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", minWidth: "160px" }}
+              >
+                {Object.entries(branchRoutes).map(([branch, route]) => (
+                  <button
+                    key={branch}
+                    onClick={() => { setShowBranchDropdown(false); navigate(route); }}
+                    className="text-left px-4 py-2 rounded-lg text-[12px] tracking-[0.1em] uppercase transition-colors"
+                    style={{ color: "hsl(var(--foreground))" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    {branch}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="py-12">

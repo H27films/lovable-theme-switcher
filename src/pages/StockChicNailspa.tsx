@@ -951,7 +951,7 @@ export default function StockChicNailspa() {
         {/* Top bar */}
         <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border }}>
           <button
-            onClick={() => navigate("/prices")}
+            onClick={() => navigate("/prices", { state: { fromBranch: "Chic Nailspa" } })}
             className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase text-foreground transition-colors"
           >
             <ArrowLeft size={15} />
