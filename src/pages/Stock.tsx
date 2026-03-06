@@ -953,11 +953,11 @@ export default function Stock() {
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
-      <div className="max-w-[760px] mx-auto px-5">
+      <div className="max-w-[1100px] mx-auto px-5">
         {/* Top bar */}
         <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border }}>
           <button
-            onClick={() => navigate("/prices", { state: { fromBranch: "Boudoir" } })}
+            onClick={() => navigate("/prices")}
             className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase text-foreground transition-colors"
           >
             <ArrowLeft size={15} />
