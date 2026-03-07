@@ -608,21 +608,19 @@ const Index = () => {
         <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border }}>
           <div className="flex items-center gap-4">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
-                OFFICE
-              </span>
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
-                style={{ ...dim, borderColor: border }}
-                onMouseEnter={e => { e.currentTarget.style.color = "hsl(var(--foreground))"; e.currentTarget.style.backgroundColor = cardBg; }}
-                onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; e.currentTarget.style.backgroundColor = "transparent"; }}
-                aria-label="Go to home"
-              >
-                <Home size={14} />
-              </button>
-            </div>
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
+              style={{ ...dim, borderColor: border }}
+              onMouseEnter={e => { e.currentTarget.style.color = "hsl(var(--foreground))"; e.currentTarget.style.backgroundColor = cardBg; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; e.currentTarget.style.backgroundColor = "transparent"; }}
+              aria-label="Go to home"
+            >
+              <Home size={14} />
+            </button>
+            <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
+              OFFICE
+            </span>
           </div>
           <div className="relative">
             <button

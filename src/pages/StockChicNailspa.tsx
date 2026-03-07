@@ -984,6 +984,31 @@ export default function StockChicNailspa() {
       <div className="max-w-[900px] mx-auto px-5">
         {/* Top bar */}
         <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border }}>
+          <div className="flex items-center gap-4">
+            <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
+              style={{ ...dim, borderColor: "hsl(var(--border))" }}
+              aria-label="Go to home"
+              onMouseEnter={e => {
+                e.currentTarget.style.color = "hsl(var(--foreground))";
+                e.currentTarget.style.backgroundColor = "hsl(var(--card))";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              <Home size={14} />
+            </button>
+            <span
+              className="text-[11px] tracking-[0.2em] uppercase"
+              style={{ color: "hsl(var(--foreground))" }}
+            >
+              Chic Nailspa
+            </span>
+          </div>
           <button
             onClick={() => navigate("/prices")}
             className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase text-foreground transition-colors"
@@ -991,33 +1016,6 @@ export default function StockChicNailspa() {
             <ArrowLeft size={15} />
             <span>OFFICE</span>
           </button>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span
-                className="text-[11px] tracking-[0.2em] uppercase"
-                style={{ color: "hsl(var(--foreground))" }}
-              >
-                Chic Nailspa
-              </span>
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
-                style={{ ...dim, borderColor: "hsl(var(--border))" }}
-                aria-label="Go to home"
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = "hsl(var(--foreground))";
-                  e.currentTarget.style.backgroundColor = "hsl(var(--card))";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = "hsl(var(--muted-foreground))";
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-              >
-                <Home size={14} />
-              </button>
-            </div>
-            <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
-          </div>
         </div>
 
         <div className="py-12">
