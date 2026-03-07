@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, Star } from "lucide-react";
+import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, Star, Search } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -695,28 +695,22 @@ const Index = () => {
             </div>
           </div>
 
-          {/* ── Search bar — large style ── */}
+          {/* ── Search bar ── */}
           <div ref={searchRef} className="relative mb-8">
-            <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Search Product</p>
-            <div className="flex items-center gap-3 border-b pb-3" style={{ borderColor: borderActive }}>
+            <div className="flex items-center gap-3 border-b pb-2" style={{ borderColor: borderActive }}>
+              <Search size={13} style={dim} />
               <input
                 type="text"
-                className="flex-1 bg-transparent outline-none text-[22px] font-light"
-                placeholder="Type product name..."
+                className="flex-1 bg-transparent outline-none text-[15px] font-light"
+                placeholder="Search product..."
                 value={search}
                 onChange={e => { setSearch(e.target.value); setSelectedProduct(null); setShowDropdown(true); setActiveTab("table"); }}
                 onFocus={() => setShowDropdown(true)}
                 onKeyDown={handleKeyDown}
-                style={{ color: search ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
               />
               {search && (
-                <button
-                  onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); }}
-                  style={dim}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                >
-                  <X size={14} />
+                <button onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); }} style={dim}>
+                  <X size={13} />
                 </button>
               )}
             </div>
