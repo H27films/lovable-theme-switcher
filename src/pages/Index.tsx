@@ -106,6 +106,7 @@ const Index = () => {
   const [branchActivity, setBranchActivity] = useState<AllFileLogRow[]>([]);
   const [branchActivityLoading, setBranchActivityLoading] = useState(false);
   const [expandedBranchDates, setExpandedBranchDates] = useState<Set<string>>(new Set());
+  const [selectedBranchProduct, setSelectedBranchProduct] = useState<string | null>(null);
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
@@ -778,6 +779,14 @@ const Index = () => {
             });
             const olderDates = [...olderByDate.keys()].sort((a, b) => b.localeCompare(a));
 
+            const branchBalanceCol = selectedBranch === "Boudoir" ? "BOUDOIR BALANCE" : selectedBranch === "Nur Yadi" ? "NUR YADI BALANCE" : "CHIC NAILSPA BALANCE";
+            const selectedBranchProductInfo = selectedBranchProduct
+              ? products.find(p => p["PRODUCT NAME"] === selectedBranchProduct) ?? null
+              : null;
+            const filteredProductActivity = selectedBranchProduct
+              ? branchActivity.filter(r => r["PRODUCT NAME"] === selectedBranchProduct)
+              : [];
+
             return (
               <div className="mb-8">
                 {/* Branch selector */}
@@ -785,7 +794,7 @@ const Index = () => {
                   {(["Boudoir", "Nur Yadi", "Chic Nailspa"] as const).map(branch => (
                     <button
                       key={branch}
-                      onClick={() => { setSelectedBranch(branch); setExpandedBranchDates(new Set()); }}
+                      onClick={() => { setSelectedBranch(branch); setExpandedBranchDates(new Set()); setSelectedBranchProduct(null); }}
                       className="text-[13px] tracking-[0.12em] uppercase pb-2 transition-colors relative"
                       style={{ color: selectedBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                       onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -798,6 +807,92 @@ const Index = () => {
                     </button>
                   ))}
                 </div>
+                {/* Product detail panel */}
+                {selectedBranchProduct && (
+                  <div className="surface-box p-5 mb-6">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>{selectedBranch} · Product Detail</p>
+                        <p className="text-[15px] font-light">{selectedBranchProduct}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {selectedBranchProductInfo && (
+                          <div className="text-right">
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
+                            <p className="text-[28px] font-light leading-none" style={{
+                              color: ((selectedBranchProductInfo as any)[branchBalanceCol] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                            }}>
+                              {(selectedBranchProductInfo as any)[branchBalanceCol] ?? 0}
+                            </p>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setSelectedBranchProduct(null)}
+                          style={dim}
+                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Prices row if available */}
+                    {selectedBranchProductInfo && (
+                      <div className="flex items-center gap-6 mb-4 pt-3 border-t" style={{ borderColor: border }}>
+                        {selectedBranchProductInfo["STAFF PRICE"] && selectedBranchProductInfo["STAFF PRICE"] > 0 && (
+                          <div>
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
+                            <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["STAFF PRICE"] as number).toFixed(2)}</p>
+                          </div>
+                        )}
+                        {selectedBranchProductInfo["CUSTOMER PRICE"] && selectedBranchProductInfo["CUSTOMER PRICE"] > 0 && (
+                          <div>
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
+                            <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["CUSTOMER PRICE"] as number).toFixed(2)}</p>
+                          </div>
+                        )}
+                        {selectedBranchProductInfo["BRANCH PRICE"] && selectedBranchProductInfo["BRANCH PRICE"] > 0 && (
+                          <div>
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
+                            <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["BRANCH PRICE"] as number).toFixed(2)}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Activity for this product */}
+                    {filteredProductActivity.length === 0 ? (
+                      <p className="text-[12px]" style={dim}>No activity found for this product</p>
+                    ) : (
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: border }}>
+                            <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
+                            <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending Bal</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredProductActivity.map(row => (
+                            <tr key={row.id} className="border-b" style={{ borderColor: border }}>
+                              <td className="text-[12px] font-light py-2">
+                                {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                              </td>
+                              <td className="text-[11px] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                              <td className="text-[13px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                                {row.QTY > 0 ? "+" : ""}{row.QTY}
+                              </td>
+                              <td className="text-[13px] font-light py-2 text-center">{row["ENDING BALANCE"]}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                )}
                 <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>{selectedBranch} · Last 60 Days</p>
                 {branchActivityLoading ? (
                   <p className="text-[12px]" style={dim}>Loading…</p>
@@ -824,7 +919,11 @@ const Index = () => {
                               <td className="text-[12px] font-light py-3">
                                 {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                               </td>
-                              <td className="text-[13px] font-light py-3" style={dim}>{row["PRODUCT NAME"]}</td>
+                              <td
+                                className="text-[13px] font-light py-3 cursor-pointer hover:underline"
+                                style={dim}
+                                onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
+                              >{row["PRODUCT NAME"] ?? "—"}</td>
                               <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                               <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                 {row.QTY > 0 ? "+" : ""}{row.QTY}
@@ -865,7 +964,11 @@ const Index = () => {
                               {isExpanded && rows.map((row, ri) => (
                                 <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
                                   <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                                  <td className="text-[13px] font-light py-2.5" style={dim}>{row["PRODUCT NAME"]}</td>
+                                  <td
+                                    className="text-[13px] font-light py-2.5 cursor-pointer hover:underline"
+                                    style={dim}
+                                    onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
+                                  >{row["PRODUCT NAME"]}</td>
                                   <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                                   <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                     {row.QTY > 0 ? "+" : ""}{row.QTY}

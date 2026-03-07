@@ -1689,7 +1689,13 @@ export default function Stock() {
                             <td className="text-[12px] font-light py-3">
                               {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </td>
-                            <td className="text-[13px] font-light py-3 text-dim">{row["PRODUCT NAME"]}</td>
+                            <td
+                              className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
+                              onClick={() => {
+                                const p = products.find(pr => pr["PRODUCT NAME"] === row["PRODUCT NAME"]);
+                                if (p) handleSelectProduct(p);
+                              }}
+                            >{row["PRODUCT NAME"]}</td>
                             <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                             <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
                             <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
@@ -1739,7 +1745,13 @@ export default function Stock() {
                             {isExpanded && rows.map((row, ri) => (
                               <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
                                 <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                                <td className="text-[13px] font-light py-2.5 text-dim">{row["PRODUCT NAME"]}</td>
+                                <td
+                                  className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
+                                  onClick={() => {
+                                    const p = products.find(pr => pr["PRODUCT NAME"] === row["PRODUCT NAME"]);
+                                    if (p) handleSelectProduct(p);
+                                  }}
+                                >{row["PRODUCT NAME"]}</td>
                                 <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                                 <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
                                 <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
