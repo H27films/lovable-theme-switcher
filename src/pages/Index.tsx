@@ -96,7 +96,7 @@ const Index = () => {
   const [activityLoading, setActivityLoading] = useState(false);
 
   // Tab toggle: activity vs table
-  const [activeTab, setActiveTab] = useState<"activity" | "table" | "branches">("table");
+  const [activeTab, setActiveTab] = useState<"activity" | "table" | "branches">("branches");
 
   // All-orders recent activity (main page, 60 days)
   const [allActivity, setAllActivity] = useState<AllFileLogRow[]>([]);
@@ -754,7 +754,7 @@ const Index = () => {
 
           {/* ── Tab switcher ── */}
           <div className="flex items-center gap-8 mb-8 border-b" style={{ borderColor: border }}>
-            {(["table", "activity", "branches"] as const).map(tab => (
+            {(["branches", "activity", "table"] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

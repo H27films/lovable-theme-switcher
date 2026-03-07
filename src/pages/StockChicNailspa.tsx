@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, X, ChevronLeft, ChevronRight, Search, ChevronDown, FileText, Download, Home, Lock, Star } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, X, ChevronLeft, ChevronRight, Search, ChevronDown, FileText, Download, Home, Lock, Star } from "lucide-react";
 import jsPDF from "jspdf";
 
 interface AllFileProduct {
@@ -1013,8 +1013,8 @@ export default function StockChicNailspa() {
             onClick={() => navigate("/prices")}
             className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase text-foreground transition-colors"
           >
-            <ArrowLeft size={15} />
             <span>OFFICE</span>
+            <ArrowRight size={15} />
           </button>
         </div>
 
