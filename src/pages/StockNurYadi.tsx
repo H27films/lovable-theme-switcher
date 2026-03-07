@@ -369,6 +369,7 @@ export default function StockNurYadi() {
 
   const [stockSearch, setStockSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<AllFileProduct | null>(null);
+  const [selectedActivityProduct, setSelectedActivityProduct] = useState<string | null>(null);
   const [showStockDropdown, setShowStockDropdown] = useState(false);
   const [stockActiveIndex, setStockActiveIndex] = useState(-1);
   const stockListRef = useRef<HTMLDivElement>(null);
@@ -1631,6 +1632,90 @@ export default function StockNurYadi() {
                   {activityRange === "all" ? "All data" : "Last 14 days"}
                 </p>
               </div>
+              {selectedActivityProduct && (() => {
+                const info = products.find(p => p["PRODUCT NAME"] === selectedActivityProduct) ?? null;
+                const activityForProduct = log.filter(r => r["PRODUCT NAME"] === selectedActivityProduct);
+                return (
+                  <div className="surface-box p-5 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Nur Yadi · Product Detail</p>
+                        <p className="text-[15px] font-light">{selectedActivityProduct}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {info && (
+                          <div className="text-right">
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
+                            <p className="text-[28px] font-light leading-none" style={{
+                              color: ((info as any)["NUR YADI BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                            }}>
+                              {(info as any)["NUR YADI BALANCE"] ?? 0}
+                            </p>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setSelectedActivityProduct(null)}
+                          style={dim}
+                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    {info && (info["STAFF PRICE"] || info["CUSTOMER PRICE"] || info["BRANCH PRICE"]) && (
+                      <div className="flex items-center gap-6 mb-4 pt-3 border-t" style={{ borderColor: border }}>
+                        {info["STAFF PRICE"] && (info["STAFF PRICE"] as number) > 0 && (
+                          <div>
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
+                            <p className="text-[14px] font-light">RM {(info["STAFF PRICE"] as number).toFixed(2)}</p>
+                          </div>
+                        )}
+                        {info["CUSTOMER PRICE"] && (info["CUSTOMER PRICE"] as number) > 0 && (
+                          <div>
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
+                            <p className="text-[14px] font-light">RM {(info["CUSTOMER PRICE"] as number).toFixed(2)}</p>
+                          </div>
+                        )}
+                        {info["BRANCH PRICE"] && (info["BRANCH PRICE"] as number) > 0 && (
+                          <div>
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
+                            <p className="text-[14px] font-light">RM {(info["BRANCH PRICE"] as number).toFixed(2)}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {activityForProduct.length === 0 ? (
+                      <p className="text-[12px]" style={dim}>No activity found for this product</p>
+                    ) : (
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: border }}>
+                            <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
+                            <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending Bal</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activityForProduct.map(row => (
+                            <tr key={row.id} className="border-b" style={{ borderColor: border }}>
+                              <td className="text-[12px] font-light py-2">
+                                {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                              </td>
+                              <td className="text-[11px] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                              <td className="text-[13px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                                {row.QTY > 0 ? "+" : ""}{row.QTY}
+                              </td>
+                              <td className="text-[13px] font-light py-2 text-center">{row["ENDING BALANCE"]}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                );
+              })()}
               {activityLog.length === 0 ? (
                 <p className="text-[13px]" style={dim}>No entries yet</p>
               ) : (() => {
@@ -1679,10 +1764,7 @@ export default function StockNurYadi() {
                             </td>
                             <td
                               className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
-                              onClick={() => {
-                                const p = products.find(pr => pr["PRODUCT NAME"] === row["PRODUCT NAME"]);
-                                if (p) handleSelectProduct(p);
-                              }}
+                              onClick={() => setSelectedActivityProduct(row["PRODUCT NAME"])}
                             >{row["PRODUCT NAME"]}</td>
                             <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                             <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
@@ -1735,10 +1817,7 @@ export default function StockNurYadi() {
                                 <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
                                 <td
                                   className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
-                                  onClick={() => {
-                                    const p = products.find(pr => pr["PRODUCT NAME"] === row["PRODUCT NAME"]);
-                                    if (p) handleSelectProduct(p);
-                                  }}
+                                  onClick={() => setSelectedActivityProduct(row["PRODUCT NAME"])}
                                 >{row["PRODUCT NAME"]}</td>
                                 <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                                 <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
