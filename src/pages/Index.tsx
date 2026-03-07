@@ -1133,7 +1133,7 @@ const Index = () => {
               {/* Balance */}
               <div className="flex items-center gap-8 mb-5 pb-5 border-b" style={{ borderColor: border }}>
                 <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Office Balance</p>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Office</p>
                   <p className="text-[22px] font-light" style={{
                     color: checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR"])
                       ? "hsl(var(--red))" : "hsl(var(--foreground))"
@@ -1144,10 +1144,22 @@ const Index = () => {
                     )}
                   </p>
                 </div>
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Boudoir</p>
+                  <p className="text-[22px] font-light">{selectedProduct["BOUDOIR BALANCE"] ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Nur Yadi</p>
+                  <p className="text-[22px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Chic Nailspa</p>
+                  <p className="text-[22px] font-light">{selectedProduct["CHIC NAILSPA BALANCE"] ?? "—"}</p>
+                </div>
                 {selectedProduct["OFFICE SECTION"] && (
                   <div>
                     <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Section</p>
-                    <p className="text-[15px] font-light">{selectedProduct["OFFICE SECTION"]}</p>
+                    <p className="text-[22px] font-light">{selectedProduct["OFFICE SECTION"]}</p>
                   </div>
                 )}
               </div>
