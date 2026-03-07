@@ -980,7 +980,7 @@ export default function StockNurYadi() {
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
-      <div className="max-w-[1100px] mx-auto px-5">
+      <div className="max-w-[900px] mx-auto px-5">
         {/* Top bar */}
         <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border }}>
           <button
