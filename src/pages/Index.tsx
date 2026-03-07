@@ -119,6 +119,25 @@ const Index = () => {
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
   const [orderActiveIndex, setOrderActiveIndex] = useState(-1);
+  const [showNewProductModal, setShowNewProductModal] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    "PRODUCT NAME": "",
+    "SUPPLIER": "",
+    "SUPPLIER PRICE": "",
+    "BRANCH PRICE": "",
+    "STAFF PRICE": "",
+    "CUSTOMER PRICE": "",
+    "OFFICE BALANCE": "0",
+    "BOUDOIR BALANCE": "0",
+    "NUR YADI BALANCE": "0",
+    "CHIC NAILSPA BALANCE": "0",
+    "PAR": "",
+    "UNITS/ORDER": "1",
+    "COLOUR": false as boolean,
+    "OFFICE SECTION": "",
+  });
+  const [savingNewProduct, setSavingNewProduct] = useState(false);
+  const [newProductError, setNewProductError] = useState<string | null>(null);
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const orderListRef = useRef<HTMLDivElement>(null);
 
@@ -501,6 +520,67 @@ const Index = () => {
 
   const thBase = "pb-3 pt-2 text-[10px] tracking-wider uppercase font-normal select-none transition-colors";
 
+  const handleSaveNewProduct = async () => {
+    if (!newProduct["PRODUCT NAME"].trim()) {
+      setNewProductError("Product name is required.");
+      return;
+    }
+    setSavingNewProduct(true);
+    setNewProductError(null);
+    try {
+      // Get max id
+      const { data: maxRow } = await supabase
+        .from("AllFileProducts")
+        .select("id")
+        .order("id", { ascending: false })
+        .limit(1)
+        .single();
+      const newId = ((maxRow?.id as number) ?? 0) + 1;
+
+      const insertData: Record<string, unknown> = {
+        id: newId,
+        "PRODUCT NAME": newProduct["PRODUCT NAME"].trim(),
+        "SUPPLIER": newProduct["SUPPLIER"].trim() || null,
+        "SUPPLIER PRICE": newProduct["SUPPLIER PRICE"] !== "" ? parseFloat(newProduct["SUPPLIER PRICE"]) : null,
+        "BRANCH PRICE": newProduct["BRANCH PRICE"] !== "" ? parseFloat(newProduct["BRANCH PRICE"]) : null,
+        "STAFF PRICE": newProduct["STAFF PRICE"] !== "" ? parseFloat(newProduct["STAFF PRICE"]) : null,
+        "CUSTOMER PRICE": newProduct["CUSTOMER PRICE"] !== "" ? parseFloat(newProduct["CUSTOMER PRICE"]) : null,
+        "OFFICE BALANCE": parseInt(newProduct["OFFICE BALANCE"]) || 0,
+        "BOUDOIR BALANCE": parseInt(newProduct["BOUDOIR BALANCE"]) || 0,
+        "NUR YADI BALANCE": parseInt(newProduct["NUR YADI BALANCE"]) || 0,
+        "CHIC NAILSPA BALANCE": parseInt(newProduct["CHIC NAILSPA BALANCE"]) || 0,
+        "PAR": newProduct["PAR"] !== "" ? parseInt(newProduct["PAR"]) : null,
+        "UNITS/ORDER": parseInt(newProduct["UNITS/ORDER"]) || 1,
+        "COLOUR": newProduct["COLOUR"],
+        "OFFICE SECTION": newProduct["OFFICE SECTION"].trim() || null,
+        "OFFICE FAVOURITE": false,
+        "BOUDOIR FAVOURITE": false,
+        "NUR YADI FAVOURITE": false,
+        "CHIC NAILSPA FAVOURITE": false,
+      };
+
+      const { error } = await supabase.from("AllFileProducts").insert([insertData]);
+      if (error) throw error;
+
+      // Refresh products
+      const { data: freshProducts } = await supabase.from("AllFileProducts").select("*");
+      if (freshProducts) setProducts(freshProducts as OfficeProduct[]);
+
+      // Reset form
+      setNewProduct({
+        "PRODUCT NAME": "", "SUPPLIER": "", "SUPPLIER PRICE": "", "BRANCH PRICE": "",
+        "STAFF PRICE": "", "CUSTOMER PRICE": "", "OFFICE BALANCE": "0", "BOUDOIR BALANCE": "0",
+        "NUR YADI BALANCE": "0", "CHIC NAILSPA BALANCE": "0", "PAR": "", "UNITS/ORDER": "1",
+        "COLOUR": false, "OFFICE SECTION": "",
+      });
+      setShowNewProductModal(false);
+    } catch (err: unknown) {
+      setNewProductError(err instanceof Error ? err.message : "Failed to save product.");
+    } finally {
+      setSavingNewProduct(false);
+    }
+  };
+
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
       <div className="max-w-[900px] mx-auto px-5">
@@ -571,13 +651,22 @@ const Index = () => {
                 <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">Office Database</h1>
                 <p className="text-[28px] font-light tracking-tight">Stock Inventory</p>
               </div>
-              <span
-                className="nav-link flex items-center gap-0.5 mb-1"
-                style={{ color: "hsl(var(--foreground))" }}
-                onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
-              >
-                Order <ClipboardList size={13} className="inline -mt-0.5" />
-              </span>
+              <div className="flex items-center gap-4 mb-1">
+                <span
+                  className="nav-link flex items-center gap-0.5"
+                  style={{ color: "hsl(var(--foreground))" }}
+                  onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
+                >
+                  Order <ClipboardList size={13} className="inline -mt-0.5" />
+                </span>
+                <span
+                  className="nav-link flex items-center gap-0.5"
+                  style={{ color: "hsl(var(--foreground))" }}
+                  onClick={() => setShowNewProductModal(true)}
+                >
+                  New Product <Plus size={13} className="inline -mt-0.5" />
+                </span>
+              </div>
             </div>
             <div className="flex items-center justify-between mt-1">
               <p className="text-[11px] tracking-wider uppercase" style={dim}>
@@ -920,8 +1009,7 @@ const Index = () => {
                                 {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                               </td>
                               <td
-                                className="text-[13px] font-light py-3 cursor-pointer hover:underline"
-                                style={dim}
+                                className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
                                 onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
                               >{row["PRODUCT NAME"] ?? "—"}</td>
                               <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
@@ -965,8 +1053,7 @@ const Index = () => {
                                 <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
                                   <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
                                   <td
-                                    className="text-[13px] font-light py-2.5 cursor-pointer hover:underline"
-                                    style={dim}
+                                    className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
                                     onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
                                   >{row["PRODUCT NAME"]}</td>
                                   <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
@@ -1357,6 +1444,165 @@ const Index = () => {
           </>)}
         </div>
       </div>
+
+      {/* New Product Modal */}
+      {showNewProductModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowNewProductModal(false)}>
+          <div className="rounded-lg p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <p className="text-[18px] font-light tracking-tight">New Product</p>
+              <button onClick={() => setShowNewProductModal(false)} style={{ color: "hsl(var(--muted-foreground))" }}><X size={16} /></button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {/* Product Name */}
+              <div>
+                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Product Name *</p>
+                <input
+                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
+                  style={{ borderColor: "hsl(var(--border))" }}
+                  value={newProduct["PRODUCT NAME"]}
+                  onChange={e => setNewProduct(p => ({ ...p, "PRODUCT NAME": e.target.value }))}
+                  placeholder="Product name"
+                />
+              </div>
+
+              {/* Supplier */}
+              <div>
+                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Supplier</p>
+                <input
+                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
+                  style={{ borderColor: "hsl(var(--border))" }}
+                  value={newProduct["SUPPLIER"]}
+                  onChange={e => setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value }))}
+                  placeholder="Supplier name"
+                />
+              </div>
+
+              {/* Prices row */}
+              <div>
+                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["SUPPLIER PRICE", "BRANCH PRICE", "STAFF PRICE", "CUSTOMER PRICE"] as const).map(field => (
+                    <div key={field}>
+                      <p className="text-[10px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" PRICE", "")}</p>
+                      <input
+                        className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
+                        style={{ borderColor: "hsl(var(--border))" }}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={newProduct[field]}
+                        onChange={e => setNewProduct(p => ({ ...p, [field]: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Balances row */}
+              <div>
+                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Opening Balances</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["OFFICE BALANCE", "BOUDOIR BALANCE", "NUR YADI BALANCE", "CHIC NAILSPA BALANCE"] as const).map(field => (
+                    <div key={field}>
+                      <p className="text-[10px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" BALANCE", "")}</p>
+                      <input
+                        className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
+                        style={{ borderColor: "hsl(var(--border))" }}
+                        type="number"
+                        min="0"
+                        value={newProduct[field]}
+                        onChange={e => setNewProduct(p => ({ ...p, [field]: e.target.value }))}
+                        placeholder="0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* PAR and Units/Order */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>PAR Level</p>
+                  <input
+                    className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
+                    style={{ borderColor: "hsl(var(--border))" }}
+                    type="number"
+                    min="0"
+                    value={newProduct["PAR"]}
+                    onChange={e => setNewProduct(p => ({ ...p, "PAR": e.target.value }))}
+                    placeholder="—"
+                  />
+                </div>
+                <div>
+                  <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
+                  <input
+                    className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
+                    style={{ borderColor: "hsl(var(--border))" }}
+                    type="number"
+                    min="1"
+                    value={newProduct["UNITS/ORDER"]}
+                    onChange={e => setNewProduct(p => ({ ...p, "UNITS/ORDER": e.target.value }))}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
+
+              {/* Office Section */}
+              <div>
+                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Office Section</p>
+                <input
+                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
+                  style={{ borderColor: "hsl(var(--border))" }}
+                  value={newProduct["OFFICE SECTION"]}
+                  onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
+                  placeholder="e.g. Nails, Skin, Wax..."
+                />
+              </div>
+
+              {/* Colour toggle */}
+              <div className="flex items-center gap-3">
+                <p className="text-[11px] tracking-wider uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>Colour Product</p>
+                <button
+                  onClick={() => setNewProduct(p => ({ ...p, "COLOUR": !p["COLOUR"] }))}
+                  className="rounded px-3 py-1 text-[12px] font-light transition-colors"
+                  style={{
+                    background: newProduct["COLOUR"] ? "hsl(var(--foreground))" : "transparent",
+                    color: newProduct["COLOUR"] ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                    border: "1px solid hsl(var(--border))"
+                  }}
+                >
+                  {newProduct["COLOUR"] ? "Yes" : "No"}
+                </button>
+              </div>
+            </div>
+
+            {newProductError && (
+              <p className="text-[12px] mt-3" style={{ color: "hsl(var(--red))" }}>{newProductError}</p>
+            )}
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={handleSaveNewProduct}
+                disabled={savingNewProduct}
+                className="flex-1 rounded py-2 text-[13px] font-light transition-opacity"
+                style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", opacity: savingNewProduct ? 0.5 : 1 }}
+              >
+                {savingNewProduct ? "Saving..." : "Save Product"}
+              </button>
+              <button
+                onClick={() => setShowNewProductModal(false)}
+                className="rounded px-4 py-2 text-[13px] font-light"
+                style={{ border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Order Panel ── */}
       {showOrderPanel && (
