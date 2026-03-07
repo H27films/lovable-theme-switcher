@@ -138,6 +138,7 @@ const Index = () => {
   });
   const [savingNewProduct, setSavingNewProduct] = useState(false);
   const [newProductError, setNewProductError] = useState<string | null>(null);
+  const [supplierOptions, setSupplierOptions] = useState<string[]>([]);
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const orderListRef = useRef<HTMLDivElement>(null);
 
@@ -511,6 +512,19 @@ const Index = () => {
     }
   }, [orderActiveIndex]);
 
+  useEffect(() => {
+    if (!showNewProductModal) return;
+    supabase
+      .from("AllFileProducts")
+      .select("SUPPLIER")
+      .then(({ data }) => {
+        if (data) {
+          const unique = Array.from(new Set(data.map((r: any) => r.SUPPLIER).filter(Boolean))).sort() as string[];
+          setSupplierOptions(unique);
+        }
+      });
+  }, [showNewProductModal]);
+
   const SortIcon = ({ col }: { col: SortKey }) => {
     if (sortKey !== col) return <ChevronUp size={10} style={{ opacity: 0.25, display: "inline", marginLeft: "3px" }} />;
     return sortDir === "asc"
@@ -651,7 +665,7 @@ const Index = () => {
                 <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">Office Database</h1>
                 <p className="text-[28px] font-light tracking-tight">Stock Inventory</p>
               </div>
-              <div className="flex items-center gap-4 mb-1">
+              <div className="flex flex-col items-end gap-1 mb-1">
                 <span
                   className="nav-link flex items-center gap-0.5"
                   style={{ color: "hsl(var(--foreground))" }}
@@ -660,20 +674,17 @@ const Index = () => {
                   Order <ClipboardList size={13} className="inline -mt-0.5" />
                 </span>
                 <span
-                  className="nav-link flex items-center gap-0.5"
-                  style={{ color: "hsl(var(--foreground))" }}
+                  className="nav-link flex items-center gap-0.5 text-[12px]"
+                  style={{ color: "hsl(var(--muted-foreground))" }}
                   onClick={() => setShowNewProductModal(true)}
                 >
-                  New Product <Plus size={13} className="inline -mt-0.5" />
+                  New Product <Plus size={12} className="inline -mt-0.5" />
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between mt-1">
               <p className="text-[11px] tracking-wider uppercase" style={dim}>
                 {products.length} products
-                {lowStockCount > 0 && (
-                  <span className="ml-3" style={{ color: "hsl(var(--red))" }}>· {lowStockCount} below par</span>
-                )}
               </p>
 
             </div>
@@ -962,6 +973,7 @@ const Index = () => {
                             <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
                             <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
                             <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Office Bal</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -975,6 +987,7 @@ const Index = () => {
                                 {row.QTY > 0 ? "+" : ""}{row.QTY}
                               </td>
                               <td className="text-[13px] font-light py-2 text-center">{row["ENDING BALANCE"]}</td>
+                              <td className="text-[12px] font-light py-2 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -997,6 +1010,7 @@ const Index = () => {
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
                           <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
+                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Office Bal</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1017,6 +1031,7 @@ const Index = () => {
                                 {row.QTY > 0 ? "+" : ""}{row.QTY}
                               </td>
                               <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
+                              <td className="text-[12px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
                             </tr>
                           );
                         })}
@@ -1061,6 +1076,7 @@ const Index = () => {
                                     {row.QTY > 0 ? "+" : ""}{row.QTY}
                                   </td>
                                   <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
+                                  <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
                                 </tr>
                               ))}
                             </>
@@ -1471,12 +1487,16 @@ const Index = () => {
               <div>
                 <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Supplier</p>
                 <input
+                  list="supplier-options"
                   className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
                   style={{ borderColor: "hsl(var(--border))" }}
                   value={newProduct["SUPPLIER"]}
                   onChange={e => setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value }))}
-                  placeholder="Supplier name"
+                  placeholder="Select or type supplier"
                 />
+                <datalist id="supplier-options">
+                  {supplierOptions.map(s => <option key={s} value={s} />)}
+                </datalist>
               </div>
 
               {/* Prices row */}
@@ -1501,26 +1521,7 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Balances row */}
-              <div>
-                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Opening Balances</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["OFFICE BALANCE", "BOUDOIR BALANCE", "NUR YADI BALANCE", "CHIC NAILSPA BALANCE"] as const).map(field => (
-                    <div key={field}>
-                      <p className="text-[10px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" BALANCE", "")}</p>
-                      <input
-                        className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
-                        style={{ borderColor: "hsl(var(--border))" }}
-                        type="number"
-                        min="0"
-                        value={newProduct[field]}
-                        onChange={e => setNewProduct(p => ({ ...p, [field]: e.target.value }))}
-                        placeholder="0"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+
 
               {/* PAR and Units/Order */}
               <div className="grid grid-cols-2 gap-2">
@@ -1558,7 +1559,7 @@ const Index = () => {
                   style={{ borderColor: "hsl(var(--border))" }}
                   value={newProduct["OFFICE SECTION"]}
                   onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
-                  placeholder="e.g. Nails, Skin, Wax..."
+                  placeholder="e.g. 12B"
                 />
               </div>
 
