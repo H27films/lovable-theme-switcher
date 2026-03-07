@@ -145,6 +145,8 @@ const Index = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
+  const [showNewProductSupplierDropdown, setShowNewProductSupplierDropdown] = useState(false);
+  const newProductSupplierRef = useRef<HTMLDivElement>(null);
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
   const border = "hsl(var(--border))";
@@ -494,11 +496,14 @@ const Index = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close supplier dropdown on outside click
+  // Close supplier dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (supplierDropdownRef.current && !supplierDropdownRef.current.contains(e.target as Node)) {
         setShowSupplierDropdown(false);
+      }
+      if (newProductSupplierRef.current && !newProductSupplierRef.current.contains(e.target as Node)) {
+        setShowNewProductSupplierDropdown(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -674,11 +679,11 @@ const Index = () => {
                   Order <ClipboardList size={13} className="inline -mt-0.5" />
                 </span>
                 <span
-                  className="nav-link flex items-center gap-0.5 text-[12px]"
-                  style={{ color: "hsl(var(--muted-foreground))" }}
+                  className="nav-link flex items-center gap-0.5"
+                  style={{ color: "hsl(var(--foreground))" }}
                   onClick={() => setShowNewProductModal(true)}
                 >
-                  New Product <Plus size={12} className="inline -mt-0.5" />
+                  New Product <Plus size={13} className="inline -mt-0.5" />
                 </span>
               </div>
             </div>
@@ -1486,17 +1491,42 @@ const Index = () => {
               {/* Supplier */}
               <div>
                 <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Supplier</p>
-                <input
-                  list="supplier-options"
-                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
-                  style={{ borderColor: "hsl(var(--border))" }}
-                  value={newProduct["SUPPLIER"]}
-                  onChange={e => setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value }))}
-                  placeholder="Select or type supplier"
-                />
-                <datalist id="supplier-options">
-                  {supplierOptions.map(s => <option key={s} value={s} />)}
-                </datalist>
+                <div className="relative" ref={newProductSupplierRef}>
+                  <input
+                    className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
+                    style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }}
+                    value={newProduct["SUPPLIER"]}
+                    onChange={e => { setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value })); setShowNewProductSupplierDropdown(true); }}
+                    onFocus={() => setShowNewProductSupplierDropdown(true)}
+                    onKeyDown={e => { if (e.key === "Escape") setShowNewProductSupplierDropdown(false); }}
+                    placeholder="Select or type supplier"
+                  />
+                  {showNewProductSupplierDropdown && (
+                    <div
+                      className="absolute top-full left-0 z-50 w-full border rounded mt-0.5 max-h-[180px] overflow-y-auto scrollbar-thin"
+                      style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))" }}
+                    >
+                      {supplierOptions
+                        .filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase()))
+                        .map(s => (
+                          <button
+                            key={s}
+                            type="button"
+                            className="w-full text-left px-3 py-2 text-[13px] font-light transition-colors"
+                            style={{ color: "hsl(var(--foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                            onClick={() => { setNewProduct(p => ({ ...p, "SUPPLIER": s })); setShowNewProductSupplierDropdown(false); }}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      {supplierOptions.filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-[12px]" style={{ color: "hsl(var(--muted-foreground))" }}>No match — will create new</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Prices row */}
