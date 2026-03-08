@@ -25,18 +25,19 @@ export default function Landing() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (settingsRef.current && !settingsRef.current.contains(target)) {
         setShowSettings(false);
       }
-      if (fontRef.current && !fontRef.current.contains(e.target as Node)) {
+      if (fontRef.current && !fontRef.current.contains(target)) {
         setShowFontMenu(false);
       }
-      if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
+      if (themeRef.current && !themeRef.current.contains(target)) {
         setShowThemeMenu(false);
       }
     };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Subtle parallax mouse tracking
@@ -200,7 +201,6 @@ export default function Landing() {
             {/* Settings dropdown */}
             {showSettings && (
               <div
-                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-4 px-5"
                 style={{
                   background: "hsl(var(--card))",
@@ -266,7 +266,6 @@ export default function Landing() {
             </button>
             {showFontMenu && (
               <div
-                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-3 px-4"
                 style={{
                   background: "hsl(var(--card))",
@@ -314,7 +313,6 @@ export default function Landing() {
             </button>
             {showThemeMenu && (
               <div
-                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-3 px-4"
                 style={{
                   background: "hsl(var(--card))",
