@@ -334,7 +334,8 @@ export default function Landing() {
                 ]).map(t => (
                   <button
                     key={t.value}
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       setTheme(t.value);
                       setShowThemeMenu(false);
                     }}
