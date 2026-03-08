@@ -29,22 +29,6 @@ export default function Landing() {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (settingsRef.current && !settingsRef.current.contains(target)) {
-        setShowSettings(false);
-      }
-      if (fontRef.current && !fontRef.current.contains(target)) {
-        setShowFontMenu(false);
-      }
-      if (themeRef.current && !themeRef.current.contains(target)) {
-        setShowThemeMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Subtle parallax mouse tracking
   useEffect(() => {
