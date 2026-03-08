@@ -181,7 +181,6 @@ export default function Landing() {
               className="transition-all duration-300 hover:scale-125"
               style={{
                 color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                animation: showSettings ? "spin 3s linear infinite" : "none",
               }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showSettings) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
