@@ -188,7 +188,7 @@ export default function Landing() {
           <div ref={settingsRef} className="relative">
             <button
               onClick={() => setShowSettings(prev => !prev)}
-              className="transition-all duration-300 hover:scale-125 hover:animate-[spin_2s_linear_infinite]"
+              className="hover:opacity-80"
               style={{
                 color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
               }}
