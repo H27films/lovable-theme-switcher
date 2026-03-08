@@ -24,14 +24,14 @@ export default function ThemeToggle({ theme, toggle, font, cycleFont }: ThemeTog
     <div className="flex items-center gap-3">
       <span
         onClick={cycleFont}
-        className="cursor-pointer text-dim hover:text-foreground transition-colors flex items-center gap-1"
+        className="cursor-pointer text-dim hover:text-foreground hover:scale-125 transition-all duration-200 flex items-center gap-1"
         title={`Font: ${fontLabel[font]} — click to change`}
       >
         <Type size={14} />
       </span>
       <span
         onClick={toggle}
-        className="cursor-pointer text-dim hover:text-foreground transition-colors"
+        className="cursor-pointer text-dim hover:text-foreground hover:scale-125 transition-all duration-200"
         title={`Switch to ${nextThemeLabel[theme]} mode`}
       >
         {theme === "dark" && <Sun size={14} />}

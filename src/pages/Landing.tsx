@@ -178,10 +178,10 @@ export default function Landing() {
           <div ref={settingsRef} className="relative">
             <button
               onClick={() => setShowSettings(prev => !prev)}
-              className="transition-all duration-300"
+              className="transition-all duration-300 hover:scale-125"
               style={{
                 color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                transform: showSettings ? "rotate(90deg)" : "rotate(0deg)",
+                animation: showSettings ? "spin 3s linear infinite" : "none",
               }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showSettings) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
@@ -392,6 +392,10 @@ export default function Landing() {
         @keyframes settingsIn {
           from { opacity: 0; transform: translateY(-6px) scale(0.95); }
           to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
