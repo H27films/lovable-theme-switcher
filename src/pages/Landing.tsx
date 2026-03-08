@@ -101,11 +101,11 @@ export default function Landing() {
 
         {/* Right: arrow */}
         <div
-          className="flex-shrink-0 ml-8"
+          className="flex-shrink-0 ml-8 transition-all duration-300 ease-out group-hover:translate-x-2"
           style={{ color: "hsl(var(--foreground))" }}
         >
           <svg
-            width="44"
+            className="w-[44px] group-hover:w-[56px] transition-all duration-300 ease-out"
             height="20"
             viewBox="0 0 52 20"
             fill="none"
