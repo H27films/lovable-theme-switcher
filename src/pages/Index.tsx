@@ -549,7 +549,7 @@ const Index = () => {
     setNewProductError(null);
     try {
       // Get max id
-      const { data: maxRow } = await supabase
+      const { data: maxRow } = await (supabase as any)
         .from("AllFileProducts")
         .select("id")
         .order("id", { ascending: false })
