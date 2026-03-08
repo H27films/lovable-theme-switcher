@@ -258,7 +258,7 @@ export default function Landing() {
           <div ref={fontRef} className="relative">
             <button
               onClick={() => { setShowFontMenu(prev => !prev); setShowThemeMenu(false); setShowSettings(false); }}
-              className="transition-all duration-200 hover:scale-125"
+              className="hover:opacity-80"
               style={{ color: showFontMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showFontMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
