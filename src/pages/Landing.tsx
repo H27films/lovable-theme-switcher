@@ -188,7 +188,7 @@ export default function Landing() {
           <div ref={settingsRef} className="relative">
             <button
               onClick={() => setShowSettings(prev => !prev)}
-              className="transition-all duration-300 hover:scale-125 hover:animate-[spin_2s_linear_infinite]"
+              className="hover:opacity-80"
               style={{
                 color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
               }}
@@ -209,7 +209,6 @@ export default function Landing() {
                   borderRadius: "8px",
                   minWidth: "200px",
                   boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                  animation: "settingsIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
                 <p className="text-[10px] tracking-[0.2em] uppercase mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>
@@ -221,7 +220,8 @@ export default function Landing() {
                     Order Confirmation
                   </span>
                   <button
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       const newVal = !orderConfirmMode;
                       setOrderConfirmMode(newVal);
                       localStorage.setItem("orderConfirmation", String(newVal));
@@ -258,7 +258,7 @@ export default function Landing() {
           <div ref={fontRef} className="relative">
             <button
               onClick={() => { setShowFontMenu(prev => !prev); setShowThemeMenu(false); setShowSettings(false); }}
-              className="transition-all duration-200 hover:scale-125"
+              className="hover:opacity-80"
               style={{ color: showFontMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showFontMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
@@ -275,7 +275,6 @@ export default function Landing() {
                   borderRadius: "8px",
                   minWidth: "140px",
                   boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                  animation: "settingsIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
                 <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
@@ -284,7 +283,7 @@ export default function Landing() {
                 {(["inter", "raleway"] as Font[]).map(f => (
                   <button
                     key={f}
-                    onClick={() => { setFont(f); setShowFontMenu(false); }}
+                    onMouseDown={(e) => { e.preventDefault(); setFont(f); setShowFontMenu(false); }}
                     className="block w-full text-left py-2 px-2 text-[12px] tracking-wide rounded transition-colors"
                     style={{
                       color: font === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
@@ -304,7 +303,7 @@ export default function Landing() {
           <div ref={themeRef} className="relative">
             <button
               onClick={() => { setShowThemeMenu(prev => !prev); setShowFontMenu(false); setShowSettings(false); }}
-              className="transition-all duration-200 hover:scale-125"
+              className="hover:opacity-80"
               style={{ color: showThemeMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showThemeMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
@@ -323,7 +322,6 @@ export default function Landing() {
                   borderRadius: "8px",
                   minWidth: "140px",
                   boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                  animation: "settingsIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
                 <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
@@ -336,7 +334,8 @@ export default function Landing() {
                 ]).map(t => (
                   <button
                     key={t.value}
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       setTheme(t.value);
                       setShowThemeMenu(false);
                     }}
@@ -498,16 +497,6 @@ export default function Landing() {
         </div>
       </div>
 
-      <style>{`
-        @keyframes settingsIn {
-          from { opacity: 0; transform: translateY(-6px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
