@@ -281,7 +281,7 @@ export default function Landing() {
                 {(["inter", "raleway"] as Font[]).map(f => (
                   <button
                     key={f}
-                    onClick={() => { if (font !== f) cycleFont(); setShowFontMenu(false); }}
+                    onClick={() => { setFont(f); setShowFontMenu(false); }}
                     className="block w-full text-left py-2 px-2 text-[12px] tracking-wide rounded transition-colors"
                     style={{
                       color: font === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
