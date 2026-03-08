@@ -87,7 +87,7 @@ const Index = () => {
   const [searchHovered, setSearchHovered] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchExpanded = searchHovered || searchFocused || search.length > 0;
+  const searchExpanded = searchHovered || searchFocused || search.length > 0 || !!filterSupplier;
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
   const [filterSupplier, setFilterSupplier] = useState<string | null>(null);
   const [page, setPage] = useState(0);
