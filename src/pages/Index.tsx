@@ -520,7 +520,7 @@ const Index = () => {
 
   useEffect(() => {
     if (!showNewProductModal) return;
-    supabase
+    (supabase as any)
       .from("AllFileProducts")
       .select("SUPPLIER")
       .then(({ data }) => {
