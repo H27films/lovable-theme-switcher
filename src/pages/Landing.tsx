@@ -201,6 +201,7 @@ export default function Landing() {
             {/* Settings dropdown */}
             {showSettings && (
               <div
+                onMouseDown={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-4 px-5"
                 style={{
                   background: "hsl(var(--card))",
@@ -266,6 +267,7 @@ export default function Landing() {
             </button>
             {showFontMenu && (
               <div
+                onMouseDown={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-3 px-4"
                 style={{
                   background: "hsl(var(--card))",
@@ -313,6 +315,7 @@ export default function Landing() {
             </button>
             {showThemeMenu && (
               <div
+                onMouseDown={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-3 px-4"
                 style={{
                   background: "hsl(var(--card))",
