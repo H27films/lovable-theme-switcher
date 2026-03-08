@@ -746,10 +746,13 @@ const Index = () => {
                   onKeyDown={handleKeyDown}
                 />
               )}
-              {search && (
-                <button onClick={(e) => { e.stopPropagation(); setSearch(""); setSelectedProduct(null); setShowDropdown(false); }} style={dim}>
+              {(search || filterSupplier) && (
+                <button onClick={(e) => { e.stopPropagation(); setSearch(""); setSelectedProduct(null); setShowDropdown(false); setFilterSupplier(null); }} style={dim}>
                   <X size={13} />
                 </button>
+              )}
+              {filterSupplier && !search && (
+                <span className="text-[13px] font-light text-muted-foreground">{filterSupplier}</span>
               )}
               <span
                 className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
