@@ -28,6 +28,12 @@ export default function Landing() {
       if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
         setShowSettings(false);
       }
+      if (fontRef.current && !fontRef.current.contains(e.target as Node)) {
+        setShowFontMenu(false);
+      }
+      if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
+        setShowThemeMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
