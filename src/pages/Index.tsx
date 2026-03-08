@@ -755,7 +755,7 @@ const Index = () => {
                 <span className="text-[13px] font-light text-muted-foreground">{filterSupplier}</span>
               )}
               <span
-                className="absolute bottom-0 left-0 h-px transition-all duration-700 ease-out"
+                className="absolute bottom-0 left-0 h-px transition-all duration-[600ms] ease-out"
                 style={{
                   background: "hsl(var(--border-active))",
                   width: searchHovered || searchExpanded ? "100%" : "0%",
