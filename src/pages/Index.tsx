@@ -399,7 +399,7 @@ const Index = () => {
 
   const toggleFavourite = async (product: OfficeProduct) => {
     const newVal = !(product["OFFICE FAVOURITE"]);
-    await supabase
+    await (supabase as any)
       .from("AllFileProducts")
       .update({ "OFFICE FAVOURITE": newVal })
       .eq("PRODUCT NAME", product["PRODUCT NAME"]);
