@@ -5,7 +5,7 @@ import { Settings, Type, Sun, Moon, Palette } from "lucide-react";
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { theme, toggle, font, cycleFont } = useTheme();
+  const { theme, setTheme, font, setFont } = useTheme();
   const [visible, setVisible] = useState(false);
   const [showStockChoice, setShowStockChoice] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
