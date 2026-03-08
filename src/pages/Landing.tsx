@@ -87,12 +87,14 @@ export default function Landing() {
         style={{
           borderRadius: "100px",
           background: "hsl(var(--card))",
-          border: `1px solid ${hover ? "hsl(var(--foreground))" : "hsl(var(--border))"}`,
-          transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+          borderWidth: "1px",
+          borderStyle: "solid",
+          borderColor: hover ? "hsl(var(--foreground))" : "hsl(var(--border))",
+          transition: "border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease",
           transform: hover ? "scale(1.02)" : "scale(1)",
           boxShadow: hover
-            ? "0 20px 60px -15px hsla(var(--foreground) / 0.12), 0 0 0 1px hsla(var(--foreground) / 0.05)"
-            : "0 2px 10px -3px hsla(0, 0%, 0%, 0.08)",
+            ? "0 16px 40px -12px rgba(0,0,0,0.12)"
+            : "0 2px 10px -3px rgba(0,0,0,0.06)",
         }}
       >
         {/* Hover glow effect */}
