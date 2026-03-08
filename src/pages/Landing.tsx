@@ -209,7 +209,6 @@ export default function Landing() {
                   borderRadius: "8px",
                   minWidth: "200px",
                   boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                  animation: "settingsIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
                 <p className="text-[10px] tracking-[0.2em] uppercase mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>
