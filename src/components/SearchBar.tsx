@@ -92,22 +92,19 @@ export default function SearchBar({ data, onSelect }: SearchBarProps) {
       onMouseLeave={() => setHovered(false)}
     >
       <div
-        className="cursor-pointer pb-2 relative"
+        className="flex items-center gap-2 cursor-pointer pb-2 relative"
         onClick={() => { setFocused(true); setTimeout(() => inputRef.current?.focus(), 50); }}
       >
-        {/* Collapsed: icon + Search label */}
-        <div className={`flex items-center gap-2 transition-all duration-300 ${expanded ? "hidden" : ""}`}>
-          <Search size={18} strokeWidth={1.5} className={`transition-colors duration-300 ${hovered ? "text-muted-foreground" : "text-foreground"}`} />
+        <Search size={18} strokeWidth={1.5} className={`transition-colors duration-300 ${hovered || expanded ? "text-muted-foreground" : "text-foreground"}`} />
+        {!expanded && (
           <span className={`text-[15px] font-light transition-colors duration-300 ${hovered ? "text-muted-foreground" : "text-foreground"}`}>Search</span>
-        </div>
-        {/* Expanded: input */}
-        <div className={`${expanded ? "" : "hidden"}`}>
-          <span className="label-uppercase block mb-2.5 text-xs tracking-[0.2em]">Search Product</span>
+        )}
+        {expanded && (
           <input
             ref={inputRef}
             type="text"
-            className="minimal-input text-2xl font-light py-3"
-            placeholder="Search..."
+            className="flex-1 bg-transparent outline-none text-[15px] font-light"
+            placeholder="Search"
             value={value}
             onChange={e => { setValue(e.target.value); setOpen(!!e.target.value.trim()); }}
             onFocus={() => setFocused(true)}
@@ -115,7 +112,7 @@ export default function SearchBar({ data, onSelect }: SearchBarProps) {
             aria-autocomplete="list"
             aria-expanded={open}
           />
-        </div>
+        )}
         {/* Animated underline */}
         <span
           className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
