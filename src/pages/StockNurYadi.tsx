@@ -458,7 +458,7 @@ function StockNurYadiInner() {
 
   const toggleFavourite = async (product: AllFileProduct) => {
     const newVal = !(product["NUR YADI FAVOURITE"]);
-    await supabase
+    await (supabase as any)
       .from("AllFileProducts")
       .update({ "NUR YADI FAVOURITE": newVal })
       .eq("PRODUCT NAME", product["PRODUCT NAME"]);

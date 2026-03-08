@@ -579,11 +579,11 @@ const Index = () => {
         "CHIC NAILSPA FAVOURITE": false,
       };
 
-      const { error } = await supabase.from("AllFileProducts").insert([insertData]);
+      const { error } = await (supabase as any).from("AllFileProducts").insert([insertData]);
       if (error) throw error;
 
       // Refresh products
-      const { data: freshProducts } = await supabase.from("AllFileProducts").select("*");
+      const { data: freshProducts } = await (supabase as any).from("AllFileProducts").select("*");
       if (freshProducts) setProducts(freshProducts as OfficeProduct[]);
 
       // Reset form

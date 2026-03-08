@@ -459,7 +459,7 @@ function StockChicNailspaInner() {
 
   const toggleFavourite = async (product: AllFileProduct) => {
     const newVal = !(product["CHIC NAILSPA FAVOURITE"]);
-    await supabase
+    await (supabase as any)
       .from("AllFileProducts")
       .update({ "CHIC NAILSPA FAVOURITE": newVal })
       .eq("PRODUCT NAME", product["PRODUCT NAME"]);

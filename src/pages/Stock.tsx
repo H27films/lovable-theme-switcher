@@ -462,7 +462,7 @@ function StockInner() {
 
   const toggleFavourite = async (product: AllFileProduct) => {
     const newVal = !(product["BOUDOIR FAVOURITE"]);
-    await supabase
+    await (supabase as any)
       .from("AllFileProducts")
       .update({ "BOUDOIR FAVOURITE": newVal })
       .eq("PRODUCT NAME", product["PRODUCT NAME"]);
