@@ -92,11 +92,13 @@ export default function SearchBar({ data, onSelect }: SearchBarProps) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Collapsed: just the search icon */}
+      {/* Collapsed: icon + "Search" label */}
       <div
-        className={`transition-all duration-300 ease-in-out ${expanded ? "opacity-0 pointer-events-none h-0" : "opacity-100 cursor-pointer"}`}
+        className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${expanded ? "opacity-0 pointer-events-none h-0" : "opacity-100 cursor-pointer"}`}
         onClick={() => { setFocused(true); setTimeout(() => inputRef.current?.focus(), 50); }}
       >
-        <Search size={22} className="text-foreground" strokeWidth={1.5} />
+        <Search size={18} className="text-foreground" strokeWidth={1.5} />
+        <span className="text-[15px] font-light text-foreground">Search</span>
       </div>
 
       {/* Expanded: label + input */}
@@ -106,7 +108,7 @@ export default function SearchBar({ data, onSelect }: SearchBarProps) {
           ref={inputRef}
           type="text"
           className="minimal-input text-2xl font-light py-3"
-          placeholder="Type product name..."
+          placeholder="Search..."
           value={value}
           onChange={e => { setValue(e.target.value); setOpen(!!e.target.value.trim()); }}
           onFocus={() => setFocused(true)}
