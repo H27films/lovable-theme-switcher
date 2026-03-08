@@ -690,7 +690,7 @@ const Index = () => {
         <div className="py-6">
 
           {/* ── Page header ── */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div>
               <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
               <div className="flex items-end justify-between">
@@ -704,7 +704,7 @@ const Index = () => {
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center justify-between mt-1">
               <p className="text-[11px] tracking-wider uppercase" style={dim}>
                 {products.length} products
               </p>
@@ -721,7 +721,7 @@ const Index = () => {
           {/* ── Search bar ── */}
           <div
             ref={searchRef}
-            className="relative mb-8"
+            className="relative mb-6"
             onMouseEnter={() => setSearchHovered(true)}
             onMouseLeave={() => setSearchHovered(false)}
           >
