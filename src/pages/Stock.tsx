@@ -1187,24 +1187,23 @@ function StockInner() {
               </div>
             </div>
 
-            {/* Stock search bar with hover-to-expand */}
+            {/* Stock search bar with hover underline */}
             <div
               className="relative mb-6"
               onMouseEnter={() => setStockSearchHovered(true)}
               onMouseLeave={() => setStockSearchHovered(false)}
             >
-              {/* Collapsed: icon + "Search" label */}
               <div
-                className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${stockSearchExpanded ? "opacity-0 pointer-events-none h-0" : "opacity-100 cursor-pointer"}`}
+                className="flex items-center gap-2 cursor-pointer pb-2 relative"
                 onClick={() => { setStockSearchFocused(true); setTimeout(() => stockInputRef.current?.focus(), 50); }}
               >
-                <Search size={18} className="text-foreground" strokeWidth={1.5} />
-                <span className="text-[15px] font-light text-foreground">Search</span>
-              </div>
-
-              {/* Expanded: input */}
-              <div className={`transition-all duration-300 ease-in-out origin-left ${stockSearchExpanded ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none h-0 overflow-hidden"}`}>
-                <div className="flex items-center gap-3 border-b pb-2" style={{ borderColor: borderActive }}>
+                {/* Collapsed: icon + Search label */}
+                <div className={`flex items-center gap-2 transition-all duration-300 ${stockSearchExpanded ? "hidden" : ""}`}>
+                  <Search size={18} strokeWidth={1.5} className={`transition-colors duration-300 ${stockSearchHovered ? "text-muted-foreground" : "text-foreground"}`} />
+                  <span className={`text-[15px] font-light transition-colors duration-300 ${stockSearchHovered ? "text-muted-foreground" : "text-foreground"}`}>Search</span>
+                </div>
+                {/* Expanded: input */}
+                <div className={`flex items-center gap-3 w-full ${stockSearchExpanded ? "" : "hidden"}`}>
                   <Search size={15} style={dim} />
                   <input
                     ref={stockInputRef}
@@ -1221,6 +1220,14 @@ function StockInner() {
                     <button onClick={() => { setStockSearch(""); setSelectedProduct(null); }} style={dim}><X size={13} /></button>
                   )}
                 </div>
+                {/* Animated underline */}
+                <span
+                  className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
+                  style={{
+                    background: `hsl(var(--border-active))`,
+                    width: stockSearchHovered || stockSearchExpanded ? "100%" : "0%",
+                  }}
+                />
               </div>
               {showStockDropdown && filteredStockProducts.length > 0 && (
                 <div
