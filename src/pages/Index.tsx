@@ -429,13 +429,23 @@ const Index = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showDropdown || dropdownResults.length === 0) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex(i => (i + 1) % dropdownResults.length); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex(i => (i <= 0 ? dropdownResults.length - 1 : i - 1)); }
+    if (!showDropdown || totalDropdownItems === 0) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex(i => (i + 1) % totalDropdownItems); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex(i => (i <= 0 ? totalDropdownItems - 1 : i - 1)); }
     else if (e.key === "Enter") {
       e.preventDefault();
-      const target = activeIndex >= 0 ? dropdownResults[activeIndex] : dropdownResults[0];
-      if (target) { setSelectedProduct(target); setSearch(target["PRODUCT NAME"]); setShowDropdown(false); }
+      const idx = activeIndex >= 0 ? activeIndex : 0;
+      if (idx < supplierMatches.length) {
+        // Selected a supplier
+        setFilterSupplier(supplierMatches[idx]);
+        setSearch("");
+        setSelectedProduct(null);
+        setShowDropdown(false);
+        setActiveTab("table");
+      } else {
+        const target = dropdownResults[idx - supplierMatches.length];
+        if (target) { setSelectedProduct(target); setSearch(target["PRODUCT NAME"]); setShowDropdown(false); }
+      }
     } else if (e.key === "Escape") { setShowDropdown(false); setActiveIndex(-1); }
   };
 
