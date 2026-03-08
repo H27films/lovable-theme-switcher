@@ -379,7 +379,11 @@ function StockNurYadiInner() {
   const [selectedActivityProduct, setSelectedActivityProduct] = useState<string | null>(null);
   const [showStockDropdown, setShowStockDropdown] = useState(false);
   const [stockActiveIndex, setStockActiveIndex] = useState(-1);
+  const [stockSearchHovered, setStockSearchHovered] = useState(false);
+  const [stockSearchFocused, setStockSearchFocused] = useState(false);
   const stockListRef = useRef<HTMLDivElement>(null);
+  const stockInputRef = useRef<HTMLInputElement>(null);
+  const stockSearchExpanded = stockSearchHovered || stockSearchFocused || stockSearch.length > 0;
 
   const today = new Date().toISOString().split("T")[0];
   const [usageDate, setUsageDate] = useState<"today" | "yesterday" | "tomorrow">("today");
@@ -1130,23 +1134,43 @@ function StockNurYadiInner() {
               </div>
             </div>
 
-            {/* Stock search bar with keyboard nav */}
-            <div className="relative mb-6">
-              <div className="flex items-center gap-3 border-b pb-2" style={{ borderColor: borderActive }}>
-                <Search size={13} style={dim} />
-                <input
-                  type="text"
-                  className="flex-1 bg-transparent outline-none text-[15px] font-light"
-                  placeholder="Search product..."
-                  value={stockSearch}
-                  onChange={e => { setStockSearch(e.target.value); setSelectedProduct(null); setShowStockDropdown(true); }}
-                  onFocus={() => setShowStockDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowStockDropdown(false), 150)}
-                  onKeyDown={handleStockKeyDown}
-                />
-                {stockSearch && (
-                  <button onClick={() => { setStockSearch(""); setSelectedProduct(null); }} style={dim}><X size={13} /></button>
+            {/* Stock search bar with hover underline */}
+            <div
+              className="relative mb-6"
+              onMouseEnter={() => setStockSearchHovered(true)}
+              onMouseLeave={() => setStockSearchHovered(false)}
+            >
+              <div
+                className="flex items-center gap-2 cursor-pointer pb-2 relative"
+                onClick={() => { setStockSearchFocused(true); setTimeout(() => stockInputRef.current?.focus(), 50); }}
+              >
+                <Search size={18} strokeWidth={1.5} className={`transition-colors duration-300 ${stockSearchHovered || stockSearchExpanded ? "text-muted-foreground" : "text-foreground"}`} />
+                {!stockSearchExpanded && (
+                  <span className={`text-[15px] font-light transition-colors duration-300 ${stockSearchHovered ? "text-muted-foreground" : "text-foreground"}`}>Search</span>
                 )}
+                {stockSearchExpanded && (
+                  <input
+                    ref={stockInputRef}
+                    type="text"
+                    className="flex-1 bg-transparent outline-none text-[15px] font-light"
+                    placeholder="Search"
+                    value={stockSearch}
+                    onChange={e => { setStockSearch(e.target.value); setSelectedProduct(null); setShowStockDropdown(true); }}
+                    onFocus={() => { setStockSearchFocused(true); setShowStockDropdown(true); }}
+                    onBlur={() => setTimeout(() => { setShowStockDropdown(false); setStockSearchFocused(false); }, 150)}
+                    onKeyDown={handleStockKeyDown}
+                  />
+                )}
+                {stockSearch && (
+                  <button onClick={(e) => { e.stopPropagation(); setStockSearch(""); setSelectedProduct(null); }} style={dim}><X size={13} /></button>
+                )}
+                <span
+                  className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
+                  style={{
+                    background: `hsl(var(--border-active))`,
+                    width: stockSearchHovered || stockSearchExpanded ? "100%" : "0%",
+                  }}
+                />
               </div>
               {showStockDropdown && filteredStockProducts.length > 0 && (
                 <div
