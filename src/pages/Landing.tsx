@@ -313,7 +313,6 @@ export default function Landing() {
             </button>
             {showThemeMenu && (
               <div
-                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-3 px-4"
                 style={{
                   background: "hsl(var(--card))",
