@@ -252,7 +252,105 @@ export default function Landing() {
             )}
           </div>
 
-          <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
+          {/* Font toggle */}
+          <div ref={fontRef} className="relative">
+            <button
+              onClick={() => { setShowFontMenu(prev => !prev); setShowThemeMenu(false); setShowSettings(false); }}
+              className="transition-all duration-200 hover:scale-125"
+              style={{ color: showFontMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+              onMouseLeave={e => { if (!showFontMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+            >
+              <Type size={16} />
+            </button>
+            {showFontMenu && (
+              <div
+                className="absolute right-0 top-8 z-50 py-3 px-4"
+                style={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  minWidth: "140px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                  animation: "settingsIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              >
+                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  Font
+                </p>
+                {(["inter", "raleway"] as Font[]).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => { if (font !== f) cycleFont(); setShowFontMenu(false); }}
+                    className="block w-full text-left py-2 px-2 text-[12px] tracking-wide rounded transition-colors"
+                    style={{
+                      color: font === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      background: font === f ? "hsl(var(--accent))" : "transparent",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--accent))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = font === f ? "hsl(var(--accent))" : "transparent"; e.currentTarget.style.color = font === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))"; }}
+                  >
+                    {f === "inter" ? "Inter" : "Raleway"}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Theme toggle */}
+          <div ref={themeRef} className="relative">
+            <button
+              onClick={() => { setShowThemeMenu(prev => !prev); setShowFontMenu(false); setShowSettings(false); }}
+              className="transition-all duration-200 hover:scale-125"
+              style={{ color: showThemeMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+              onMouseLeave={e => { if (!showThemeMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+            >
+              {theme === "dark" && <Sun size={16} />}
+              {theme === "light" && <Palette size={16} />}
+              {theme === "sand" && <Moon size={16} />}
+            </button>
+            {showThemeMenu && (
+              <div
+                className="absolute right-0 top-8 z-50 py-3 px-4"
+                style={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  minWidth: "140px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                  animation: "settingsIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              >
+                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  Theme
+                </p>
+                {([
+                  { value: "dark" as Theme, label: "Dark", icon: <Moon size={13} /> },
+                  { value: "light" as Theme, label: "Light", icon: <Sun size={13} /> },
+                  { value: "sand" as Theme, label: "Sand", icon: <Palette size={13} /> },
+                ]).map(t => (
+                  <button
+                    key={t.value}
+                    onClick={() => {
+                      while (theme !== t.value) toggle();
+                      setShowThemeMenu(false);
+                    }}
+                    className="flex items-center gap-2 w-full text-left py-2 px-2 text-[12px] tracking-wide rounded transition-colors"
+                    style={{
+                      color: theme === t.value ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      background: theme === t.value ? "hsl(var(--accent))" : "transparent",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--accent))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = theme === t.value ? "hsl(var(--accent))" : "transparent"; e.currentTarget.style.color = theme === t.value ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))"; }}
+                  >
+                    {t.icon}
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
