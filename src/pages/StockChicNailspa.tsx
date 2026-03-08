@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -16,7 +17,6 @@ interface AllFileProduct {
   "CUSTOMER PRICE": number | null;
   "CHIC NAILSPA BALANCE": number;
   "NUR YADI BALANCE": number;
-  "CHIC NAILSPA BALANCE": number;
   "OFFICE BALANCE": number;
   "PAR": number | null;
   "UNITS/ORDER": number | null;
@@ -68,7 +68,7 @@ const makeOrderEntries = (): OrderLine[] => [1,2,3,4,5].map(id => ({
   id, productName: "", qty: 1, showProductDropdown: false, productSearch: "",
 }));
 
-function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, onClose, showBalance }: {
+function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, onClose, showBalance, lineStyle }: {
   entry: { productName: string; showProductDropdown: boolean; productSearch: string };
   sortedProducts: AllFileProduct[];
   onSelect: (name: string) => void;
@@ -76,6 +76,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
   onToggle: () => void;
   onClose: () => void;
   showBalance?: boolean;
+  lineStyle?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -136,13 +137,13 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
   };
 
   return (
-    <div ref={ref} className="relative flex-1 max-w-[460px]">
+    <div ref={ref} className={lineStyle ? "relative w-full" : "relative flex-1 max-w-[460px]"}>
       <div
-        className="flex items-center justify-between px-3 py-2 cursor-pointer h-[34px]"
-        style={{ background: cardBg, border: `1px solid ${borderActive}` }}
+        className={lineStyle ? "flex items-center justify-between px-0 cursor-pointer h-[40px] w-full" : "flex items-center justify-between px-3 py-2 cursor-pointer h-[34px]"}
+        style={lineStyle ? {} : { background: cardBg, border: `1px solid ${borderActive}` }}
         onClick={onToggle}
       >
-        <span className="text-[13px] font-light" style={{ color: entry.productName ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}>
+        <span className="text-[13px] font-light" style={{ color: "hsl(var(--foreground))" }}>
           {entry.productName || "Select product..."}
         </span>
         <ChevronDown size={12} style={dim} />
@@ -151,7 +152,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
       {entry.showProductDropdown && (
         <div
           className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
         >
           <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor: border }}>
             <Search size={11} style={dim} />
@@ -193,11 +194,12 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
   );
 }
 
-function TypeDropdown({ entry, onSelect, onToggle, onClose }: {
+function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
   entry: EntryLine;
   onSelect: (type: string) => void;
   onToggle: () => void;
   onClose: () => void;
+  lineStyle?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -242,14 +244,14 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose }: {
   return (
     <div
       ref={ref}
-      className="relative flex-shrink-0"
-      style={{ width: "150px" }}
+      className={lineStyle ? "relative w-full" : "relative flex-shrink-0"}
+      style={lineStyle ? {} : { width: "150px" }}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
       <div
-        className="flex items-center justify-between px-2 py-2 cursor-pointer h-[34px]"
-        style={{ background: cardBg, border: `1px solid ${borderActive}` }}
+        className={lineStyle ? "flex items-center justify-between px-0 cursor-pointer h-[40px] w-full" : "flex items-center justify-between px-2 py-2 cursor-pointer h-[34px]"}
+        style={lineStyle ? {} : { background: cardBg, border: `1px solid ${borderActive}` }}
         onClick={onToggle}
       >
         <span className="text-[11px] font-light">{entry.type}</span>
@@ -258,7 +260,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose }: {
       {entry.showTypeDropdown && (
         <div
           className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
         >
           {TYPES.map((t, i) => (
             <div
@@ -307,7 +309,7 @@ function DatePicker({ value, onChange }: {
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1.5 h-[28px] px-3 text-[11px] tracking-wider uppercase transition-colors"
-        style={{ border: `1px solid ${value !== "today" ? borderActive : border}`, background: cardBg, color: value !== "today" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+        style={{ border: `1px solid ${borderActive}`, background: cardBg, color: "hsl(var(--foreground))", borderRadius: "5px" }}
       >
         {OPTIONS.find(o => o.value === value)?.label}
         <ChevronDown size={10} />
@@ -315,7 +317,7 @@ function DatePicker({ value, onChange }: {
       {open && (
         <div
           className="absolute top-full right-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "110px" }}
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "110px", borderRadius: "5px" }}
         >
           {OPTIONS.map(opt => (
             <div
@@ -323,7 +325,7 @@ function DatePicker({ value, onChange }: {
               className="px-3 py-2 text-[11px] tracking-wider uppercase cursor-pointer transition-colors"
               style={{
                 borderBottom: `1px solid ${border}`,
-                color: value === opt.value ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                color: "hsl(var(--foreground))",
                 background: value === opt.value ? cardBg : "transparent",
               }}
               onMouseDown={() => { onChange(opt.value); setOpen(false); }}
@@ -339,7 +341,7 @@ function DatePicker({ value, onChange }: {
   );
 }
 
-export default function StockChicNailspa() {
+function StockChicNailspaInner() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
 
@@ -354,6 +356,10 @@ export default function StockChicNailspa() {
   const [orderEntries, setOrderEntries] = useState<OrderLine[]>(makeOrderEntries());
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState<{ grn: string; date: string; entries: { productName: string; starting: number; qty: number; ending: number }[] } | null>(null);
+  const [orderConfirming, setOrderConfirming] = useState(false);
+  const [orderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
   const [reversing, setReversing] = useState<number | null>(null);
   const [showOrderSummaryPanel, setShowOrderSummaryPanel] = useState(false);
   const [grnNotes, setGrnNotes] = useState("");
@@ -366,6 +372,8 @@ export default function StockChicNailspa() {
   const [activityRange, setActivityRange] = useState<"14" | "all">("14");
   const [dateSortAsc, setDateSortAsc] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
+  const [usageError, setUsageError] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const [stockSearch, setStockSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<AllFileProduct | null>(null);
@@ -708,15 +716,30 @@ export default function StockChicNailspa() {
   const handleOrderSubmit = async () => {
     const valid = orderEntries.filter(e => e.productName && e.qty > 0);
     if (!valid.length) return;
-    setOrderSubmitting(true);
 
-    // Generate GRN: BOU DDMMYY based on selected date
+    // Generate GRN: CHIC DDMMYY based on selected date
     const orderDateObj = new Date(getDateStr(orderDate));
     const dd = String(orderDateObj.getDate()).padStart(2, "0");
     const mm = String(orderDateObj.getMonth() + 1).padStart(2, "0");
     const yy = String(orderDateObj.getFullYear()).slice(-2);
     const grn = `CHIC ${dd}${mm}${yy}`;
 
+    if (orderConfirmMode) {
+      // V2: build pending order
+      const entries = valid.map(entry => {
+        const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+        const starting = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
+        const qty = Number(entry.qty);
+        const ending = starting + qty;
+        return { productName: entry.productName, starting, qty, ending };
+      });
+      setPendingOrder({ grn, date: getDateStr(orderDate), entries });
+      setOrderSubmitted(true);
+      return;
+    }
+
+    // V1: existing direct write
+    setOrderSubmitting(true);
     try {
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
@@ -758,6 +781,57 @@ export default function StockChicNailspa() {
     setOrderSubmitting(false);
   };
 
+  const handleResetOrder = () => {
+    setPendingOrder(null);
+    setOrderEntries(makeOrderEntries());
+    setOrderSubmitted(false);
+    setOrderError(null);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!pendingOrder) return;
+    setOrderConfirming(true);
+    setOrderError(null);
+    try {
+      for (const entry of pendingOrder.entries) {
+        const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+        const currentBranchBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
+        const endingBranchBalance = currentBranchBalance + Number(entry.qty);
+        const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
+        const endingOfficeBalance = currentOfficeBalance - Number(entry.qty);
+        await (supabase as any).from("AllFileLog").insert({
+          "DATE": pendingOrder.date,
+          "PRODUCT NAME": entry.productName,
+          "BRANCH": "Chic Nailspa",
+          "SUPPLIER": "Office",
+          "TYPE": "Order",
+          "STARTING BALANCE": entry.starting,
+          "QTY": entry.qty,
+          "ENDING BALANCE": entry.ending,
+          "GRN": pendingOrder.grn,
+          "OFFICE BALANCE": endingOfficeBalance,
+        });
+        await (supabase as any).from("AllFileProducts")
+          .update({ "CHIC NAILSPA BALANCE": endingBranchBalance })
+          .eq("PRODUCT NAME", entry.productName);
+        await (supabase as any).from("AllFileProducts")
+          .update({ "OFFICE BALANCE": endingOfficeBalance })
+          .eq("PRODUCT NAME", entry.productName);
+      }
+      await fetchProducts();
+      await fetchLog();
+      setOrderEntries(makeOrderEntries());
+      setPendingOrder(null);
+      setOrderSubmitted(false);
+      setOrderSuccess(true);
+      setTimeout(() => setOrderSuccess(false), 3000);
+    } catch (err) {
+      console.error("Confirm order error:", err);
+      setOrderError("Failed to confirm order. Please try again.");
+    }
+    setOrderConfirming(false);
+  };
+
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
   const border = "hsl(var(--border))";
   const borderActive = "hsl(var(--border-active))";
@@ -768,7 +842,7 @@ export default function StockChicNailspa() {
   const latestOrderDate = allOrderDates[0] ?? today;
   const todayOrders = log.filter(r => r.TYPE === "Order" && r.DATE === latestOrderDate);
   const allTodayOrders = log.filter(r => r.TYPE === "Order" && r.DATE === latestOrderDate);
-  const hasOrderNotification = log.filter(r => r.TYPE === "Order" && (r.DATE === today || r.DATE === tomorrow)).length > 0;
+  const hasOrderNotification = pendingOrder !== null || log.filter(r => r.TYPE === "Order" && (r.DATE === today || r.DATE === tomorrow)).length > 0;
 
   // Group ALL orders by date+GRN for the All Orders section
   const allOrderGroups = (() => {
@@ -808,6 +882,7 @@ export default function StockChicNailspa() {
     const margin = 50;
 
     const grnNumber = (() => {
+      if (pendingOrder?.grn) return pendingOrder.grn;
       const found = allTodayOrders.find((r: LogRow) => r.GRN);
       if (found) return found.GRN as string;
       const d = new Date();
@@ -893,17 +968,18 @@ export default function StockChicNailspa() {
     doc.text("ENDING", endCX, tableTop + 5, { align: "center" });
     doc.text("BALANCE", endCX, tableTop - 5, { align: "center" });
 
-    // Rows — sorted alphabetically
-    const sortedOrders = [...allTodayOrders].sort((a, b) =>
-      a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"])
-    );
+    // Rows — use pendingOrder if available, else allTodayOrders
+    type PdfRow = { name: string; starting: number; qty: number; ending: number };
+    const pdfRows: PdfRow[] = pendingOrder
+      ? [...pendingOrder.entries].sort((a, b) => a.productName.localeCompare(b.productName)).map(e => ({ name: e.productName, starting: e.starting, qty: e.qty, ending: e.ending }))
+      : [...allTodayOrders].sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"])).map(r => ({ name: r["PRODUCT NAME"], starting: r["STARTING BALANCE"], qty: r.QTY, ending: r["ENDING BALANCE"] }));
 
     const rowH = 26;
     let y = tableTop + 16;
     let totalQty = 0;
 
-    sortedOrders.forEach((row, idx) => {
-      totalQty += row.QTY;
+    pdfRows.forEach((row, idx) => {
+      totalQty += row.qty;
       if (idx % 2 === 0) {
         doc.setFillColor(250, 250, 250);
         doc.rect(margin, y - 2, W - 2 * margin, rowH, "F");
@@ -922,10 +998,10 @@ export default function StockChicNailspa() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9.5);
       doc.setTextColor(38, 38, 38);
-      doc.text(row["PRODUCT NAME"], nameX, y + 14);
-      doc.text(String(row["STARTING BALANCE"]), oldCX, y + 14, { align: "center" });
-      doc.text(String(row.QTY), qtyCX, y + 14, { align: "center" });
-      doc.text(String(row["ENDING BALANCE"]), endCX, y + 14, { align: "center" });
+      doc.text(row.name, nameX, y + 14);
+      doc.text(String(row.starting), oldCX, y + 14, { align: "center" });
+      doc.text(String(row.qty), qtyCX, y + 14, { align: "center" });
+      doc.text(String(row.ending), endCX, y + 14, { align: "center" });
       y += rowH;
     });
 
@@ -967,7 +1043,9 @@ export default function StockChicNailspa() {
   const exportToExcel = () => {
     const rows = [
       ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
-      ...allTodayOrders.map(r => [r["PRODUCT NAME"], r["STARTING BALANCE"], r.QTY, r["ENDING BALANCE"]])
+      ...(pendingOrder
+        ? pendingOrder.entries.map(e => [e.productName, e.starting, e.qty, e.ending])
+        : allTodayOrders.map(r => [r["PRODUCT NAME"], r["STARTING BALANCE"], r.QTY, r["ENDING BALANCE"]]))
     ];
     const csv = rows.map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -989,7 +1067,7 @@ export default function StockChicNailspa() {
             <button
               onClick={() => navigate("/")}
               className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
-              style={{ ...dim, borderColor: "hsl(var(--border))" }}
+              style={{ ...dim, borderColor: "hsl(var(--border))", borderRadius: "5px" }}
               aria-label="Go to home"
               onMouseEnter={e => {
                 e.currentTarget.style.color = "hsl(var(--foreground))";
@@ -1018,17 +1096,15 @@ export default function StockChicNailspa() {
           </button>
         </div>
 
-        <div className="py-12">
+        <div className="py-6">
 
-          {/* ── SECTION 1: Current Stock ── */}
+          {/* ── SECTION 1: Chic Nailspa Stock ── */}
           <div className="mb-12">
             <div className="mb-6">
               <div className="flex items-end justify-between">
                 <div>
-                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">Current Stock</h1>
-                  <p className="text-[28px] font-light tracking-tight">
-                    {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
-                  </p>
+                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
+                  <p className="text-[28px] font-light tracking-tight uppercase">Chic Nailspa</p>
                 </div>
                 <span
                   className="nav-link mb-1"
@@ -1039,7 +1115,7 @@ export default function StockChicNailspa() {
                 </span>
               </div>
               <div className="flex items-center justify-between mt-1">
-                <p className="text-[11px] tracking-wider uppercase" style={dim}>{products.length} products · Chic Nailspa</p>
+                <p className="text-[11px] tracking-wider uppercase" style={dim}>{products.length} products</p>
                 {mode === "order" && (
                   <span
                     className="nav-link relative"
@@ -1077,7 +1153,7 @@ export default function StockChicNailspa() {
                 <div
                   ref={stockListRef}
                   className="absolute top-full left-0 right-0 z-50 border max-h-[220px] overflow-y-auto scrollbar-thin"
-                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                 >
                   {filteredStockProducts.map((row, i) => (
                     <div key={row["PRODUCT NAME"]}
@@ -1108,7 +1184,7 @@ export default function StockChicNailspa() {
                 return `RM ${val.toFixed(2)}`;
               };
               return (
-                <div className="surface-box p-6">
+                <div className="surface-box p-6" style={{ borderRadius: "5px" }}>
                   {/* Balance row */}
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -1227,60 +1303,87 @@ export default function StockChicNailspa() {
                   <p className="text-[11px] tracking-wider uppercase" style={dim}>Enter today's stock movements</p>
                   <DatePicker value={usageDate} onChange={setUsageDate} />
                 </div>
-                {/* Column headers */}
-                <div className="flex items-center gap-5 mb-1">
-                  <div className="w-4 flex-shrink-0" />
-                  <div className="flex-1"><span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span></div>
-                  <div className="flex-shrink-0 text-center" style={{width:"150px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Type</span></div>
-                  <div className="flex-shrink-0 text-center" style={{width:"130px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Qty</span></div>
-                  <div className="w-[13px] flex-shrink-0" />
-                </div>
-                <div className="space-y-3 mb-5">
+                {/* Excel-style grid — no column-gap, border-bottom on cells 2–4 only */}
+                <div
+                  className="mb-5"
+                  style={{ display: "grid", gridTemplateColumns: "20px 1fr 150px 140px 28px", columnGap: 0, marginLeft: "-4px" }}
+                >
+                  {/* Header row — border-bottom only on Product, Type, Qty */}
+                  <div />
+                  <div className="pb-2 pr-4" style={{ borderBottom: `1px solid ${borderActive}` }}>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span>
+                  </div>
+                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Type</span>
+                  </div>
+                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Qty</span>
+                  </div>
+                  <div />
+
+                  {/* Data rows */}
                   {entries.map((entry, idx) => (
-                    <div key={entry.id} className="flex items-stretch gap-5">
-                      <span className="text-[10px] w-4 text-right flex-shrink-0 pt-2.5" style={dim}>{idx + 1}</span>
-                      <ProductDropdown
-                        entry={entry}
-                        sortedProducts={sortedProducts}
-                        onSelect={name => updateEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
-                        onSearch={val => updateEntry(entry.id, { productSearch: val })}
-                        onToggle={() => {
-                          closeAllDropdowns(entry.id, "product");
-                          updateEntry(entry.id, { showProductDropdown: !entry.showProductDropdown, showTypeDropdown: false });
-                        }}
-                        onClose={() => updateEntry(entry.id, { showProductDropdown: false })}
-                        showBalance
-                      />
-                      <TypeDropdown
-                        entry={entry}
-                        onSelect={type => updateEntry(entry.id, { type, showTypeDropdown: false })}
-                        onToggle={() => {
-                          closeAllDropdowns(entry.id, "type");
-                          updateEntry(entry.id, { showTypeDropdown: !entry.showTypeDropdown, showProductDropdown: false });
-                        }}
-                        onClose={() => updateEntry(entry.id, { showTypeDropdown: false })}
-                      />
-                      <div className="flex items-center flex-shrink-0 h-[34px]" style={{ border: `1px solid ${borderActive}`, background: cardBg }}>
-                        <button onClick={() => updateEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
-                          className="px-2 py-2 transition-colors" style={dim}
+                    <React.Fragment key={entry.id}>
+                      {/* Row number — no border */}
+                      <div className="flex items-center justify-start">
+                        <span className="text-[13px]" style={dim}>{idx + 1}</span>
+                      </div>
+                      {/* Product cell — border-bottom */}
+                      <div className="pr-4" style={{ borderBottom: `1px solid ${border}` }}>
+                        <ProductDropdown
+                          entry={entry}
+                          sortedProducts={sortedProducts}
+                          onSelect={name => updateEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
+                          onSearch={val => updateEntry(entry.id, { productSearch: val })}
+                          onToggle={() => {
+                            closeAllDropdowns(entry.id, "product");
+                            updateEntry(entry.id, { showProductDropdown: !entry.showProductDropdown, showTypeDropdown: false });
+                          }}
+                          onClose={() => updateEntry(entry.id, { showProductDropdown: false })}
+                          showBalance
+                          lineStyle
+                        />
+                      </div>
+                      {/* Type cell — border-bottom */}
+                      <div className="px-2" style={{ borderBottom: `1px solid ${border}` }}>
+                        <TypeDropdown
+                          entry={entry}
+                          onSelect={type => updateEntry(entry.id, { type, showTypeDropdown: false })}
+                          onToggle={() => {
+                            closeAllDropdowns(entry.id, "type");
+                            updateEntry(entry.id, { showTypeDropdown: !entry.showTypeDropdown, showProductDropdown: false });
+                          }}
+                          onClose={() => updateEntry(entry.id, { showTypeDropdown: false })}
+                          lineStyle
+                        />
+                      </div>
+                      {/* Qty stepper cell — border-bottom */}
+                      <div className="flex items-center justify-between py-1 px-2" style={{ borderBottom: `1px solid ${border}` }}>
+                        <button
+                          onClick={() => updateEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
+                          className="px-1.5 py-1 transition-colors" style={dim}
                           onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                           onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                           <ChevronLeft size={13} />
                         </button>
-                        <span className="text-[13px] font-light px-3 min-w-[32px] text-center">{entry.qty}</span>
-                        <button onClick={() => updateEntry(entry.id, { qty: entry.qty + 1 })}
-                          className="px-2 py-2 transition-colors" style={dim}
+                        <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
+                        <button
+                          onClick={() => updateEntry(entry.id, { qty: entry.qty + 1 })}
+                          className="px-1.5 py-1 transition-colors" style={dim}
                           onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                           onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                           <ChevronRight size={13} />
                         </button>
                       </div>
-                      <button onClick={() => removeEntry(entry.id)} className="flex-shrink-0 transition-colors pt-2.5" style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        <X size={13} />
-                      </button>
-                    </div>
+                      {/* Remove button — no border */}
+                      <div className="flex items-center justify-center pl-2">
+                        <button onClick={() => removeEntry(entry.id)} className="transition-colors" style={dim}
+                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                          <X size={13} />
+                        </button>
+                      </div>
+                    </React.Fragment>
                   ))}
                 </div>
                 <button onClick={addEntry}
@@ -1289,11 +1392,14 @@ export default function StockChicNailspa() {
                   onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                   <Plus size={11} /> Add another product
                 </button>
-                <button onClick={handleSubmit} disabled={submitting} className="minimal-btn" style={{ opacity: submitting ? 0.5 : 1 }}>
+                <button onClick={handleSubmit} disabled={submitting} className="minimal-btn" style={{ opacity: submitting ? 0.5 : 1, borderRadius: "5px" }}>
                   {submitting ? "Saving..." : "Submit"}
                 </button>
                 {submitSuccess && (
                   <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Stock updated successfully</p>
+                )}
+                {usageError && (
+                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--red))" }}>✗ {usageError}</p>
                 )}
               </div>
             )}
@@ -1305,63 +1411,89 @@ export default function StockChicNailspa() {
                   <p className="text-[11px] tracking-wider uppercase" style={dim}>Add stock from a new order</p>
                   <DatePicker value={orderDate} onChange={setOrderDate} />
                 </div>
-                {/* Column headers */}
-                <div className="flex items-center gap-5 mb-1">
-                  <div className="w-4 flex-shrink-0" />
-                  <div className="flex-1"><span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span></div>
-                  <div className="flex-shrink-0" style={{width:"60px", textAlign:"center"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span></div>
-                  <div className="flex-shrink-0 text-center" style={{width:"130px"}}><span className="text-[10px] tracking-wider uppercase" style={dim}>Order Qty</span></div>
-                  <div className="w-[13px] flex-shrink-0" />
-                </div>
-                <div className="space-y-3 mb-5">
+                {/* Excel-style grid — no column-gap, border-bottom on cells 2–4 only for seamless line */}
+                <div
+                  className="mb-5"
+                  style={{ display: "grid", gridTemplateColumns: "20px 1fr 70px 140px 28px", columnGap: 0, marginLeft: "-4px" }}
+                >
+                  {/* Header row — border-bottom only on Product, Balance, Order Qty */}
+                  <div />
+                  <div className="pb-2 pr-4" style={{ borderBottom: `1px solid ${borderActive}` }}>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span>
+                  </div>
+                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
+                  </div>
+                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Order Qty</span>
+                  </div>
+                  <div />
+
+                  {/* Data rows */}
                   {orderEntries.map((entry, idx) => {
                     const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
                     const currentBal = product?.["CHIC NAILSPA BALANCE"] ?? null;
                     return (
-                      <div key={entry.id} className="flex items-stretch gap-5">
-                        <span className="text-[10px] w-4 text-right flex-shrink-0 pt-2.5" style={dim}>{idx + 1}</span>
-                        <ProductDropdown
-                          entry={entry}
-                          sortedProducts={sortedProducts}
-                          onSelect={name => updateOrderEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
-                          onSearch={val => updateOrderEntry(entry.id, { productSearch: val })}
-                          onToggle={() => {
-                            closeAllOrderDropdowns(entry.id);
-                            updateOrderEntry(entry.id, { showProductDropdown: !entry.showProductDropdown });
-                          }}
-                          onClose={() => updateOrderEntry(entry.id, { showProductDropdown: false })}
-                          showBalance
-                        />
-                        {/* Current balance box */}
-                        <div
-                          className="flex items-center justify-center flex-shrink-0 h-[34px]" style={{width:"60px", border: `1px solid ${border}`, background: cardBg}}
-                        >
+                      <React.Fragment key={entry.id}>
+                        {/* Row number — no border */}
+                        <div className="flex items-center justify-start">
+                          <span className="text-[13px]" style={dim}>{idx + 1}</span>
+                        </div>
+                        {/* Product cell — border-bottom */}
+                        <div className="pr-4" style={{ borderBottom: `1px solid ${border}` }}>
+                          <ProductDropdown
+                            entry={entry}
+                            sortedProducts={sortedProducts}
+                            onSelect={name => updateOrderEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
+                            onSearch={val => updateOrderEntry(entry.id, { productSearch: val })}
+                            onToggle={() => {
+                              closeAllOrderDropdowns(entry.id);
+                              updateOrderEntry(entry.id, { showProductDropdown: !entry.showProductDropdown });
+                            }}
+                            onClose={() => updateOrderEntry(entry.id, { showProductDropdown: false })}
+                            showBalance
+                            lineStyle
+                          />
+                        </div>
+                        {/* Balance cell — border-bottom */}
+                        <div className="flex items-center justify-center px-2" style={{ borderBottom: `1px solid ${border}` }}>
                           <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
                             {currentBal === null ? "—" : currentBal}
                           </span>
                         </div>
-                        {/* Qty stepper */}
-                        <div className="flex items-center flex-shrink-0 h-[34px]" style={{ width: "130px", border: `1px solid ${borderActive}`, background: cardBg }}>
-                          <button onClick={() => updateOrderEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
-                            className="px-2 py-2 transition-colors" style={dim}
+                        {/* Qty stepper cell — border-bottom */}
+                        <div className="flex items-center justify-between py-1 px-2" style={{ borderBottom: `1px solid ${border}` }}>
+                          <button
+                            onClick={() => updateOrderEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
+                            className="px-1.5 py-1 transition-colors" style={dim}
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                             <ChevronLeft size={13} />
                           </button>
-                          <span className="text-[13px] font-light px-3 min-w-[32px] text-center">{entry.qty}</span>
-                          <button onClick={() => updateOrderEntry(entry.id, { qty: entry.qty + 1 })}
-                            className="px-2 py-2 transition-colors" style={dim}
+                          <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
+                          <button
+                            onClick={() => updateOrderEntry(entry.id, { qty: entry.qty + 1 })}
+                            className="px-1.5 py-1 transition-colors" style={dim}
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                             <ChevronRight size={13} />
                           </button>
                         </div>
-                        <button onClick={() => removeOrderEntry(entry.id)} className="flex-shrink-0 transition-colors pt-2.5" style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                          <X size={13} />
-                        </button>
-                      </div>
+                        {/* Remove button — no border */}
+                        <div className="flex items-center justify-center pl-2">
+                          <button onClick={() => {
+                            if (orderEntries.length > 5) {
+                              removeOrderEntry(entry.id);
+                            } else {
+                              updateOrderEntry(entry.id, { productName: "", qty: 1, productSearch: "", showProductDropdown: false });
+                            }
+                          }} className="transition-colors" style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                            <X size={13} />
+                          </button>
+                        </div>
+                      </React.Fragment>
                     );
                   })}
                 </div>
@@ -1371,11 +1503,17 @@ export default function StockChicNailspa() {
                   onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                   <Plus size={11} /> Add another product
                 </button>
-                <button onClick={handleOrderSubmit} disabled={orderSubmitting} className="minimal-btn" style={{ opacity: orderSubmitting ? 0.5 : 1 }}>
+                <button onClick={handleOrderSubmit} disabled={orderSubmitting} className="minimal-btn" style={{ opacity: orderSubmitting ? 0.5 : 1, borderRadius: "5px" }}>
                   {orderSubmitting ? "Saving..." : "Submit Order"}
                 </button>
+                {orderSubmitted && !orderSuccess && (
+                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Order submitted</p>
+                )}
                 {orderSuccess && (
                   <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Order applied successfully</p>
+                )}
+                {orderError && (
+                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--red))" }}>✗ {orderError}</p>
                 )}
 
                 {/* Order Summary — preview before submit */}
@@ -1383,7 +1521,7 @@ export default function StockChicNailspa() {
                   <div className="mt-10">
                     <div className="mb-5">
                       <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
-                      <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>Preview before submitting</p>
+                      <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>{pendingOrder ? "Pending · Click × to remove" : "Preview · Click × to remove · Submit Order to confirm"}</p>
                     </div>
                     <table className="w-full border-collapse">
                       <thead>
@@ -1402,51 +1540,21 @@ export default function StockChicNailspa() {
                             <td className="text-[13px] font-light py-3 text-center" style={dim}>{row.current}</td>
                             <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>{row.orderQty}</td>
                             <td className="text-[13px] font-light py-3 text-center">{row.ending}</td>
-                            <td className="py-3 text-center" />
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {/* Submitted Orders — today only, with reverse button */}
-                {todayOrders.length > 0 && orderSummary.length === 0 && (
-                  <div className="mt-10">
-                    <div className="mb-5">
-                      <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
-                      <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
-                        {latestOrderDate === tomorrow ? "Tomorrow's order" : latestOrderDate === today ? "Submitted today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} — click × to reverse
-                      </p>
-                    </div>
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b" style={{ borderColor: borderActive }}>
-                          <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
-                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Starting Bal</th>
-                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
-                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
-                          <th className="w-6" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {todayOrders.map(row => (
-                          <tr key={row.id} className="border-b table-row-hover" style={{ borderColor: border }}>
-                            <td className="text-[13px] font-light py-3">{row["PRODUCT NAME"]}</td>
-                            <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["STARTING BALANCE"]}</td>
-                            <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</td>
-                            <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
                             <td className="py-3 text-center">
                               <button
-                                onClick={() => reverseOrder(row)}
-                                disabled={reversing === row.id}
-                                className="transition-colors"
-                                style={{ color: "hsl(var(--muted-foreground))", opacity: reversing === row.id ? 0.4 : 1 }}
+                                onClick={() => {
+                                  setOrderEntries(prev => prev.map(e => e.productName === row.productName ? { ...e, productName: "", qty: 1, productSearch: "", showProductDropdown: false } : e));
+                                  setPendingOrder(prev => {
+                                    if (!prev) return prev;
+                                    const entries = prev.entries.filter(e => e.productName !== row.productName);
+                                    if (!entries.length) { setOrderSubmitted(false); return null; }
+                                    return { ...prev, entries };
+                                  });
+                                }}
+                                style={{ color: "hsl(var(--muted-foreground))" }}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                              >
-                                <X size={13} />
-                              </button>
+                              ><X size={13} /></button>
                             </td>
                           </tr>
                         ))}
@@ -1454,6 +1562,7 @@ export default function StockChicNailspa() {
                     </table>
                   </div>
                 )}
+
 
                 {/* Recent Orders */}
                 <div className="mt-10">
@@ -1572,7 +1681,7 @@ export default function StockChicNailspa() {
                                 {isExpanded && rows.map((row, ri) => (
                                   <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
                                     <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                                    <td className="text-[13px] font-light py-2.5">{row["PRODUCT NAME"]}</td>
+                                    <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center" style={dim}>{row["STARTING BALANCE"]}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
@@ -1634,7 +1743,7 @@ export default function StockChicNailspa() {
                 const info = products.find(p => p["PRODUCT NAME"] === selectedActivityProduct) ?? null;
                 const activityForProduct = log.filter(r => r["PRODUCT NAME"] === selectedActivityProduct);
                 return (
-                  <div className="surface-box p-5 mb-6">
+                  <div className="surface-box p-5 mb-6" style={{ borderRadius: "5px" }}>
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Chic Nailspa · Product Detail</p>
@@ -1861,68 +1970,50 @@ export default function StockChicNailspa() {
               </button>
             </div>
 
-            {/* ── Most recent order (editable) ── */}
-            {allTodayOrders.length === 0 ? (
-              <p className="text-[13px]" style={dim}>No orders submitted yet.</p>
-            ) : (
-              <>
-                <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Click qty to edit · × to remove line</p>
-                <table className="w-full border-collapse mb-8">
+            {/* V2: Pending order confirmation */}
+            {pendingOrder !== null && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="text-[15px] font-light tracking-tight">
+                    {new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  </h3>
+                  <span className="text-[10px] tracking-[0.15em] uppercase px-2 py-0.5" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "4px", color: "hsl(var(--muted-foreground))" }}>
+                    Pending
+                  </span>
+                  <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    · {pendingOrder.entries.length} {pendingOrder.entries.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
+                <p className="text-[10px] tracking-[0.15em] uppercase mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>{pendingOrder.grn}</p>
+                <table className="w-full border-collapse mb-5">
                   <thead>
                     <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
-                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Prev Bal</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">New Bal</th>
+                      <th className="label-uppercase font-normal text-left pb-2 pt-1">Product</th>
+                      <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
+                      <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending</th>
                       <th className="w-6" />
                     </tr>
                   </thead>
                   <tbody>
-                    {allTodayOrders.map(row => {
-                      const isEditing = editingOrderRow === row.id;
-                      const isSaving = savingOrderEdit === row.id;
-                      const parsedEdit = parseInt(editingOrderQty);
-                      const previewBal = isEditing && !isNaN(parsedEdit)
-                        ? row["STARTING BALANCE"] + parsedEdit
-                        : row["ENDING BALANCE"];
+                    {pendingOrder.entries.map((entry, idx) => {
                       return (
-                        <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))", opacity: isSaving ? 0.4 : 1, transition: "opacity 0.15s" }}>
-                          <td className="text-[13px] font-light py-3">{row["PRODUCT NAME"]}</td>
-                          <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["STARTING BALANCE"]}</td>
-                          <td className="text-[13px] font-light py-3 text-center">
-                            {isEditing ? (
-                              <input
-                                autoFocus
-                                type="number"
-                                min={1}
-                                className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
-                                value={editingOrderQty}
-                                onChange={e => setEditingOrderQty(e.target.value)}
-                                onClick={e => (e.target as HTMLInputElement).select()}
-                                onBlur={() => handleOrderQtyEdit(row, parsedEdit)}
-                                onKeyDown={e => {
-                                  if (e.key === "Enter") handleOrderQtyEdit(row, parsedEdit);
-                                  if (e.key === "Escape") setEditingOrderRow(null);
-                                }}
-                              />
-                            ) : (
-                              <span
-                                className="cursor-pointer"
-                                style={{ color: "hsl(var(--green))" }}
-                                title="Click to edit"
-                                onClick={() => { setEditingOrderRow(row.id); setEditingOrderQty(String(row.QTY)); }}
-                                onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-                                onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-                              >+{row.QTY}</span>
-                            )}
-                          </td>
-                          <td className="text-[13px] font-light py-3 text-center" style={isEditing ? dim : {}}>{previewBal}</td>
+                        <tr key={idx} className="border-b" style={{ borderColor: "hsl(var(--border))" }}>
+                          <td className="text-[13px] font-light py-3">{entry.productName}</td>
+                          <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>+{entry.qty}</td>
+                          <td className="text-[13px] font-light py-3 text-center">{entry.ending}</td>
                           <td className="py-3 text-center">
                             <button
-                              onClick={() => handleOrderRowDelete(row)}
-                              disabled={isSaving}
-                              style={dim}
+                              onClick={() => {
+                                const productName = entry.productName;
+                                setPendingOrder(prev => {
+                                  if (!prev) return prev;
+                                  const entries = prev.entries.filter((_, i) => i !== idx);
+                                  if (!entries.length) { setOrderSubmitted(false); return null; }
+                                  return { ...prev, entries };
+                                });
+                                setOrderEntries(prev => prev.map(e => e.productName === productName ? { ...e, productName: "", qty: 1, productSearch: "", showProductDropdown: false } : e));
+                              }}
+                              style={{ color: "hsl(var(--muted-foreground))" }}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                             ><X size={13} /></button>
@@ -1932,7 +2023,6 @@ export default function StockChicNailspa() {
                     })}
                   </tbody>
                 </table>
-
                 {/* Notes */}
                 <div className="mb-6 mt-2">
                   <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Add Notes</p>
@@ -1945,35 +2035,90 @@ export default function StockChicNailspa() {
                     onChange={e => setGrnNotes(e.target.value)}
                   />
                 </div>
-                <div className="flex items-center gap-6 mb-12">
-                  <button
-                    onClick={generateGRNPdf}
-                    className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                    style={{ color: "hsl(var(--muted-foreground))" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                  >
-                    <FileText size={12} />
-                    GRN
-                  </button>
-                  <button
-                    onClick={exportToExcel}
-                    className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                    style={{ color: "hsl(var(--muted-foreground))" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                  >
-                    <Download size={12} />
-                    Export to Excel
-                  </button>
+                {/* Confirm + Reset + GRN + Export buttons */}
+                <div className="flex flex-col gap-3 mb-12">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={handleConfirmOrder}
+                      disabled={orderConfirming}
+                      className="text-[11px] tracking-wider uppercase transition-colors"
+                      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", padding: "6px 12px", borderRadius: "5px", opacity: orderConfirming ? 0.5 : 1 }}
+                    >
+                      {orderConfirming ? "Confirming..." : "Confirm Order"}
+                    </button>
+                    <button
+                      onClick={handleResetOrder}
+                      className="text-[11px] tracking-wider uppercase transition-colors"
+                      style={{ color: "hsl(var(--muted-foreground))" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <button
+                      onClick={generateGRNPdf}
+                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                      style={{ color: "hsl(var(--muted-foreground))" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                    >
+                      <FileText size={12} />
+                      GRN
+                    </button>
+                    <button
+                      onClick={exportToExcel}
+                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                      style={{ color: "hsl(var(--muted-foreground))" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                    >
+                      <Download size={12} />
+                      Export to Excel
+                    </button>
+                  </div>
                 </div>
-              </>
+                {orderError && (
+                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--red))" }}>✗ {orderError}</p>
+                )}
+                {orderSuccess && (
+                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Order confirmed</p>
+                )}
+                <div className="mt-6 mb-2 border-t" style={{ borderColor: "hsl(var(--border))" }} />
+              </div>
+            )}
+
+            {/* ── Most recent order (editable) ── */}
+            {allTodayOrders.length > 0 && (
+              <div className="flex items-center gap-6 mb-12">
+                <button
+                  onClick={generateGRNPdf}
+                  className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                  style={{ color: "hsl(var(--muted-foreground))" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                >
+                  <FileText size={12} />
+                  GRN
+                </button>
+                <button
+                  onClick={exportToExcel}
+                  className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                  style={{ color: "hsl(var(--muted-foreground))" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                >
+                  <Download size={12} />
+                  Export to Excel
+                </button>
+              </div>
             )}
 
             {/* ── All Orders ── */}
             {allOrderGroups.length > 0 && (
               <div>
-                <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))" }}>
+                <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}>
                   <h3 className="text-[13px] font-light tracking-tight mb-1">All Orders</h3>
                   <p className="text-[10px] tracking-wider uppercase" style={dim}>Last 60 days</p>
                 </div>
@@ -1983,7 +2128,7 @@ export default function StockChicNailspa() {
                       <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">GRN</th>
                       <th className="label-uppercase font-normal text-center pb-3 pt-2">Items</th>
-                      <th className="w-8" />
+                      <th className="w-8 label-uppercase font-normal text-center pb-3 pt-2">{expandedGRNs.size > 0 ? "BAL" : ""}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1992,7 +2137,7 @@ export default function StockChicNailspa() {
                         <tr
                           key={group.key}
                           className="border-b cursor-pointer"
-                          style={{ borderColor: "hsl(var(--border))" }}
+                          style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                           onClick={() => toggleGRN(group.key)}
                           onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
@@ -2009,8 +2154,9 @@ export default function StockChicNailspa() {
                         {expandedGRNs.has(group.key) && group.rows.map((row, ri) => (
                           <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))" }}>
                             <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                            <td className="text-[13px] font-light py-2.5" colSpan={2}>{row["PRODUCT NAME"]}</td>
+                            <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
                             <td className="text-[12px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>+{row.QTY}</td>
+                            <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["ENDING BALANCE"]}</td>
                           </tr>
                         ))}
                       </>
@@ -2023,5 +2169,13 @@ export default function StockChicNailspa() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StockChicNailspa() {
+  return (
+    <ErrorBoundary>
+      <StockChicNailspaInner />
+    </ErrorBoundary>
   );
 }

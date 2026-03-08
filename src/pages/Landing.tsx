@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Settings } from "lucide-react";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -10,10 +11,23 @@ export default function Landing() {
   const [hoverStock, setHoverStock] = useState(false);
   const [showStockChoice, setShowStockChoice] = useState(false);
   const [hoverPrices, setHoverPrices] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [orderConfirmMode, setOrderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const Card = ({
@@ -106,7 +120,75 @@ export default function Landing() {
         <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
           Branches
         </span>
-        <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
+        <div className="flex items-center gap-4">
+          {/* Settings gear */}
+          <div ref={settingsRef} className="relative">
+            <button
+              onClick={() => setShowSettings(prev => !prev)}
+              className="transition-colors"
+              style={{ color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+              onMouseLeave={e => { if (!showSettings) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+            >
+              <Settings size={16} />
+            </button>
+
+            {/* Settings dropdown */}
+            {showSettings && (
+              <div
+                className="absolute right-0 top-8 z-50 py-4 px-5"
+                style={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  minWidth: "200px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                }}
+              >
+                <p className="text-[10px] tracking-[0.2em] uppercase mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  Settings
+                </p>
+                {/* Order Confirmation toggle */}
+                <div className="flex items-center justify-between gap-6">
+                  <span className="text-[12px] tracking-wide" style={{ color: orderConfirmMode ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}>
+                    Order Confirmation
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newVal = !orderConfirmMode;
+                      setOrderConfirmMode(newVal);
+                      localStorage.setItem("orderConfirmation", String(newVal));
+                    }}
+                    style={{
+                      width: "36px",
+                      height: "20px",
+                      borderRadius: "10px",
+                      background: orderConfirmMode ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      position: "relative",
+                      transition: "background 0.2s",
+                      flexShrink: 0,
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{
+                      width: "14px",
+                      height: "14px",
+                      borderRadius: "50%",
+                      background: "hsl(var(--background))",
+                      position: "absolute",
+                      top: "3px",
+                      left: orderConfirmMode ? "19px" : "3px",
+                      transition: "left 0.2s",
+                    }} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
+        </div>
       </div>
 
       {/* Main content */}
@@ -168,20 +250,6 @@ export default function Landing() {
                 <p className="text-[18px] font-light tracking-tight">Boudoir</p>
               </button>
               <button
-                onClick={() => navigate("/stocknuryadi")}
-                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  color: "hsl(var(--foreground))",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
-              >
-                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
-                <p className="text-[18px] font-light tracking-tight">Nur Yadi</p>
-              </button>
-              <button
                 onClick={() => navigate("/stockchicnailspa")}
                 className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
                 style={{
@@ -194,6 +262,20 @@ export default function Landing() {
               >
                 <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
                 <p className="text-[18px] font-light tracking-tight">Chic Nailspa</p>
+              </button>
+              <button
+                onClick={() => navigate("/stocknuryadi")}
+                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
+                style={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  color: "hsl(var(--foreground))",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
+              >
+                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
+                <p className="text-[18px] font-light tracking-tight">Nur Yadi</p>
               </button>
             </div>
           )}

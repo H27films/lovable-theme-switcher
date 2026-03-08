@@ -75,8 +75,8 @@ const Index = () => {
 
   const branchRoutes: Record<string, string> = {
     "Boudoir": "/stock",
-    "Nur Yadi": "/stocknuryadi",
     "Chic Nailspa": "/stockchicnailspa",
+    "Nur Yadi": "/stocknuryadi",
   };
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
@@ -103,6 +103,7 @@ const Index = () => {
   const [allActivityLoading, setAllActivityLoading] = useState(false);
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<"Office" | "Boudoir" | "Nur Yadi" | "Chic Nailspa">("Office");
+  const [hoveredBranch, setHoveredBranch] = useState<string | null>(null);
   const [branchActivity, setBranchActivity] = useState<AllFileLogRow[]>([]);
   const [branchActivityLoading, setBranchActivityLoading] = useState(false);
   const [expandedBranchDates, setExpandedBranchDates] = useState<Set<string>>(new Set());
@@ -659,25 +660,16 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="py-12">
+        <div className="py-6">
 
           {/* ── Page header ── */}
           <div className="mb-8">
-            <div className="flex items-end justify-between">
-              <div>
-                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">Office Database</h1>
-                <p className="text-[28px] font-light tracking-tight">Stock Inventory</p>
-              </div>
-              <div className="flex flex-col items-end gap-1 mb-1">
+            <div>
+              <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
+              <div className="flex items-end justify-between">
+                <p className="text-[28px] font-light tracking-tight uppercase">Office Database</p>
                 <span
-                  className="nav-link flex items-center gap-0.5"
-                  style={{ color: "hsl(var(--foreground))" }}
-                  onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
-                >
-                  Order <ClipboardList size={13} className="inline -mt-0.5" />
-                </span>
-                <span
-                  className="nav-link flex items-center gap-0.5"
+                  className="nav-link flex items-center gap-0.5 mb-1"
                   style={{ color: "hsl(var(--foreground))" }}
                   onClick={() => setShowNewProductModal(true)}
                 >
@@ -685,11 +677,17 @@ const Index = () => {
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-1">
+            <div className="flex items-center justify-between mt-2">
               <p className="text-[11px] tracking-wider uppercase" style={dim}>
                 {products.length} products
               </p>
-
+              <span
+                className="nav-link flex items-center gap-0.5"
+                style={{ color: "hsl(var(--foreground))" }}
+                onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
+              >
+                Order <ClipboardList size={13} className="inline -mt-0.5" />
+              </span>
             </div>
           </div>
 
@@ -716,7 +714,7 @@ const Index = () => {
               <div
                 ref={listRef}
                 className="absolute top-full left-0 right-0 z-50 border max-h-[240px] overflow-y-auto scrollbar-thin"
-                style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+                style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
               >
                 {dropdownResults.map((p, i) => (
                   <div
@@ -797,19 +795,22 @@ const Index = () => {
               <div className="mb-8">
                 {/* Branch selector — now includes Office */}
                 <div className="flex items-center gap-6 mb-6">
-                  {(["Office", "Boudoir", "Nur Yadi", "Chic Nailspa"] as const).map(branch => (
+                  {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
                     <button
                       key={branch}
                       onClick={() => { setSelectedBranch(branch); setExpandedBranchDates(new Set()); setExpandedGRNs(new Set()); setSelectedBranchProduct(null); }}
-                      className="text-[13px] tracking-[0.12em] uppercase pb-2 transition-colors relative"
-                      style={{ color: selectedBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                      onMouseLeave={e => (e.currentTarget.style.color = selectedBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+                      className="transition-all duration-200"
+                      style={{
+                        fontSize: selectedBranch === branch ? "15px" : hoveredBranch === branch ? "13px" : "12px",
+                        fontWeight: 300,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: selectedBranch === branch || hoveredBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      }}
+                      onMouseEnter={() => setHoveredBranch(branch)}
+                      onMouseLeave={() => setHoveredBranch(null)}
                     >
                       {branch}
-                      {selectedBranch === branch && (
-                        <span className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "hsl(var(--foreground))" }} />
-                      )}
                     </button>
                   ))}
                 </div>
@@ -928,7 +929,7 @@ const Index = () => {
                 {selectedBranch !== "Office" && (<>
                   {/* Product detail panel */}
                   {selectedBranchProduct && (
-                    <div className="surface-box p-5 mb-6">
+                    <div className="surface-box p-5 mb-6" style={{ borderRadius: "5px" }}>
                       {/* Header */}
                       <div className="flex items-center justify-between mb-4">
                         <div>
@@ -1116,7 +1117,7 @@ const Index = () => {
 
           {/* ── Selected product card ── */}
           {selectedProduct && (
-            <div className="surface-box p-6 mb-8">
+            <div className="surface-box p-6 mb-8" style={{ borderRadius: "5px" }}>
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>
@@ -1172,12 +1173,12 @@ const Index = () => {
                   <p className="text-[22px] font-light">{selectedProduct["BOUDOIR BALANCE"] ?? "—"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Nur Yadi</p>
-                  <p className="text-[22px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
-                </div>
-                <div>
                   <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Chic Nailspa</p>
                   <p className="text-[22px] font-light">{selectedProduct["CHIC NAILSPA BALANCE"] ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Nur Yadi</p>
+                  <p className="text-[22px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
                 </div>
                 {selectedProduct["OFFICE SECTION"] && (
                   <div>
@@ -1510,7 +1511,7 @@ const Index = () => {
                 <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Product Name *</p>
                 <input
                   className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
-                  style={{ borderColor: "hsl(var(--border))" }}
+                  style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                   value={newProduct["PRODUCT NAME"]}
                   onChange={e => setNewProduct(p => ({ ...p, "PRODUCT NAME": e.target.value }))}
                   placeholder="Product name"
@@ -1533,7 +1534,7 @@ const Index = () => {
                   {showNewProductSupplierDropdown && (
                     <div
                       className="absolute top-full left-0 z-50 w-full border rounded mt-0.5 max-h-[180px] overflow-y-auto scrollbar-thin"
-                      style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))" }}
+                      style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                     >
                       {supplierOptions
                         .filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase()))
@@ -1567,7 +1568,7 @@ const Index = () => {
                       <p className="text-[10px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" PRICE", "")}</p>
                       <input
                         className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
-                        style={{ borderColor: "hsl(var(--border))" }}
+                        style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                         type="number"
                         step="0.01"
                         min="0"
@@ -1588,7 +1589,7 @@ const Index = () => {
                   <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>PAR Level</p>
                   <input
                     className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
-                    style={{ borderColor: "hsl(var(--border))" }}
+                    style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                     type="number"
                     min="0"
                     value={newProduct["PAR"]}
@@ -1600,7 +1601,7 @@ const Index = () => {
                   <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
                   <input
                     className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
-                    style={{ borderColor: "hsl(var(--border))" }}
+                    style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                     type="number"
                     min="1"
                     value={newProduct["UNITS/ORDER"]}
@@ -1615,7 +1616,7 @@ const Index = () => {
                 <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Office Section</p>
                 <input
                   className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
-                  style={{ borderColor: "hsl(var(--border))" }}
+                  style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                   value={newProduct["OFFICE SECTION"]}
                   onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
                   placeholder="e.g. 12B"
@@ -1710,7 +1711,7 @@ const Index = () => {
               {showSupplierDropdown && (
                 <div
                   className="absolute top-full left-0 z-50 border min-w-[180px] py-1 max-h-[220px] overflow-y-auto scrollbar-thin"
-                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                 >
                   {/* Clear all */}
                   <button
@@ -1767,7 +1768,7 @@ const Index = () => {
                 <div
                   ref={orderListRef}
                   className="absolute top-full left-0 right-0 z-50 border max-h-[200px] overflow-y-auto scrollbar-thin"
-                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                 >
                   {orderDropdownResults.map((p, i) => (
                     <div
@@ -1934,7 +1935,7 @@ const Index = () => {
                   ) : (
                     <button
                       className="minimal-btn"
-                      style={{ opacity: (orderLines.length === 0 || orderSubmitting) ? 0.4 : 1 }}
+                      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", opacity: (orderLines.length === 0 || orderSubmitting) ? 0.4 : 1, borderRadius: "5px" }}
                       disabled={orderLines.length === 0 || orderSubmitting}
                       onClick={handleOrderConfirm}
                     >
