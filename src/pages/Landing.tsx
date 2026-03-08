@@ -35,8 +35,8 @@ export default function Landing() {
         setShowThemeMenu(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   // Subtle parallax mouse tracking
@@ -200,6 +200,7 @@ export default function Landing() {
             {/* Settings dropdown */}
             {showSettings && (
               <div
+                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-4 px-5"
                 style={{
                   background: "hsl(var(--card))",
@@ -265,6 +266,7 @@ export default function Landing() {
             </button>
             {showFontMenu && (
               <div
+                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-3 px-4"
                 style={{
                   background: "hsl(var(--card))",
@@ -312,6 +314,7 @@ export default function Landing() {
             </button>
             {showThemeMenu && (
               <div
+                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-3 px-4"
                 style={{
                   background: "hsl(var(--card))",
