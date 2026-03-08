@@ -372,9 +372,6 @@ export default function Landing() {
           <Card
             onClick={() => navigate("/prices")}
             delay="320ms"
-            hover={hoverPrices}
-            onEnter={() => setHoverPrices(true)}
-            onLeave={() => setHoverPrices(false)}
             icon={
               <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 4H28V12L14 26a2 2 0 01-2.83 0L5.83 20.83a2 2 0 010-2.83L20 4z" />
