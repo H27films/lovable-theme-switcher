@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme, type Theme, type Font } from "@/hooks/useTheme";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Settings, Type, Sun, Moon, Palette } from "lucide-react";
 import {
   DropdownMenu,
@@ -12,6 +12,52 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const LandingCard = React.memo(({
+  onClick,
+  delay,
+  icon,
+  label,
+  title,
+  subtitle,
+  visible,
+}: {
+  onClick: () => void;
+  delay: string;
+  icon: React.ReactNode;
+  label: string;
+  title: string;
+  subtitle: string;
+  visible: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    className="group w-full"
+    style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? `translateY(0) scale(1)` : `translateY(24px) scale(0.97)`,
+      transition: `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)`,
+      transitionDelay: delay,
+    }}
+  >
+    <div className="relative overflow-hidden flex items-center justify-between px-10 py-8 rounded-[100px] bg-card border border-border transition-[border-color,transform,box-shadow] duration-300 ease-out group-hover:border-foreground group-hover:scale-[1.03] group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] shadow-[0_2px_10px_-3px_rgba(0,0,0,0.06)]">
+      <div className="flex items-center gap-6">
+        <div style={{ color: "hsl(var(--foreground))", flexShrink: 0 }}>{icon}</div>
+        <div className="text-left">
+          <p className="text-[11px] uppercase mb-1 tracking-[0.2em]" style={{ color: "hsl(var(--muted-foreground))" }}>{label}</p>
+          <p className="text-[26px] font-light tracking-tight leading-none mb-1">{title}</p>
+          <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>{subtitle}</p>
+        </div>
+      </div>
+      <div className="flex-shrink-0 ml-8 transition-all duration-300 ease-out group-hover:translate-x-2" style={{ color: "hsl(var(--foreground))" }}>
+        <svg className="w-[44px] group-hover:w-[56px] transition-all duration-300 ease-out" height="20" viewBox="0 0 52 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="0" y1="10" x2="44" y2="10" />
+          <path d="M34 2l10 8-10 8" />
+        </svg>
+      </div>
+    </div>
+  </button>
+));
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -44,83 +90,6 @@ export default function Landing() {
     window.addEventListener("mousemove", handleMouse);
     return () => window.removeEventListener("mousemove", handleMouse);
   }, []);
-
-  const Card = ({
-    onClick,
-    delay,
-    icon,
-    label,
-    title,
-    subtitle,
-  }: {
-    onClick: () => void;
-    delay: string;
-    icon: React.ReactNode;
-    label: string;
-    title: string;
-    subtitle: string;
-  }) => (
-    <button
-      onClick={onClick}
-      className="group w-full"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible
-          ? `translateY(0) scale(1)`
-          : `translateY(24px) scale(0.97)`,
-        transition: `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)`,
-        transitionDelay: delay,
-      }}
-    >
-      <div
-        className="relative overflow-hidden flex items-center justify-between px-10 py-8 rounded-[100px] bg-card border border-border transition-[border-color,transform,box-shadow] duration-300 ease-out group-hover:border-foreground group-hover:scale-[1.03] group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] shadow-[0_2px_10px_-3px_rgba(0,0,0,0.06)]"
-      >
-        {/* Left: icon + text */}
-        <div className="flex items-center gap-6">
-          <div style={{ color: "hsl(var(--foreground))", flexShrink: 0 }}>
-            {icon}
-          </div>
-          <div className="text-left">
-            <p
-              className="text-[11px] uppercase mb-1 tracking-[0.2em]"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              {label}
-            </p>
-            <p className="text-[26px] font-light tracking-tight leading-none mb-1">
-              {title}
-            </p>
-            <p
-              className="text-[13px] font-light"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              {subtitle}
-            </p>
-          </div>
-        </div>
-
-        {/* Right: arrow */}
-        <div
-          className="flex-shrink-0 ml-8 transition-all duration-300 ease-out group-hover:translate-x-2"
-          style={{ color: "hsl(var(--foreground))" }}
-        >
-          <svg
-            className="w-[44px] group-hover:w-[56px] transition-all duration-300 ease-out"
-            height="20"
-            viewBox="0 0 52 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="0" y1="10" x2="44" y2="10" />
-            <path d="M34 2l10 8-10 8" />
-          </svg>
-        </div>
-      </div>
-    </button>
-  );
 
   return (
     <div
@@ -286,9 +255,10 @@ export default function Landing() {
 
         {/* Cards */}
         <div className="flex flex-col gap-4 w-full max-w-[560px]">
-          <Card
+          <LandingCard
             onClick={() => setShowStockChoice(prev => !prev)}
             delay="200ms"
+            visible={visible}
             icon={
               <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="4" y="14" width="28" height="18" rx="0.5" />
@@ -349,9 +319,10 @@ export default function Landing() {
             </div>
           </div>
 
-          <Card
+          <LandingCard
             onClick={() => navigate("/prices")}
             delay="320ms"
+            visible={visible}
             icon={
               <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 4H28V12L14 26a2 2 0 01-2.83 0L5.83 20.83a2 2 0 010-2.83L20 4z" />
