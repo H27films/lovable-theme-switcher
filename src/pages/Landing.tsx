@@ -178,10 +178,9 @@ export default function Landing() {
           <div ref={settingsRef} className="relative">
             <button
               onClick={() => setShowSettings(prev => !prev)}
-              className="transition-all duration-300 hover:scale-125"
+              className="transition-all duration-300 hover:scale-125 hover:animate-[spin_2s_linear_infinite]"
               style={{
                 color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                animation: showSettings ? "spin 3s linear infinite" : "none",
               }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showSettings) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
