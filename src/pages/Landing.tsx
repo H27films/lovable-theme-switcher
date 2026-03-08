@@ -8,9 +8,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
   const [visible, setVisible] = useState(false);
-  const [hoverStock, setHoverStock] = useState(false);
   const [showStockChoice, setShowStockChoice] = useState(false);
-  const [hoverPrices, setHoverPrices] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [orderConfirmMode, setOrderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
