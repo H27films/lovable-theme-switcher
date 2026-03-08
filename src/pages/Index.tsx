@@ -84,6 +84,10 @@ const Index = () => {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [searchHovered, setSearchHovered] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchExpanded = searchHovered || searchFocused || search.length > 0;
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
   const [page, setPage] = useState(0);
   const [filterLowStock, setFilterLowStock] = useState(false);
