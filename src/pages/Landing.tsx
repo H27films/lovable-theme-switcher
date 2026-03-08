@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme, type Theme, type Font } from "@/hooks/useTheme";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Settings, Type, Sun, Moon, Palette } from "lucide-react";
 import {
   DropdownMenu,
