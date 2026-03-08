@@ -1166,7 +1166,7 @@ function StockChicNailspaInner() {
                   <button onClick={(e) => { e.stopPropagation(); setStockSearch(""); setSelectedProduct(null); }} style={dim}><X size={13} /></button>
                 )}
                 <span
-                  className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
+                  className="absolute bottom-0 left-0 h-px transition-all duration-[600ms] ease-out"
                   style={{
                     background: `hsl(var(--border-active))`,
                     width: stockSearchHovered || stockSearchExpanded ? "100%" : "0%",
