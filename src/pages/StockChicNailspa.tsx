@@ -542,7 +542,7 @@ export default function StockChicNailspa() {
           "QTY": -Number(entry.qty),
           "ENDING BALANCE": endingBalance,
           "GRN": null,
-          "OFFICE BALANCE": null,
+          "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
         });
 
         // Update ALL AllFileProducts rows for this product

@@ -545,7 +545,7 @@ export default function Stock() {
           "QTY": -Number(entry.qty),
           "ENDING BALANCE": endingBalance,
           "GRN": null,
-          "OFFICE BALANCE": null,
+          "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
         });
         if (logErr) { console.error("AllFileLog insert error:", logErr); setUsageError(logErr.message || "Log write failed — check console"); }
 
