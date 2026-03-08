@@ -8,9 +8,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
   const [visible, setVisible] = useState(false);
-  const [hoverStock, setHoverStock] = useState(false);
   const [showStockChoice, setShowStockChoice] = useState(false);
-  const [hoverPrices, setHoverPrices] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [orderConfirmMode, setOrderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -50,9 +48,6 @@ export default function Landing() {
   const Card = ({
     onClick,
     delay,
-    hover,
-    onEnter,
-    onLeave,
     icon,
     label,
     title,
@@ -60,9 +55,6 @@ export default function Landing() {
   }: {
     onClick: () => void;
     delay: string;
-    hover: boolean;
-    onEnter: () => void;
-    onLeave: () => void;
     icon: React.ReactNode;
     label: string;
     title: string;
@@ -70,8 +62,6 @@ export default function Landing() {
   }) => (
     <button
       onClick={onClick}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
       className="group w-full"
       style={{
         opacity: visible ? 1 : 0,
@@ -83,74 +73,37 @@ export default function Landing() {
       }}
     >
       <div
-        className="relative overflow-hidden flex items-center justify-between px-10 py-8"
-        style={{
-          borderRadius: "100px",
-          background: "hsl(var(--card))",
-          borderWidth: "1px",
-          borderStyle: "solid",
-          borderColor: hover ? "hsl(var(--foreground))" : "hsl(var(--border))",
-          transition: "border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease",
-          transform: hover ? "scale(1.02)" : "scale(1)",
-          boxShadow: hover
-            ? "0 16px 40px -12px rgba(0,0,0,0.12)"
-            : "0 2px 10px -3px rgba(0,0,0,0.06)",
-        }}
+        className="relative overflow-hidden flex items-center justify-between px-10 py-8 rounded-[100px] bg-card border border-border transition-[border-color,transform,box-shadow] duration-300 ease-out group-hover:border-foreground group-hover:scale-[1.02] group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] shadow-[0_2px_10px_-3px_rgba(0,0,0,0.06)]"
       >
         {/* Hover glow effect */}
         <div
+          className="absolute inset-0 rounded-[100px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: "100px",
-            background: hover
-              ? "radial-gradient(circle at 30% 50%, hsla(var(--foreground) / 0.03), transparent 70%)"
-              : "none",
-            transition: "background 0.5s ease",
-            pointerEvents: "none",
+            background: "radial-gradient(circle at 30% 50%, hsla(var(--foreground) / 0.03), transparent 70%)",
           }}
         />
 
         {/* Left: icon + text */}
         <div className="flex items-center gap-6 relative z-10">
           <div
-            style={{
-              color: "hsl(var(--foreground))",
-              flexShrink: 0,
-              transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-              transform: hover ? "scale(1.1) rotate(-3deg)" : "scale(1) rotate(0deg)",
-            }}
+            className="transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
+            style={{ color: "hsl(var(--foreground))", flexShrink: 0 }}
           >
             {icon}
           </div>
           <div className="text-left">
             <p
-              className="text-[11px] tracking-[0.2em] uppercase mb-1"
-              style={{
-                color: "hsl(var(--muted-foreground))",
-                transition: "letter-spacing 0.4s ease",
-                letterSpacing: hover ? "0.3em" : "0.2em",
-              }}
+              className="text-[11px] uppercase mb-1 tracking-[0.2em] group-hover:tracking-[0.3em] transition-[letter-spacing] duration-300"
+              style={{ color: "hsl(var(--muted-foreground))" }}
             >
               {label}
             </p>
-            <p
-              className="text-[26px] font-light tracking-tight leading-none mb-1"
-              style={{
-                transition: "transform 0.3s ease",
-                transform: hover ? "translateX(4px)" : "translateX(0)",
-              }}
-            >
+            <p className="text-[26px] font-light tracking-tight leading-none mb-1 transition-transform duration-300 group-hover:translate-x-1">
               {title}
             </p>
             <p
-              className="text-[13px] font-light"
-              style={{
-                color: "hsl(var(--muted-foreground))",
-                transition: "opacity 0.3s ease, transform 0.3s ease",
-                opacity: hover ? 1 : 0.7,
-                transform: hover ? "translateX(4px)" : "translateX(0)",
-              }}
+              className="text-[13px] font-light transition-all duration-300 opacity-70 group-hover:opacity-100 group-hover:translate-x-1"
+              style={{ color: "hsl(var(--muted-foreground))" }}
             >
               {subtitle}
             </p>
@@ -159,15 +112,11 @@ export default function Landing() {
 
         {/* Right: animated arrow */}
         <div
-          className="flex-shrink-0 ml-8 relative z-10"
-          style={{
-            transform: hover ? "translateX(12px)" : "translateX(0)",
-            color: "hsl(var(--foreground))",
-            transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
+          className="flex-shrink-0 ml-8 relative z-10 transition-transform duration-300 ease-out group-hover:translate-x-3"
+          style={{ color: "hsl(var(--foreground))" }}
         >
           <svg
-            width={hover ? "52" : "44"}
+            width="44"
             height="20"
             viewBox="0 0 52 20"
             fill="none"
@@ -175,7 +124,6 @@ export default function Landing() {
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }}
           >
             <line x1="0" y1="10" x2="44" y2="10" />
             <path d="M34 2l10 8-10 8" />
@@ -361,9 +309,6 @@ export default function Landing() {
           <Card
             onClick={() => setShowStockChoice(prev => !prev)}
             delay="200ms"
-            hover={hoverStock}
-            onEnter={() => setHoverStock(true)}
-            onLeave={() => setHoverStock(false)}
             icon={
               <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="4" y="14" width="28" height="18" rx="0.5" />
@@ -427,9 +372,6 @@ export default function Landing() {
           <Card
             onClick={() => navigate("/prices")}
             delay="320ms"
-            hover={hoverPrices}
-            onEnter={() => setHoverPrices(true)}
-            onLeave={() => setHoverPrices(false)}
             icon={
               <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 4H28V12L14 26a2 2 0 01-2.83 0L5.83 20.83a2 2 0 010-2.83L20 4z" />
