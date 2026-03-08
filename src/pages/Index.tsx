@@ -762,42 +762,69 @@ const Index = () => {
                 }}
               />
             </div>
-            {showDropdown && dropdownResults.length > 0 && (
+            {showDropdown && totalDropdownItems > 0 && (
               <div
                 ref={listRef}
                 className="absolute top-full left-0 right-0 z-50 border max-h-[240px] overflow-y-auto scrollbar-thin"
                 style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
               >
-                {dropdownResults.map((p, i) => (
+                {/* Supplier matches */}
+                {supplierMatches.map((supplier, i) => (
                   <div
-                    key={p.id}
+                    key={`supplier-${supplier}`}
                     data-item
                     className="flex items-center justify-between px-4 py-2.5 cursor-pointer"
                     style={{ borderBottom: `1px solid ${border}`, background: i === activeIndex ? cardBg : "transparent" }}
-                    onMouseDown={() => { setSelectedProduct(p); setSearch(p["PRODUCT NAME"]); setShowDropdown(false); }}
+                    onMouseDown={() => {
+                      setFilterSupplier(supplier);
+                      setSearch("");
+                      setSelectedProduct(null);
+                      setShowDropdown(false);
+                      setActiveTab("table");
+                    }}
                     onMouseEnter={() => setActiveIndex(i)}
                   >
-                    <div className="flex items-center gap-3">
-                      {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
-                      <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
-                      {p["SUPPLIER"] && <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>}
-                      {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
-                        <span className="text-[10px] tracking-wider uppercase" style={dim}>Colour</span>
-                      )}
-                    </div>
                     <div className="flex items-center gap-2">
-                      {(p["UNITS/ORDER"] ?? 1) > 1 && (
-                        <span className="text-[11px]" style={dim}>{p["UNITS/ORDER"]} units</span>
-                      )}
-                      <span className="text-[12px] font-light" style={{
-                        color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
-                          ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                      }}>
-                        {p["OFFICE BALANCE"] ?? "—"}
-                      </span>
+                      <Building2 size={12} style={dim} />
+                      <span className="text-[13px] font-light">{supplier}</span>
                     </div>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Supplier</span>
                   </div>
                 ))}
+                {/* Product matches */}
+                {dropdownResults.map((p, i) => {
+                  const idx = supplierMatches.length + i;
+                  return (
+                    <div
+                      key={p.id}
+                      data-item
+                      className="flex items-center justify-between px-4 py-2.5 cursor-pointer"
+                      style={{ borderBottom: `1px solid ${border}`, background: idx === activeIndex ? cardBg : "transparent" }}
+                      onMouseDown={() => { setSelectedProduct(p); setSearch(p["PRODUCT NAME"]); setShowDropdown(false); setFilterSupplier(null); }}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                    >
+                      <div className="flex items-center gap-3">
+                        {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                        <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
+                        {p["SUPPLIER"] && <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>}
+                        {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
+                          <span className="text-[10px] tracking-wider uppercase" style={dim}>Colour</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {(p["UNITS/ORDER"] ?? 1) > 1 && (
+                          <span className="text-[11px]" style={dim}>{p["UNITS/ORDER"]} units</span>
+                        )}
+                        <span className="text-[12px] font-light" style={{
+                          color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
+                            ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                        }}>
+                          {p["OFFICE BALANCE"] ?? "—"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
