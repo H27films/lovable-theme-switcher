@@ -721,7 +721,7 @@ const Index = () => {
           {/* ── Search bar ── */}
           <div
             ref={searchRef}
-            className="relative mb-8"
+            className="relative mb-6"
             onMouseEnter={() => setSearchHovered(true)}
             onMouseLeave={() => setSearchHovered(false)}
           >
