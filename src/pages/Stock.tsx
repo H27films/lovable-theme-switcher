@@ -383,7 +383,11 @@ function StockInner() {
   const [selectedActivityProduct, setSelectedActivityProduct] = useState<string | null>(null);
   const [showStockDropdown, setShowStockDropdown] = useState(false);
   const [stockActiveIndex, setStockActiveIndex] = useState(-1);
+  const [stockSearchHovered, setStockSearchHovered] = useState(false);
+  const [stockSearchFocused, setStockSearchFocused] = useState(false);
   const stockListRef = useRef<HTMLDivElement>(null);
+  const stockInputRef = useRef<HTMLInputElement>(null);
+  const stockSearchExpanded = stockSearchHovered || stockSearchFocused || stockSearch.length > 0;
 
   const today = new Date().toISOString().split("T")[0];
   const [usageDate, setUsageDate] = useState<"today" | "yesterday" | "tomorrow">("today");
