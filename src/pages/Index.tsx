@@ -367,7 +367,8 @@ const Index = () => {
         filterColour === "all" ? true :
         filterColour === "yes" ? isColour :
         !isColour;
-      return matchSearch && matchLow && matchColour;
+      const matchSupplier = !filterSupplier || p["SUPPLIER"] === filterSupplier;
+      return matchSearch && matchLow && matchColour && matchSupplier;
     })
     .sort((a, b) => {
       const key = sortKey ?? "PRODUCT NAME";
