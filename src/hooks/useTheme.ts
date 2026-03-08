@@ -41,5 +41,5 @@ export function useTheme() {
 
   const cycleFont = () => setFont(f => f === "inter" ? "raleway" : "inter");
 
-  return { theme, toggle, font, cycleFont };
+  return { theme, toggle, setTheme, font, cycleFont, setFont };
 }
