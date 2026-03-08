@@ -333,7 +333,7 @@ export default function Landing() {
                   <button
                     key={t.value}
                     onClick={() => {
-                      while (theme !== t.value) toggle();
+                      setTheme(t.value);
                       setShowThemeMenu(false);
                     }}
                     className="flex items-center gap-2 w-full text-left py-2 px-2 text-[12px] tracking-wide rounded transition-colors"
