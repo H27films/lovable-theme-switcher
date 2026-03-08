@@ -96,13 +96,13 @@ const Index = () => {
   const [activityLoading, setActivityLoading] = useState(false);
 
   // Tab toggle: activity vs table
-  const [activeTab, setActiveTab] = useState<"activity" | "table" | "branches">("branches");
+  const [activeTab, setActiveTab] = useState<"table" | "branches">("branches");
 
   // All-orders recent activity (main page, 60 days)
   const [allActivity, setAllActivity] = useState<AllFileLogRow[]>([]);
   const [allActivityLoading, setAllActivityLoading] = useState(false);
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
-  const [selectedBranch, setSelectedBranch] = useState<"Boudoir" | "Nur Yadi" | "Chic Nailspa">("Boudoir");
+  const [selectedBranch, setSelectedBranch] = useState<"Office" | "Boudoir" | "Nur Yadi" | "Chic Nailspa">("Office");
   const [branchActivity, setBranchActivity] = useState<AllFileLogRow[]>([]);
   const [branchActivityLoading, setBranchActivityLoading] = useState(false);
   const [expandedBranchDates, setExpandedBranchDates] = useState<Set<string>>(new Set());
@@ -253,7 +253,7 @@ const Index = () => {
 
   // Fetch branch activity when BRANCHES tab is active or branch changes
   useEffect(() => {
-    if (activeTab !== "branches") return;
+    if (activeTab !== "branches" || selectedBranch === "Office") return;
     const fetchBranchActivity = async () => {
       setBranchActivityLoading(true);
       try {
@@ -754,7 +754,7 @@ const Index = () => {
 
           {/* ── Tab switcher ── */}
           <div className="flex items-center gap-8 mb-8 border-b" style={{ borderColor: border }}>
-            {(["branches", "activity", "table"] as const).map(tab => (
+            {(["branches", "table"] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -763,7 +763,7 @@ const Index = () => {
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
               >
-                {tab === "activity" ? "Recent Activity" : tab === "branches" ? "Branches" : "Table"}
+                {tab === "branches" ? "Branches" : "Table"}
                 {activeTab === tab && (
                   <span className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "hsl(var(--foreground))" }} />
                 )}
@@ -771,99 +771,8 @@ const Index = () => {
             ))}
           </div>
 
-          {/* ── Recent Activity (14 days) ── */}
-          {activeTab === "activity" && ((() => {
-            // Group allActivity by GRN
-            const groups: { grn: string; rows: AllFileLogRow[] }[] = [];
-            const seen = new Map<string, AllFileLogRow[]>();
-            allActivity.forEach(row => {
-              const key = row.GRN ?? "—";
-              if (!seen.has(key)) { seen.set(key, []); groups.push({ grn: key, rows: seen.get(key)! }); }
-              seen.get(key)!.push(row);
-            });
-
-            return (
-              <div className="mb-8">
-                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Recent Activity · Last 60 Days</p>
-                {allActivityLoading ? (
-                  <p className="text-[12px]" style={dim}>Loading…</p>
-                ) : groups.length === 0 ? (
-                  <p className="text-[12px]" style={dim}>No order activity in the last 60 days</p>
-                ) : (
-                  <div className="border-t" style={{ borderColor: border }}>
-                    {groups.map(({ grn, rows }) => {
-                      const first = rows[0];
-                      const isSupplierOrder = first.BRANCH === "Office";
-                      const typeLabel = isSupplierOrder ? "Supplier Order" : "Branch Order";
-                      const counterparty = isSupplierOrder ? (first.SUPPLIER ?? "—") : (first.BRANCH ?? "—");
-                      const uniqueProducts = new Set(rows.map(r => r["PRODUCT NAME"])).size;
-                      const totalUnits = rows.reduce((s, r) => s + Math.abs(r.QTY ?? 0), 0);
-                      const expanded = expandedGRNs.has(grn);
-                      const dateStr = first.DATE ? (() => {
-                        const d = new Date(first.DATE);
-                        return d.getDate() + " " + d.toLocaleString("en-GB", { month: "short" });
-                      })() : "—";
-
-                      return (
-                        <div key={grn} className="border-b" style={{ borderColor: border }}>
-                          {/* Collapsed row */}
-                          <div
-                            className="flex items-center gap-4 py-2.5 cursor-pointer select-none"
-                            onClick={() => setExpandedGRNs(prev => {
-                              const next = new Set(prev);
-                              next.has(grn) ? next.delete(grn) : next.add(grn);
-                              return next;
-                            })}
-                            onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
-                            onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                          >
-                            <span style={dim}>{expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}</span>
-                            <span className="text-[12px] font-light w-16 shrink-0">{dateStr}</span>
-                            <span className="text-[11px] tracking-wide uppercase w-28 shrink-0" style={dim}>{grn}</span>
-                            <span className="text-[12px] font-light flex-1">{counterparty}</span>
-                            <span className="text-[11px] shrink-0" style={dim}>{uniqueProducts} {uniqueProducts === 1 ? "product" : "products"}</span>
-                            <span className="text-[12px] font-light w-20 text-right shrink-0" style={{ color: isSupplierOrder ? "#4ade80" : "#f87171" }}>
-                              {isSupplierOrder ? "+" : "−"}{totalUnits} units
-                            </span>
-                          </div>
-
-                          {/* Expanded product lines */}
-                          {expanded && (
-                            <div className="pb-3 pl-6">
-                              <table className="w-full border-collapse">
-                                <thead>
-                                  <tr style={{ borderBottom: `1px solid ${border}` }}>
-                                    <th className="text-left text-[10px] tracking-wider uppercase pb-1.5 pr-6 font-normal" style={dim}>Product</th>
-                                    <th className="text-right text-[10px] tracking-wider uppercase pb-1.5 pr-6 font-normal" style={dim}>QTY</th>
-                                    <th className="text-right text-[10px] tracking-wider uppercase pb-1.5 font-normal" style={dim}>Office Balance</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {rows.map((r, ri) => (
-                                    <tr key={ri} className="border-b last:border-0" style={{ borderColor: border }}>
-                                      <td className="text-[12px] font-light py-1.5 pr-6">{r["PRODUCT NAME"] ?? "—"}</td>
-                                      <td className="text-[12px] font-light py-1.5 pr-6 text-right" style={{ color: isSupplierOrder ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
-                                        {isSupplierOrder ? "+" : "−"}{r.QTY ?? 0}
-                                      </td>
-                                      <td className="text-[12px] font-light py-1.5 text-right">{r["OFFICE BALANCE"] ?? "—"}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })())}
-
-          {/* ── Branches Activity ── */}
           {activeTab === "branches" && (() => {
-            // Group by date
+            // Group branch activity by date (7-day split)
             const cutoff7 = new Date();
             cutoff7.setDate(cutoff7.getDate() - 7);
             const cutoff7Str = cutoff7.toISOString().split("T")[0];
@@ -876,7 +785,7 @@ const Index = () => {
             });
             const olderDates = [...olderByDate.keys()].sort((a, b) => b.localeCompare(a));
 
-            const branchBalanceCol = selectedBranch === "Boudoir" ? "BOUDOIR BALANCE" : selectedBranch === "Nur Yadi" ? "NUR YADI BALANCE" : "CHIC NAILSPA BALANCE";
+            const branchBalanceCol = selectedBranch === "Boudoir" ? "BOUDOIR BALANCE" : selectedBranch === "Nur Yadi" ? "NUR YADI BALANCE" : selectedBranch === "Chic Nailspa" ? "CHIC NAILSPA BALANCE" : "OFFICE BALANCE";
             const selectedBranchProductInfo = selectedBranchProduct
               ? products.find(p => p["PRODUCT NAME"] === selectedBranchProduct) ?? null
               : null;
@@ -886,12 +795,12 @@ const Index = () => {
 
             return (
               <div className="mb-8">
-                {/* Branch selector */}
+                {/* Branch selector — now includes Office */}
                 <div className="flex items-center gap-6 mb-6">
-                  {(["Boudoir", "Nur Yadi", "Chic Nailspa"] as const).map(branch => (
+                  {(["Office", "Boudoir", "Nur Yadi", "Chic Nailspa"] as const).map(branch => (
                     <button
                       key={branch}
-                      onClick={() => { setSelectedBranch(branch); setExpandedBranchDates(new Set()); setSelectedBranchProduct(null); }}
+                      onClick={() => { setSelectedBranch(branch); setExpandedBranchDates(new Set()); setExpandedGRNs(new Set()); setSelectedBranchProduct(null); }}
                       className="text-[13px] tracking-[0.12em] uppercase pb-2 transition-colors relative"
                       style={{ color: selectedBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                       onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -904,188 +813,304 @@ const Index = () => {
                     </button>
                   ))}
                 </div>
-                {/* Product detail panel */}
-                {selectedBranchProduct && (
-                  <div className="surface-box p-5 mb-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>{selectedBranch} · Product Detail</p>
-                        <p className="text-[15px] font-light">{selectedBranchProduct}</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        {selectedBranchProductInfo && (
-                          <div className="text-right">
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
-                            <p className="text-[28px] font-light leading-none" style={{
-                              color: ((selectedBranchProductInfo as any)[branchBalanceCol] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                            }}>
-                              {(selectedBranchProductInfo as any)[branchBalanceCol] ?? 0}
-                            </p>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => setSelectedBranchProduct(null)}
-                          style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
+
+                {/* ── OFFICE sub-tab: 7-day individual + older GRN-grouped ── */}
+                {selectedBranch === "Office" && (() => {
+                  const cutoff7off = new Date();
+                  cutoff7off.setDate(cutoff7off.getDate() - 7);
+                  const cutoff7offStr = cutoff7off.toISOString().split("T")[0];
+                  const offRecentRows = allActivity.filter(r => r.DATE >= cutoff7offStr);
+                  const offOlderRows = allActivity.filter(r => r.DATE < cutoff7offStr);
+                  const offOlderGRNs: { grn: string; rows: AllFileLogRow[] }[] = [];
+                  const offOlderSeen = new Map<string, AllFileLogRow[]>();
+                  offOlderRows.forEach(row => {
+                    const key = row.GRN ?? "—";
+                    if (!offOlderSeen.has(key)) { offOlderSeen.set(key, []); offOlderGRNs.push({ grn: key, rows: offOlderSeen.get(key)! }); }
+                    offOlderSeen.get(key)!.push(row);
+                  });
+                  return (
+                    <div className="mb-8">
+                      <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Office · Last 60 Days</p>
+                      {allActivityLoading ? (
+                        <p className="text-[12px]" style={dim}>Loading…</p>
+                      ) : allActivity.length === 0 ? (
+                        <p className="text-[12px]" style={dim}>No order activity in the last 60 days</p>
+                      ) : (
+                        <div className="border-t" style={{ borderColor: border }}>
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="border-b" style={{ borderColor: border }}>
+                                <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
+                                <th className="label-uppercase font-normal text-left pb-3 pt-2">GRN</th>
+                                <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
+                                <th className="label-uppercase font-normal text-left pb-3 pt-2">Supplier / Branch</th>
+                                <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
+                                <th className="label-uppercase font-normal text-center pb-3 pt-2">Office Bal</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {offRecentRows.map((row, idx) => {
+                                const isSupplier = row.BRANCH === "Office";
+                                const counterparty = isSupplier ? (row.SUPPLIER ?? "—") : (row.BRANCH ?? "—");
+                                const nextRow = offRecentRows[idx + 1];
+                                const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && offOlderGRNs.length > 0);
+                                return (
+                                  <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
+                                    <td className="text-[12px] font-light py-3">
+                                      {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                    </td>
+                                    <td className="text-[11px] font-light py-3 tracking-wide uppercase" style={dim}>{row.GRN ?? "—"}</td>
+                                    <td className="text-[13px] font-light py-3">{row["PRODUCT NAME"] ?? "—"}</td>
+                                    <td className="text-[12px] font-light py-3" style={dim}>{counterparty}</td>
+                                    <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY > 0 ? "hsl(var(--green))" : "hsl(var(--red))" }}>
+                                      {row.QTY > 0 ? "+" : ""}{row.QTY}
+                                    </td>
+                                    <td className="text-[12px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
+                                  </tr>
+                                );
+                              })}
+                              {offOlderGRNs.map(({ grn, rows: grnRows }) => {
+                                const first = grnRows[0];
+                                const isSupplier = first.BRANCH === "Office";
+                                const counterparty = isSupplier ? (first.SUPPLIER ?? "—") : (first.BRANCH ?? "—");
+                                const uniqueProducts = new Set(grnRows.map(r => r["PRODUCT NAME"])).size;
+                                const totalUnits = grnRows.reduce((s, r) => s + Math.abs(r.QTY ?? 0), 0);
+                                const isExpanded = expandedGRNs.has(grn);
+                                const dateStr = first.DATE ? (() => {
+                                  const d = new Date(first.DATE);
+                                  return d.getDate() + " " + d.toLocaleString("en-GB", { month: "short" });
+                                })() : "—";
+                                return (
+                                  <>
+                                    <tr
+                                      key={`offgrp-${grn}`}
+                                      className="cursor-pointer"
+                                      style={{ borderBottom: `1px solid ${isExpanded ? "hsl(var(--border-active))" : border}` }}
+                                      onClick={() => setExpandedGRNs(prev => { const next = new Set(prev); next.has(grn) ? next.delete(grn) : next.add(grn); return next; })}
+                                      onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
+                                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                                    >
+                                      <td className="text-[12px] font-light py-3" style={dim}>{dateStr}</td>
+                                      <td className="text-[11px] font-light py-3 tracking-wide uppercase" style={dim}>{grn}</td>
+                                      <td className="text-[12px] font-light py-3" style={dim}>{uniqueProducts} {uniqueProducts === 1 ? "product" : "products"}</td>
+                                      <td className="text-[12px] font-light py-3" style={dim}>{counterparty}</td>
+                                      <td className="text-[12px] font-light py-3 text-center" style={{ color: isSupplier ? "#4ade80" : "#f87171" }}>
+                                        {isSupplier ? "+" : "−"}{totalUnits} units
+                                      </td>
+                                      <td className="py-3 text-center">
+                                        <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+                                      </td>
+                                    </tr>
+                                    {isExpanded && grnRows.map((r, ri) => (
+                                      <tr key={r.id} className="table-row-hover" style={{ borderBottom: `1px solid ${border}`, background: "hsl(var(--card))" }}>
+                                        <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
+                                        <td className="text-[11px] font-light py-2.5 tracking-wide uppercase" style={dim}>{r.GRN ?? "—"}</td>
+                                        <td className="text-[13px] font-light py-2.5">{r["PRODUCT NAME"] ?? "—"}</td>
+                                        <td className="text-[12px] font-light py-2.5" style={dim}>{isSupplier ? (r.SUPPLIER ?? "—") : (r.BRANCH ?? "—")}</td>
+                                        <td className="text-[13px] font-light py-2.5 text-center" style={{ color: isSupplier ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
+                                          {r.QTY > 0 ? "+" : ""}{r.QTY}
+                                        </td>
+                                        <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{r["OFFICE BALANCE"] ?? "—"}</td>
+                                      </tr>
+                                    ))}
+                                  </>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
+                  );
+                })()}
 
-                    {/* Prices row if available */}
-                    {selectedBranchProductInfo && (
-                      <div className="flex items-center gap-6 mb-4 pt-3 border-t" style={{ borderColor: border }}>
-                        {selectedBranchProductInfo["STAFF PRICE"] && selectedBranchProductInfo["STAFF PRICE"] > 0 && (
-                          <div>
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
-                            <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["STAFF PRICE"] as number).toFixed(2)}</p>
-                          </div>
-                        )}
-                        {selectedBranchProductInfo["CUSTOMER PRICE"] && selectedBranchProductInfo["CUSTOMER PRICE"] > 0 && (
-                          <div>
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
-                            <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["CUSTOMER PRICE"] as number).toFixed(2)}</p>
-                          </div>
-                        )}
-                        {selectedBranchProductInfo["BRANCH PRICE"] && selectedBranchProductInfo["BRANCH PRICE"] > 0 && (
-                          <div>
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
-                            <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["BRANCH PRICE"] as number).toFixed(2)}</p>
-                          </div>
-                        )}
+                {/* ── Branch sub-tabs: product detail + activity table ── */}
+                {selectedBranch !== "Office" && (<>
+                  {/* Product detail panel */}
+                  {selectedBranchProduct && (
+                    <div className="surface-box p-5 mb-6">
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>{selectedBranch} · Product Detail</p>
+                          <p className="text-[15px] font-light">{selectedBranchProduct}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {selectedBranchProductInfo && (
+                            <div className="text-right">
+                              <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
+                              <p className="text-[28px] font-light leading-none" style={{
+                                color: ((selectedBranchProductInfo as any)[branchBalanceCol] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                              }}>
+                                {(selectedBranchProductInfo as any)[branchBalanceCol] ?? 0}
+                              </p>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => setSelectedBranchProduct(null)}
+                            style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
-                    )}
 
-                    {/* Activity for this product */}
-                    {filteredProductActivity.length === 0 ? (
-                      <p className="text-[12px]" style={dim}>No activity found for this product</p>
-                    ) : (
+                      {/* Prices row if available */}
+                      {selectedBranchProductInfo && (
+                        <div className="flex items-center gap-6 mb-4 pt-3 border-t" style={{ borderColor: border }}>
+                          {selectedBranchProductInfo["STAFF PRICE"] && selectedBranchProductInfo["STAFF PRICE"] > 0 && (
+                            <div>
+                              <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
+                              <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["STAFF PRICE"] as number).toFixed(2)}</p>
+                            </div>
+                          )}
+                          {selectedBranchProductInfo["CUSTOMER PRICE"] && selectedBranchProductInfo["CUSTOMER PRICE"] > 0 && (
+                            <div>
+                              <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
+                              <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["CUSTOMER PRICE"] as number).toFixed(2)}</p>
+                            </div>
+                          )}
+                          {selectedBranchProductInfo["BRANCH PRICE"] && selectedBranchProductInfo["BRANCH PRICE"] > 0 && (
+                            <div>
+                              <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
+                              <p className="text-[14px] font-light">RM {(selectedBranchProductInfo["BRANCH PRICE"] as number).toFixed(2)}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Activity for this product */}
+                      {filteredProductActivity.length === 0 ? (
+                        <p className="text-[12px]" style={dim}>No activity found for this product</p>
+                      ) : (
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="border-b" style={{ borderColor: border }}>
+                              <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
+                              <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
+                              <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
+                              <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending Bal</th>
+                              <th className="label-uppercase font-normal text-center pb-2 pt-1">Office Bal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredProductActivity.map(row => (
+                              <tr key={row.id} className="border-b" style={{ borderColor: border }}>
+                                <td className="text-[12px] font-light py-2">
+                                  {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                </td>
+                                <td className="text-[11px] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                <td className="text-[13px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                                  {row.QTY > 0 ? "+" : ""}{row.QTY}
+                                </td>
+                                <td className="text-[13px] font-light py-2 text-center">{row["ENDING BALANCE"]}</td>
+                                <td className="text-[12px] font-light py-2 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>{selectedBranch} · Last 60 Days</p>
+                  {branchActivityLoading ? (
+                    <p className="text-[12px]" style={dim}>Loading…</p>
+                  ) : branchActivity.length === 0 ? (
+                    <p className="text-[12px]" style={dim}>No activity in the last 60 days</p>
+                  ) : (
+                    <div className="border-t" style={{ borderColor: border }}>
                       <table className="w-full border-collapse">
                         <thead>
                           <tr className="border-b" style={{ borderColor: border }}>
-                            <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
-                            <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
-                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
-                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending Bal</th>
-                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Office Bal</th>
+                            <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
+                            <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Office Bal</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredProductActivity.map(row => (
-                            <tr key={row.id} className="border-b" style={{ borderColor: border }}>
-                              <td className="text-[12px] font-light py-2">
-                                {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                              </td>
-                              <td className="text-[11px] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                              <td className="text-[13px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
-                                {row.QTY > 0 ? "+" : ""}{row.QTY}
-                              </td>
-                              <td className="text-[13px] font-light py-2 text-center">{row["ENDING BALANCE"]}</td>
-                              <td className="text-[12px] font-light py-2 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
-                            </tr>
-                          ))}
+                          {recentRows.map((row, idx) => {
+                            const nextRow = recentRows[idx + 1];
+                            const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && olderDates.length > 0);
+                            return (
+                              <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
+                                <td className="text-[12px] font-light py-3">
+                                  {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                </td>
+                                <td
+                                  className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
+                                  onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
+                                >{row["PRODUCT NAME"] ?? "—"}</td>
+                                <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                                  {row.QTY > 0 ? "+" : ""}{row.QTY}
+                                </td>
+                                <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
+                                <td className="text-[12px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
+                              </tr>
+                            );
+                          })}
+                          {olderDates.map((date, di) => {
+                            const rows = olderByDate.get(date)!;
+                            const isExpanded = expandedBranchDates.has(date);
+                            const isLast = di === olderDates.length - 1;
+                            return (
+                              <>
+                                <tr
+                                  key={`group-${date}`}
+                                  className="cursor-pointer"
+                                  style={{ borderBottom: `1px solid ${isExpanded ? "hsl(var(--border-active))" : border}` }}
+                                  onClick={() => setExpandedBranchDates(prev => {
+                                    const next = new Set(prev);
+                                    next.has(date) ? next.delete(date) : next.add(date);
+                                    return next;
+                                  })}
+                                  onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
+                                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                                >
+                                  <td className="text-[12px] font-light py-3" style={dim}>
+                                    {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                  </td>
+                                  <td className="text-[12px] font-light py-3" style={dim}>
+                                    {rows.length} {rows.length === 1 ? "entry" : "entries"}
+                                  </td>
+                                  <td colSpan={2} />
+                                  <td className="py-3 text-center">
+                                    <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+                                  </td>
+                                </tr>
+                                {isExpanded && rows.map((row, ri) => (
+                                  <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
+                                    <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
+                                    <td
+                                      className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
+                                      onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
+                                    >{row["PRODUCT NAME"]}</td>
+                                    <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                    <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                                      {row.QTY > 0 ? "+" : ""}{row.QTY}
+                                    </td>
+                                    <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
+                                    <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
+                                  </tr>
+                                ))}
+                              </>
+                            );
+                          })}
                         </tbody>
                       </table>
-                    )}
-                  </div>
-                )}
-                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>{selectedBranch} · Last 60 Days</p>
-                {branchActivityLoading ? (
-                  <p className="text-[12px]" style={dim}>Loading…</p>
-                ) : branchActivity.length === 0 ? (
-                  <p className="text-[12px]" style={dim}>No activity in the last 60 days</p>
-                ) : (
-                  <div className="border-t" style={{ borderColor: border }}>
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b" style={{ borderColor: border }}>
-                          <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
-                          <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
-                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
-                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
-                          <th className="label-uppercase font-normal text-center pb-3 pt-2">Office Bal</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recentRows.map((row, idx) => {
-                          const nextRow = recentRows[idx + 1];
-                          const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && olderDates.length > 0);
-                          return (
-                            <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
-                              <td className="text-[12px] font-light py-3">
-                                {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                              </td>
-                              <td
-                                className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
-                                onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
-                              >{row["PRODUCT NAME"] ?? "—"}</td>
-                              <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                              <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
-                                {row.QTY > 0 ? "+" : ""}{row.QTY}
-                              </td>
-                              <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
-                              <td className="text-[12px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
-                            </tr>
-                          );
-                        })}
-                        {olderDates.map((date, di) => {
-                          const rows = olderByDate.get(date)!;
-                          const isExpanded = expandedBranchDates.has(date);
-                          const isLast = di === olderDates.length - 1;
-                          return (
-                            <>
-                              <tr
-                                key={`group-${date}`}
-                                className="cursor-pointer"
-                                style={{ borderBottom: `1px solid ${isExpanded ? "hsl(var(--border-active))" : border}` }}
-                                onClick={() => setExpandedBranchDates(prev => {
-                                  const next = new Set(prev);
-                                  next.has(date) ? next.delete(date) : next.add(date);
-                                  return next;
-                                })}
-                                onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
-                                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                              >
-                                <td className="text-[12px] font-light py-3" style={dim}>
-                                  {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                                </td>
-                                <td className="text-[12px] font-light py-3" style={dim}>
-                                  {rows.length} {rows.length === 1 ? "entry" : "entries"}
-                                </td>
-                                <td colSpan={2} />
-                                <td className="py-3 text-center">
-                                  <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
-                                </td>
-                              </tr>
-                              {isExpanded && rows.map((row, ri) => (
-                                <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
-                                  <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                                  <td
-                                    className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
-                                    onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
-                                  >{row["PRODUCT NAME"]}</td>
-                                  <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                                  <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
-                                    {row.QTY > 0 ? "+" : ""}{row.QTY}
-                                  </td>
-                                  <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
-                                  <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
-                                </tr>
-                              ))}
-                            </>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                    </div>
+                  )}
+                </>)}
               </div>
             );
           })()}
+
+
 
           {activeTab === "table" && (<>
 
