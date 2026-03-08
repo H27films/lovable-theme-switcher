@@ -115,7 +115,7 @@ export default function SearchBar({ data, onSelect }: SearchBarProps) {
         )}
         {/* Animated underline */}
         <span
-          className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
+          className="absolute bottom-0 left-0 h-px transition-all duration-[600ms] ease-out"
           style={{
             background: "hsl(var(--border-active))",
             width: hovered || expanded ? "100%" : "0%",
