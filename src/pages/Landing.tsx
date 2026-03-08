@@ -255,9 +255,10 @@ export default function Landing() {
 
         {/* Cards */}
         <div className="flex flex-col gap-4 w-full max-w-[560px]">
-          <Card
+          <LandingCard
             onClick={() => setShowStockChoice(prev => !prev)}
             delay="200ms"
+            visible={visible}
             icon={
               <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="4" y="14" width="28" height="18" rx="0.5" />
