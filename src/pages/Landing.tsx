@@ -309,9 +309,6 @@ export default function Landing() {
           <Card
             onClick={() => setShowStockChoice(prev => !prev)}
             delay="200ms"
-            hover={hoverStock}
-            onEnter={() => setHoverStock(true)}
-            onLeave={() => setHoverStock(false)}
             icon={
               <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="4" y="14" width="28" height="18" rx="0.5" />
