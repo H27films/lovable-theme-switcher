@@ -13,7 +13,9 @@ export default function Landing() {
   const [hoverPrices, setHoverPrices] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [orderConfirmMode, setOrderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const settingsRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
@@ -28,6 +30,21 @@ export default function Landing() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Subtle parallax mouse tracking
+  useEffect(() => {
+    const handleMouse = (e: MouseEvent) => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePos({
+          x: ((e.clientX - rect.left) / rect.width - 0.5) * 2,
+          y: ((e.clientY - rect.top) / rect.height - 0.5) * 2,
+        });
+      }
+    };
+    window.addEventListener("mousemove", handleMouse);
+    return () => window.removeEventListener("mousemove", handleMouse);
   }, []);
 
   const Card = ({
@@ -55,37 +72,96 @@ export default function Landing() {
       onClick={onClick}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      className="group w-full transition-all duration-500"
+      className="group w-full"
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(16px)",
+        transform: visible
+          ? `translateY(0) scale(1)`
+          : `translateY(24px) scale(0.97)`,
+        transition: `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)`,
         transitionDelay: delay,
       }}
     >
       <div
-        className="flex items-center justify-between px-10 py-8 transition-all duration-300"
+        className="relative overflow-hidden flex items-center justify-between px-10 py-8"
         style={{
           borderRadius: "100px",
-          background: hover ? "hsl(var(--card))" : "hsl(var(--card))",
+          background: "hsl(var(--card))",
           border: `1px solid ${hover ? "hsl(var(--foreground))" : "hsl(var(--border))"}`,
+          transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+          transform: hover ? "scale(1.02)" : "scale(1)",
+          boxShadow: hover
+            ? "0 20px 60px -15px hsla(var(--foreground) / 0.12), 0 0 0 1px hsla(var(--foreground) / 0.05)"
+            : "0 2px 10px -3px hsla(0, 0%, 0%, 0.08)",
         }}
       >
+        {/* Hover glow effect */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "100px",
+            background: hover
+              ? "radial-gradient(circle at 30% 50%, hsla(var(--foreground) / 0.03), transparent 70%)"
+              : "none",
+            transition: "background 0.5s ease",
+            pointerEvents: "none",
+          }}
+        />
+
         {/* Left: icon + text */}
-        <div className="flex items-center gap-6">
-          <div style={{ color: "hsl(var(--foreground))", flexShrink: 0 }}>{icon}</div>
+        <div className="flex items-center gap-6 relative z-10">
+          <div
+            style={{
+              color: "hsl(var(--foreground))",
+              flexShrink: 0,
+              transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+              transform: hover ? "scale(1.1) rotate(-3deg)" : "scale(1) rotate(0deg)",
+            }}
+          >
+            {icon}
+          </div>
           <div className="text-left">
-            <p className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>{label}</p>
-            <p className="text-[26px] font-light tracking-tight leading-none mb-1">{title}</p>
-            <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>{subtitle}</p>
+            <p
+              className="text-[11px] tracking-[0.2em] uppercase mb-1"
+              style={{
+                color: "hsl(var(--muted-foreground))",
+                transition: "letter-spacing 0.4s ease",
+                letterSpacing: hover ? "0.3em" : "0.2em",
+              }}
+            >
+              {label}
+            </p>
+            <p
+              className="text-[26px] font-light tracking-tight leading-none mb-1"
+              style={{
+                transition: "transform 0.3s ease",
+                transform: hover ? "translateX(4px)" : "translateX(0)",
+              }}
+            >
+              {title}
+            </p>
+            <p
+              className="text-[13px] font-light"
+              style={{
+                color: "hsl(var(--muted-foreground))",
+                transition: "opacity 0.3s ease, transform 0.3s ease",
+                opacity: hover ? 1 : 0.7,
+                transform: hover ? "translateX(4px)" : "translateX(0)",
+              }}
+            >
+              {subtitle}
+            </p>
           </div>
         </div>
 
         {/* Right: animated arrow */}
         <div
-          className="flex-shrink-0 ml-8 transition-all duration-300"
+          className="flex-shrink-0 ml-8 relative z-10"
           style={{
-            transform: hover ? "translateX(8px)" : "translateX(0)",
+            transform: hover ? "translateX(12px)" : "translateX(0)",
             color: "hsl(var(--foreground))",
+            transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
           <svg
@@ -97,7 +173,7 @@ export default function Landing() {
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ transition: "width 0.3s ease" }}
+            style={{ transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }}
           >
             <line x1="0" y1="10" x2="44" y2="10" />
             <path d="M34 2l10 8-10 8" />
@@ -109,15 +185,53 @@ export default function Landing() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      ref={containerRef}
+      className="min-h-screen flex flex-col relative overflow-hidden"
       style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}
     >
+      {/* Animated background grid dots */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)`,
+          backgroundSize: "40px 40px",
+          opacity: visible ? 0.4 : 0,
+          transition: "opacity 1.5s ease",
+          transform: `translate(${mousePos.x * -3}px, ${mousePos.y * -3}px)`,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Subtle radial glow */}
+      <div
+        style={{
+          position: "absolute",
+          top: "30%",
+          left: "50%",
+          width: "800px",
+          height: "800px",
+          transform: `translate(-50%, -50%) translate(${mousePos.x * 20}px, ${mousePos.y * 20}px)`,
+          background: "radial-gradient(circle, hsla(var(--foreground) / 0.02) 0%, transparent 70%)",
+          pointerEvents: "none",
+          transition: "transform 0.3s ease-out",
+        }}
+      />
+
       {/* Top bar */}
       <div
-        className="flex justify-between items-center px-8 py-6 border-b"
-        style={{ borderColor: "hsl(var(--border))" }}
+        className="relative z-10 flex justify-between items-center px-8 py-6 border-b"
+        style={{
+          borderColor: "hsl(var(--border))",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(-10px)",
+          transition: "opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s",
+        }}
       >
-        <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
+        <span
+          className="text-[11px] tracking-[0.2em] uppercase"
+          style={{ color: "hsl(var(--foreground))" }}
+        >
           Branches
         </span>
         <div className="flex items-center gap-4">
@@ -125,8 +239,11 @@ export default function Landing() {
           <div ref={settingsRef} className="relative">
             <button
               onClick={() => setShowSettings(prev => !prev)}
-              className="transition-colors"
-              style={{ color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+              className="transition-all duration-300"
+              style={{
+                color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                transform: showSettings ? "rotate(90deg)" : "rotate(0deg)",
+              }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showSettings) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
             >
@@ -143,6 +260,7 @@ export default function Landing() {
                   borderRadius: "8px",
                   minWidth: "200px",
                   boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                  animation: "settingsIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
                 <p className="text-[10px] tracking-[0.2em] uppercase mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>
@@ -192,24 +310,55 @@ export default function Landing() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 py-16">
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 relative z-10">
 
-        {/* Title */}
+        {/* Title with staggered animation */}
         <div
-          className="text-center mb-14 transition-all duration-700"
-          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(12px)" }}
+          className="text-center mb-14"
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(20px)",
+            transition: "opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+          }}
         >
-          <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
+          <p
+            className="text-[11px] tracking-[0.25em] uppercase mb-3"
+            style={{
+              color: "hsl(var(--muted-foreground))",
+              opacity: visible ? 1 : 0,
+              transition: "opacity 0.6s ease 0.3s",
+            }}
+          >
             Product Database
           </p>
-          <h1 className="text-[42px] font-light tracking-tight">Select a section</h1>
+          <h1
+            className="text-[42px] font-light tracking-tight"
+            style={{
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0) scale(1)" : "translateY(10px) scale(0.98)",
+              transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s",
+            }}
+          >
+            Select a section
+          </h1>
+          {/* Animated underline */}
+          <div
+            style={{
+              width: visible ? "60px" : "0px",
+              height: "1px",
+              background: "hsl(var(--foreground))",
+              margin: "12px auto 0",
+              transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s",
+              opacity: 0.3,
+            }}
+          />
         </div>
 
         {/* Cards */}
         <div className="flex flex-col gap-4 w-full max-w-[560px]">
           <Card
             onClick={() => setShowStockChoice(prev => !prev)}
-            delay="120ms"
+            delay="200ms"
             hover={hoverStock}
             onEnter={() => setHoverStock(true)}
             onLeave={() => setHoverStock(false)}
@@ -227,62 +376,55 @@ export default function Landing() {
           />
 
           {/* Stock sub-choices */}
-          {showStockChoice && (
-            <div
-              className="flex gap-3 w-full transition-all duration-300"
-              style={{
-                opacity: showStockChoice ? 1 : 0,
-                transform: showStockChoice ? "translateY(0)" : "translateY(-8px)",
-              }}
-            >
-              <button
-                onClick={() => navigate("/stock")}
-                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  color: "hsl(var(--foreground))",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
-              >
-                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
-                <p className="text-[18px] font-light tracking-tight">Boudoir</p>
-              </button>
-              <button
-                onClick={() => navigate("/stockchicnailspa")}
-                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  color: "hsl(var(--foreground))",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
-              >
-                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
-                <p className="text-[18px] font-light tracking-tight">Chic Nailspa</p>
-              </button>
-              <button
-                onClick={() => navigate("/stocknuryadi")}
-                className="flex-1 py-4 px-6 rounded-full text-center transition-all duration-200"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  color: "hsl(var(--foreground))",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
-              >
-                <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
-                <p className="text-[18px] font-light tracking-tight">Nur Yadi</p>
-              </button>
+          <div
+            style={{
+              maxHeight: showStockChoice ? "200px" : "0px",
+              opacity: showStockChoice ? 1 : 0,
+              transform: showStockChoice ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.97)",
+              transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+              overflow: "hidden",
+            }}
+          >
+            <div className="flex gap-3 w-full">
+              {[
+                { name: "Boudoir", route: "/stock", delay: "0ms" },
+                { name: "Chic Nailspa", route: "/stockchicnailspa", delay: "60ms" },
+                { name: "Nur Yadi", route: "/stocknuryadi", delay: "120ms" },
+              ].map((salon, i) => (
+                <button
+                  key={salon.name}
+                  onClick={() => navigate(salon.route)}
+                  className="flex-1 py-4 px-6 rounded-full text-center group/sub"
+                  style={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    color: "hsl(var(--foreground))",
+                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                    transitionDelay: showStockChoice ? `${i * 60}ms` : "0ms",
+                    opacity: showStockChoice ? 1 : 0,
+                    transform: showStockChoice ? "translateY(0)" : "translateY(-8px)",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = "hsl(var(--foreground))";
+                    e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
+                    e.currentTarget.style.boxShadow = "0 8px 25px -8px hsla(0, 0%, 0%, 0.15)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = "hsl(var(--border))";
+                    e.currentTarget.style.transform = "translateY(0) scale(1)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
+                  <p className="text-[18px] font-light tracking-tight">{salon.name}</p>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           <Card
             onClick={() => navigate("/prices")}
-            delay="220ms"
+            delay="320ms"
             hover={hoverPrices}
             onEnter={() => setHoverPrices(true)}
             onLeave={() => setHoverPrices(false)}
@@ -298,7 +440,27 @@ export default function Landing() {
             subtitle="Manage product pricing & suppliers"
           />
         </div>
+
+        {/* Bottom floating label */}
+        <div
+          style={{
+            marginTop: "48px",
+            opacity: visible ? 0.3 : 0,
+            transition: "opacity 1s ease 0.8s",
+          }}
+        >
+          <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>
+            ▲ Select to continue
+          </p>
+        </div>
       </div>
+
+      <style>{`
+        @keyframes settingsIn {
+          from { opacity: 0; transform: translateY(-6px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   );
 }
