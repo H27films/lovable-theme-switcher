@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme";
-import ThemeToggle from "@/components/ThemeToggle";
+import { useTheme, type Theme, type Font } from "@/hooks/useTheme";
 import { useEffect, useRef, useState } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Type, Sun, Moon, Palette } from "lucide-react";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -10,9 +9,13 @@ export default function Landing() {
   const [visible, setVisible] = useState(false);
   const [showStockChoice, setShowStockChoice] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showFontMenu, setShowFontMenu] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [orderConfirmMode, setOrderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const settingsRef = useRef<HTMLDivElement>(null);
+  const fontRef = useRef<HTMLDivElement>(null);
+  const themeRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
