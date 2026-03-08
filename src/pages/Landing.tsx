@@ -174,176 +174,68 @@ export default function Landing() {
           Branches
         </span>
         <div className="flex items-center gap-4">
-          {/* Settings gear */}
-          <div ref={settingsRef} className="relative">
-            <button
-              onClick={() => setShowSettings(prev => !prev)}
-              className="hover:opacity-80"
-              style={{
-                color: showSettings ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-              }}
-              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-              onMouseLeave={e => { if (!showSettings) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-            >
-              <Settings size={16} />
-            </button>
-
-            {/* Settings dropdown */}
-            {showSettings && (
-              <div
-                onMouseDown={(e) => e.stopPropagation()}
-                className="absolute right-0 top-8 z-50 py-4 px-5"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  minWidth: "200px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="hover:opacity-80" style={{ color: "hsl(var(--muted-foreground))" }}>
+                <Settings size={16} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={orderConfirmMode}
+                onCheckedChange={(checked) => {
+                  const next = checked === true;
+                  setOrderConfirmMode(next);
+                  localStorage.setItem("orderConfirmation", String(next));
                 }}
               >
-                <p className="text-[10px] tracking-[0.2em] uppercase mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  Settings
-                </p>
-                {/* Order Confirmation toggle */}
-                <div className="flex items-center justify-between gap-6">
-                  <span className="text-[12px] tracking-wide" style={{ color: orderConfirmMode ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}>
-                    Order Confirmation
-                  </span>
-                  <button
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      const newVal = !orderConfirmMode;
-                      setOrderConfirmMode(newVal);
-                      localStorage.setItem("orderConfirmation", String(newVal));
-                    }}
-                    style={{
-                      width: "36px",
-                      height: "20px",
-                      borderRadius: "10px",
-                      background: orderConfirmMode ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                      position: "relative",
-                      transition: "background 0.2s",
-                      flexShrink: 0,
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{
-                      width: "14px",
-                      height: "14px",
-                      borderRadius: "50%",
-                      background: "hsl(var(--background))",
-                      position: "absolute",
-                      top: "3px",
-                      left: orderConfirmMode ? "19px" : "3px",
-                      transition: "left 0.2s",
-                    }} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+                Order Confirmation
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          {/* Font toggle */}
-          <div ref={fontRef} className="relative">
-            <button
-              onClick={() => { setShowFontMenu(prev => !prev); setShowThemeMenu(false); setShowSettings(false); }}
-              className="hover:opacity-80"
-              style={{ color: showFontMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-              onMouseLeave={e => { if (!showFontMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-            >
-              <Type size={16} />
-            </button>
-            {showFontMenu && (
-              <div
-                onMouseDown={(e) => e.stopPropagation()}
-                className="absolute right-0 top-8 z-50 py-3 px-4"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  minWidth: "140px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                }}
-              >
-                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  Font
-                </p>
-                {(["inter", "raleway"] as Font[]).map(f => (
-                  <button
-                    key={f}
-                    onMouseDown={(e) => { e.preventDefault(); setFont(f); setShowFontMenu(false); }}
-                    className="block w-full text-left py-2 px-2 text-[12px] tracking-wide rounded transition-colors"
-                    style={{
-                      color: font === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                      background: font === f ? "hsl(var(--accent))" : "transparent",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--accent))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = font === f ? "hsl(var(--accent))" : "transparent"; e.currentTarget.style.color = font === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))"; }}
-                  >
-                    {f === "inter" ? "Inter" : "Raleway"}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="hover:opacity-80" style={{ color: "hsl(var(--muted-foreground))" }}>
+                <Type size={16} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuLabel>Font</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={font} onValueChange={(value) => setFont(value as Font)}>
+                <DropdownMenuRadioItem value="inter">Inter</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="raleway">Raleway</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          {/* Theme toggle */}
-          <div ref={themeRef} className="relative">
-            <button
-              onClick={() => { setShowThemeMenu(prev => !prev); setShowFontMenu(false); setShowSettings(false); }}
-              className="hover:opacity-80"
-              style={{ color: showThemeMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-              onMouseLeave={e => { if (!showThemeMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-            >
-              {theme === "dark" && <Sun size={16} />}
-              {theme === "light" && <Palette size={16} />}
-              {theme === "sand" && <Moon size={16} />}
-            </button>
-            {showThemeMenu && (
-              <div
-                onMouseDown={(e) => e.stopPropagation()}
-                className="absolute right-0 top-8 z-50 py-3 px-4"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  minWidth: "140px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                }}
-              >
-                <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  Theme
-                </p>
-                {([
-                  { value: "dark" as Theme, label: "Dark", icon: <Moon size={13} /> },
-                  { value: "light" as Theme, label: "Light", icon: <Sun size={13} /> },
-                  { value: "sand" as Theme, label: "Sand", icon: <Palette size={13} /> },
-                ]).map(t => (
-                  <button
-                    key={t.value}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      setTheme(t.value);
-                      setShowThemeMenu(false);
-                    }}
-                    className="flex items-center gap-2 w-full text-left py-2 px-2 text-[12px] tracking-wide rounded transition-colors"
-                    style={{
-                      color: theme === t.value ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                      background: theme === t.value ? "hsl(var(--accent))" : "transparent",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--accent))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = theme === t.value ? "hsl(var(--accent))" : "transparent"; e.currentTarget.style.color = theme === t.value ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))"; }}
-                  >
-                    {t.icon}
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="hover:opacity-80" style={{ color: "hsl(var(--muted-foreground))" }}>
+                {theme === "dark" && <Sun size={16} />}
+                {theme === "light" && <Palette size={16} />}
+                {theme === "sand" && <Moon size={16} />}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuLabel>Theme</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as Theme)}>
+                <DropdownMenuRadioItem value="dark">
+                  <span className="flex items-center gap-2"><Moon size={13} />Dark</span>
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="light">
+                  <span className="flex items-center gap-2"><Sun size={13} />Light</span>
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="sand">
+                  <span className="flex items-center gap-2"><Palette size={13} />Sand</span>
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
