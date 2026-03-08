@@ -399,7 +399,7 @@ const Index = () => {
 
   const toggleFavourite = async (product: OfficeProduct) => {
     const newVal = !(product["OFFICE FAVOURITE"]);
-    await supabase
+    await (supabase as any)
       .from("AllFileProducts")
       .update({ "OFFICE FAVOURITE": newVal })
       .eq("PRODUCT NAME", product["PRODUCT NAME"]);
@@ -520,7 +520,7 @@ const Index = () => {
 
   useEffect(() => {
     if (!showNewProductModal) return;
-    supabase
+    (supabase as any)
       .from("AllFileProducts")
       .select("SUPPLIER")
       .then(({ data }) => {
@@ -549,7 +549,7 @@ const Index = () => {
     setNewProductError(null);
     try {
       // Get max id
-      const { data: maxRow } = await supabase
+      const { data: maxRow } = await (supabase as any)
         .from("AllFileProducts")
         .select("id")
         .order("id", { ascending: false })
@@ -579,11 +579,11 @@ const Index = () => {
         "CHIC NAILSPA FAVOURITE": false,
       };
 
-      const { error } = await supabase.from("AllFileProducts").insert([insertData]);
+      const { error } = await (supabase as any).from("AllFileProducts").insert([insertData]);
       if (error) throw error;
 
       // Refresh products
-      const { data: freshProducts } = await supabase.from("AllFileProducts").select("*");
+      const { data: freshProducts } = await (supabase as any).from("AllFileProducts").select("*");
       if (freshProducts) setProducts(freshProducts as OfficeProduct[]);
 
       // Reset form
