@@ -201,7 +201,6 @@ export default function Landing() {
             {/* Settings dropdown */}
             {showSettings && (
               <div
-                onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 z-50 py-4 px-5"
                 style={{
                   background: "hsl(var(--card))",
