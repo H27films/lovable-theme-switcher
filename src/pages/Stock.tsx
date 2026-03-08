@@ -1193,23 +1193,24 @@ function StockInner() {
               onMouseEnter={() => setStockSearchHovered(true)}
               onMouseLeave={() => setStockSearchHovered(false)}
             >
-              {/* Collapsed: just icon */}
+              {/* Collapsed: icon + "Search" label */}
               <div
-                className={`transition-all duration-300 ease-in-out ${stockSearchExpanded ? "opacity-0 pointer-events-none h-0" : "opacity-100 cursor-pointer"}`}
+                className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${stockSearchExpanded ? "opacity-0 pointer-events-none h-0" : "opacity-100 cursor-pointer"}`}
                 onClick={() => { setStockSearchFocused(true); setTimeout(() => stockInputRef.current?.focus(), 50); }}
               >
-                <Search size={22} className="text-foreground" strokeWidth={1.5} />
+                <Search size={18} className="text-foreground" strokeWidth={1.5} />
+                <span className="text-[15px] font-light text-foreground">Search</span>
               </div>
 
               {/* Expanded: input */}
               <div className={`transition-all duration-300 ease-in-out origin-left ${stockSearchExpanded ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none h-0 overflow-hidden"}`}>
                 <div className="flex items-center gap-3 border-b pb-2" style={{ borderColor: borderActive }}>
-                  <Search size={13} style={dim} />
+                  <Search size={15} style={dim} />
                   <input
                     ref={stockInputRef}
                     type="text"
                     className="flex-1 bg-transparent outline-none text-[15px] font-light"
-                    placeholder="Search product..."
+                    placeholder="Search..."
                     value={stockSearch}
                     onChange={e => { setStockSearch(e.target.value); setSelectedProduct(null); setShowStockDropdown(true); }}
                     onFocus={() => { setStockSearchFocused(true); setShowStockDropdown(true); }}
