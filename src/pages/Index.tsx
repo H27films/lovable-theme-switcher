@@ -89,6 +89,7 @@ const Index = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchExpanded = searchHovered || searchFocused || search.length > 0;
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
+  const [filterSupplier, setFilterSupplier] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [filterLowStock, setFilterLowStock] = useState(false);
   const [filterColour, setFilterColour] = useState<"all" | "yes" | "no">("all");
