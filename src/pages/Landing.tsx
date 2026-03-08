@@ -73,36 +73,25 @@ export default function Landing() {
       }}
     >
       <div
-        className="relative overflow-hidden flex items-center justify-between px-10 py-8 rounded-[100px] bg-card border border-border transition-[border-color,transform,box-shadow] duration-300 ease-out group-hover:border-foreground group-hover:scale-[1.02] group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] shadow-[0_2px_10px_-3px_rgba(0,0,0,0.06)]"
+        className="relative overflow-hidden flex items-center justify-between px-10 py-8 rounded-[100px] bg-card border border-border transition-[border-color,transform,box-shadow] duration-300 ease-out group-hover:border-foreground group-hover:scale-[1.03] group-hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] shadow-[0_2px_10px_-3px_rgba(0,0,0,0.06)]"
       >
-        {/* Hover glow effect */}
-        <div
-          className="absolute inset-0 rounded-[100px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{
-            background: "radial-gradient(circle at 30% 50%, hsla(var(--foreground) / 0.03), transparent 70%)",
-          }}
-        />
-
         {/* Left: icon + text */}
-        <div className="flex items-center gap-6 relative z-10">
-          <div
-            className="transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
-            style={{ color: "hsl(var(--foreground))", flexShrink: 0 }}
-          >
+        <div className="flex items-center gap-6">
+          <div style={{ color: "hsl(var(--foreground))", flexShrink: 0 }}>
             {icon}
           </div>
           <div className="text-left">
             <p
-              className="text-[11px] uppercase mb-1 tracking-[0.2em] group-hover:tracking-[0.3em] transition-[letter-spacing] duration-300"
+              className="text-[11px] uppercase mb-1 tracking-[0.2em]"
               style={{ color: "hsl(var(--muted-foreground))" }}
             >
               {label}
             </p>
-            <p className="text-[26px] font-light tracking-tight leading-none mb-1 transition-transform duration-300 group-hover:translate-x-1">
+            <p className="text-[26px] font-light tracking-tight leading-none mb-1">
               {title}
             </p>
             <p
-              className="text-[13px] font-light transition-all duration-300 opacity-70 group-hover:opacity-100 group-hover:translate-x-1"
+              className="text-[13px] font-light"
               style={{ color: "hsl(var(--muted-foreground))" }}
             >
               {subtitle}
@@ -110,9 +99,9 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Right: animated arrow */}
+        {/* Right: arrow */}
         <div
-          className="flex-shrink-0 ml-8 relative z-10 transition-transform duration-300 ease-out group-hover:translate-x-3"
+          className="flex-shrink-0 ml-8"
           style={{ color: "hsl(var(--foreground))" }}
         >
           <svg
