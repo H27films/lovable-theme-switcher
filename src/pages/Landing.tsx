@@ -497,12 +497,6 @@ export default function Landing() {
         </div>
       </div>
 
-      <style>{`
-        @keyframes settingsIn {
-          from { opacity: 0; transform: translateY(-6px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>
   );
 }
