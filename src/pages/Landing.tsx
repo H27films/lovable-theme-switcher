@@ -303,7 +303,7 @@ export default function Landing() {
           <div ref={themeRef} className="relative">
             <button
               onClick={() => { setShowThemeMenu(prev => !prev); setShowFontMenu(false); setShowSettings(false); }}
-              className="transition-all duration-200 hover:scale-125"
+              className="hover:opacity-80"
               style={{ color: showThemeMenu ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
               onMouseLeave={e => { if (!showThemeMenu) e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
