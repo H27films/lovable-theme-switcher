@@ -696,23 +696,45 @@ const Index = () => {
           </div>
 
           {/* ── Search bar ── */}
-          <div ref={searchRef} className="relative mb-8">
-            <div className="flex items-center gap-3 border-b pb-2" style={{ borderColor: borderActive }}>
-              <Search size={13} style={dim} />
-              <input
-                type="text"
-                className="flex-1 bg-transparent outline-none text-[15px] font-light"
-                placeholder="Search product..."
-                value={search}
-                onChange={e => { setSearch(e.target.value); setSelectedProduct(null); setShowDropdown(true); setActiveTab("table"); }}
-                onFocus={() => setShowDropdown(true)}
-                onKeyDown={handleKeyDown}
-              />
+          <div
+            ref={searchRef}
+            className="relative mb-8"
+            onMouseEnter={() => setSearchHovered(true)}
+            onMouseLeave={() => setSearchHovered(false)}
+          >
+            <div
+              className="flex items-center gap-2 cursor-pointer pb-2 relative"
+              onClick={() => { setSearchFocused(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+            >
+              <Search size={18} strokeWidth={1.5} className={`transition-colors duration-300 ${searchHovered || searchExpanded ? "text-muted-foreground" : "text-foreground"}`} />
+              {!searchExpanded && (
+                <span className={`text-[15px] font-light transition-colors duration-300 ${searchHovered ? "text-muted-foreground" : "text-foreground"}`}>Search</span>
+              )}
+              {searchExpanded && (
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="flex-1 bg-transparent outline-none text-[15px] font-light"
+                  placeholder="Search"
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setSelectedProduct(null); setShowDropdown(true); setActiveTab("table"); }}
+                  onFocus={() => { setSearchFocused(true); setShowDropdown(true); }}
+                  onBlur={() => setTimeout(() => { setShowDropdown(false); setSearchFocused(false); }, 150)}
+                  onKeyDown={handleKeyDown}
+                />
+              )}
               {search && (
-                <button onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); }} style={dim}>
+                <button onClick={(e) => { e.stopPropagation(); setSearch(""); setSelectedProduct(null); setShowDropdown(false); }} style={dim}>
                   <X size={13} />
                 </button>
               )}
+              <span
+                className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
+                style={{
+                  background: "hsl(var(--border-active))",
+                  width: searchHovered || searchExpanded ? "100%" : "0%",
+                }}
+              />
             </div>
             {showDropdown && dropdownResults.length > 0 && (
               <div
