@@ -1752,7 +1752,8 @@ export default function StockNurYadi() {
                     <tbody>
                       {/* Recent rows (≤7 days) — shown individually */}
                       {recentRows.map((row, idx) => {
-                        const canReverse = row.DATE === today || row.DATE === yesterdayStr;
+                        const eightDaysAgoStr = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split("T")[0]; })();
+                        const canReverse = row.DATE >= eightDaysAgoStr && row.DATE <= tomorrow;
                         const nextRow = recentRows[idx + 1];
                         const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && olderDates.length > 0);
                         return (
