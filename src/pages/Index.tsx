@@ -388,6 +388,15 @@ const Index = () => {
   const pagedProducts = filteredProducts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const lowStockCount = products.filter(p => checkBelowPar(p["OFFICE BALANCE"], p["PAR"])).length;
 
+  // Get unique matching suppliers
+  const supplierMatches = search.length > 0
+    ? Array.from(new Set(
+        products
+          .map(p => p["SUPPLIER"])
+          .filter((s): s is string => !!s && s.toLowerCase().includes(search.toLowerCase()))
+      )).sort().slice(0, 5)
+    : [];
+
   const dropdownResults = search.length > 0
     ? products
         .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(search.toLowerCase()))
@@ -402,6 +411,8 @@ const Index = () => {
         })
         .slice(0, 30)
     : [];
+
+  const totalDropdownItems = supplierMatches.length + dropdownResults.length;
 
   const toggleFavourite = async (product: OfficeProduct) => {
     const newVal = !(product["OFFICE FAVOURITE"]);
