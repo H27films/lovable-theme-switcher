@@ -91,30 +91,38 @@ export default function SearchBar({ data, onSelect }: SearchBarProps) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Collapsed: just the search icon */}
-      {/* Collapsed: icon + "Search" label */}
       <div
-        className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${expanded ? "opacity-0 pointer-events-none h-0" : "opacity-100 cursor-pointer"}`}
+        className="cursor-pointer pb-2 relative"
         onClick={() => { setFocused(true); setTimeout(() => inputRef.current?.focus(), 50); }}
       >
-        <Search size={18} className="text-foreground" strokeWidth={1.5} />
-        <span className="text-[15px] font-light text-foreground">Search</span>
-      </div>
-
-      {/* Expanded: label + input */}
-      <div className={`transition-all duration-300 ease-in-out origin-left ${expanded ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none h-0 overflow-hidden"}`}>
-        <span className="label-uppercase block mb-2.5 text-xs tracking-[0.2em]">Search Product</span>
-        <input
-          ref={inputRef}
-          type="text"
-          className="minimal-input text-2xl font-light py-3"
-          placeholder="Search..."
-          value={value}
-          onChange={e => { setValue(e.target.value); setOpen(!!e.target.value.trim()); }}
-          onFocus={() => setFocused(true)}
-          onKeyDown={handleKeyDown}
-          aria-autocomplete="list"
-          aria-expanded={open}
+        {/* Collapsed: icon + Search label */}
+        <div className={`flex items-center gap-2 transition-all duration-300 ${expanded ? "hidden" : ""}`}>
+          <Search size={18} strokeWidth={1.5} className={`transition-colors duration-300 ${hovered ? "text-muted-foreground" : "text-foreground"}`} />
+          <span className={`text-[15px] font-light transition-colors duration-300 ${hovered ? "text-muted-foreground" : "text-foreground"}`}>Search</span>
+        </div>
+        {/* Expanded: input */}
+        <div className={`${expanded ? "" : "hidden"}`}>
+          <span className="label-uppercase block mb-2.5 text-xs tracking-[0.2em]">Search Product</span>
+          <input
+            ref={inputRef}
+            type="text"
+            className="minimal-input text-2xl font-light py-3"
+            placeholder="Search..."
+            value={value}
+            onChange={e => { setValue(e.target.value); setOpen(!!e.target.value.trim()); }}
+            onFocus={() => setFocused(true)}
+            onKeyDown={handleKeyDown}
+            aria-autocomplete="list"
+            aria-expanded={open}
+          />
+        </div>
+        {/* Animated underline */}
+        <span
+          className="absolute bottom-0 left-0 h-px transition-all duration-300 ease-out"
+          style={{
+            background: "hsl(var(--border-active))",
+            width: hovered || expanded ? "100%" : "0%",
+          }}
         />
       </div>
 
