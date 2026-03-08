@@ -220,7 +220,8 @@ export default function Landing() {
                     Order Confirmation
                   </span>
                   <button
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       const newVal = !orderConfirmMode;
                       setOrderConfirmMode(newVal);
                       localStorage.setItem("orderConfirmation", String(newVal));
