@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme, type Theme, type Font } from "@/hooks/useTheme";
 import React, { useEffect, useRef, useState } from "react";
-import { Settings, Type, Sun, Moon, Palette } from "lucide-react";
+import { Settings, Sun, Moon, Palette } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -67,7 +67,6 @@ export default function Landing() {
     return () => clearTimeout(t);
   }, []);
 
-  // Subtle parallax mouse tracking
   useEffect(() => {
     const handleMouse = (e: MouseEvent) => {
       if (containerRef.current) {
@@ -88,7 +87,6 @@ export default function Landing() {
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
       
-      {/* Animated background grid dots */}
       <div
         style={{
           position: "absolute",
@@ -101,7 +99,6 @@ export default function Landing() {
           pointerEvents: "none"
         }} />
       
-      {/* Subtle radial glow */}
       <div
         style={{
           position: "absolute",
@@ -115,7 +112,6 @@ export default function Landing() {
           transition: "transform 0.3s ease-out"
         }} />
       
-      {/* Top bar */}
       <div
         className="relative z-10 flex justify-between items-center px-8 py-6 border-b"
         style={{
@@ -176,7 +172,9 @@ export default function Landing() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="transition-colors hover:!text-white data-[state=open]:!text-white focus:outline-none" style={{ color: "hsl(var(--muted-foreground))" }}>
-                <Type size={16} />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+                  <path d="M3 19l5-12 5 12M5.5 14h5M14 19l3.5-7 3.5 7M15.5 16h4" />
+                </svg>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[110px] text-xs">
@@ -193,9 +191,10 @@ export default function Landing() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="transition-colors hover:!text-white data-[state=open]:!text-white focus:outline-none" style={{ color: "hsl(var(--muted-foreground))" }}>
-                {theme === "dark" && <Sun size={16} />}
-                {theme === "light" && <Palette size={16} />}
-                {theme === "sand" && <Moon size={16} />}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                </svg>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[110px] text-xs">
@@ -217,10 +216,8 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 relative z-10">
 
-        {/* Title with staggered animation */}
         <div className="text-center mb-14">
           <h1
             className="text-[42px] font-light tracking-tight"
@@ -249,7 +246,6 @@ export default function Landing() {
             }} />
         </div>
 
-        {/* Cards */}
         <div className="flex flex-col gap-4 w-full max-w-[560px]">
           <LandingCard
             onClick={() => setShowStockChoice((prev) => !prev)}
@@ -267,7 +263,6 @@ export default function Landing() {
             title="Branches"
             subtitle="Track usage, orders & balances" />
 
-          {/* Stock sub-choices */}
           <div
             style={{
               maxHeight: showStockChoice ? "200px" : "0px",
@@ -327,7 +322,6 @@ export default function Landing() {
             subtitle="Manage product pricing & suppliers" />
         </div>
 
-        {/* Bottom floating label */}
         <div
           style={{
             marginTop: "48px",
