@@ -239,7 +239,7 @@ export default function Landing() {
           style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "translateY(0)" : "translateY(20px)",
-            transition: "opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
+            transition: "opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
           }}>
           
           <h1
@@ -255,9 +255,9 @@ export default function Landing() {
           {/* Continuously animated underline */}
           <style>{`
             @keyframes underlinePulse {
-              0%   { width: 25px; }
+              0%   { width: 55px; }
               50%  { width: 270px; }
-              100% { width: 25px; }
+              100% { width: 55px; }
             }
           `}</style>
           <div
