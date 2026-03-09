@@ -710,6 +710,25 @@ const Index = () => {
     const t = setTimeout(() => setMounted(true), 20);
     return () => clearTimeout(t);
   }, []);
+  // ── Scroll direction blur ──
+  const [scrollDir, setScrollDir] = useState<"up" | "down" | null>(null);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      setScrollDir(currentY > lastY ? "down" : "up");
+      lastY = currentY;
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+      scrollTimer.current = setTimeout(() => setScrollDir(null), 150);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    };
+  }, []);
+
   // fade: full animation for elements that don't contain dropdowns
   const fade = (delay: number): React.CSSProperties => ({
     opacity: mounted ? 1 : 0,
@@ -724,6 +743,33 @@ const Index = () => {
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
+
+      {/* ── Scroll direction blur overlays ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: "120px",
+        background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)",
+        backdropFilter: scrollDir === "down" ? "blur(6px)" : "none",
+        WebkitBackdropFilter: scrollDir === "down" ? "blur(6px)" : "none",
+        maskImage: "linear-gradient(to bottom, black 30%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to bottom, black 30%, transparent 100%)",
+        opacity: scrollDir === "down" ? 1 : 0,
+        transition: "opacity 0.2s ease, backdrop-filter 0.2s ease",
+        pointerEvents: "none",
+        zIndex: 50,
+      }} />
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, height: "120px",
+        background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)",
+        backdropFilter: scrollDir === "up" ? "blur(6px)" : "none",
+        WebkitBackdropFilter: scrollDir === "up" ? "blur(6px)" : "none",
+        maskImage: "linear-gradient(to top, black 30%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to top, black 30%, transparent 100%)",
+        opacity: scrollDir === "up" ? 1 : 0,
+        transition: "opacity 0.2s ease, backdrop-filter 0.2s ease",
+        pointerEvents: "none",
+        zIndex: 50,
+      }} />
+
       <div className="max-w-[900px] mx-auto px-5">
 
         {/* ── Top bar ── */}
