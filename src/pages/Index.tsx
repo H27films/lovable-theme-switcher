@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, Star, Search, Building2, RefreshCw } from "lucide-react";
+import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, Star, Search, Building2, RefreshCw, Upload } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -1842,7 +1842,7 @@ const Index = () => {
                   disabled={importingCSV}
                   onChange={handleImportCSV}
                 />
-                {importingCSV ? "Importing..." : "Import CSV"}
+                <Upload size={13} />{importingCSV ? "Importing..." : "Import CSV"}
               </label>
               {csvImportResult && (
                 <p className="mt-2 text-[12px]" style={{ color: csvImportResult.startsWith("✓") ? "hsl(var(--foreground))" : "hsl(var(--destructive))" }}>
