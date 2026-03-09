@@ -247,7 +247,7 @@ export default function Landing() {
             style={{
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0) scale(1)" : "translateY(10px) scale(0.98)",
-              transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s"
+              transition: "all 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.45s"
             }}>
             
             Product Database
