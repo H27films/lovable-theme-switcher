@@ -379,6 +379,18 @@ function StockInner() {
   const [editingPendingQty, setEditingPendingQty] = useState("");
 
   const [stockSearch, setStockSearch] = useState("");
+
+  // ── Page entrance animation ──
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 20);
+    return () => clearTimeout(t);
+  }, []);
+  const fade = (delay: number): React.CSSProperties => ({
+    opacity: mounted ? 1 : 0,
+    transform: mounted ? "translateY(0)" : "translateY(12px)",
+    transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
+  });
   const [selectedProduct, setSelectedProduct] = useState<AllFileProduct | null>(null);
   const [selectedActivityProduct, setSelectedActivityProduct] = useState<string | null>(null);
   const [showStockDropdown, setShowStockDropdown] = useState(false);
@@ -1117,7 +1129,7 @@ function StockInner() {
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
       <div className="max-w-[900px] mx-auto px-5">
         {/* Top bar */}
-        <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border }}>
+        <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border, ...fade(0) }}>
           <div className="flex items-center gap-4">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
             <button
@@ -1156,7 +1168,7 @@ function StockInner() {
 
           {/* ── SECTION 1: Boudoir Stock ── */}
           <div className="mb-12">
-            <div className="mb-6">
+            <div className="mb-6" style={fade(90)}>
               <div className="flex items-end justify-between">
                 <div>
                 <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
@@ -1190,6 +1202,7 @@ function StockInner() {
             {/* Stock search bar with hover underline */}
             <div
               className="relative mb-6"
+              style={fade(170)}
               onMouseEnter={() => setStockSearchHovered(true)}
               onMouseLeave={() => setStockSearchHovered(false)}
             >
@@ -1345,7 +1358,7 @@ function StockInner() {
           </div>
 
           {/* ── SECTION 2: Mode Toggle ── */}
-          <div className="mb-12">
+          <div className="mb-12" style={fade(260)}>
 
             {/* Tab buttons */}
             <div className="flex items-center border-b mb-8" style={{ borderColor: border }}>
@@ -1780,7 +1793,7 @@ function StockInner() {
           {/* ── SECTION 3: Recent Activity (Daily Usage mode only) ── */}
           {mode === "usage" && (
             <div>
-              <div className="mb-5">
+              <div className="mb-5" style={fade(380)}>
                 <div className="flex items-center gap-5">
                   <button
                     type="button"
