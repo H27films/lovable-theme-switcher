@@ -38,6 +38,24 @@ interface AllFileLogRow {
   "OFFICE BALANCE"?: number | null;
 }
 
+interface EntryProduct {
+  id: number;
+  "PRODUCT NAME": string;
+  "SUPPLIER": string | null;
+  "OFFICE BALANCE": number | null;
+  "BOUDOIR BALANCE": number | null;
+  "CHIC NAILSPA BALANCE": number | null;
+  "NUR YADI BALANCE": number | null;
+  "OFFICE FAVOURITE": boolean | null;
+}
+
+interface EntryItem {
+  id: number;
+  productName: string;
+  type: string;
+  qty: number;
+}
+
 const fmtActivityDate = (d: string) => {
   const dt = new Date(d + "T00:00:00");
   return dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -65,6 +83,62 @@ const checkBelowPar = (balance: number | null, par: number | null): boolean => {
 };
 
 const PAGE_SIZE = 200;
+
+function EntryTypeDropdown({ value, options, onChange }: {
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const border = "hsl(var(--border))";
+  const borderActive = "hsl(var(--border-active))";
+  const cardBg = "hsl(var(--card))";
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 h-[28px] px-3 text-[11px] tracking-wider uppercase transition-colors"
+        style={{ border: `1px solid ${borderActive}`, background: cardBg, color: "hsl(var(--foreground))", borderRadius: "5px" }}
+      >
+        {value}
+        <ChevronDown size={10} />
+      </button>
+      {open && (
+        <div
+          className="absolute top-full left-0 z-50 border mt-0.5"
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "130px", borderRadius: "5px" }}
+        >
+          {options.map((opt, i) => (
+            <div
+              key={opt}
+              className="px-3 py-2 text-[11px] tracking-wider uppercase cursor-pointer transition-colors"
+              style={{
+                borderBottom: i < options.length - 1 ? `1px solid ${border}` : "none",
+                color: value === opt ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                background: value === opt ? cardBg : "transparent",
+              }}
+              onMouseDown={() => { onChange(opt); setOpen(false); }}
+              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+              onMouseLeave={e => (e.currentTarget.style.color = value === opt ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const Index = () => {
   const { theme, toggle, font, cycleFont } = useTheme();
@@ -101,7 +175,7 @@ const Index = () => {
   const [activityLoading, setActivityLoading] = useState(false);
 
   // Tab toggle: activity vs table
-  const [activeTab, setActiveTab] = useState<"table" | "branches">("branches");
+  const [activeTab, setActiveTab] = useState<"table" | "branches" | "entry">("branches");
 
   // All-orders recent activity (main page, 60 days)
   const [allActivity, setAllActivity] = useState<AllFileLogRow[]>([]);
@@ -113,6 +187,20 @@ const Index = () => {
   const [branchActivityLoading, setBranchActivityLoading] = useState(false);
   const [expandedBranchDates, setExpandedBranchDates] = useState<Set<string>>(new Set());
   const [selectedBranchProduct, setSelectedBranchProduct] = useState<string | null>(null);
+
+  // Entry tab state
+  const [entryBranch, setEntryBranch] = useState<"Office" | "Boudoir" | "Chic Nailspa" | "Nur Yadi">("Boudoir");
+  const [entryType, setEntryType] = useState<"Usage" | "Order">("Usage");
+  const [entryProductsRaw, setEntryProductsRaw] = useState<EntryProduct[]>([]);
+  const [entrySearch, setEntrySearch] = useState("");
+  const [entryShowDropdown, setEntryShowDropdown] = useState(false);
+  const [entryActiveIndex, setEntryActiveIndex] = useState(-1);
+  const [entryItems, setEntryItems] = useState<EntryItem[]>([]);
+  const [entrySubmitting, setEntrySubmitting] = useState(false);
+  const [entrySuccess, setEntrySuccess] = useState(false);
+  const [entryError, setEntryError] = useState<string | null>(null);
+  const entrySearchRef = useRef<HTMLDivElement>(null);
+  const entryInputRef = useRef<HTMLInputElement>(null);
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
@@ -155,6 +243,129 @@ const Index = () => {
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
   const [showNewProductSupplierDropdown, setShowNewProductSupplierDropdown] = useState(false);
   const newProductSupplierRef = useRef<HTMLDivElement>(null);
+
+  // ── Entry tab helpers ──
+  const entryBalanceCol = (branch: string): string => {
+    if (branch === "Office") return "OFFICE BALANCE";
+    if (branch === "Boudoir") return "BOUDOIR BALANCE";
+    if (branch === "Chic Nailspa") return "CHIC NAILSPA BALANCE";
+    return "NUR YADI BALANCE";
+  };
+
+  const entryGRNPrefix = (branch: string) => {
+    if (branch === "Office") return "OFFICE";
+    if (branch === "Boudoir") return "BOU";
+    if (branch === "Chic Nailspa") return "CHIC";
+    return "NUR";
+  };
+
+  const entryUsageTypes = (branch: string) => {
+    if (branch === "Office") return ["Expired", "Personal Usage"];
+    return ["Salon Use", "Customer", "Staff"];
+  };
+
+  const entryDropdownResults = entrySearch.length > 0 ? (() => {
+    const lower = entrySearch.toLowerCase();
+    if (entryBranch === "Office" && entryType === "Order") {
+      return entryProductsRaw
+        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(lower))
+        .slice(0, 15);
+    } else {
+      const seen = new Set<string>();
+      const results: EntryProduct[] = [];
+      for (const p of entryProductsRaw) {
+        if (p["PRODUCT NAME"]?.toLowerCase().includes(lower) && !seen.has(p["PRODUCT NAME"])) {
+          seen.add(p["PRODUCT NAME"]);
+          results.push(p);
+          if (results.length >= 15) break;
+        }
+      }
+      return results;
+    }
+  })() : [];
+
+  const addEntryItem = (p: EntryProduct) => {
+    const defaultType = entryUsageTypes(entryBranch)[0];
+    setEntryItems(prev => [...prev, { id: Date.now(), productName: p["PRODUCT NAME"], type: defaultType, qty: 1 }]);
+    setEntrySearch("");
+    setEntryShowDropdown(false);
+    setEntryActiveIndex(-1);
+    setTimeout(() => entryInputRef.current?.focus(), 0);
+  };
+
+  const handleEntryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!entryShowDropdown || entryDropdownResults.length === 0) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setEntryActiveIndex(i => (i + 1) % entryDropdownResults.length); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setEntryActiveIndex(i => (i <= 0 ? entryDropdownResults.length - 1 : i - 1)); }
+    else if (e.key === "Enter") {
+      e.preventDefault();
+      const target = entryActiveIndex >= 0 ? entryDropdownResults[entryActiveIndex] : entryDropdownResults[0];
+      if (target) addEntryItem(target);
+    } else if (e.key === "Escape") { setEntryShowDropdown(false); setEntryActiveIndex(-1); }
+  };
+
+  const handleEntrySubmit = async () => {
+    if (!entryItems.length) return;
+    setEntrySubmitting(true);
+    setEntryError(null);
+    const today = new Date().toISOString().split("T")[0];
+    const dd = today.slice(8, 10), mm = today.slice(5, 7), yy = today.slice(2, 4);
+    const grn = entryType === "Order" ? `${entryGRNPrefix(entryBranch)} ${dd}${mm}${yy}` : null;
+    const balCol = entryBalanceCol(entryBranch);
+    try {
+      for (const item of entryItems) {
+        if (!item.productName || item.qty <= 0) continue;
+        const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
+        if (!product) continue;
+        if (entryType === "Usage") {
+          const currentBalance = Number((product as any)[balCol] ?? 0);
+          const endingBalance = currentBalance - Number(item.qty);
+          const currentOfficeBalance = Number(product["OFFICE BALANCE"] ?? 0);
+          const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+            "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": entryBranch,
+            "SUPPLIER": null, "TYPE": item.type,
+            "STARTING BALANCE": currentBalance, "QTY": -Number(item.qty), "ENDING BALANCE": endingBalance,
+            "GRN": null,
+            "OFFICE BALANCE": entryBranch === "Office" ? endingBalance : currentOfficeBalance,
+          });
+          if (logErr) { setEntryError(logErr.message || "Log write failed"); setEntrySubmitting(false); return; }
+          await (supabase as any).from("AllFileProducts").update({ [balCol]: endingBalance }).eq("PRODUCT NAME", item.productName);
+        } else {
+          if (entryBranch === "Office") {
+            const currentBalance = Number(product["OFFICE BALANCE"] ?? 0);
+            const endingBalance = currentBalance + Number(item.qty);
+            const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+              "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": "Office",
+              "SUPPLIER": product["SUPPLIER"] ?? null, "TYPE": "Order",
+              "STARTING BALANCE": currentBalance, "QTY": Number(item.qty), "ENDING BALANCE": endingBalance,
+              "GRN": grn, "OFFICE BALANCE": endingBalance,
+            });
+            if (logErr) { setEntryError(logErr.message || "Log write failed"); setEntrySubmitting(false); return; }
+            await (supabase as any).from("AllFileProducts").update({ "OFFICE BALANCE": endingBalance }).eq("PRODUCT NAME", item.productName);
+          } else {
+            const currentBranchBalance = Number((product as any)[balCol] ?? 0);
+            const endingBranchBalance = currentBranchBalance + Number(item.qty);
+            const currentOfficeBalance = Number(product["OFFICE BALANCE"] ?? 0);
+            const endingOfficeBalance = currentOfficeBalance - Number(item.qty);
+            const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+              "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": entryBranch,
+              "SUPPLIER": "Office", "TYPE": "Order",
+              "STARTING BALANCE": currentBranchBalance, "QTY": Number(item.qty), "ENDING BALANCE": endingBranchBalance,
+              "GRN": grn, "OFFICE BALANCE": endingOfficeBalance,
+            });
+            if (logErr) { setEntryError(logErr.message || "Log write failed"); setEntrySubmitting(false); return; }
+            await (supabase as any).from("AllFileProducts").update({ [balCol]: endingBranchBalance }).eq("PRODUCT NAME", item.productName);
+            await (supabase as any).from("AllFileProducts").update({ "OFFICE BALANCE": endingOfficeBalance }).eq("PRODUCT NAME", item.productName);
+          }
+        }
+      }
+      await fetchEntryProducts();
+      setEntryItems([]);
+      setEntrySuccess(true);
+      setTimeout(() => setEntrySuccess(false), 3000);
+    } catch (err) { console.error("Entry submit error:", err); setEntryError("Submit failed"); }
+    setEntrySubmitting(false);
+  };
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
   const border = "hsl(var(--border))";
@@ -520,6 +731,29 @@ const Index = () => {
       if (orderSearchRef.current && !orderSearchRef.current.contains(e.target as Node)) {
         setShowOrderDropdown(false);
         setOrderActiveIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  // ── Entry tab: fetch all products ──
+  const fetchEntryProducts = useCallback(async () => {
+    const { data } = await (supabase as any)
+      .from("AllFileProducts")
+      .select("id, \"PRODUCT NAME\", \"SUPPLIER\", \"OFFICE BALANCE\", \"BOUDOIR BALANCE\", \"CHIC NAILSPA BALANCE\", \"NUR YADI BALANCE\", \"OFFICE FAVOURITE\"")
+      .order("PRODUCT NAME", { ascending: true });
+    setEntryProductsRaw(data ?? []);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "entry") fetchEntryProducts();
+  }, [activeTab, fetchEntryProducts]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (entrySearchRef.current && !entrySearchRef.current.contains(e.target as Node)) {
+        setEntryShowDropdown(false);
+        setEntryActiveIndex(-1);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -972,7 +1206,7 @@ const Index = () => {
 
           {/* ── Tab switcher ── */}
           <div className="flex items-center gap-8 mb-8 border-b" style={{ borderColor: border, ...fade(260) }}>
-            {(["branches", "table"] as const).map(tab => (
+            {(["branches", "table", "entry"] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -982,7 +1216,7 @@ const Index = () => {
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
               >
-                {tab === "branches" ? "Branches" : "Table"}
+                {tab === "branches" ? "Branches" : tab === "table" ? "Table" : "Entry"}
                 {activeTab === tab && (
                   <span className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "hsl(var(--foreground))" }} />
                 )}
@@ -1714,6 +1948,189 @@ const Index = () => {
             </>
           )}
 
+          {activeTab === "entry" && (
+            <div>
+              {/* ── Branch + Type selectors ── */}
+              <div className="flex items-center flex-wrap gap-3 mb-8">
+                <div className="flex items-center gap-2">
+                  {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
+                    <button
+                      key={branch}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => { setEntryBranch(branch); setEntryItems([]); setEntrySearch(""); }}
+                      className="text-[11px] tracking-[0.12em] uppercase px-3 py-1.5 transition-colors"
+                      style={{
+                        borderRadius: "5px",
+                        border: `1px solid ${entryBranch === branch ? "hsl(var(--foreground))" : border}`,
+                        background: entryBranch === branch ? "hsl(var(--foreground))" : "transparent",
+                        color: entryBranch === branch ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                      }}
+                    >
+                      {branch}
+                    </button>
+                  ))}
+                </div>
+                <div className="w-px h-5" style={{ background: border }} />
+                <div className="flex items-center gap-2">
+                  {(["Usage", "Order"] as const).map(type => (
+                    <button
+                      key={type}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => { setEntryType(type); setEntryItems([]); setEntrySearch(""); }}
+                      className="text-[11px] tracking-[0.12em] uppercase px-3 py-1.5 transition-colors"
+                      style={{
+                        borderRadius: "5px",
+                        border: `1px solid ${entryType === type ? "hsl(var(--foreground))" : border}`,
+                        background: entryType === type ? "hsl(var(--foreground))" : "transparent",
+                        color: entryType === type ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                      }}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Search bar ── */}
+              <div ref={entrySearchRef} className="relative mb-6">
+                <p className="text-[14.5px] tracking-wider uppercase mb-2" style={dim}>
+                  {entryType === "Usage" ? `${entryBranch} Usage` : `${entryBranch} Order`}
+                </p>
+                <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
+                  <input
+                    ref={entryInputRef}
+                    type="text"
+                    className="flex-1 bg-transparent outline-none text-[14.5px] font-light"
+                    placeholder="Search to add..."
+                    value={entrySearch}
+                    onChange={e => { setEntrySearch(e.target.value); setEntryShowDropdown(true); setEntryActiveIndex(-1); }}
+                    onFocus={() => entrySearch && setEntryShowDropdown(true)}
+                    onKeyDown={handleEntryKeyDown}
+                    style={{ color: "hsl(var(--foreground))" }}
+                  />
+                  {entrySearch && (
+                    <button onClick={() => { setEntrySearch(""); setEntryShowDropdown(false); }} style={dim}>
+                      <X size={12} />
+                    </button>
+                  )}
+                  <Plus size={12} style={dim} />
+                </div>
+                {entryShowDropdown && entryDropdownResults.length > 0 && (
+                  <div
+                    className="absolute top-full left-0 right-0 z-50 border max-h-[220px] overflow-y-auto scrollbar-thin"
+                    style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+                  >
+                    {entryDropdownResults.map((p, i) => {
+                      const balCol = entryBalanceCol(entryBranch);
+                      const balance = (p as any)[balCol];
+                      return (
+                        <div
+                          key={p.id}
+                          className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
+                          style={{ borderBottom: `1px solid ${border}`, background: i === entryActiveIndex ? cardBg : "transparent" }}
+                          onMouseDown={() => addEntryItem(p)}
+                          onMouseEnter={() => setEntryActiveIndex(i)}
+                        >
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                              <span className="text-[14.5px] font-light" style={{ color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</span>
+                            </div>
+                            {entryBranch === "Office" && entryType === "Order" && p["SUPPLIER"] && (
+                              <span className="text-[13px]" style={dim}>{p["SUPPLIER"]}</span>
+                            )}
+                          </div>
+                          <span className="text-[14.5px] font-light" style={dim}>{balance ?? "—"}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Items table ── */}
+              {entryItems.length > 0 ? (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                      {entryItems.length} item{entryItems.length !== 1 ? "s" : ""}
+                    </p>
+                    <button
+                      onClick={() => setEntryItems([])}
+                      className="text-[11px] tracking-wider uppercase px-2 py-0.5 rounded transition-colors"
+                      style={{ color: "hsl(var(--muted-foreground))", border: `1px solid ${border}` }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <table className="w-full border-collapse mb-6">
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${border}` }}>
+                        <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "32px" }}>#</th>
+                        <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={dim}>Product</th>
+                        {entryType === "Usage" && (
+                          <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "160px" }}>Type</th>
+                        )}
+                        <th className="text-center pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "80px" }}>Qty</th>
+                        <th style={{ width: "32px" }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entryItems.map((item, idx) => (
+                        <tr key={item.id} style={{ borderBottom: `1px solid ${border}` }}>
+                          <td className="py-3 text-[12px] font-light" style={dim}>{idx + 1}</td>
+                          <td className="py-3 text-[13px] font-light pr-4" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</td>
+                          {entryType === "Usage" && (
+                            <td className="py-3 pr-4">
+                              <EntryTypeDropdown
+                                value={item.type}
+                                options={entryUsageTypes(entryBranch)}
+                                onChange={type => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, type } : i))}
+                              />
+                            </td>
+                          )}
+                          <td className="py-3 text-center">
+                            <input
+                              type="number"
+                              min={1}
+                              value={item.qty}
+                              onChange={e => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, Number(e.target.value)) } : i))}
+                              className="w-16 text-center bg-transparent border-b text-[13px] font-light outline-none"
+                              style={{ borderColor: border, color: "hsl(var(--foreground))" }}
+                            />
+                          </td>
+                          <td className="py-3 text-right">
+                            <button onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}>
+                              <X size={13} style={dim} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Submit row */}
+                  <div className="flex items-center justify-between pt-2">
+                    <div>
+                      {entryError && <span className="text-[12px]" style={{ color: "hsl(var(--red))" }}>{entryError}</span>}
+                      {entrySuccess && <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>✓ Submitted</span>}
+                    </div>
+                    <button
+                      onClick={handleEntrySubmit}
+                      disabled={entrySubmitting}
+                      className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
+                      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
+                    >
+                      {entrySubmitting ? "Submitting..." : "Submit"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[13px] font-light" style={dim}>No items added yet</p>
+              )}
+            </div>
+          )}
+
           </>)}
         </div>
       </div>
@@ -2333,3 +2750,4 @@ const Index = () => {
 };
 
 export default Index;
+
