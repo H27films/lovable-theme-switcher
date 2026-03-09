@@ -50,9 +50,9 @@ const LandingCard = React.memo(({
         </div>
       </div>
       <div className="flex-shrink-0 ml-8 transition-all duration-300 ease-out group-hover:translate-x-2" style={{ color: "hsl(var(--foreground))" }}>
-        <svg className="w-[44px] group-hover:w-[56px] transition-all duration-300 ease-out" height="20" viewBox="0 0 52 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="0" y1="10" x2="44" y2="10" />
-          <path d="M34 2l10 8-10 8" />
+        <svg className="w-[56px] group-hover:w-[80px] transition-all duration-300 ease-out" height="20" viewBox="0 0 72 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="0" y1="10" x2="64" y2="10" />
+          <path d="M54 2l10 8-10 8" />
         </svg>
       </div>
     </div>
