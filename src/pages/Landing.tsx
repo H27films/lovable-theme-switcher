@@ -290,7 +290,8 @@ export default function Landing() {
             style={{
               maxHeight: showStockChoice ? "200px" : "0px",
               transition: "max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-              overflow: "hidden"
+              overflow: "hidden",
+              padding: "4px 4px"
             }}>
             
             <div className="flex gap-3 w-full">
