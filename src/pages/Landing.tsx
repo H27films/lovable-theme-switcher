@@ -205,7 +205,7 @@ export default function Landing() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="hover:opacity-80" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <button className="hover:opacity-80 transition-colors data-[state=open]:text-white" style={{ color: "hsl(var(--muted-foreground))" }}>
                 {theme === "dark" && <Sun size={16} />}
                 {theme === "light" && <Palette size={16} />}
                 {theme === "sand" && <Moon size={16} />}
