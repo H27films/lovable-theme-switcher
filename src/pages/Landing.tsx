@@ -140,7 +140,7 @@ export default function Landing() {
           className="text-[11px] tracking-[0.2em] uppercase"
           style={{ color: "hsl(var(--foreground))" }}>
           
-          Branches
+          Nail Salon
         </span>
         <div className="flex items-center gap-4">
           <DropdownMenu>
@@ -242,16 +242,6 @@ export default function Landing() {
             transition: "opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
           }}>
           
-          <p
-            className="text-[11px] tracking-[0.25em] uppercase mb-3"
-            style={{
-              color: "hsl(var(--muted-foreground))",
-              opacity: visible ? 1 : 0,
-              transition: "opacity 0.6s ease 0.3s"
-            }}>
-            
-            Product Database
-          </p>
           <h1
             className="text-[42px] font-light tracking-tight"
             style={{
@@ -260,17 +250,24 @@ export default function Landing() {
               transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s"
             }}>
             
-            Select a section
+            Product Database
           </h1>
-          {/* Animated underline */}
+          {/* Continuously animated underline */}
+          <style>{`
+            @keyframes underlinePulse {
+              0%   { width: 30px; }
+              50%  { width: 90px; }
+              100% { width: 30px; }
+            }
+          `}</style>
           <div
             style={{
-              width: visible ? "60px" : "0px",
               height: "1px",
               background: "hsl(var(--foreground))",
               margin: "12px auto 0",
-              transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s",
-              opacity: 0.3
+              opacity: visible ? 0.3 : 0,
+              transition: "opacity 0.8s ease 0.6s",
+              animation: visible ? "underlinePulse 3s ease-in-out infinite" : "none"
             }} />
           
         </div>
@@ -290,7 +287,7 @@ export default function Landing() {
               </svg>
             }
             label="Inventory"
-            title="Branch Stock"
+            title="Branches"
             subtitle="Track usage, orders & balances" />
           
 
@@ -353,7 +350,7 @@ export default function Landing() {
               </svg>
             }
             label="Prices & Suppliers"
-            title="Office Database"
+            title="Office"
             subtitle="Manage product pricing & suppliers" />
           
         </div>
