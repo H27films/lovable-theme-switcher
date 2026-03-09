@@ -194,6 +194,8 @@ const Index = () => {
   const [entryProductsRaw, setEntryProductsRaw] = useState<EntryProduct[]>([]);
   const [entrySearch, setEntrySearch] = useState("");
   const [entryShowDropdown, setEntryShowDropdown] = useState(false);
+  const [entryHoveredBranch, setEntryHoveredBranch] = useState<string|null>(null);
+  const [entryHoveredType, setEntryHoveredType] = useState<string|null>(null);
   const [entryActiveIndex, setEntryActiveIndex] = useState(-1);
   const [entryItems, setEntryItems] = useState<EntryItem[]>([]);
   const [entrySubmitting, setEntrySubmitting] = useState(false);
@@ -1953,38 +1955,41 @@ const Index = () => {
           {activeTab === "entry" && (
             <div>
               {/* ── Branch + Type selectors ── */}
-              <div className="flex items-center flex-wrap gap-3 mb-8">
+              <div className="flex flex-col gap-2 mb-8">
                 <div className="flex items-center gap-2">
                   {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
                     <button
                       key={branch}
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => { setEntryBranch(branch); setEntryItems([]); setEntrySearch(""); }}
+                      onMouseEnter={() => setEntryHoveredBranch(branch)}
+                      onMouseLeave={() => setEntryHoveredBranch(null)}
                       className="text-[11px] tracking-[0.12em] uppercase px-3 py-1.5 transition-colors"
                       style={{
                         borderRadius: "5px",
-                        border: `1px solid ${entryBranch === branch ? "hsl(var(--foreground))" : border}`,
+                        border: `1px solid ${entryBranch === branch || entryHoveredBranch === branch ? "hsl(var(--foreground))" : border}`,
                         background: entryBranch === branch ? "hsl(var(--foreground))" : "transparent",
-                        color: entryBranch === branch ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                        color: entryBranch === branch ? "hsl(var(--background))" : entryHoveredBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                       }}
                     >
                       {branch}
                     </button>
                   ))}
                 </div>
-                <div className="w-px h-5" style={{ background: border }} />
                 <div className="flex items-center gap-2">
                   {(["Usage", "Order"] as const).map(type => (
                     <button
                       key={type}
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => { setEntryType(type); setEntryItems([]); setEntrySearch(""); }}
+                      onMouseEnter={() => setEntryHoveredType(type)}
+                      onMouseLeave={() => setEntryHoveredType(null)}
                       className="text-[11px] tracking-[0.12em] uppercase px-3 py-1.5 transition-colors"
                       style={{
                         borderRadius: "5px",
-                        border: `1px solid ${entryType === type ? "hsl(var(--foreground))" : border}`,
+                        border: `1px solid ${entryType === type || entryHoveredType === type ? "hsl(var(--foreground))" : border}`,
                         background: entryType === type ? "hsl(var(--foreground))" : "transparent",
-                        color: entryType === type ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                        color: entryType === type ? "hsl(var(--background))" : entryHoveredType === type ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                       }}
                     >
                       {type}
