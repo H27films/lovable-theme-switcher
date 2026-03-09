@@ -201,6 +201,7 @@ const Index = () => {
   const [entrySubmitting, setEntrySubmitting] = useState(false);
   const [entrySuccessMsg, setEntrySuccessMsg] = useState<string | null>(null);
   const [entryError, setEntryError] = useState<string | null>(null);
+  const [entryPendingGRN, setEntryPendingGRN] = useState<string | null>(null);
   const entrySearchRef = useRef<HTMLDivElement>(null);
   const entryInputRef = useRef<HTMLInputElement>(null);
   const entryDropdownRef = useRef<HTMLDivElement>(null);
@@ -308,6 +309,7 @@ const Index = () => {
   };
 
   const handleEntrySubmit = async () => {
+    if (entryPendingGRN) return; // already staged — use Confirm Order button
     if (!entryItems.length) return;
     setEntrySubmitting(true);
     setEntryError(null);
@@ -370,10 +372,7 @@ const Index = () => {
           });
           if (reqErr) { setEntryError(reqErr.message || "Submit failed"); setEntrySubmitting(false); return; }
         }
-        await fetchEntryProducts();
-        setEntryItems([]);
-        setEntrySuccessMsg(`✓ Order sent to ${entryBranch} · Awaiting confirmation`);
-        setTimeout(() => setEntrySuccessMsg(null), 4000);
+        setEntryPendingGRN(grn);
         setEntrySubmitting(false);
         return;
       }
@@ -382,6 +381,76 @@ const Index = () => {
       setEntrySuccessMsg("✓ Logged");
       setTimeout(() => setEntrySuccessMsg(null), 3000);
     } catch (err) { console.error("Entry submit error:", err); setEntryError("Submit failed"); }
+    setEntrySubmitting(false);
+  };
+
+  const handleEntryEditOrder = async () => {
+    if (!entryPendingGRN) return;
+    await (supabase as any).from("AllFileLog")
+      .delete()
+      .eq("BRANCH", entryBranch)
+      .eq("TYPE", "Order Request")
+      .eq("GRN", entryPendingGRN);
+    setEntryPendingGRN(null);
+  };
+
+  const handleEntryConfirmOrder = async () => {
+    if (!entryPendingGRN) return;
+    setEntrySubmitting(true);
+    setEntryError(null);
+    try {
+      const balCol = entryBalanceCol(entryBranch);
+      // Fetch the staged Order Request rows
+      const { data: reqRows, error: fetchErr } = await (supabase as any)
+        .from("AllFileLog")
+        .select("*")
+        .eq("BRANCH", entryBranch)
+        .eq("TYPE", "Order Request")
+        .eq("GRN", entryPendingGRN);
+      if (fetchErr || !reqRows?.length) {
+        setEntryError("Could not find pending order — it may have already been confirmed.");
+        setEntrySubmitting(false);
+        return;
+      }
+      // Delete the Order Request rows
+      await (supabase as any).from("AllFileLog")
+        .delete()
+        .eq("BRANCH", entryBranch)
+        .eq("TYPE", "Order Request")
+        .eq("GRN", entryPendingGRN);
+      // Write proper Order entries + update balances
+      for (const row of reqRows) {
+        const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === row["PRODUCT NAME"]);
+        const currentOfficeBalance = Number((product as any)?.["OFFICE BALANCE"] ?? 0);
+        const endingOfficeBalance = currentOfficeBalance - Number(row["QTY"] ?? 0);
+        await (supabase as any).from("AllFileLog").insert({
+          "DATE": row["DATE"],
+          "PRODUCT NAME": row["PRODUCT NAME"],
+          "BRANCH": entryBranch,
+          "SUPPLIER": "Office",
+          "TYPE": "Order",
+          "STARTING BALANCE": row["STARTING BALANCE"],
+          "QTY": row["QTY"],
+          "ENDING BALANCE": row["ENDING BALANCE"],
+          "GRN": entryPendingGRN,
+          "OFFICE BALANCE": endingOfficeBalance,
+        });
+        await (supabase as any).from("AllFileProducts")
+          .update({ [balCol]: row["ENDING BALANCE"] })
+          .eq("PRODUCT NAME", row["PRODUCT NAME"]);
+        await (supabase as any).from("AllFileProducts")
+          .update({ "OFFICE BALANCE": endingOfficeBalance })
+          .eq("PRODUCT NAME", row["PRODUCT NAME"]);
+      }
+      await fetchEntryProducts();
+      setEntryItems([]);
+      setEntryPendingGRN(null);
+      setEntrySuccessMsg("✓ Order confirmed");
+      setTimeout(() => setEntrySuccessMsg(null), 3000);
+    } catch (err) {
+      console.error("Entry confirm order error:", err);
+      setEntryError("Confirm failed");
+    }
     setEntrySubmitting(false);
   };
 
@@ -2162,8 +2231,35 @@ const Index = () => {
                     <div>
                       {entryError && <span className="text-[12px]" style={{ color: "hsl(var(--red))" }}>{entryError}</span>}
                       {entrySuccessMsg && <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{entrySuccessMsg}</span>}
+                      {entryPendingGRN && !entryError && !entrySuccessMsg && (
+                        <span className="text-[11px] tracking-wider uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>
+                          Pending · {entryPendingGRN}
+                        </span>
+                      )}
                     </div>
-                    <button
+                    {entryPendingGRN && entryType === "Order" && entryBranch !== "Office" ? (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleEntryEditOrder}
+                          disabled={entrySubmitting}
+                          className="text-[12px] tracking-[0.12em] uppercase px-4 py-2 transition-opacity"
+                          style={{ border: "1px solid hsl(var(--border))", borderRadius: "5px", color: "hsl(var(--muted-foreground))", opacity: entrySubmitting ? 0.4 : 1 }}
+                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={handleEntryConfirmOrder}
+                          disabled={entrySubmitting}
+                          className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
+                          style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
+                        >
+                          {entrySubmitting ? "Confirming..." : "Confirm Order"}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
                         onClick={handleEntrySubmit}
                         disabled={entrySubmitting}
                         className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
@@ -2171,6 +2267,7 @@ const Index = () => {
                       >
                         {entrySubmitting ? "Submitting..." : "Submit"}
                       </button>
+                    )}
                   </div>
                 </div>
               ) : (
