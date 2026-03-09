@@ -301,7 +301,7 @@ export default function Landing() {
               opacity: showStockChoice ? 1 : 0,
               transform: showStockChoice ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.97)",
               transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-              overflow: "hidden",
+              overflow: showStockChoice ? "visible" : "hidden",
             }}
           >
             <div className="flex gap-3 w-full">
