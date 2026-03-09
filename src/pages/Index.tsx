@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -702,6 +702,7 @@ const Index = () => {
     } finally {
       setSavingNewProduct(false);
     }
+  };
 
   // ── Page entrance animation ──
   const [mounted, setMounted] = useState(false);
@@ -714,7 +715,6 @@ const Index = () => {
     transform: mounted ? "translateY(0)" : "translateY(12px)",
     transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
   });
-  };
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
