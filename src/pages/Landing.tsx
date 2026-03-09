@@ -295,17 +295,15 @@ export default function Landing() {
           <div
             style={{
               maxHeight: showStockChoice ? "200px" : "0px",
-              opacity: showStockChoice ? 1 : 0,
-              transform: showStockChoice ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.97)",
-              transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-              overflow: showStockChoice ? "visible" : "hidden"
+              transition: "max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+              overflow: "hidden"
             }}>
             
             <div className="flex gap-3 w-full">
               {[
-              { name: "Boudoir", route: "/stock", delay: "0ms" },
-              { name: "Chic Nailspa", route: "/stockchicnailspa", delay: "60ms" },
-              { name: "Nur Yadi", route: "/stocknuryadi", delay: "120ms" }].
+              { name: "Boudoir", route: "/stock" },
+              { name: "Chic Nailspa", route: "/stockchicnailspa" },
+              { name: "Nur Yadi", route: "/stocknuryadi" }].
               map((salon, i) =>
               <button
                 key={salon.name}
@@ -315,10 +313,10 @@ export default function Landing() {
                   background: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
                   color: "hsl(var(--foreground))",
-                  transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                  transitionDelay: showStockChoice ? `${i * 60}ms` : "0ms",
+                  transition: "opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s",
+                  transitionDelay: showStockChoice ? `${i * 120}ms` : "0ms",
                   opacity: showStockChoice ? 1 : 0,
-                  transform: showStockChoice ? "translateY(0)" : "translateY(-8px)"
+                  transform: showStockChoice ? "translateY(0)" : "translateY(12px)"
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "hsl(var(--foreground))";
