@@ -152,7 +152,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
       {entry.showProductDropdown && (
         <div
           className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+          style={{ background: "#111111", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
         >
           <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor: border }}>
             <Search size={11} style={dim} />
@@ -260,7 +260,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
       {entry.showTypeDropdown && (
         <div
           className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+          style={{ background: "#111111", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
         >
           {TYPES.map((t, i) => (
             <div
@@ -317,7 +317,7 @@ function DatePicker({ value, onChange }: {
       {open && (
         <div
           className="absolute top-full right-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "110px", borderRadius: "5px" }}
+          style={{ background: "#111111", borderColor: borderActive, minWidth: "110px", borderRadius: "5px" }}
         >
           {OPTIONS.map(opt => (
             <div
@@ -1241,7 +1241,7 @@ function StockChicNailspaInner() {
                 <div
                   ref={stockListRef}
                   className="absolute top-full left-0 right-0 z-50 border max-h-[220px] overflow-y-auto scrollbar-thin"
-                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+                  style={{ background: "#111111", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                 >
                   {filteredStockProducts.map((row, i) => (
                     <div key={row["PRODUCT NAME"]}

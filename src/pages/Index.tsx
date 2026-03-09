@@ -116,7 +116,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
       {open && (
         <div
           className="absolute top-full left-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "130px", borderRadius: "5px" }}
+          style={{ background: "#111111", borderColor: borderActive, minWidth: "130px", borderRadius: "5px" }}
         >
           {options.map((opt, i) => (
             <div
@@ -1275,7 +1275,7 @@ const Index = () => {
               <div
                 ref={listRef}
                 className="absolute top-full left-0 right-0 z-50 border max-h-[240px] overflow-y-auto scrollbar-thin"
-                style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+                style={{ background: "#111111", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
               >
                 {/* Supplier matches */}
                 {supplierMatches.map((supplier, i) => (
@@ -2163,7 +2163,7 @@ const Index = () => {
                   <div
                     ref={entryDropdownRef}
                     className="absolute top-full left-0 right-0 z-50 border max-h-[220px] overflow-y-auto scrollbar-thin"
-                    style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+                    style={{ background: "#111111", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                   >
                     {entryDropdownResults.map((p, i) => {
                       const balCol = entryBalanceCol(entryBranch);
@@ -2368,7 +2368,7 @@ const Index = () => {
                   {showNewProductSupplierDropdown && (
                     <div
                       className="absolute top-full left-0 z-50 w-full border rounded mt-0.5 max-h-[180px] overflow-y-auto scrollbar-thin"
-                      style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                      style={{ background: "#111111", borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                     >
                       {supplierOptions
                         .filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase()))
@@ -2568,7 +2568,7 @@ const Index = () => {
               {showSupplierDropdown && (
                 <div
                   className="absolute top-full left-0 z-50 border min-w-[180px] py-1 max-h-[220px] overflow-y-auto scrollbar-thin"
-                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+                  style={{ background: "#111111", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                 >
                   {/* Clear all */}
                   <button
@@ -2625,7 +2625,7 @@ const Index = () => {
                 <div
                   ref={orderListRef}
                   className="absolute top-full left-0 right-0 z-50 border max-h-[200px] overflow-y-auto scrollbar-thin"
-                  style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+                  style={{ background: "#111111", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                 >
                   {orderDropdownResults.map((p, i) => (
                     <div
