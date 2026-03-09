@@ -149,19 +149,41 @@ export default function Landing() {
                 <Settings size={16} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="min-w-[160px] text-xs">
+              <DropdownMenuLabel className="text-[10px] tracking-widest uppercase">Settings</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={orderConfirmMode}
-                onCheckedChange={(checked) => {
-                  const next = checked === true;
+              <div
+                className="flex items-center justify-between px-2 py-1.5 cursor-pointer rounded-sm hover:bg-accent"
+                onClick={() => {
+                  const next = !orderConfirmMode;
                   setOrderConfirmMode(next);
                   localStorage.setItem("orderConfirmation", String(next));
                 }}
               >
-                Order Confirmation
-              </DropdownMenuCheckboxItem>
+                <span className="text-xs">Order Confirmation</span>
+                <div
+                  style={{
+                    width: "28px",
+                    height: "16px",
+                    borderRadius: "8px",
+                    background: orderConfirmMode ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                    position: "relative",
+                    transition: "background 0.2s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <div style={{
+                    width: "12px",
+                    height: "12px",
+                    borderRadius: "50%",
+                    background: "hsl(var(--background))",
+                    position: "absolute",
+                    top: "2px",
+                    left: orderConfirmMode ? "14px" : "2px",
+                    transition: "left 0.2s",
+                  }} />
+                </div>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -171,12 +193,12 @@ export default function Landing() {
                 <Type size={16} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuLabel>Font</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="min-w-[110px] text-xs">
+              <DropdownMenuLabel className="text-[10px] tracking-widest uppercase">Font</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup value={font} onValueChange={(value) => setFont(value as Font)}>
-                <DropdownMenuRadioItem value="inter">Inter</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="raleway">Raleway</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="inter" className="text-xs">Inter</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="raleway" className="text-xs">Raleway</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -189,18 +211,18 @@ export default function Landing() {
                 {theme === "sand" && <Moon size={16} />}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="min-w-[110px] text-xs">
+              <DropdownMenuLabel className="text-[10px] tracking-widest uppercase">Theme</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as Theme)}>
-                <DropdownMenuRadioItem value="dark">
-                  <span className="flex items-center gap-2"><Moon size={13} />Dark</span>
+                <DropdownMenuRadioItem value="dark" className="text-xs">
+                  <span className="flex items-center gap-2"><Moon size={11} />Dark</span>
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="light">
-                  <span className="flex items-center gap-2"><Sun size={13} />Light</span>
+                <DropdownMenuRadioItem value="light" className="text-xs">
+                  <span className="flex items-center gap-2"><Sun size={11} />Light</span>
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="sand">
-                  <span className="flex items-center gap-2"><Palette size={13} />Sand</span>
+                <DropdownMenuRadioItem value="sand" className="text-xs">
+                  <span className="flex items-center gap-2"><Palette size={11} />Sand</span>
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
