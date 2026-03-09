@@ -2158,14 +2158,25 @@ const Index = () => {
                             </td>
                           )}
                           <td className="py-3 text-center">
-                            <input
-                              type="number"
-                              min={1}
-                              value={item.qty}
-                              onChange={e => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, Number(e.target.value)) } : i))}
-                              className="w-16 text-center bg-transparent text-[13px] font-light outline-none"
-                              style={{ borderColor: border, color: "hsl(var(--foreground))" }}
-                            />
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))}
+                                className="px-1 py-0.5 transition-colors" style={dim}
+                                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                              >
+                                <ChevronLeft size={13} />
+                              </button>
+                              <span className="text-[13px] font-light min-w-[28px] text-center">{item.qty}</span>
+                              <button
+                                onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))}
+                                className="px-1 py-0.5 transition-colors" style={dim}
+                                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                              >
+                                <ChevronRight size={13} />
+                              </button>
+                            </div>
                           </td>
                           <td className="py-3 text-right">
                             <button onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}>
