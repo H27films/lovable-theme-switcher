@@ -714,6 +714,7 @@ const Index = () => {
     transform: mounted ? "translateY(0)" : "translateY(12px)",
     transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
   });
+  };
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
@@ -733,7 +734,7 @@ const Index = () => {
             >
               <Home size={14} />
             </button>
-            <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
+            <span className="text-[11px] [font-variant-numeric:lining-nums] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
               OFFICE
             </span>
           </div>
@@ -779,7 +780,7 @@ const Index = () => {
           {/* ── Page header ── */}
           <div className="mb-6" style={fade(90)}>
             <div>
-              <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1" style={{ fontVariantNumeric: "lining-nums" }}>{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
+              <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim mb-1">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
               <div className="flex items-end justify-between">
                 <p className="text-[28px] font-light tracking-tight uppercase">Office Database</p>
                 <span
@@ -792,7 +793,7 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center justify-between mt-1">
-              <p className="text-[11px] tracking-wider uppercase" style={dim}>
+              <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase" style={dim}>
                 {products.length} products
               </p>
               <span
@@ -894,14 +895,14 @@ const Index = () => {
                       <div className="flex items-center gap-3">
                         {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                         <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
-                        {p["SUPPLIER"] && <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>}
+                        {p["SUPPLIER"] && <span className="text-[11px] [font-variant-numeric:lining-nums]" style={dim}>{p["SUPPLIER"]}</span>}
                         {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
                           <span className="text-[10px] tracking-wider uppercase" style={dim}>Colour</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
                         {(p["UNITS/ORDER"] ?? 1) > 1 && (
-                          <span className="text-[11px]" style={dim}>{p["UNITS/ORDER"]} units</span>
+                          <span className="text-[11px] [font-variant-numeric:lining-nums]" style={dim}>{p["UNITS/ORDER"]} units</span>
                         )}
                         <span className="text-[12px] font-light" style={{
                           color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
@@ -1029,7 +1030,7 @@ const Index = () => {
                                     <td className="text-[12px] font-light py-3">
                                       {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                     </td>
-                                    <td className="text-[11px] font-light py-3 tracking-wide uppercase" style={dim}>{row.GRN ?? "—"}</td>
+                                    <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 tracking-wide uppercase" style={dim}>{row.GRN ?? "—"}</td>
                                     <td className="text-[13px] font-light py-3">{row["PRODUCT NAME"] ?? "—"}</td>
                                     <td className="text-[12px] font-light py-3" style={dim}>{counterparty}</td>
                                     <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY > 0 ? "hsl(var(--green))" : "hsl(var(--red))" }}>
@@ -1061,7 +1062,7 @@ const Index = () => {
                                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                                     >
                                       <td className="text-[12px] font-light py-3" style={dim}>{dateStr}</td>
-                                      <td className="text-[11px] font-light py-3 tracking-wide uppercase" style={dim}>{grn}</td>
+                                      <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 tracking-wide uppercase" style={dim}>{grn}</td>
                                       <td className="text-[12px] font-light py-3" style={dim}>{uniqueProducts} {uniqueProducts === 1 ? "product" : "products"}</td>
                                       <td className="text-[12px] font-light py-3" style={dim}>{counterparty}</td>
                                       <td className="text-[12px] font-light py-3 text-center" style={{ color: isSupplier ? "#4ade80" : "#f87171" }}>
@@ -1074,7 +1075,7 @@ const Index = () => {
                                     {isExpanded && grnRows.map((r, ri) => (
                                       <tr key={r.id} className="table-row-hover" style={{ borderBottom: `1px solid ${border}`, background: "hsl(var(--card))" }}>
                                         <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                                        <td className="text-[11px] font-light py-2.5 tracking-wide uppercase" style={dim}>{r.GRN ?? "—"}</td>
+                                        <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-2.5 tracking-wide uppercase" style={dim}>{r.GRN ?? "—"}</td>
                                         <td className="text-[13px] font-light py-2.5">{r["PRODUCT NAME"] ?? "—"}</td>
                                         <td className="text-[12px] font-light py-2.5" style={dim}>{isSupplier ? (r.SUPPLIER ?? "—") : (r.BRANCH ?? "—")}</td>
                                         <td className="text-[13px] font-light py-2.5 text-center" style={{ color: isSupplier ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
@@ -1102,7 +1103,7 @@ const Index = () => {
                       {/* Header */}
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>{selectedBranch} · Product Detail</p>
+                          <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={dim}>{selectedBranch} · Product Detail</p>
                           <p className="text-[15px] font-light">{selectedBranchProduct}</p>
                         </div>
                         <div className="flex items-center gap-4">
@@ -1171,7 +1172,7 @@ const Index = () => {
                                 <td className="text-[12px] font-light py-2">
                                   {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                 </td>
-                                <td className="text-[11px] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                                 <td className="text-[13px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                   {row.QTY > 0 ? "+" : ""}{row.QTY}
                                 </td>
@@ -1215,7 +1216,7 @@ const Index = () => {
                                   className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
                                   onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
                                 >{row["PRODUCT NAME"] ?? "—"}</td>
-                                <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                                 <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                   {row.QTY > 0 ? "+" : ""}{row.QTY}
                                 </td>
@@ -1260,7 +1261,7 @@ const Index = () => {
                                       className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
                                       onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
                                     >{row["PRODUCT NAME"]}</td>
-                                    <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                    <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                       {row.QTY > 0 ? "+" : ""}{row.QTY}
                                     </td>
@@ -1289,7 +1290,7 @@ const Index = () => {
             <div className="surface-box p-6 mb-8" style={{ borderRadius: "5px" }}>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>
+                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={dim}>
                     {selectedProduct["COLOUR"] === true ? "Colour Product" : "Product"}
                     {selectedProduct["OFFICE SECTION"] && ` · Section ${selectedProduct["OFFICE SECTION"]}`}
                   </p>
@@ -1363,7 +1364,7 @@ const Index = () => {
                   <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Supplier Price</p>
                   <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["SUPPLIER PRICE"])}</p>
                   {(selectedProduct["UNITS/ORDER"] ?? 1) > 1 && (
-                    <p className="text-[11px] mt-1" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
+                    <p className="text-[11px] [font-variant-numeric:lining-nums] mt-1" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
                       × {selectedProduct["UNITS/ORDER"]} units/order
                     </p>
                   )}
@@ -1466,7 +1467,7 @@ const Index = () => {
                 <button
                   key={f}
                   onClick={() => setFilterColour(f)}
-                  className="text-[11px] tracking-wider uppercase transition-colors"
+                  className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase transition-colors"
                   style={{ color: filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                   onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                   onMouseLeave={e => (e.currentTarget.style.color = filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
@@ -1614,7 +1615,7 @@ const Index = () => {
                           <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["STAFF PRICE"])}</td>
                           <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["CUSTOMER PRICE"])}</td>
                           <td className="text-[12px] font-light py-3 pr-4" style={dim}>{p["OFFICE SECTION"] || "—"}</td>
-                          <td className="text-[11px] font-light py-3 pr-4 text-center tracking-wider uppercase" style={dim}>
+                          <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 pr-4 text-center tracking-wider uppercase" style={dim}>
                             {p["COLOUR"] === true ? "Colour" : "Product"}
                           </td>
                           <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{p["PAR"] ?? "—"}</td>
@@ -1631,7 +1632,7 @@ const Index = () => {
               {/* ── Pagination ── */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-4 border-t" style={{ borderColor: border }}>
-                  <p className="text-[11px] tracking-wider uppercase" style={dim}>
+                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase" style={dim}>
                     Page {page + 1} of {totalPages} · {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredProducts.length)} of {filteredProducts.length}
                   </p>
                   <div className="flex items-center gap-4">
@@ -1688,7 +1689,7 @@ const Index = () => {
             <div className="flex flex-col gap-3">
               {/* Product Name */}
               <div>
-                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Product Name *</p>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Product Name *</p>
                 <input
                   className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
                   style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
@@ -1700,7 +1701,7 @@ const Index = () => {
 
               {/* Supplier */}
               <div>
-                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Supplier</p>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Supplier</p>
                 <div className="relative" ref={newProductSupplierRef}>
                   <input
                     className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
@@ -1741,7 +1742,7 @@ const Index = () => {
 
               {/* Prices row */}
               <div>
-                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
                 <div className="grid grid-cols-2 gap-2">
                   {(["SUPPLIER PRICE", "BRANCH PRICE", "STAFF PRICE", "CUSTOMER PRICE"] as const).map(field => (
                     <div key={field}>
@@ -1766,7 +1767,7 @@ const Index = () => {
               {/* PAR and Units/Order */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>PAR Level</p>
+                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>PAR Level</p>
                   <input
                     className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
                     style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
@@ -1778,7 +1779,7 @@ const Index = () => {
                   />
                 </div>
                 <div>
-                  <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
+                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
                   <input
                     className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
                     style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
@@ -1793,7 +1794,7 @@ const Index = () => {
 
               {/* Office Section */}
               <div>
-                <p className="text-[11px] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Office Section</p>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Office Section</p>
                 <input
                   className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
                   style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
@@ -1805,7 +1806,7 @@ const Index = () => {
 
               {/* Colour toggle */}
               <div className="flex items-center gap-3">
-                <p className="text-[11px] tracking-wider uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>Colour Product</p>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>Colour Product</p>
                 <button
                   onClick={() => setNewProduct(p => ({ ...p, "COLOUR": !p["COLOUR"] }))}
                   className="rounded px-3 py-1 text-[12px] font-light transition-colors"
@@ -2014,7 +2015,7 @@ const Index = () => {
                   {orderLines.length > 0 && (
                     <button
                       onClick={() => setOrderLines([])}
-                      className="text-[11px] tracking-wider uppercase px-2 py-0.5 rounded transition-colors"
+                      className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase px-2 py-0.5 rounded transition-colors"
                       style={{ color: "hsl(var(--muted-foreground))", border: `1px solid ${border}` }}
                     >
                       Clear
@@ -2276,7 +2277,6 @@ const Index = () => {
         </div>
       )}
     </div>
-  </div>
   );
 };
 
