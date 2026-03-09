@@ -1579,7 +1579,7 @@ const Index = () => {
       {showNewProductModal && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowNewProductModal(false)}>
           <div
-            className="h-full w-full max-w-[520px] overflow-y-auto p-10"
+            className="h-full w-full max-w-[500px] overflow-y-auto p-10"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
@@ -1759,7 +1759,7 @@ const Index = () => {
       {showOrderPanel && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
           <div
-            className="h-full w-full max-w-[420px] overflow-y-auto p-10"
+            className="h-full w-full max-w-[500px] overflow-y-auto p-10"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
