@@ -1227,7 +1227,7 @@ const Index = () => {
           </div>
 
           {/* ── Search bar ── */}
-          <div style={fade(170)}>
+          <div style={{...fade(170), position: "relative", zIndex: 40}}>
           <div
             ref={searchRef}
             className="relative mb-12"

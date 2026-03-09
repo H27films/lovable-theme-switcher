@@ -1198,7 +1198,7 @@ function StockChicNailspaInner() {
 
             {/* Stock search bar with hover underline */}
             <div
-              style={fade(170)}
+              style={{...fade(170), position: "relative", zIndex: 40}}
             >
               <div
                 className="relative mb-6"
