@@ -714,7 +714,6 @@ const Index = () => {
     transform: mounted ? "translateY(0)" : "translateY(12px)",
     transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
   });
-  };
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
