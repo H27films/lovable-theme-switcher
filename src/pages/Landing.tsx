@@ -145,7 +145,7 @@ export default function Landing() {
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="hover:opacity-80" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <button className="hover:opacity-80 transition-colors" style={{ color: orderConfirmMode ? "#ffffff" : "hsl(var(--muted-foreground))" }}>
                 <Settings size={16} />
               </button>
             </DropdownMenuTrigger>
