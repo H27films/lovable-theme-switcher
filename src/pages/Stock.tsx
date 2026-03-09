@@ -465,7 +465,25 @@ function StockInner() {
         .gte("DATE", cutoff.toISOString().split("T")[0])
         .order("DATE", { ascending: false });
       if (error) console.error("Fetch log error:", error);
-      if (data) setLog(data.sort((a: LogRow, b: LogRow) => b.DATE.localeCompare(a.DATE) || b.id - a.id));
+      if (data) {
+        const orderRequests = data.filter((r: LogRow) => r.TYPE === "Order Request");
+        const regularLog = data.filter((r: LogRow) => r.TYPE !== "Order Request");
+        setLog(regularLog.sort((a: LogRow, b: LogRow) => b.DATE.localeCompare(a.DATE) || b.id - a.id));
+        if (orderRequests.length > 0) {
+          const req = orderRequests[0];
+          setPendingOrder({
+            grn: req.GRN || "",
+            date: req.DATE,
+            entries: orderRequests.map((r: LogRow) => ({
+              productName: r["PRODUCT NAME"],
+              starting: Number(r["STARTING BALANCE"]),
+              qty: Number(r.QTY),
+              ending: Number(r["ENDING BALANCE"]),
+            }))
+          });
+          setOrderSubmitted(true);
+        }
+      }
     } catch (err) { console.error("Error fetching log:", err); }
   }, []);
 
@@ -811,7 +829,8 @@ function StockInner() {
     }
   };
 
-  const handleResetOrder = () => {
+  const handleResetOrder = async () => {
+    await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Boudoir").eq("TYPE", "Order Request");
     setPendingOrder(null);
     setOrderEntries(makeOrderEntries());
     setOrderSubmitted(false);
@@ -875,6 +894,8 @@ function StockInner() {
     setOrderConfirming(true);
     setOrderError(null);
     try {
+      // Delete any Order Request entries written via ENTRY tab (no balance changes yet)
+      await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Boudoir").eq("TYPE", "Order Request").eq("GRN", pendingOrder.grn);
       for (const entry of pendingOrder.entries) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
         const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
