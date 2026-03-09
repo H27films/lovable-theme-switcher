@@ -2304,7 +2304,7 @@ const Index = () => {
                         className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
                         style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
                       >
-                        {entrySubmitting ? "Submitting..." : "Submit Order"}
+                        {entrySubmitting ? "Submitting..." : "Submit"}
                       </button>
                     )}
                   </div>
