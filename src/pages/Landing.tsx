@@ -106,6 +106,8 @@ export default function Landing() {
           user-select: none;
         }
         .l3-nav-item:hover { color: hsl(var(--muted-foreground)); }
+        .l3-branches-nav[data-open="true"] { color: hsl(var(--muted-foreground)); }
+        .l3-branches-nav[data-open="true"]:hover { color: hsl(var(--muted-foreground)); }
 
         .l3-hand-underline {
           position: absolute;
@@ -163,7 +165,7 @@ export default function Landing() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "flex-end",
+            alignItems: "center",
             padding: "28px 44px 0",
             flexShrink: 0,
             opacity: visible ? 1 : 0,
@@ -354,9 +356,9 @@ export default function Landing() {
                 e.stopPropagation();
                 setBranchesOpen((prev) => !prev);
               }}
+              data-open={branchesOpen}
               style={{
                 transform: branchesOpen ? "translateY(-2px)" : "translateY(0)",
-                color: branchesOpen ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))",
                 transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), color 0.35s",
               }}
             >
