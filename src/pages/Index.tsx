@@ -746,7 +746,7 @@ const Index = () => {
 
       {/* ── Scroll direction blur overlays ── */}
       <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, height: "70px",
+        position: "fixed", top: 0, left: 0, right: 0, height: "80px",
         background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
@@ -758,7 +758,7 @@ const Index = () => {
         zIndex: 50,
       }} />
       <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0, height: "70px",
+        position: "fixed", bottom: 0, left: 0, right: 0, height: "80px",
         background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
