@@ -482,6 +482,18 @@ function StockInner() {
             }))
           });
           setOrderSubmitted(true);
+          // Populate orderEntries so inline Order Summary renders on the Order tab
+          setOrderEntries(prev => {
+            const hasData = prev.some(e => e.productName);
+            if (hasData) return prev; // user already has local entries — don't overwrite
+            return orderRequests.map((r: LogRow, idx: number) => ({
+              id: Date.now() + idx,
+              productName: r["PRODUCT NAME"],
+              qty: Number(r.QTY),
+              showProductDropdown: false,
+              productSearch: "",
+            }));
+          });
         }
       }
     } catch (err) { console.error("Error fetching log:", err); }
