@@ -145,7 +145,7 @@ export default function Landing() {
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="transition-colors hover:!text-white data-[state=open]:!text-white" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <button className="transition-colors hover:!text-white data-[state=open]:!text-white focus:outline-none" style={{ color: "hsl(var(--muted-foreground))" }}>
                 <Settings size={16} />
               </button>
             </DropdownMenuTrigger>
@@ -189,7 +189,7 @@ export default function Landing() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="transition-colors hover:!text-white data-[state=open]:!text-white" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <button className="transition-colors hover:!text-white data-[state=open]:!text-white focus:outline-none" style={{ color: "hsl(var(--muted-foreground))" }}>
                 <Type size={16} />
               </button>
             </DropdownMenuTrigger>
@@ -205,7 +205,7 @@ export default function Landing() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="transition-colors hover:!text-white data-[state=open]:!text-white" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <button className="transition-colors hover:!text-white data-[state=open]:!text-white focus:outline-none" style={{ color: "hsl(var(--muted-foreground))" }}>
                 {theme === "dark" && <Sun size={16} />}
                 {theme === "light" && <Palette size={16} />}
                 {theme === "sand" && <Moon size={16} />}
