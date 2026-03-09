@@ -206,6 +206,7 @@ const Index = () => {
     entries: { productName: string; starting: number; qty: number; ending: number }[];
   } | null>(null);
   const [entryConfirming, setEntryConfirming] = useState(false);
+  const [entryPanelVisible, setEntryPanelVisible] = useState(false);
   const entrySearchRef = useRef<HTMLDivElement>(null);
   const entryInputRef = useRef<HTMLInputElement>(null);
   const entryDropdownRef = useRef<HTMLDivElement>(null);
@@ -411,6 +412,7 @@ const Index = () => {
       await fetchEntryProducts();
       setEntryItems([]);
       setEntryPendingOrder(null);
+      setEntryPanelVisible(false);
       setEntrySuccess(true);
       setTimeout(() => setEntrySuccess(false), 3000);
     } catch (err) { console.error("Entry confirm order error:", err); setEntryError("Confirm failed"); }
@@ -2194,14 +2196,35 @@ const Index = () => {
                       {entryError && <span className="text-[12px]" style={{ color: "hsl(var(--red))" }}>{entryError}</span>}
                       {entrySuccess && <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>✓ Confirmed</span>}
                     </div>
-                    <button
-                      onClick={handleEntrySubmit}
-                      disabled={entrySubmitting}
-                      className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
-                      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
-                    >
-                      {entrySubmitting ? "Submitting..." : "Submit"}
-                    </button>
+                    {entryPendingOrder && !entryPanelVisible ? (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => { setEntryPendingOrder(null); setEntryError(null); }}
+                          className="text-[12px] tracking-[0.12em] uppercase px-4 py-2 transition-colors"
+                          style={{ color: "hsl(var(--muted-foreground))" }}
+                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setEntryPanelVisible(true)}
+                          className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
+                          style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px" }}
+                        >
+                          Confirm Order
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleEntrySubmit}
+                        disabled={entrySubmitting}
+                        className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
+                        style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
+                      >
+                        {entrySubmitting ? "Submitting..." : "Submit"}
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -2211,7 +2234,7 @@ const Index = () => {
           )}
 
           {/* ── Pending Order Confirmation ── */}
-          {entryPendingOrder && (
+          {entryPendingOrder && entryPanelVisible && (
             <div
               className="absolute inset-0 z-30 flex flex-col p-6"
               style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
@@ -2224,7 +2247,7 @@ const Index = () => {
                   </p>
                 </div>
                 <button
-                  onClick={() => { setEntryPendingOrder(null); setEntryError(null); }}
+                  onClick={() => { setEntryPendingOrder(null); setEntryPanelVisible(false); setEntryError(null); }}
                   style={{ color: "hsl(var(--muted-foreground))" }}
                   onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                   onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
@@ -2264,7 +2287,7 @@ const Index = () => {
                 </div>
                 <div className="flex gap-3 items-center">
                   <button
-                    onClick={() => { setEntryPendingOrder(null); setEntryError(null); }}
+                    onClick={() => { setEntryPendingOrder(null); setEntryPanelVisible(false); setEntryError(null); }}
                     className="text-[12px] tracking-[0.12em] uppercase px-4 py-2"
                     style={{ color: "hsl(var(--muted-foreground))" }}
                     onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
