@@ -163,7 +163,7 @@ export default function Landing() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "flex-end",
             padding: "28px 44px 0",
             flexShrink: 0,
             opacity: visible ? 1 : 0,
@@ -339,7 +339,7 @@ export default function Landing() {
             padding: "20px 44px",
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "flex-end",
             opacity: visible ? 1 : 0,
             transform: branchesOpen ? "translateY(-40px)" : "translateY(0)",
             transition: "opacity 0.9s ease 1.0s, transform 0.5s cubic-bezier(0.16,1,0.3,1)",
