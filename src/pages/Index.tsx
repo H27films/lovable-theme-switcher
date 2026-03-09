@@ -143,6 +143,8 @@ const Index = () => {
     "OFFICE SECTION": "",
   });
   const [savingNewProduct, setSavingNewProduct] = useState(false);
+  const [importingCSV, setImportingCSV] = useState(false);
+  const [csvImportResult, setCsvImportResult] = useState<string | null>(null);
   const [newProductError, setNewProductError] = useState<string | null>(null);
   const [supplierOptions, setSupplierOptions] = useState<string[]>([]);
   const orderSearchRef = useRef<HTMLDivElement>(null);
@@ -566,6 +568,80 @@ const Index = () => {
   };
 
   const thBase = "pb-3 pt-2 text-[10px] tracking-wider uppercase font-normal select-none transition-colors";
+
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingCSV(true);
+    setCsvImportResult(null);
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) throw new Error("CSV has no data rows.");
+      const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+      // Get max id
+      const { data: maxRow } = await (supabase as any)
+        .from("AllFileProducts")
+        .select("id")
+        .order("id", { ascending: false })
+        .limit(1)
+        .single();
+      let nextId = ((maxRow?.id as number) ?? 0) + 1;
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        // Handle quoted commas in CSV
+        const cols: string[] = [];
+        let cur = ""; let inQ = false;
+        for (const ch of lines[i]) {
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === "," && !inQ) { cols.push(cur.trim()); cur = ""; }
+          else { cur += ch; }
+        }
+        cols.push(cur.trim());
+        const get = (col: string) => {
+          const idx = headers.indexOf(col);
+          return idx >= 0 ? cols[idx]?.replace(/^"|"$/g, "").trim() : "";
+        };
+        rows.push({
+          id: nextId++,
+          "PRODUCT NAME": get("PRODUCT NAME") || null,
+          "SUPPLIER": get("SUPPLIER") || null,
+          "SUPPLIER PRICE": get("SUPPLIER PRICE") !== "" ? parseFloat(get("SUPPLIER PRICE")) : null,
+          "BRANCH PRICE": get("BRANCH PRICE") !== "" ? parseFloat(get("BRANCH PRICE")) : null,
+          "STAFF PRICE": get("STAFF PRICE") !== "" ? parseFloat(get("STAFF PRICE")) : null,
+          "CUSTOMER PRICE": get("CUSTOMER PRICE") !== "" ? parseFloat(get("CUSTOMER PRICE")) : null,
+          "OFFICE BALANCE": parseInt(get("OFFICE BALANCE")) || 0,
+          "BOUDOIR BALANCE": parseInt(get("BOUDOIR BALANCE")) || 0,
+          "NUR YADI BALANCE": parseInt(get("NUR YADI BALANCE")) || 0,
+          "CHIC NAILSPA BALANCE": parseInt(get("CHIC NAILSPA BALANCE")) || 0,
+          "PAR": get("PAR") !== "" ? parseInt(get("PAR")) : null,
+          "UNITS/ORDER": parseInt(get("UNITS/ORDER")) || 1,
+          "COLOUR": get("COLOUR") === "true" || get("COLOUR") === "1",
+          "OFFICE SECTION": get("OFFICE SECTION") || null,
+          "OFFICE FAVOURITE": false,
+          "BOUDOIR FAVOURITE": false,
+          "NUR YADI FAVOURITE": false,
+          "CHIC NAILSPA FAVOURITE": false,
+        });
+      }
+      // Batch insert in chunks of 100
+      const chunkSize = 100;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+        const { error } = await (supabase as any).from("AllFileProducts").insert(chunk);
+        if (error) throw error;
+      }
+      // Refresh products
+      const { data: freshProducts } = await (supabase as any).from("AllFileProducts").select("*");
+      if (freshProducts) setProducts(freshProducts as OfficeProduct[]);
+      setCsvImportResult(`✓ ${rows.length} product${rows.length !== 1 ? "s" : ""} imported`);
+    } catch (err: unknown) {
+      setCsvImportResult("✗ " + (err instanceof Error ? err.message : "Import failed"));
+    } finally {
+      setImportingCSV(false);
+      e.target.value = "";
+    }
+  };
 
   const handleSaveNewProduct = async () => {
     if (!newProduct["PRODUCT NAME"].trim()) {
@@ -1750,6 +1826,29 @@ const Index = () => {
               >
                 Cancel
               </button>
+            </div>
+
+            <div className="mt-4" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: "16px" }}>
+              <label
+                className="flex items-center gap-2 cursor-pointer text-[13px] font-light tracking-wider uppercase transition-colors w-fit"
+                style={{ color: importingCSV ? "hsl(var(--muted-foreground))" : "hsl(var(--muted-foreground))" }}
+                onMouseEnter={e => { if (!importingCSV) e.currentTarget.style.color = "hsl(var(--foreground))"; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+              >
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  disabled={importingCSV}
+                  onChange={handleImportCSV}
+                />
+                {importingCSV ? "Importing..." : "Import CSV"}
+              </label>
+              {csvImportResult && (
+                <p className="mt-2 text-[12px]" style={{ color: csvImportResult.startsWith("✓") ? "hsl(var(--foreground))" : "hsl(var(--destructive))" }}>
+                  {csvImportResult}
+                </p>
+              )}
             </div>
           </div>
         </div>
