@@ -203,6 +203,7 @@ const Index = () => {
   const [entryError, setEntryError] = useState<string | null>(null);
   const entrySearchRef = useRef<HTMLDivElement>(null);
   const entryInputRef = useRef<HTMLInputElement>(null);
+  const entryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
@@ -426,6 +427,13 @@ const Index = () => {
       items[activeIndex]?.scrollIntoView({ block: "nearest" });
     }
   }, [activeIndex]);
+
+  useEffect(() => {
+    if (entryActiveIndex >= 0 && entryDropdownRef.current) {
+      const items = entryDropdownRef.current.querySelectorAll("[data-entry-item]");
+      items[entryActiveIndex]?.scrollIntoView({ block: "nearest" });
+    }
+  }, [entryActiveIndex]);
 
   useEffect(() => { setPage(0); }, [search, filterLowStock, filterColour, sortKey, sortDir]);
 
@@ -1953,7 +1961,7 @@ const Index = () => {
           </>)}
 
           {activeTab === "entry" && (
-            <div>
+            <div style={{ paddingBottom: entryShowDropdown ? "260px" : "40px", transition: "padding-bottom 0.2s" }}>
               {/* ── Branch + Type selectors ── */}
               <div className="flex flex-col gap-2 mb-8">
                 <div className="flex items-center gap-6 mb-1">
@@ -2028,6 +2036,7 @@ const Index = () => {
                 </div>
                 {entryShowDropdown && entryDropdownResults.length > 0 && (
                   <div
+                    ref={entryDropdownRef}
                     className="absolute top-full left-0 right-0 z-50 border max-h-[220px] overflow-y-auto scrollbar-thin"
                     style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
                   >
@@ -2037,6 +2046,7 @@ const Index = () => {
                       return (
                         <div
                           key={p.id}
+                          data-entry-item
                           className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
                           style={{ borderBottom: `1px solid ${border}`, background: i === entryActiveIndex ? cardBg : "transparent" }}
                           onMouseDown={() => addEntryItem(p)}
@@ -2106,7 +2116,7 @@ const Index = () => {
                               min={1}
                               value={item.qty}
                               onChange={e => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, Number(e.target.value)) } : i))}
-                              className="w-16 text-center bg-transparent border-b text-[13px] font-light outline-none"
+                              className="w-16 text-center bg-transparent text-[13px] font-light outline-none"
                               style={{ borderColor: border, color: "hsl(var(--foreground))" }}
                             />
                           </td>
