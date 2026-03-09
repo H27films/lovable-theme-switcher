@@ -256,7 +256,7 @@ export default function Landing() {
           <style>{`
             @keyframes underlinePulse {
               0%   { width: 30px; }
-              50%  { width: 120px; }
+              50%  { width: 2500px; }
               100% { width: 30px; }
             }
           `}</style>
