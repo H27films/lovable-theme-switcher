@@ -241,7 +241,7 @@ export default function Landing() {
             style={{
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0) scale(1)" : "translateY(12px) scale(0.98)",
-              transition: "opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)"
+              transition: "opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s"
             }}>
             
             Product Database
@@ -249,9 +249,9 @@ export default function Landing() {
           {/* Continuously animated underline */}
           <style>{`
             @keyframes underlinePulse {
-              0%   { width: 25px; }
+              0%   { width: 80px; }
               50%  { width: 270px; }
-              100% { width: 25px; }
+              100% { width: 80px; }
             }
           `}</style>
           <div
