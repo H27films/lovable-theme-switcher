@@ -22,7 +22,7 @@ const BRANCHES = [
   { name: "Nur Yadi", route: "/stocknuryadi" },
 ];
 
-export default function Landing3() {
+export default function Landing() {
   const navigate = useNavigate();
   const { theme, setTheme, font, setFont } = useTheme();
   const [visible, setVisible] = useState(false);

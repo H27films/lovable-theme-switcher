@@ -51,7 +51,7 @@ const LandingCard = React.memo(({
   </button>
 );
 
-export default function Landing() {
+export default function Landing3() {
   const navigate = useNavigate();
   const { theme, setTheme, font, setFont } = useTheme();
   const [visible, setVisible] = useState(false);
