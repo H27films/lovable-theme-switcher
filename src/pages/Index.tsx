@@ -202,26 +202,37 @@ const Index = () => {
   const [entryHoveredType, setEntryHoveredType] = useState<string|null>(null);
   const [entryActiveIndex, setEntryActiveIndex] = useState(-1);
   const [entryItems, setEntryItems] = useState<EntryItem[]>(() => {
-    try { const s = localStorage.getItem("entry_items"); return s ? JSON.parse(s) : []; } catch { return []; }
+    try { const b = localStorage.getItem("entry_branch") || "Boudoir"; const s = localStorage.getItem(`entry_items_${b}`); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [entrySubmitting, setEntrySubmitting] = useState(false);
   const [entrySuccessMsg, setEntrySuccessMsg] = useState<string | null>(null);
   const [entryError, setEntryError] = useState<string | null>(null);
   const [entryPendingGRN, setEntryPendingGRN] = useState<string | null>(() => {
-    try { return localStorage.getItem("entry_pending_grn") || null; } catch { return null; }
+    try { const b = localStorage.getItem("entry_branch") || "Boudoir"; return localStorage.getItem(`entry_pending_grn_${b}`) || null; } catch { return null; }
   });
   const entrySearchRef = useRef<HTMLDivElement>(null);
   const entryInputRef = useRef<HTMLInputElement>(null);
   const entryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Persist ENTRY state to localStorage so it survives tab/page navigation
-  useEffect(() => { try { localStorage.setItem("entry_branch", entryBranch); } catch {} }, [entryBranch]);
+  useEffect(() => {
+    try { localStorage.setItem("entry_branch", entryBranch); } catch {}
+    // Load this branch's saved items and pending GRN when switching branches
+    try {
+      const savedItems = localStorage.getItem(`entry_items_${entryBranch}`);
+      setEntryItems(savedItems ? JSON.parse(savedItems) : []);
+    } catch { setEntryItems([]); }
+    try {
+      const savedGRN = localStorage.getItem(`entry_pending_grn_${entryBranch}`);
+      setEntryPendingGRN(savedGRN || null);
+    } catch { setEntryPendingGRN(null); }
+  }, [entryBranch]);
   useEffect(() => { try { localStorage.setItem("entry_type", entryType); } catch {} }, [entryType]);
-  useEffect(() => { try { localStorage.setItem("entry_items", JSON.stringify(entryItems)); } catch {} }, [entryItems]);
+  useEffect(() => { try { localStorage.setItem(`entry_items_${entryBranch}`, JSON.stringify(entryItems)); } catch {} }, [entryItems]); // entryBranch captured from render closure
   useEffect(() => {
     try {
-      if (entryPendingGRN) localStorage.setItem("entry_pending_grn", entryPendingGRN);
-      else localStorage.removeItem("entry_pending_grn");
+      if (entryPendingGRN) localStorage.setItem(`entry_pending_grn_${entryBranch}`, entryPendingGRN);
+      else localStorage.removeItem(`entry_pending_grn_${entryBranch}`);
     } catch {}
   }, [entryPendingGRN]);
 
@@ -418,7 +429,7 @@ const Index = () => {
       .eq("GRN", entryPendingGRN);
     setEntryPendingGRN(null);
     setEntryItems([]);
-    try { localStorage.removeItem("entry_pending_grn"); localStorage.removeItem("entry_items"); } catch {}
+    try { localStorage.removeItem(`entry_pending_grn_${entryBranch}`); localStorage.removeItem(`entry_items_${entryBranch}`); } catch {}
   };
 
   const handleEntryConfirmOrder = async () => {
@@ -472,7 +483,7 @@ const Index = () => {
       await fetchEntryProducts();
       setEntryItems([]);
       setEntryPendingGRN(null);
-      try { localStorage.removeItem("entry_pending_grn"); localStorage.removeItem("entry_items"); } catch {}
+      try { localStorage.removeItem(`entry_pending_grn_${entryBranch}`); localStorage.removeItem(`entry_items_${entryBranch}`); } catch {}
       setEntrySuccessMsg("✓ Order confirmed");
       setTimeout(() => setEntrySuccessMsg(null), 3000);
     } catch (err) {
