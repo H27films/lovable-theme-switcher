@@ -1956,7 +1956,7 @@ const Index = () => {
             <div>
               {/* ── Branch + Type selectors ── */}
               <div className="flex flex-col gap-2 mb-8">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-6 mb-1">
                   {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
                     <button
                       key={branch}
@@ -1964,12 +1964,16 @@ const Index = () => {
                       onClick={() => { setEntryBranch(branch); setEntryItems([]); setEntrySearch(""); }}
                       onMouseEnter={() => setEntryHoveredBranch(branch)}
                       onMouseLeave={() => setEntryHoveredBranch(null)}
-                      className="text-[11px] tracking-[0.12em] uppercase px-3 py-1.5 transition-colors"
+                      className="transition-all duration-200"
                       style={{
-                        borderRadius: "5px",
-                        border: `1px solid ${entryBranch === branch || entryHoveredBranch === branch ? "hsl(var(--foreground))" : border}`,
-                        background: entryBranch === branch ? "hsl(var(--foreground))" : "transparent",
-                        color: entryBranch === branch ? "hsl(var(--background))" : entryHoveredBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        fontSize: entryBranch === branch ? "15px" : entryHoveredBranch === branch ? "13px" : "12px",
+                        fontWeight: 300,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: entryBranch === branch || entryHoveredBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
                       }}
                     >
                       {branch}
