@@ -36,7 +36,7 @@ const LandingCard = React.memo(({
   style={{
     opacity: visible ? 1 : 0,
     transform: visible ? `translateY(0) scale(1)` : `translateY(24px) scale(0.97)`,
-    transition: `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)`,
+    transition: `opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)`,
     transitionDelay: delay
   }}>
   
