@@ -1250,9 +1250,11 @@ function StockInner() {
 
             {/* Stock search bar with hover underline */}
             <div
-              className="relative mb-6"
               style={fade(170)}
-              onMouseEnter={() => setStockSearchHovered(true)}
+            >
+              <div
+                className="relative mb-6"
+                onMouseEnter={() => setStockSearchHovered(true)}
               onMouseLeave={() => setStockSearchHovered(false)}
             >
               <div
@@ -1314,6 +1316,7 @@ function StockInner() {
                   ))}
                 </div>
               )}
+            </div>
             </div>
 
             {selectedProduct && (() => {

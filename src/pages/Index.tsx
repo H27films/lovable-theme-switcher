@@ -1227,10 +1227,10 @@ const Index = () => {
           </div>
 
           {/* ── Search bar ── */}
+          <div style={fade(170)}>
           <div
             ref={searchRef}
             className="relative mb-12"
-            style={fade(170)}
             onMouseEnter={() => setSearchHovered(true)}
             onMouseLeave={() => setSearchHovered(false)}
           >
@@ -1336,6 +1336,7 @@ const Index = () => {
                 })}
               </div>
             )}
+          </div>
           </div>
 
           {/* ── Tab switcher ── */}
@@ -2304,7 +2305,7 @@ const Index = () => {
                         className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
                         style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
                       >
-                        {entrySubmitting ? "Submitting..." : "Submit"}
+                        {entrySubmitting ? "Submitting..." : "Submit Order"}
                       </button>
                     )}
                   </div>
