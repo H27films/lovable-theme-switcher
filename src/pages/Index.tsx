@@ -1948,6 +1948,8 @@ const Index = () => {
             </>
           )}
 
+          </>)}
+
           {activeTab === "entry" && (
             <div>
               {/* ── Branch + Type selectors ── */}
@@ -2130,8 +2132,6 @@ const Index = () => {
               )}
             </div>
           )}
-
-          </>)}
         </div>
       </div>
 
