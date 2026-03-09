@@ -21,14 +21,6 @@ const LandingCard = React.memo(({
   title,
   subtitle,
   visible
-
-
-
-
-
-
-
-
 }: {onClick: () => void;delay: string;icon: React.ReactNode;label: string;title: string;subtitle: string;visible: boolean;}) =>
 <button
   onClick={onClick}
@@ -75,7 +67,6 @@ export default function Landing() {
     return () => clearTimeout(t);
   }, []);
 
-
   // Subtle parallax mouse tracking
   useEffect(() => {
     const handleMouse = (e: MouseEvent) => {
@@ -110,7 +101,6 @@ export default function Landing() {
           pointerEvents: "none"
         }} />
       
-
       {/* Subtle radial glow */}
       <div
         style={{
@@ -125,7 +115,6 @@ export default function Landing() {
           transition: "transform 0.3s ease-out"
         }} />
       
-
       {/* Top bar */}
       <div
         className="relative z-10 flex justify-between items-center px-8 py-6 border-b"
@@ -139,7 +128,6 @@ export default function Landing() {
         <span
           className="text-[11px] tracking-[0.2em] uppercase"
           style={{ color: "hsl(var(--foreground))" }}>
-          
           Nail Salon
         </span>
         <div className="flex items-center gap-4">
@@ -159,7 +147,6 @@ export default function Landing() {
                   setOrderConfirmMode(next);
                   localStorage.setItem("orderConfirmation", String(next));
                 }}>
-                
                 <span className="text-xs">Order Confirmation</span>
                 <div
                   style={{
@@ -171,7 +158,6 @@ export default function Landing() {
                     transition: "background 0.2s",
                     flexShrink: 0
                   }}>
-                  
                   <div style={{
                     width: "12px",
                     height: "12px",
@@ -199,6 +185,7 @@ export default function Landing() {
               <DropdownMenuRadioGroup value={font} onValueChange={(value) => setFont(value as Font)}>
                 <DropdownMenuRadioItem value="inter" className="text-xs">Inter</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="raleway" className="text-xs">Raleway</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="helvetica" className="text-xs">Helvetica Neue</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -235,7 +222,6 @@ export default function Landing() {
 
         {/* Title with staggered animation */}
         <div className="text-center mb-14">
-          
           <h1
             className="text-[42px] font-light tracking-tight"
             style={{
@@ -243,10 +229,8 @@ export default function Landing() {
               transform: visible ? "translateY(0) scale(1)" : "translateY(12px) scale(0.98)",
               transition: "opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s"
             }}>
-            
             Product Database
           </h1>
-          {/* Continuously animated underline */}
           <style>{`
             @keyframes underlinePulse {
               0%   { width: 130px; }
@@ -263,7 +247,6 @@ export default function Landing() {
               transition: "opacity 0.7s ease 0.15s",
               animation: visible ? "underlinePulse 5s ease-in-out infinite" : "none"
             }} />
-          
         </div>
 
         {/* Cards */}
@@ -273,7 +256,7 @@ export default function Landing() {
             delay="700ms"
             visible={visible}
             icon={
-            <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="4" y="14" width="28" height="18" rx="0.5" />
                 <path d="M4 14 L18 4 L32 14" />
                 <rect x="13" y="22" width="10" height="10" />
@@ -283,7 +266,6 @@ export default function Landing() {
             label="Inventory"
             title="Branches"
             subtitle="Track usage, orders & balances" />
-          
 
           {/* Stock sub-choices */}
           <div
@@ -293,37 +275,35 @@ export default function Landing() {
               overflow: "hidden",
               padding: "4px 4px"
             }}>
-            
             <div className="flex gap-3 w-full">
               {[
-              { name: "Boudoir", route: "/stock" },
-              { name: "Chic Nailspa", route: "/stockchicnailspa" },
-              { name: "Nur Yadi", route: "/stocknuryadi" }].
+                { name: "Boudoir", route: "/stock" },
+                { name: "Chic Nailspa", route: "/stockchicnailspa" },
+                { name: "Nur Yadi", route: "/stocknuryadi" }].
               map((salon, i) =>
-              <button
-                key={salon.name}
-                onClick={() => navigate(salon.route)}
-                className="flex-1 py-4 px-6 rounded-full text-center group/sub"
-                style={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  color: "hsl(var(--foreground))",
-                  transition: `opacity ${i === 0 ? "0.8s" : "0.45s"} cubic-bezier(0.16, 1, 0.3, 1), transform ${i === 0 ? "0.8s" : "0.45s"} cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s`,
-                  transitionDelay: showStockChoice ? `${i * 120}ms` : "0ms",
-                  opacity: showStockChoice ? 1 : 0,
-                  transform: showStockChoice ? "translateY(0)" : "translateY(12px)"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "hsl(var(--foreground))";
-                  e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
-                  e.currentTarget.style.boxShadow = "0 8px 25px -8px hsla(0, 0%, 0%, 0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "hsl(var(--border))";
-                  e.currentTarget.style.transform = "translateY(0) scale(1)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}>
-                
+                <button
+                  key={salon.name}
+                  onClick={() => navigate(salon.route)}
+                  className="flex-1 py-4 px-6 rounded-full text-center group/sub"
+                  style={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    color: "hsl(var(--foreground))",
+                    transition: `opacity ${i === 0 ? "0.8s" : "0.45s"} cubic-bezier(0.16, 1, 0.3, 1), transform ${i === 0 ? "0.8s" : "0.45s"} cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s`,
+                    transitionDelay: showStockChoice ? `${i * 120}ms` : "0ms",
+                    opacity: showStockChoice ? 1 : 0,
+                    transform: showStockChoice ? "translateY(0)" : "translateY(12px)"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "hsl(var(--foreground))";
+                    e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
+                    e.currentTarget.style.boxShadow = "0 8px 25px -8px hsla(0, 0%, 0%, 0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "hsl(var(--border))";
+                    e.currentTarget.style.transform = "translateY(0) scale(1)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}>
                   <p className="text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Salon</p>
                   <p className="text-[18px] font-light tracking-tight">{salon.name}</p>
                 </button>
@@ -336,7 +316,7 @@ export default function Landing() {
             delay="870ms"
             visible={visible}
             icon={
-            <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 4H28V12L14 26a2 2 0 01-2.83 0L5.83 20.83a2 2 0 010-2.83L20 4z" />
                 <circle cx="24" cy="10" r="1.5" fill="currentColor" stroke="none" />
                 <line x1="10" y1="26" x2="16" y2="32" strokeOpacity="0.4" />
@@ -345,7 +325,6 @@ export default function Landing() {
             label="Prices & Suppliers"
             title="Office"
             subtitle="Manage product pricing & suppliers" />
-          
         </div>
 
         {/* Bottom floating label */}
@@ -355,7 +334,6 @@ export default function Landing() {
             opacity: visible ? 0.3 : 0,
             transition: "opacity 1s ease 1.1s"
           }}>
-          
           <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>
             ▲ Select to continue
           </p>
@@ -363,5 +341,4 @@ export default function Landing() {
       </div>
 
     </div>);
-
 }
