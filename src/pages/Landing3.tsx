@@ -77,17 +77,22 @@ export default function Landing3() {
 
         .l3-b-text {
           display: block;
-          font-size: clamp(11px, 1.15vw, 13px);
+          font-size: clamp(16px, 2vw, 22px);
           font-weight: 300;
-          letter-spacing: 0.22em;
+          letter-spacing: 0.20em;
           text-transform: uppercase;
-          color: hsl(var(--muted-foreground));
-          transition: color 0.22s ease, letter-spacing 0.28s ease;
-          padding: 3px 0;
+          color: hsl(var(--foreground));
+          opacity: 0.65;
+          transition: opacity 0.22s ease, letter-spacing 0.28s ease;
+          padding: 4px 0;
         }
         .l3-b-item:hover .l3-b-text {
+          opacity: 1;
+          letter-spacing: 0.30em;
+        }
+        .l3-branches-open .l3-b-item .l3-b-text {
+          opacity: 1;
           color: hsl(var(--foreground));
-          letter-spacing: 0.32em;
         }
 
         .l3-nav-item {
@@ -338,10 +343,9 @@ export default function Landing3() {
             </span>
             <span
               style={{
-                color: "hsl(var(--muted-foreground))",
+                color: branchesOpen ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                 display: "block",
-                transition: "filter 0.4s ease, opacity 0.4s ease",
-                opacity: branchesOpen ? blurredOpacity : 1,
+                transition: "color 0.4s ease",
               }}
             >
               Database.
@@ -360,7 +364,8 @@ export default function Landing3() {
             justifyContent: "space-between",
             alignItems: "center",
             opacity: visible ? 1 : 0,
-            transition: "opacity 0.9s ease 1.0s",
+            transform: branchesOpen ? "translateY(-40px)" : "translateY(0)",
+            transition: "opacity 0.9s ease 1.0s, transform 0.5s cubic-bezier(0.16,1,0.3,1)",
             zIndex: 5,
             position: "relative",
           }}
@@ -376,7 +381,8 @@ export default function Landing3() {
               }}
               style={{
                 transform: branchesOpen ? "translateY(-2px)" : "translateY(0)",
-                transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), color 0.25s",
+                color: branchesOpen ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))",
+                transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), color 0.35s",
               }}
             >
               Branches
