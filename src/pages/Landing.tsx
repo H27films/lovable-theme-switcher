@@ -307,7 +307,8 @@ export default function Landing() {
         >
           <h1
             style={{
-              fontSize: "clamp(60px, 10vw, 130px)",
+              fontSize: "90px",
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
               fontWeight: 300,
               letterSpacing: "-0.03em",
               lineHeight: 0.88,
