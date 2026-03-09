@@ -309,6 +309,7 @@ const Index = () => {
   };
 
   const handleEntrySubmit = async () => {
+    if (entrySubmitting) return; // prevent rapid double-clicks
     if (entryPendingGRN) return; // already staged — use Confirm Order button
     if (!entryItems.length) return;
     setEntrySubmitting(true);
@@ -355,6 +356,11 @@ const Index = () => {
       }
       // If branch order: write "Order Request" to AllFileLog (no balance changes yet)
       if (entryType === "Order" && entryBranch !== "Office") {
+        // Clear any stale Order Request rows for this branch before inserting fresh ones
+        await (supabase as any).from("AllFileLog")
+          .delete()
+          .eq("BRANCH", entryBranch)
+          .eq("TYPE", "Order Request");
         for (const item of entryItems) {
           if (!item.productName || item.qty <= 0) continue;
           const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
