@@ -255,9 +255,9 @@ export default function Landing() {
           {/* Continuously animated underline */}
           <style>{`
             @keyframes underlinePulse {
-              0%   { width: 35px; }
-              50%  { width: 280px; }
-              100% { width: 35px; }
+              0%   { width: 45px; }
+              50%  { width: 270px; }
+              100% { width: 45px; }
             }
           `}</style>
           <div
