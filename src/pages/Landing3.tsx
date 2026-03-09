@@ -48,6 +48,8 @@ export default function Landing3() {
 
   const blurredOpacity = 0.25;
   const blurAmount = "blur(5px)";
+  const blurLight = "blur(2px)";
+  const blurredOpacityLight = 0.5;
 
   return (
     <>
@@ -69,29 +71,28 @@ export default function Landing3() {
           display: block;
           margin-bottom: 2px;
         }
-        .l3-branches-open .l3-b-item:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0.21s; }
-        .l3-branches-open .l3-b-item:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.13s; }
-        .l3-branches-open .l3-b-item:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.05s; }
+        .l3-branches-open .l3-b-item:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0.08s; }
+        .l3-branches-open .l3-b-item:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.16s; }
+        .l3-branches-open .l3-b-item:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.24s; }
 
         .l3-b-text {
           display: block;
-          font-size: clamp(20px, 2.8vw, 38px);
-          font-weight: 200;
-          letter-spacing: 0.02em;
-          text-transform: capitalize;
-          color: hsl(var(--dim));
-          transition: color 0.22s ease, letter-spacing 0.22s ease;
-          padding-bottom: 6px;
-          padding-left: 2px;
+          font-size: clamp(11px, 1.15vw, 13px);
+          font-weight: 300;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: hsl(var(--muted-foreground));
+          transition: color 0.22s ease, letter-spacing 0.28s ease;
+          padding: 3px 0;
         }
         .l3-b-item:hover .l3-b-text {
           color: hsl(var(--foreground));
-          letter-spacing: 0.10em;
+          letter-spacing: 0.32em;
         }
 
         .l3-nav-item {
           display: block;
-          font-size: clamp(11px, 1.1vw, 13px);
+          font-size: clamp(12px, 1.3vw, 15px);
           font-weight: 400;
           letter-spacing: 0.18em;
           text-transform: uppercase;
@@ -177,8 +178,8 @@ export default function Landing3() {
               textTransform: "uppercase",
               color: "hsl(var(--foreground))",
               fontWeight: 400,
-              filter: branchesOpen ? blurAmount : "none",
-              opacity: branchesOpen ? blurredOpacity : 1,
+              filter: branchesOpen ? blurLight : "none",
+              opacity: branchesOpen ? blurredOpacityLight : 1,
               transition: "filter 0.4s ease, opacity 0.4s ease",
             }}
           >
@@ -202,7 +203,7 @@ export default function Landing3() {
                 <button className="l3-icon-btn">
                   <svg
                     width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="hsl(var(--dim))" strokeWidth="1.4"
+                    fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4"
                   >
                     <path d="M3 19l5-12 5 12M5.5 14h5M14 19l3.5-7 3.5 7M15.5 16h4" />
                   </svg>
@@ -225,7 +226,7 @@ export default function Landing3() {
                 <button className="l3-icon-btn">
                   <svg
                     width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="hsl(var(--dim))" strokeWidth="1.4"
+                    fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4"
                   >
                     <circle cx="12" cy="12" r="4" />
                     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
@@ -255,7 +256,7 @@ export default function Landing3() {
                 <button className="l3-icon-btn">
                   <svg
                     width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="hsl(var(--dim))" strokeWidth="1.4"
+                    fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4"
                   >
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -348,36 +349,8 @@ export default function Landing3() {
           </h1>
         </div>
 
-        {/* ── Branch name overlay ── */}
-        <div
-          className={`l3-branch-overlay${branchesOpen ? " l3-branches-open" : ""}`}
-          style={{
-            position: "absolute",
-            top: "52%",
-            left: "44px",
-            pointerEvents: branchesOpen ? "auto" : "none",
-            opacity: branchesOpen ? 1 : 0,
-            transition: "opacity 0.35s ease",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            zIndex: 10,
-          }}
-        >
-          {BRANCHES.map((b) => (
-            <div
-              key={b.name}
-              className="l3-b-item"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(b.route);
-              }}
-            >
-              <span className="l3-b-text">{b.name}</span>
-            </div>
-          ))}
-        </div>
 
-        {/* ── Bottom bar ── */}
+                {/* ── Bottom bar ── */}
         <div
           style={{
             flexShrink: 0,
@@ -392,8 +365,8 @@ export default function Landing3() {
             position: "relative",
           }}
         >
-          {/* Left: BRANCHES stacked above OFFICE */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px", alignItems: "flex-start" }}>
+          {/* Left: BRANCHES + inline list + OFFICE */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
             {/* BRANCHES */}
             <div
               className="l3-nav-item l3-branches-nav"
@@ -401,9 +374,38 @@ export default function Landing3() {
                 e.stopPropagation();
                 setBranchesOpen((prev) => !prev);
               }}
+              style={{
+                transform: branchesOpen ? "translateY(-2px)" : "translateY(0)",
+                transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), color 0.25s",
+              }}
             >
               Branches
               <span className="l3-hand-underline" style={{ backgroundImage: BRUSH_URL }} />
+            </div>
+
+            {/* Inline branch list — slides in below BRANCHES */}
+            <div
+              style={{
+                maxHeight: branchesOpen ? "120px" : "0px",
+                overflow: "hidden",
+                transition: "max-height 0.55s cubic-bezier(0.16,1,0.3,1)",
+                paddingTop: branchesOpen ? "10px" : "0px",
+              }}
+            >
+              <div className={branchesOpen ? "l3-branches-open" : ""}>
+                {BRANCHES.map((b) => (
+                  <div
+                    key={b.name}
+                    className="l3-b-item"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(b.route);
+                    }}
+                  >
+                    <span className="l3-b-text">{b.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* OFFICE */}
@@ -414,8 +416,9 @@ export default function Landing3() {
                 navigate("/prices");
               }}
               style={{
-                filter: branchesOpen ? blurAmount : "none",
-                opacity: branchesOpen ? blurredOpacity : 1,
+                marginTop: "14px",
+                filter: branchesOpen ? blurLight : "none",
+                opacity: branchesOpen ? blurredOpacityLight : 1,
                 pointerEvents: branchesOpen ? "none" : "auto",
                 transition: "filter 0.4s ease, opacity 0.4s ease, color 0.25s",
               }}
@@ -432,8 +435,8 @@ export default function Landing3() {
               letterSpacing: "0.25em",
               textTransform: "uppercase",
               color: "hsl(var(--muted-foreground))",
-              filter: branchesOpen ? blurAmount : "none",
-              opacity: branchesOpen ? blurredOpacity : 1,
+              filter: branchesOpen ? blurLight : "none",
+              opacity: branchesOpen ? blurredOpacityLight : 1,
               transition: "filter 0.4s ease, opacity 0.4s ease",
             }}
           >
