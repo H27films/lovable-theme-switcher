@@ -152,8 +152,8 @@ export default function Landing() {
         style={{
           background: "hsl(var(--background))",
           color: "hsl(var(--foreground))",
-          minHeight: "100vh",
-          height: "100vh",
+          minHeight: "100dvh",
+          height: "100dvh",
           overflow: "hidden",
           position: "relative",
           display: "flex",

@@ -1110,7 +1110,7 @@ const Index = () => {
   });
 
   return (
-    <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
+    <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
       {/* ── Scroll direction blur overlays ── */}
       <div style={{
