@@ -382,9 +382,25 @@ function StockInner() {
 
   // ── Page entrance animation ──
   const [mounted, setMounted] = useState(false);
+  const [scrollDir, setScrollDir] = useState<"up" | "down" | null>(null);
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 20);
     return () => clearTimeout(t);
+  }, []);
+
+  // Scroll direction blur effect
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let timer: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrollDir(y > lastY ? "down" : "up");
+      lastY = y;
+      clearTimeout(timer);
+      timer = setTimeout(() => setScrollDir(null), 150);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); clearTimeout(timer); };
   }, []);
   const fade = (delay: number): React.CSSProperties => ({
     opacity: mounted ? 1 : 0,
@@ -2286,6 +2302,32 @@ function StockInner() {
           </div>
         </div>
       )}
+
+      {/* ── Scroll direction blur overlays ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: "70px",
+        background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        maskImage: "linear-gradient(to bottom, black 30%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to bottom, black 30%, transparent 100%)",
+        opacity: scrollDir === "down" ? 1 : 0,
+        transition: "opacity 0.5s ease",
+        pointerEvents: "none",
+        zIndex: 50,
+      }} />
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, height: "70px",
+        background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        maskImage: "linear-gradient(to top, black 30%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to top, black 30%, transparent 100%)",
+        opacity: scrollDir === "up" ? 1 : 0,
+        transition: "opacity 0.5s ease",
+        pointerEvents: "none",
+        zIndex: 50,
+      }} />
     </div>
   );
 }
