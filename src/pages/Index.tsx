@@ -911,6 +911,7 @@ const Index = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
+                onMouseDown={e => e.preventDefault()}
                 className="text-[13px] tracking-[0.15em] uppercase pb-3 transition-colors relative"
                 style={{ color: activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -954,6 +955,7 @@ const Index = () => {
                     <button
                       key={branch}
                       onClick={() => { setSelectedBranch(branch); setExpandedBranchDates(new Set()); setExpandedGRNs(new Set()); setSelectedBranchProduct(null); }}
+                      onMouseDown={e => e.preventDefault()}
                       className="transition-all duration-200"
                       style={{
                         fontSize: selectedBranch === branch ? "15px" : hoveredBranch === branch ? "13px" : "12px",
