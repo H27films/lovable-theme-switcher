@@ -201,6 +201,11 @@ const Index = () => {
   const [entrySubmitting, setEntrySubmitting] = useState(false);
   const [entrySuccess, setEntrySuccess] = useState(false);
   const [entryError, setEntryError] = useState<string | null>(null);
+  const [entryPendingOrder, setEntryPendingOrder] = useState<{
+    grn: string; date: string; branch: string;
+    entries: { productName: string; starting: number; qty: number; ending: number }[];
+  } | null>(null);
+  const [entryConfirming, setEntryConfirming] = useState(false);
   const entrySearchRef = useRef<HTMLDivElement>(null);
   const entryInputRef = useRef<HTMLInputElement>(null);
   const entryDropdownRef = useRef<HTMLDivElement>(null);
@@ -346,21 +351,29 @@ const Index = () => {
             if (logErr) { setEntryError(logErr.message || "Log write failed"); setEntrySubmitting(false); return; }
             await (supabase as any).from("AllFileProducts").update({ "OFFICE BALANCE": endingBalance }).eq("PRODUCT NAME", item.productName);
           } else {
-            const currentBranchBalance = Number((product as any)[balCol] ?? 0);
-            const endingBranchBalance = currentBranchBalance + Number(item.qty);
-            const currentOfficeBalance = Number(product["OFFICE BALANCE"] ?? 0);
-            const endingOfficeBalance = currentOfficeBalance - Number(item.qty);
-            const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
-              "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": entryBranch,
-              "SUPPLIER": "Office", "TYPE": "Order",
-              "STARTING BALANCE": currentBranchBalance, "QTY": Number(item.qty), "ENDING BALANCE": endingBranchBalance,
-              "GRN": grn, "OFFICE BALANCE": endingOfficeBalance,
-            });
-            if (logErr) { setEntryError(logErr.message || "Log write failed"); setEntrySubmitting(false); return; }
-            await (supabase as any).from("AllFileProducts").update({ [balCol]: endingBranchBalance }).eq("PRODUCT NAME", item.productName);
-            await (supabase as any).from("AllFileProducts").update({ "OFFICE BALANCE": endingOfficeBalance }).eq("PRODUCT NAME", item.productName);
+            // Branch order: stage as pending (no Supabase yet)
+            // handled below after loop
           }
         }
+      }
+      // If branch order, collect pending entries and stage (no Supabase)
+      if (entryType === "Order" && entryBranch !== "Office") {
+        const pendingEntries: { productName: string; starting: number; qty: number; ending: number }[] = [];
+        for (const item of entryItems) {
+          if (!item.productName || item.qty <= 0) continue;
+          const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
+          if (!product) continue;
+          const currentBranchBalance = Number((product as any)[balCol] ?? 0);
+          pendingEntries.push({
+            productName: item.productName,
+            starting: currentBranchBalance,
+            qty: Number(item.qty),
+            ending: currentBranchBalance + Number(item.qty),
+          });
+        }
+        setEntryPendingOrder({ grn: grn!, date: today, branch: entryBranch, entries: pendingEntries });
+        setEntrySubmitting(false);
+        return;
       }
       await fetchEntryProducts();
       setEntryItems([]);
@@ -368,6 +381,40 @@ const Index = () => {
       setTimeout(() => setEntrySuccess(false), 3000);
     } catch (err) { console.error("Entry submit error:", err); setEntryError("Submit failed"); }
     setEntrySubmitting(false);
+  };
+
+  const handleEntryConfirmOrder = async () => {
+    if (!entryPendingOrder) return;
+    setEntryConfirming(true);
+    setEntryError(null);
+    const balCol = entryBalanceCol(entryPendingOrder.branch);
+    try {
+      for (const entry of entryPendingOrder.entries) {
+        const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === entry.productName);
+        const currentOfficeBalance = Number((product as any)["OFFICE BALANCE"] ?? 0);
+        const endingOfficeBalance = currentOfficeBalance - entry.qty;
+        await (supabase as any).from("AllFileLog").insert({
+          "DATE": entryPendingOrder.date,
+          "PRODUCT NAME": entry.productName,
+          "BRANCH": entryPendingOrder.branch,
+          "SUPPLIER": "Office",
+          "TYPE": "Order",
+          "STARTING BALANCE": entry.starting,
+          "QTY": entry.qty,
+          "ENDING BALANCE": entry.ending,
+          "GRN": entryPendingOrder.grn,
+          "OFFICE BALANCE": endingOfficeBalance,
+        });
+        await (supabase as any).from("AllFileProducts").update({ [balCol]: entry.ending }).eq("PRODUCT NAME", entry.productName);
+        await (supabase as any).from("AllFileProducts").update({ "OFFICE BALANCE": endingOfficeBalance }).eq("PRODUCT NAME", entry.productName);
+      }
+      await fetchEntryProducts();
+      setEntryItems([]);
+      setEntryPendingOrder(null);
+      setEntrySuccess(true);
+      setTimeout(() => setEntrySuccess(false), 3000);
+    } catch (err) { console.error("Entry confirm order error:", err); setEntryError("Confirm failed"); }
+    setEntryConfirming(false);
   };
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
@@ -2134,7 +2181,7 @@ const Index = () => {
                   <div className="flex items-center justify-between pt-2">
                     <div>
                       {entryError && <span className="text-[12px]" style={{ color: "hsl(var(--red))" }}>{entryError}</span>}
-                      {entrySuccess && <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>✓ Submitted</span>}
+                      {entrySuccess && <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>✓ Confirmed</span>}
                     </div>
                     <button
                       onClick={handleEntrySubmit}
@@ -2149,6 +2196,81 @@ const Index = () => {
               ) : (
                 <p className="text-[13px] font-light" style={dim}>No items added yet</p>
               )}
+            </div>
+          )}
+
+          {/* ── Pending Order Confirmation ── */}
+          {entryPendingOrder && (
+            <div
+              className="absolute inset-0 z-30 flex flex-col p-6"
+              style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-[18px] font-light tracking-tight">Order Summary</h2>
+                  <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
+                    {entryPendingOrder.branch} · {entryPendingOrder.entries.length} {entryPendingOrder.entries.length === 1 ? "item" : "items"} · Pending confirmation
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setEntryPendingOrder(null); setEntryError(null); }}
+                  style={{ color: "hsl(var(--muted-foreground))" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Review order · Confirm to submit to Supabase</p>
+
+              <div className="overflow-y-auto flex-1">
+                <table className="w-full border-collapse mb-6">
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid hsl(var(--border-active))` }}>
+                      <th className="text-left pb-3 pt-2 text-[11px] tracking-wider uppercase font-normal" style={dim}>Product</th>
+                      <th className="text-center pb-3 pt-2 text-[11px] tracking-wider uppercase font-normal" style={dim}>Prev Bal</th>
+                      <th className="text-center pb-3 pt-2 text-[11px] tracking-wider uppercase font-normal" style={dim}>Qty</th>
+                      <th className="text-center pb-3 pt-2 text-[11px] tracking-wider uppercase font-normal" style={dim}>New Bal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entryPendingOrder.entries.map((entry, idx) => (
+                      <tr key={idx} style={{ borderBottom: `1px solid hsl(var(--border))` }}>
+                        <td className="text-[13px] font-light py-3">{entry.productName}</td>
+                        <td className="text-[13px] font-light py-3 text-center" style={dim}>{entry.starting}</td>
+                        <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--foreground))" }}>+{entry.qty}</td>
+                        <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--foreground))" }}>{entry.ending}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-between pt-4" style={{ borderTop: `1px solid hsl(var(--border))` }}>
+                <div>
+                  {entryError && <span className="text-[12px]" style={{ color: "hsl(var(--red))" }}>{entryError}</span>}
+                </div>
+                <div className="flex gap-3 items-center">
+                  <button
+                    onClick={() => { setEntryPendingOrder(null); setEntryError(null); }}
+                    className="text-[12px] tracking-[0.12em] uppercase px-4 py-2"
+                    style={{ color: "hsl(var(--muted-foreground))" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEntryConfirmOrder}
+                    disabled={entryConfirming}
+                    className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
+                    style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entryConfirming ? 0.6 : 1 }}
+                  >
+                    {entryConfirming ? "Confirming..." : "Confirm Order"}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
