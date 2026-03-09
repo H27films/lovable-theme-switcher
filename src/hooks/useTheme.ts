@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 
 export type Theme = "dark" | "light" | "sand";
-export type Font = "inter" | "raleway";
+export type Font = "inter" | "raleway" | "helvetica";
 
 const fontFamilies: Record<Font, string> = {
   inter: "'Inter', sans-serif",
   raleway: "'Raleway', sans-serif",
+  helvetica: "'Helvetica Neue', Helvetica, Arial, sans-serif",
 };
 
 export function useTheme() {
@@ -16,7 +17,7 @@ export function useTheme() {
 
   const [font, setFont] = useState<Font>(() => {
     const saved = localStorage.getItem("font");
-    return (saved === "raleway" ? saved : "inter") as Font;
+    return (saved === "raleway" || saved === "helvetica" ? saved : "inter") as Font;
   });
 
   useEffect(() => {
@@ -39,7 +40,11 @@ export function useTheme() {
     return "dark";
   });
 
-  const cycleFont = () => setFont(f => f === "inter" ? "raleway" : "inter");
+  const cycleFont = () => setFont(f => {
+    if (f === "inter") return "raleway";
+    if (f === "raleway") return "helvetica";
+    return "inter";
+  });
 
   return { theme, toggle, setTheme, font, cycleFont, setFont };
 }
