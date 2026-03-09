@@ -702,6 +702,7 @@ const Index = () => {
     } finally {
       setSavingNewProduct(false);
     }
+  };
 
   // ── Page entrance animation ──
   const [mounted, setMounted] = useState(false);
@@ -709,19 +710,24 @@ const Index = () => {
     const t = setTimeout(() => setMounted(true), 20);
     return () => clearTimeout(t);
   }, []);
+  // fade: full animation for elements that don't contain dropdowns
   const fade = (delay: number): React.CSSProperties => ({
     opacity: mounted ? 1 : 0,
     transform: mounted ? "translateY(0)" : "translateY(12px)",
     transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
   });
-  };
+  // fadeTop: opacity-only for top bar to avoid transform stacking context breaking dropdown z-index
+  const fadeTop = (delay: number): React.CSSProperties => ({
+    opacity: mounted ? 1 : 0,
+    transition: `opacity 0.55s ease ${delay}ms`,
+  });
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
       <div className="max-w-[900px] mx-auto px-5">
 
         {/* ── Top bar ── */}
-        <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border, position: "relative", zIndex: 10, ...fade(0) }}>
+        <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border, position: "relative", zIndex: 10, ...fadeTop(0) }}>
           <div className="flex items-center gap-4">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
             <button
