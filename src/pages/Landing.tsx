@@ -133,7 +133,7 @@ export default function Landing() {
           borderColor: "hsl(var(--border))",
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(-10px)",
-          transition: "opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s"
+          transition: "opacity 0.6s ease 0.55s, transform 0.6s ease 0.55s"
         }}>
         
         <span
@@ -234,20 +234,14 @@ export default function Landing() {
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 relative z-10">
 
         {/* Title with staggered animation */}
-        <div
-          className="text-center mb-14"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(20px)",
-            transition: "opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
-          }}>
+        <div className="text-center mb-14">
           
           <h1
             className="text-[42px] font-light tracking-tight"
             style={{
               opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0) scale(1)" : "translateY(10px) scale(0.98)",
-              transition: "all 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.45s"
+              transform: visible ? "translateY(0) scale(1)" : "translateY(12px) scale(0.98)",
+              transition: "opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)"
             }}>
             
             Product Database
@@ -255,9 +249,9 @@ export default function Landing() {
           {/* Continuously animated underline */}
           <style>{`
             @keyframes underlinePulse {
-              0%   { width: 55px; }
+              0%   { width: 25px; }
               50%  { width: 270px; }
-              100% { width: 55px; }
+              100% { width: 25px; }
             }
           `}</style>
           <div
@@ -266,7 +260,7 @@ export default function Landing() {
               background: "hsl(var(--foreground))",
               margin: "12px auto 0",
               opacity: visible ? 0.3 : 0,
-              transition: "opacity 0.8s ease 0.6s",
+              transition: "opacity 0.7s ease 0.15s",
               animation: visible ? "underlinePulse 5s ease-in-out infinite" : "none"
             }} />
           
@@ -276,7 +270,7 @@ export default function Landing() {
         <div className="flex flex-col gap-4 w-full max-w-[560px]">
           <LandingCard
             onClick={() => setShowStockChoice((prev) => !prev)}
-            delay="200ms"
+            delay="700ms"
             visible={visible}
             icon={
             <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
@@ -338,7 +332,7 @@ export default function Landing() {
 
           <LandingCard
             onClick={() => navigate("/prices")}
-            delay="320ms"
+            delay="870ms"
             visible={visible}
             icon={
             <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
@@ -358,7 +352,7 @@ export default function Landing() {
           style={{
             marginTop: "48px",
             opacity: visible ? 0.3 : 0,
-            transition: "opacity 1s ease 0.8s"
+            transition: "opacity 1s ease 1.1s"
           }}>
           
           <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>
