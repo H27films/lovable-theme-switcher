@@ -145,7 +145,7 @@ export default function Landing() {
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="hover:opacity-80 transition-colors data-[state=open]:text-white" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <button className="transition-colors hover:!text-white data-[state=open]:!text-white" style={{ color: "hsl(var(--muted-foreground))" }}>
                 <Settings size={16} />
               </button>
             </DropdownMenuTrigger>
