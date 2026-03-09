@@ -76,7 +76,7 @@ export default function Landing() {
           display: block;
           font-size: clamp(16px, 2vw, 22px);
           font-weight: 300;
-          letter-spacing: 0.20em;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: hsl(var(--foreground));
           opacity: 0.65;
@@ -85,7 +85,7 @@ export default function Landing() {
         }
         .l3-b-item:hover .l3-b-text {
           opacity: 1;
-          letter-spacing: 0.30em;
+          letter-spacing: 0.18em;
         }
         .l3-branches-open .l3-b-item .l3-b-text {
           opacity: 1;
