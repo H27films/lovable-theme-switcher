@@ -79,7 +79,7 @@ export default function Landing3() {
           font-weight: 200;
           letter-spacing: 0.02em;
           text-transform: capitalize;
-          color: hsl(var(--muted-foreground));
+          color: hsl(var(--dim));
           transition: color 0.22s ease, letter-spacing 0.22s ease;
           padding-bottom: 6px;
           padding-left: 2px;
@@ -175,7 +175,7 @@ export default function Landing3() {
               fontSize: "11px",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
-              color: "hsl(var(--muted-foreground))",
+              color: "hsl(var(--foreground))",
               fontWeight: 400,
               filter: branchesOpen ? blurAmount : "none",
               opacity: branchesOpen ? blurredOpacity : 1,
@@ -202,7 +202,7 @@ export default function Landing3() {
                 <button className="l3-icon-btn">
                   <svg
                     width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4"
+                    fill="none" stroke="hsl(var(--dim))" strokeWidth="1.4"
                   >
                     <path d="M3 19l5-12 5 12M5.5 14h5M14 19l3.5-7 3.5 7M15.5 16h4" />
                   </svg>
@@ -225,7 +225,7 @@ export default function Landing3() {
                 <button className="l3-icon-btn">
                   <svg
                     width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4"
+                    fill="none" stroke="hsl(var(--dim))" strokeWidth="1.4"
                   >
                     <circle cx="12" cy="12" r="4" />
                     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
@@ -255,7 +255,7 @@ export default function Landing3() {
                 <button className="l3-icon-btn">
                   <svg
                     width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4"
+                    fill="none" stroke="hsl(var(--dim))" strokeWidth="1.4"
                   >
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
