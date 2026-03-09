@@ -1575,13 +1575,24 @@ const Index = () => {
         </div>
       </div>
 
-      {/* New Product Modal */}
+      {/* New Product Panel */}
       {showNewProductModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowNewProductModal(false)}>
-          <div className="rounded-lg p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
-              <p className="text-[18px] font-light tracking-tight">New Product</p>
-              <button onClick={() => setShowNewProductModal(false)} style={{ color: "hsl(var(--muted-foreground))" }}><X size={16} /></button>
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowNewProductModal(false)}>
+          <div
+            className="h-full w-full max-w-[520px] overflow-y-auto p-10"
+            style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-[24px] font-light tracking-tight">New Product</h2>
+                <p className="text-[14.5px] tracking-wider uppercase mt-1" style={dim}>Add to product database</p>
+              </div>
+              <button onClick={() => setShowNewProductModal(false)} style={dim}
+                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                <X size={16} />
+              </button>
             </div>
 
             <div className="flex flex-col gap-3">
