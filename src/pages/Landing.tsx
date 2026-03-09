@@ -313,7 +313,7 @@ export default function Landing() {
                   background: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
                   color: "hsl(var(--foreground))",
-                  transition: "opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s",
+                  transition: `opacity ${i === 0 ? "0.8s" : "0.45s"} cubic-bezier(0.16, 1, 0.3, 1), transform ${i === 0 ? "0.8s" : "0.45s"} cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s`,
                   transitionDelay: showStockChoice ? `${i * 120}ms` : "0ms",
                   opacity: showStockChoice ? 1 : 0,
                   transform: showStockChoice ? "translateY(0)" : "translateY(12px)"
