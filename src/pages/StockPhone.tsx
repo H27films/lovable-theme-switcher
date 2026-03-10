@@ -1227,7 +1227,7 @@ function StockInner() {
 
             {/* Stock search bar with hover underline */}
             <div
-              style={{...fade(170), position: "relative", zIndex: 40}}
+              style={{...fade(170), position: "relative", zIndex: 40, marginTop: "16px"}}
             >
               <div
                 className="relative mb-6"
