@@ -1777,9 +1777,9 @@ function StockInner() {
 
             {/* ── Order Summary Panel ── */}
             {mode === "summary" && (
-              <div className="pt-2 pb-12">
+              <div className="pt-1 pb-12">
                   {/* Panel header */}
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center justify-between mb-3">
                     <div>
                       <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
                       <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
