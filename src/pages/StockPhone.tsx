@@ -1178,7 +1178,7 @@ function StockInner() {
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
       <div className="max-w-[900px] mx-auto px-5">
         {/* Top bar */}
-        <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border, ...fade(0) }}>
+        <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, ...fade(0) }}>
           <span
             className="text-[11px] tracking-[0.2em] uppercase"
             style={{ color: "hsl(var(--foreground))" }}
