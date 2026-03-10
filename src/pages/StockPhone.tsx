@@ -1376,7 +1376,7 @@ function StockInner() {
           <div className="mb-12" style={{ ...fade(260), position: "relative", zIndex: 10 }}>
 
             {/* Tab buttons */}
-            <div className="flex items-center border-b mb-8" style={{ borderColor: border }}>
+            <div className="flex items-center border-b mb-4" style={{ borderColor: border }}>
               <button
                 onClick={() => setMode("usage")}
                 className="pb-3 pr-6 text-[13px] tracking-wider uppercase transition-colors"
