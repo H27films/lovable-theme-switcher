@@ -176,7 +176,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
                 className="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors"
                 style={{
                   borderBottom: `1px solid ${border}`,
-                  background: i === activeIndex ? cardBg : "transparent",
+                  background: i === activeIndex ? cardBg : "hsl(var(--popover))",
                 }}
                 onMouseDown={() => { onSelect(p["PRODUCT NAME"]); setActiveIndex(-1); }}
                 onMouseEnter={() => setActiveIndex(i)}
@@ -269,7 +269,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
               className="px-3 py-2 text-[11px] font-light cursor-pointer transition-colors"
               style={{
                 borderBottom: `1px solid ${border}`,
-                background: i === activeIndex ? cardBg : "transparent",
+                background: i === activeIndex ? cardBg : "hsl(var(--popover))",
               }}
               onMouseDown={() => { onSelect(t); setActiveIndex(-1); }}
               onMouseEnter={() => setActiveIndex(i)}
