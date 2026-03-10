@@ -152,8 +152,8 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
 
       {entry.showProductDropdown && (
         <div
-          className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+          className="absolute top-full left-0 right-0 z-[200] border"
+          style={{ background: "hsl(var(--card))", borderColor: borderActive, marginTop: "2px" }}
         >
           <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor: border }}>
             <Search size={11} style={dim} />
@@ -176,7 +176,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
                 className="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors"
                 style={{
                   borderBottom: `1px solid ${border}`,
-                  background: i === activeIndex ? cardBg : "hsl(var(--popover))",
+                  background: i === activeIndex ? "hsl(var(--muted))" : "hsl(var(--card))",
                 }}
                 onMouseDown={() => { onSelect(p["PRODUCT NAME"]); setActiveIndex(-1); }}
                 onMouseEnter={() => setActiveIndex(i)}
@@ -260,8 +260,8 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
       </div>
       {entry.showTypeDropdown && (
         <div
-          className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+          className="absolute top-full left-0 right-0 z-[200] border"
+          style={{ background: "hsl(var(--card))", borderColor: borderActive, marginTop: "2px" }}
         >
           {TYPES.map((t, i) => (
             <div
@@ -269,7 +269,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
               className="px-3 py-2 text-[11px] font-light cursor-pointer transition-colors"
               style={{
                 borderBottom: `1px solid ${border}`,
-                background: i === activeIndex ? cardBg : "hsl(var(--popover))",
+                background: i === activeIndex ? "hsl(var(--muted))" : "hsl(var(--card))",
               }}
               onMouseDown={() => { onSelect(t); setActiveIndex(-1); }}
               onMouseEnter={() => setActiveIndex(i)}
@@ -318,7 +318,7 @@ function DatePicker({ value, onChange }: {
       {open && (
         <div
           className="absolute top-full right-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "110px", borderRadius: "5px" }}
+          style={{ background: "hsl(var(--card))", borderColor: borderActive, minWidth: "110px", borderRadius: "5px", zIndex: 200 }}
         >
           {OPTIONS.map(opt => (
             <div
