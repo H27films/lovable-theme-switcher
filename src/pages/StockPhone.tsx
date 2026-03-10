@@ -1179,6 +1179,12 @@ function StockInner() {
       <div className="max-w-[900px] mx-auto px-5">
         {/* Top bar */}
         <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border, ...fade(0) }}>
+          <span
+            className="text-[11px] tracking-[0.2em] uppercase"
+            style={{ color: "hsl(var(--foreground))" }}
+          >
+            Boudoir
+          </span>
           <div className="flex items-center gap-4">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
             <button
@@ -1197,20 +1203,7 @@ function StockInner() {
             >
               <Home size={14} />
             </button>
-            <span
-              className="text-[11px] tracking-[0.2em] uppercase"
-              style={{ color: "hsl(var(--foreground))" }}
-            >
-              Boudoir
-            </span>
           </div>
-          <button
-            onClick={() => navigate("/prices")}
-            className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase text-foreground transition-colors"
-          >
-            <span>OFFICE</span>
-            <ArrowRight size={15} />
-          </button>
         </div>
 
         <div className="py-6">
