@@ -415,9 +415,18 @@ function StockInner() {
   const [stockSearchFocused, setStockSearchFocused] = useState(false);
   const stockListRef = useRef<HTMLDivElement>(null);
   const stockInputRef = useRef<HTMLInputElement>(null);
+  const activityDetailRef = useRef<HTMLDivElement>(null);
   const stockSearchExpanded = stockSearchHovered || stockSearchFocused || stockSearch.length > 0;
 
   const today = new Date().toISOString().split("T")[0];
+
+  useEffect(() => {
+    if (selectedActivityProduct && activityDetailRef.current) {
+      setTimeout(() => {
+        activityDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [selectedActivityProduct]);
   const [usageDate, setUsageDate] = useState<"today" | "yesterday" | "tomorrow">("today");
   const [orderDate, setOrderDate] = useState<"today" | "yesterday" | "tomorrow">("today");
 
@@ -2056,7 +2065,7 @@ function StockInner() {
                   return `RM ${val.toFixed(2)}`;
                 };
                 return (
-                  <div className="surface-box p-6 mb-6" style={{ borderRadius: "5px" }}>
+                  <div ref={activityDetailRef} className="surface-box p-6 mb-6" style={{ borderRadius: "5px" }}>
                     {/* Name + star + close | Balance + units */}
                     <div className="flex items-center justify-between mb-6">
                       <div>
