@@ -2051,56 +2051,73 @@ function StockInner() {
               {selectedActivityProduct && (() => {
                 const info = products.find(p => p["PRODUCT NAME"] === selectedActivityProduct) ?? null;
                 const activityForProduct = log.filter(r => r["PRODUCT NAME"] === selectedActivityProduct);
+                const fmtPrice = (val: number | null | undefined) => {
+                  if (!val || val < 0.01) return "—";
+                  return `RM ${val.toFixed(2)}`;
+                };
                 return (
-                  <div className="surface-box p-5 mb-6">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="surface-box p-6 mb-6" style={{ borderRadius: "5px" }}>
+                    {/* Name + star + close | Balance + units */}
+                    <div className="flex items-center justify-between mb-6">
                       <div>
-                        <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Boudoir · Product Detail</p>
-                        <p className="text-[15px] font-light">{selectedActivityProduct}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[15px] font-light">{selectedActivityProduct}</p>
+                          {info && (
+                            <button
+                              onClick={() => toggleFavourite(info)}
+                              title={info["BOUDOIR FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
+                            >
+                              <Star
+                                size={20}
+                                style={{
+                                  fill: info["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
+                                  color: info["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                                  transition: "all 0.15s"
+                                }}
+                              />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setSelectedActivityProduct(null)}
+                            style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        {info && (
-                          <div className="text-right">
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
-                            <p className="text-[28px] font-light leading-none" style={{
-                              color: (info["BOUDOIR BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                            }}>
-                              {info["BOUDOIR BALANCE"] ?? 0}
-                            </p>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => setSelectedActivityProduct(null)}
-                          style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
+                      {info && (
+                        <div className="text-right">
+                          <p className="text-[22px] font-light leading-none" style={{
+                            color: (info["BOUDOIR BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                          }}>
+                            {info["BOUDOIR BALANCE"] ?? 0}
+                          </p>
+                          <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
+                        </div>
+                      )}
                     </div>
-                    {info && (info["STAFF PRICE"] || info["CUSTOMER PRICE"] || info["BRANCH PRICE"]) && (
-                      <div className="flex items-center gap-6 mb-4 pt-3 border-t" style={{ borderColor: border }}>
+
+                    {/* Prices */}
+                    {info && (info["STAFF PRICE"] || info["CUSTOMER PRICE"]) && (
+                      <div className="flex items-center gap-6 mb-6 pt-4 border-t" style={{ borderColor: border }}>
                         {info["STAFF PRICE"] && (info["STAFF PRICE"] as number) > 0 && (
                           <div>
                             <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
-                            <p className="text-[14px] font-light">RM {(info["STAFF PRICE"] as number).toFixed(2)}</p>
+                            <p className="text-[13px] font-light">{fmtPrice(info["STAFF PRICE"] as number)}</p>
                           </div>
                         )}
                         {info["CUSTOMER PRICE"] && (info["CUSTOMER PRICE"] as number) > 0 && (
                           <div>
                             <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
-                            <p className="text-[14px] font-light">RM {(info["CUSTOMER PRICE"] as number).toFixed(2)}</p>
-                          </div>
-                        )}
-                        {info["BRANCH PRICE"] && (info["BRANCH PRICE"] as number) > 0 && (
-                          <div>
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
-                            <p className="text-[14px] font-light">RM {(info["BRANCH PRICE"] as number).toFixed(2)}</p>
+                            <p className="text-[13px] font-light">{fmtPrice(info["CUSTOMER PRICE"] as number)}</p>
                           </div>
                         )}
                       </div>
                     )}
+
+                    {/* Table */}
                     {activityForProduct.length === 0 ? (
                       <p className="text-[12px]" style={dim}>No activity found for this product</p>
                     ) : (
@@ -2110,20 +2127,22 @@ function StockInner() {
                             <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
                             <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
                             <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
-                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">End Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">GRN</th>
                           </tr>
                         </thead>
                         <tbody>
                           {activityForProduct.map(row => (
                             <tr key={row.id} className="border-b" style={{ borderColor: border }}>
-                              <td className="text-[12px] font-light py-2">
+                              <td className="text-[10px] font-light py-2" style={dim}>
                                 {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                               </td>
-                              <td className="text-[11px] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                              <td className="text-[13px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                              <td className="text-[10px] font-light py-2" style={dim}>{row.TYPE || "—"}</td>
+                              <td className="text-[12px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                 {row.QTY > 0 ? "+" : ""}{row.QTY}
                               </td>
-                              <td className="text-[13px] font-light py-2 text-center">{row["ENDING BALANCE"]}</td>
+                              <td className="text-[12px] font-light py-2 text-center">{row["ENDING BALANCE"] ?? "—"}</td>
+                              <td className="text-[11px] font-light py-2 text-center" style={dim}>{row.GRN || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
