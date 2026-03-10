@@ -2162,7 +2162,7 @@ function StockInner() {
                       <tr className="border-b" style={{ borderColor: borderActive }}>
                         <th
                           className="label-uppercase font-normal text-left pb-3 pt-2 cursor-pointer select-none transition-colors"
-                          style={{ color: "hsl(var(--muted-foreground))" }}
+                          style={{ color: "hsl(var(--muted-foreground))", width: "65px" }}
                           onClick={() => setDateSortAsc(prev => !prev)}
                           onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                           onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
