@@ -1777,11 +1777,11 @@ function StockInner() {
 
             {/* ── Order Summary Panel ── */}
             {mode === "summary" && (
-              <div className="pt-0 pb-12">
+              <div>
                   {/* Panel header */}
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-[18px] font-light tracking-tight" style={{ margin: 0, padding: 0 }}>Order Summary</h2>
+                      <div className="text-[18px] font-light tracking-tight" style={{ lineHeight: 1.2 }}>Order Summary</div>
                       <p className="text-[11px] tracking-wider uppercase mt-0.5" style={dim}>
                         {pendingOrder
                           ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
