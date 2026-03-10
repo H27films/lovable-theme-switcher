@@ -1778,16 +1778,19 @@ function StockInner() {
             {/* ── Order Summary Panel ── */}
             {mode === "summary" && (
               <div className="pt-0 pb-12">
-                  {/* Panel header - date/count info only */}
+                  {/* Panel header */}
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[11px] tracking-wider uppercase" style={dim}>
-                      {pendingOrder
-                        ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
-                        : latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                      {pendingOrder
-                        ? ` · ${pendingOrder.entries.length} ${pendingOrder.entries.length === 1 ? "item" : "items"} · Pending`
-                        : allTodayOrders.length > 0 ? ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}` : ""}
-                    </p>
+                    <div>
+                      <h2 className="text-[18px] font-light tracking-tight">Order Summary</h2>
+                      <p className="text-[11px] tracking-wider uppercase mt-0.5" style={dim}>
+                        {pendingOrder
+                          ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+                          : latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        {pendingOrder
+                          ? ` · ${pendingOrder.entries.length} ${pendingOrder.entries.length === 1 ? "item" : "items"} · Pending`
+                          : allTodayOrders.length > 0 ? ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}` : ""}
+                      </p>
+                    </div>
                   </div>
 
                   {/* ── Most recent order (editable) ── */}
