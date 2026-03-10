@@ -251,7 +251,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
       onKeyDown={handleKeyDown}
     >
       <div
-        className={lineStyle ? "flex items-center justify-between px-0 cursor-pointer h-[40px] w-full" : "flex items-center justify-between px-2 py-2 cursor-pointer h-[34px]"}
+        className={lineStyle ? "flex items-center justify-between px-0 cursor-pointer h-[28px] w-full" : "flex items-center justify-between px-2 py-2 cursor-pointer h-[34px]"}
         style={lineStyle ? {} : { background: cardBg, border: `1px solid ${borderActive}` }}
         onClick={onToggle}
       >
@@ -1988,10 +1988,10 @@ function StockInner() {
                                 onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
                                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                               >
-                                <td className="text-[12px] font-light py-3" style={dim}>
+                                <td className="text-[12px] font-light py-3" style={{ color: "hsl(var(--foreground))" }}>
                                   {new Date(group.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                 </td>
-                                <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.grn}</td>
+                                <td className="text-[12px] font-light py-3 text-center" style={{ color: "hsl(var(--foreground))" }}>{group.grn}</td>
                                 <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.rows.length}</td>
                                 <td className="py-3 text-center">
                                   <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
