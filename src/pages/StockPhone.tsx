@@ -1706,9 +1706,9 @@ function StockInner() {
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                             >Date</th>
                             <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
-                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Starting Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Start Bal</th>
                             <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">End Bal</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1718,10 +1718,10 @@ function StockInner() {
                             const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && olderDates.length > 0);
                             return (
                               <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
-                                <td className="text-[12px] font-light py-3">
+                                <td className="text-[10px] font-light py-3">
                                   {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                 </td>
-                                <td className="text-[13px] font-light py-3">{row["PRODUCT NAME"]}</td>
+                                <td className="text-[11px] font-light py-3">{row["PRODUCT NAME"]}</td>
                                 <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["STARTING BALANCE"]}</td>
                                 <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</td>
                                 <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
@@ -1743,10 +1743,10 @@ function StockInner() {
                                   onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
                                   onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                                 >
-                                  <td className="text-[12px] font-light py-3" style={dim}>
+                                  <td className="text-[10px] font-light py-3" style={dim}>
                                     {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                   </td>
-                                  <td className="text-[12px] font-light py-3" style={dim}>
+                                  <td className="text-[11px] font-light py-3" style={dim}>
                                     {rows.length} {rows.length === 1 ? "item" : "items"}
                                   </td>
                                   <td colSpan={2} />
@@ -1757,7 +1757,7 @@ function StockInner() {
                                 {isExpanded && rows.map((row, ri) => (
                                   <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
                                     <td className="text-[10px] font-light py-2.5 pl-2" style={dim}>—</td>
-                                    <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
+                                    <td className="text-[11px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center" style={dim}>{row["STARTING BALANCE"]}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
