@@ -1781,7 +1781,7 @@ function StockInner() {
                   {/* Panel header */}
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h2 className="text-[18px] font-light tracking-tight">Order Summary</h2>
+                      <h2 className="text-[18px] font-light tracking-tight" style={{ margin: 0, padding: 0 }}>Order Summary</h2>
                       <p className="text-[11px] tracking-wider uppercase mt-0.5" style={dim}>
                         {pendingOrder
                           ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
