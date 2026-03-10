@@ -346,7 +346,7 @@ function StockInner() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
 
-  const [mode, setMode] = useState<"usage" | "order">("usage");
+  const [mode, setMode] = useState<"usage" | "order" | "summary">("usage");
 
   const [products, setProducts] = useState<AllFileProduct[]>([]);
   const [log, setLog] = useState<LogRow[]>([]);
@@ -1210,20 +1210,6 @@ function StockInner() {
 
           {/* ── SECTION 1: Boudoir Stock ── */}
           <div className="mb-4">
-            {mode === "order" && (
-              <div className="flex justify-end mb-2" style={fade(90)}>
-                <span
-                  className="nav-link relative"
-                  style={{ color: "hsl(var(--foreground))" }}
-                  onClick={() => setShowOrderSummaryPanel(true)}
-                >
-                  Order Summary &nbsp;<FileText size={13} className="inline -mt-0.5" />
-                  {hasOrderNotification && (
-                    <span className="absolute -top-1 -right-0 w-2 h-2 rounded-full" style={{ background: "hsl(var(--green))" }} />
-                  )}
-                </span>
-              </div>
-            )}
 
             {/* Stock search bar with hover underline */}
             <div
@@ -1412,6 +1398,17 @@ function StockInner() {
                 }}
               >
                 Order
+              </button>
+              <button
+                onClick={() => setMode("summary")}
+                className="pb-3 px-6 text-[13px] tracking-wider uppercase transition-colors"
+                style={{
+                  color: mode === "summary" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                  borderBottom: mode === "summary" ? "1px solid hsl(var(--foreground))" : "1px solid transparent",
+                  marginBottom: "-1px",
+                }}
+              >
+                Summary
               </button>
             </div>
 
@@ -1778,6 +1775,251 @@ function StockInner() {
             )}
           </div>
 
+            {/* ── Order Summary Panel ── */}
+            {mode === "summary" && (
+              <div className="pt-2 pb-12">
+                  {/* Panel header */}
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
+                      <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
+                        {pendingOrder
+                          ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+                          : latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        {pendingOrder
+                          ? ` · ${pendingOrder.entries.length} ${pendingOrder.entries.length === 1 ? "item" : "items"} · Pending`
+                          : allTodayOrders.length > 0 ? ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}` : ""}
+                      </p>
+                    </div>
+                    <button onClick={() => setMode("order")} style={dim}
+                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* ── Most recent order (editable) ── */}
+                  {pendingOrder !== null ? (
+                    <>
+                      <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Pending confirmation · Click qty to edit · × to remove</p>
+                      <table className="w-full border-collapse mb-8">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
+                            <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Prev Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">New Bal</th>
+                            <th className="w-6" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pendingOrder.entries.map((entry, idx) => {
+                            const isEditing = editingPendingIdx === idx;
+                            const parsedEdit = parseInt(editingPendingQty);
+                            const previewBal = isEditing && !isNaN(parsedEdit) ? entry.starting + parsedEdit : entry.ending;
+                            return (
+                              <tr key={idx} className="border-b" style={{ borderColor: "hsl(var(--border))" }}>
+                                <td className="text-[13px] font-light py-3">{entry.productName}</td>
+                                <td className="text-[13px] font-light py-3 text-center" style={dim}>{entry.starting}</td>
+                                <td className="text-[13px] font-light py-3 text-center">
+                                  {isEditing ? (
+                                    <input
+                                      autoFocus
+                                      type="number"
+                                      min={1}
+                                      className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                      style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
+                                      value={editingPendingQty}
+                                      onChange={e => setEditingPendingQty(e.target.value)}
+                                      onClick={e => (e.target as HTMLInputElement).select()}
+                                      onBlur={() => {
+                                        if (!isNaN(parsedEdit) && parsedEdit > 0) {
+                                          setPendingOrder(prev => {
+                                            if (!prev) return prev;
+                                            const entries = [...prev.entries];
+                                            entries[idx] = { ...entries[idx], qty: parsedEdit, ending: entries[idx].starting + parsedEdit };
+                                            return { ...prev, entries };
+                                          });
+                                        }
+                                        setEditingPendingIdx(null);
+                                      }}
+                                      onKeyDown={e => {
+                                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                        if (e.key === "Escape") setEditingPendingIdx(null);
+                                      }}
+                                    />
+                                  ) : (
+                                    <span
+                                      className="cursor-pointer"
+                                      style={{ color: "hsl(var(--green))" }}
+                                      title="Click to edit"
+                                      onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }}
+                                      onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+                                      onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+                                    >+{entry.qty}</span>
+                                  )}
+                                </td>
+                                <td className="text-[13px] font-light py-3 text-center" style={isEditing ? dim : {}}>{previewBal}</td>
+                                <td className="py-3 text-center">
+                                  <button
+                                    onClick={() => {
+                                      const productName = entry.productName;
+                                      setPendingOrder(prev => {
+                                        if (!prev) return prev;
+                                        const entries = prev.entries.filter((_, i) => i !== idx);
+                                        if (!entries.length) { setOrderSubmitted(false); return null; }
+                                        return { ...prev, entries };
+                                      });
+                                      setOrderEntries(prev => prev.map(e => e.productName === productName ? { ...e, productName: "", qty: 1, productSearch: "", showProductDropdown: false } : e));
+                                    }}
+                                    style={dim}
+                                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                                    onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                                  ><X size={13} /></button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+
+                      {/* Notes */}
+                      <div className="mb-6 mt-2">
+                        <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Add Notes</p>
+                        <textarea
+                          rows={3}
+                          className="w-full bg-transparent outline-none text-[13px] font-light resize-none"
+                          style={{ borderBottom: "1px solid hsl(var(--border-active))", padding: "6px 0", color: "hsl(var(--foreground))" }}
+                          placeholder="Example: No Argan Stock..."
+                          value={grnNotes}
+                          onChange={e => setGrnNotes(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-3 mb-12">
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={handleConfirmOrder}
+                            disabled={orderConfirming}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase"
+                            style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", padding: "6px 12px", borderRadius: "5px", opacity: orderConfirming ? 0.5 : 1 }}
+                          >
+                            {orderConfirming ? "Confirming..." : "Confirm Order"}
+                          </button>
+                          <button
+                            onClick={handleResetOrder}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            Reset
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <button
+                            onClick={generateGRNPdf}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <FileText size={12} />
+                            GRN
+                          </button>
+                          <button
+                            onClick={exportToExcel}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <Download size={12} />
+                            Export to Excel
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : allTodayOrders.length === 0 ? (
+                    <p className="text-[13px]" style={dim}>No orders submitted yet.</p>
+                  ) : (
+                    <div className="flex items-center gap-6 mb-12">
+                      <button
+                        onClick={generateGRNPdf}
+                        className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                        style={{ color: "hsl(var(--muted-foreground))" }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                      >
+                        <FileText size={12} />
+                        GRN
+                      </button>
+                      <button
+                        onClick={exportToExcel}
+                        className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                        style={{ color: "hsl(var(--muted-foreground))" }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                      >
+                        <Download size={12} />
+                        Export to Excel
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ── All Orders ── */}
+                  {allOrderGroups.length > 0 && (
+                    <div>
+                      <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))" }}>
+                        <h3 className="text-[13px] font-light tracking-tight mb-1">All Orders</h3>
+                        <p className="text-[10px] tracking-wider uppercase" style={dim}>Last 60 days</p>
+                      </div>
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
+                            <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">GRN</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Items</th>
+                            <th className="w-8 label-uppercase font-normal text-center pb-3 pt-2">{expandedGRNs.size > 0 ? "BAL" : ""}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allOrderGroups.map(group => (
+                            <>
+                              <tr
+                                key={group.key}
+                                className="border-b cursor-pointer"
+                                style={{ borderColor: "hsl(var(--border))" }}
+                                onClick={() => toggleGRN(group.key)}
+                                onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                              >
+                                <td className="text-[12px] font-light py-3" style={dim}>
+                                  {new Date(group.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                </td>
+                                <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.grn}</td>
+                                <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.rows.length}</td>
+                                <td className="py-3 text-center">
+                                  <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+                                </td>
+                              </tr>
+                              {expandedGRNs.has(group.key) && group.rows.map((row, ri) => (
+                                <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))" }}>
+                                  <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
+                                  <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
+                                  <td className="text-[12px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>+{row.QTY}</td>
+                                  <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["ENDING BALANCE"]}</td>
+                                </tr>
+                              ))}
+                            </>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+              </div>
+            )}
+
+
           {/* ── SECTION 3: Recent Activity (Daily Usage mode only) ── */}
           {mode === "usage" && (
             <div>
@@ -2025,255 +2267,6 @@ function StockInner() {
         </div>
       </div>
 
-      {/* ── Order Summary Panel ── */}
-      {showOrderSummaryPanel && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderSummaryPanel(false)}>
-          <div
-            className="h-full w-full max-w-[480px] overflow-y-auto p-8"
-            style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Panel header */}
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
-                <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
-                  {pendingOrder
-                    ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
-                    : latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  {pendingOrder
-                    ? ` · ${pendingOrder.entries.length} ${pendingOrder.entries.length === 1 ? "item" : "items"} · Pending`
-                    : allTodayOrders.length > 0 ? ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}` : ""}
-                </p>
-              </div>
-              <button onClick={() => setShowOrderSummaryPanel(false)} style={dim}
-                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* ── Most recent order (editable) ── */}
-            {pendingOrder !== null ? (
-              <>
-                <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Pending confirmation · Click qty to edit · × to remove</p>
-                <table className="w-full border-collapse mb-8">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
-                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Prev Bal</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">New Bal</th>
-                      <th className="w-6" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingOrder.entries.map((entry, idx) => {
-                      const isEditing = editingPendingIdx === idx;
-                      const parsedEdit = parseInt(editingPendingQty);
-                      const previewBal = isEditing && !isNaN(parsedEdit) ? entry.starting + parsedEdit : entry.ending;
-                      return (
-                        <tr key={idx} className="border-b" style={{ borderColor: "hsl(var(--border))" }}>
-                          <td className="text-[13px] font-light py-3">{entry.productName}</td>
-                          <td className="text-[13px] font-light py-3 text-center" style={dim}>{entry.starting}</td>
-                          <td className="text-[13px] font-light py-3 text-center">
-                            {isEditing ? (
-                              <input
-                                autoFocus
-                                type="number"
-                                min={1}
-                                className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
-                                value={editingPendingQty}
-                                onChange={e => setEditingPendingQty(e.target.value)}
-                                onClick={e => (e.target as HTMLInputElement).select()}
-                                onBlur={() => {
-                                  if (!isNaN(parsedEdit) && parsedEdit > 0) {
-                                    setPendingOrder(prev => {
-                                      if (!prev) return prev;
-                                      const entries = [...prev.entries];
-                                      entries[idx] = { ...entries[idx], qty: parsedEdit, ending: entries[idx].starting + parsedEdit };
-                                      return { ...prev, entries };
-                                    });
-                                  }
-                                  setEditingPendingIdx(null);
-                                }}
-                                onKeyDown={e => {
-                                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                                  if (e.key === "Escape") setEditingPendingIdx(null);
-                                }}
-                              />
-                            ) : (
-                              <span
-                                className="cursor-pointer"
-                                style={{ color: "hsl(var(--green))" }}
-                                title="Click to edit"
-                                onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }}
-                                onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-                                onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-                              >+{entry.qty}</span>
-                            )}
-                          </td>
-                          <td className="text-[13px] font-light py-3 text-center" style={isEditing ? dim : {}}>{previewBal}</td>
-                          <td className="py-3 text-center">
-                            <button
-                              onClick={() => {
-                                const productName = entry.productName;
-                                setPendingOrder(prev => {
-                                  if (!prev) return prev;
-                                  const entries = prev.entries.filter((_, i) => i !== idx);
-                                  if (!entries.length) { setOrderSubmitted(false); return null; }
-                                  return { ...prev, entries };
-                                });
-                                setOrderEntries(prev => prev.map(e => e.productName === productName ? { ...e, productName: "", qty: 1, productSearch: "", showProductDropdown: false } : e));
-                              }}
-                              style={dim}
-                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                            ><X size={13} /></button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {/* Notes */}
-                <div className="mb-6 mt-2">
-                  <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Add Notes</p>
-                  <textarea
-                    rows={3}
-                    className="w-full bg-transparent outline-none text-[13px] font-light resize-none"
-                    style={{ borderBottom: "1px solid hsl(var(--border-active))", padding: "6px 0", color: "hsl(var(--foreground))" }}
-                    placeholder="Example: No Argan Stock..."
-                    value={grnNotes}
-                    onChange={e => setGrnNotes(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-3 mb-12">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={handleConfirmOrder}
-                      disabled={orderConfirming}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase"
-                      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", padding: "6px 12px", borderRadius: "5px", opacity: orderConfirming ? 0.5 : 1 }}
-                    >
-                      {orderConfirming ? "Confirming..." : "Confirm Order"}
-                    </button>
-                    <button
-                      onClick={handleResetOrder}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                      style={{ color: "hsl(var(--muted-foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                    >
-                      Reset
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <button
-                      onClick={generateGRNPdf}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                      style={{ color: "hsl(var(--muted-foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                    >
-                      <FileText size={12} />
-                      GRN
-                    </button>
-                    <button
-                      onClick={exportToExcel}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                      style={{ color: "hsl(var(--muted-foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                    >
-                      <Download size={12} />
-                      Export to Excel
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : allTodayOrders.length === 0 ? (
-              <p className="text-[13px]" style={dim}>No orders submitted yet.</p>
-            ) : (
-              <div className="flex items-center gap-6 mb-12">
-                <button
-                  onClick={generateGRNPdf}
-                  className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                  style={{ color: "hsl(var(--muted-foreground))" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                >
-                  <FileText size={12} />
-                  GRN
-                </button>
-                <button
-                  onClick={exportToExcel}
-                  className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                  style={{ color: "hsl(var(--muted-foreground))" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                >
-                  <Download size={12} />
-                  Export to Excel
-                </button>
-              </div>
-            )}
-
-            {/* ── All Orders ── */}
-            {allOrderGroups.length > 0 && (
-              <div>
-                <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))" }}>
-                  <h3 className="text-[13px] font-light tracking-tight mb-1">All Orders</h3>
-                  <p className="text-[10px] tracking-wider uppercase" style={dim}>Last 60 days</p>
-                </div>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
-                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">GRN</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Items</th>
-                      <th className="w-8 label-uppercase font-normal text-center pb-3 pt-2">{expandedGRNs.size > 0 ? "BAL" : ""}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allOrderGroups.map(group => (
-                      <>
-                        <tr
-                          key={group.key}
-                          className="border-b cursor-pointer"
-                          style={{ borderColor: "hsl(var(--border))" }}
-                          onClick={() => toggleGRN(group.key)}
-                          onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                        >
-                          <td className="text-[12px] font-light py-3" style={dim}>
-                            {new Date(group.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                          </td>
-                          <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.grn}</td>
-                          <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.rows.length}</td>
-                          <td className="py-3 text-center">
-                            <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
-                          </td>
-                        </tr>
-                        {expandedGRNs.has(group.key) && group.rows.map((row, ri) => (
-                          <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))" }}>
-                            <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                            <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
-                            <td className="text-[12px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>+{row.QTY}</td>
-                            <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["ENDING BALANCE"]}</td>
-                          </tr>
-                        ))}
-                      </>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Scroll direction blur overlays ── */}
       <div style={{
