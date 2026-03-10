@@ -1293,7 +1293,6 @@ function StockInner() {
                   {/* Balance row */}
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
                       <div className="flex items-center gap-2">
                         <p className="text-[15px] font-light">{selectedProduct["PRODUCT NAME"]}</p>
                         <button
@@ -1312,7 +1311,7 @@ function StockInner() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[32px] font-light leading-none" style={{
+                      <p className="text-[22px] font-light leading-none" style={{
                         color: selectedProduct["BOUDOIR BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
                       }}>{selectedProduct["BOUDOIR BALANCE"]}</p>
                       <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
@@ -1323,11 +1322,11 @@ function StockInner() {
                   <div className="flex items-center gap-6 mb-6 pt-4 border-t" style={{ borderColor: border }}>
                     <div>
                       <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
-                      <p className="text-[15px] font-light">{fmtPrice(selectedProduct["STAFF PRICE"])}</p>
+                      <p className="text-[13px] font-light">{fmtPrice(selectedProduct["STAFF PRICE"])}</p>
                     </div>
                     <div>
                       <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
-                      <p className="text-[15px] font-light">{fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
+                      <p className="text-[13px] font-light">{fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
                     </div>
                   </div>
 
@@ -1337,28 +1336,22 @@ function StockInner() {
                       <thead>
                         <tr className="border-b" style={{ borderColor: border }}>
                           <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
-                          <th className="label-uppercase font-normal text-left pb-2 pt-1">Product</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">Branch</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">Supplier</th>
+                          <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
                           <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">Office Bal</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">GRN</th>
+                          <th className="label-uppercase font-normal text-center pb-2 pt-1">End Bal</th>
                         </tr>
                       </thead>
                       <tbody>
                         {productLog.map(row => (
                           <tr key={row.id} className="border-b" style={{ borderColor: border }}>
-                            <td className="text-[12px] font-light py-2" style={dim}>
+                            <td className="text-[10px] font-light py-2" style={dim}>
                               {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </td>
-                            <td className="text-[12px] font-light py-2">{row["PRODUCT NAME"]}</td>
-                            <td className="text-[11px] font-light py-2 text-center tracking-wider uppercase" style={dim}>{row.BRANCH}</td>
-                            <td className="text-[11px] font-light py-2 text-center" style={dim}>{row.SUPPLIER || "—"}</td>
+                            <td className="text-[10px] font-light py-2" style={dim}>{row.TYPE || "—"}</td>
                             <td className="text-[12px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                               {row.QTY > 0 ? "+" : ""}{row.QTY}
                             </td>
-                            <td className="text-[12px] font-light py-2 text-center">{row["OFFICE BALANCE"] ?? "—"}</td>
-                            <td className="text-[11px] font-light py-2 text-center" style={dim}>{row.GRN || "—"}</td>
+                            <td className="text-[12px] font-light py-2 text-center">{row["ENDING BALANCE"] ?? "—"}</td>
                           </tr>
                         ))}
                       </tbody>
