@@ -904,11 +904,23 @@ const Index = () => {
   }, []);
   // ── Entry tab: fetch all products ──
   const fetchEntryProducts = useCallback(async () => {
-    const { data } = await (supabase as any)
-      .from("AllFileProducts")
-      .select("id, \"PRODUCT NAME\", \"SUPPLIER\", \"OFFICE BALANCE\", \"BOUDOIR BALANCE\", \"CHIC NAILSPA BALANCE\", \"NUR YADI BALANCE\", \"OFFICE FAVOURITE\", \"BOUDOIR FAVOURITE\", \"CHIC NAILSPA FAVOURITE\", \"NUR YADI FAVOURITE\", \"COLOUR\"")
-      .order("PRODUCT NAME", { ascending: true });
-    setEntryProductsRaw(data ?? []);
+    let allData: EntryProduct[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data, error } = await (supabase as any)
+        .from("AllFileProducts")
+        .select("id, \"PRODUCT NAME\", \"SUPPLIER\", \"OFFICE BALANCE\", \"BOUDOIR BALANCE\", \"CHIC NAILSPA BALANCE\", \"NUR YADI BALANCE\", \"OFFICE FAVOURITE\", \"BOUDOIR FAVOURITE\", \"CHIC NAILSPA FAVOURITE\", \"NUR YADI FAVOURITE\", \"COLOUR\"")
+        .order("PRODUCT NAME", { ascending: true })
+        .range(from, from + batchSize - 1);
+      if (error) { console.error("Entry fetch error:", error); break; }
+      if (data && data.length > 0) {
+        allData = allData.concat(data);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      } else break;
+    }
+    setEntryProductsRaw(allData);
   }, []);
 
   useEffect(() => {
