@@ -1178,7 +1178,7 @@ function StockInner() {
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
       <div className="max-w-[900px] mx-auto px-5">
         {/* Top bar */}
-        <div className="flex justify-between items-center py-1 border-b" style={{ borderColor: border, ...fade(0) }}>
+        <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: border, ...fade(0) }}>
           <span
             className="text-[11px] tracking-[0.2em] uppercase"
             style={{ color: "hsl(var(--foreground))" }}
@@ -1206,34 +1206,24 @@ function StockInner() {
           </div>
         </div>
 
-        <div className="py-6">
+        <div className="py-2">
 
           {/* ── SECTION 1: Boudoir Stock ── */}
-          <div className="mb-12">
-            <div className="mb-6" style={fade(90)}>
-              <div className="flex items-end justify-between">
-                <div>
-                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1" style={{ fontVariantNumeric: "lining-nums" }}>{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
-                  <p className="text-[28px] font-light tracking-tight uppercase">Boudoir</p>
-                </div>
-
+          <div className="mb-4">
+            {mode === "order" && (
+              <div className="flex justify-end mb-2" style={fade(90)}>
+                <span
+                  className="nav-link relative"
+                  style={{ color: "hsl(var(--foreground))" }}
+                  onClick={() => setShowOrderSummaryPanel(true)}
+                >
+                  Order Summary &nbsp;<FileText size={13} className="inline -mt-0.5" />
+                  {hasOrderNotification && (
+                    <span className="absolute -top-1 -right-0 w-2 h-2 rounded-full" style={{ background: "hsl(var(--green))" }} />
+                  )}
+                </span>
               </div>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-[11px] tracking-wider uppercase" style={dim}>{products.length} products</p>
-                {mode === "order" && (
-                  <span
-                    className="nav-link relative"
-                    style={{ color: "hsl(var(--foreground))" }}
-                    onClick={() => setShowOrderSummaryPanel(true)}
-                  >
-                    Order Summary &nbsp;<FileText size={13} className="inline -mt-0.5" />
-                    {hasOrderNotification && (
-                      <span className="absolute -top-1 -right-0 w-2 h-2 rounded-full" style={{ background: "hsl(var(--green))" }} />
-                    )}
-                  </span>
-                )}
-              </div>
-            </div>
+            )}
 
             {/* Stock search bar with hover underline */}
             <div
