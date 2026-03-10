@@ -60,12 +60,12 @@ interface OrderLine {
 
 const TYPES = ["Salon Use", "Customer", "Staff"];
 
-const makeEntries = (): EntryLine[] => [1,2,3,4,5].map(id => ({
+const makeEntries = (): EntryLine[] => [1].map(id => ({
   id, productName: "", type: "Salon Use", qty: 1,
   showProductDropdown: false, showTypeDropdown: false, productSearch: "",
 }));
 
-const makeOrderEntries = (): OrderLine[] => [1,2,3,4,5].map(id => ({
+const makeOrderEntries = (): OrderLine[] => [1].map(id => ({
   id, productName: "", qty: 1, showProductDropdown: false, productSearch: "",
 }));
 
@@ -1422,87 +1422,66 @@ function StockInner() {
                   <p className="text-[11px] tracking-wider uppercase" style={dim}>Enter today's stock movements</p>
                   <DatePicker value={usageDate} onChange={setUsageDate} />
                 </div>
-                {/* Excel-style grid — no column-gap, border-bottom on cells 2–4 only */}
-                <div
-                  className="mb-5"
-                  style={{ display: "grid", gridTemplateColumns: "20px 1fr 150px 140px 28px", columnGap: 0, marginLeft: "-4px" }}
-                >
-                  {/* Header row — border-bottom only on Product, Type, Qty */}
-                  <div />
-                  <div className="pb-2 pr-4" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Type</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Qty</span>
-                  </div>
-                  <div />
-
-                  {/* Data rows */}
+                {/* Stacked rows — mobile friendly */}
+                <div className="mb-5">
                   {entries.map((entry, idx) => (
-                    <React.Fragment key={entry.id}>
-                      {/* Row number — no border */}
-                      <div className="flex items-center justify-start">
-                        <span className="text-[13px]" style={dim}>{idx + 1}</span>
-                      </div>
-                      {/* Product cell — border-bottom */}
-                      <div className="pr-4" style={{ borderBottom: `1px solid ${border}` }}>
-                        <ProductDropdown
-                          entry={entry}
-                          sortedProducts={sortedProducts}
-                          onSelect={name => updateEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
-                          onSearch={val => updateEntry(entry.id, { productSearch: val })}
-                          onToggle={() => {
-                            closeAllDropdowns(entry.id, "product");
-                            updateEntry(entry.id, { showProductDropdown: !entry.showProductDropdown, showTypeDropdown: false });
-                          }}
-                          onClose={() => updateEntry(entry.id, { showProductDropdown: false })}
-                          showBalance
-                          lineStyle
-                        />
-                      </div>
-                      {/* Type cell — border-bottom */}
-                      <div className="px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                        <TypeDropdown
-                          entry={entry}
-                          onSelect={type => updateEntry(entry.id, { type, showTypeDropdown: false })}
-                          onToggle={() => {
-                            closeAllDropdowns(entry.id, "type");
-                            updateEntry(entry.id, { showTypeDropdown: !entry.showTypeDropdown, showProductDropdown: false });
-                          }}
-                          onClose={() => updateEntry(entry.id, { showTypeDropdown: false })}
-                          lineStyle
-                        />
-                      </div>
-                      {/* Qty stepper cell — border-bottom */}
-                      <div className="flex items-center justify-between py-1 px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                        <button
-                          onClick={() => updateEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
-                          className="px-1.5 py-1 transition-colors" style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                          <ChevronLeft size={13} />
-                        </button>
-                        <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
-                        <button
-                          onClick={() => updateEntry(entry.id, { qty: entry.qty + 1 })}
-                          className="px-1.5 py-1 transition-colors" style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                          <ChevronRight size={13} />
-                        </button>
-                      </div>
-                      {/* Remove button — no border */}
-                      <div className="flex items-center justify-center pl-2">
-                        <button onClick={() => removeEntry(entry.id)} className="transition-colors" style={dim}
+                    <div key={entry.id} className="mb-3">
+                      {/* Line 1: Product + Remove */}
+                      <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
+                        <div className="flex-1">
+                          <ProductDropdown
+                            entry={entry}
+                            sortedProducts={sortedProducts}
+                            onSelect={name => updateEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
+                            onSearch={val => updateEntry(entry.id, { productSearch: val })}
+                            onToggle={() => {
+                              closeAllDropdowns(entry.id, "product");
+                              updateEntry(entry.id, { showProductDropdown: !entry.showProductDropdown, showTypeDropdown: false });
+                            }}
+                            onClose={() => updateEntry(entry.id, { showProductDropdown: false })}
+                            showBalance
+                            lineStyle
+                          />
+                        </div>
+                        <button onClick={() => removeEntry(entry.id)} className="transition-colors flex-shrink-0" style={dim}
                           onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                           onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                           <X size={13} />
                         </button>
                       </div>
-                    </React.Fragment>
+                      {/* Line 2: Type + Qty */}
+                      <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                        <div className="flex-1">
+                          <TypeDropdown
+                            entry={entry}
+                            onSelect={type => updateEntry(entry.id, { type, showTypeDropdown: false })}
+                            onToggle={() => {
+                              closeAllDropdowns(entry.id, "type");
+                              updateEntry(entry.id, { showTypeDropdown: !entry.showTypeDropdown, showProductDropdown: false });
+                            }}
+                            onClose={() => updateEntry(entry.id, { showTypeDropdown: false })}
+                            lineStyle
+                          />
+                        </div>
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => updateEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
+                            className="px-1.5 py-1 transition-colors" style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                            <ChevronLeft size={13} />
+                          </button>
+                          <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
+                          <button
+                            onClick={() => updateEntry(entry.id, { qty: entry.qty + 1 })}
+                            className="px-1.5 py-1 transition-colors" style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                            <ChevronRight size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
                 <button onClick={addEntry}
@@ -1530,89 +1509,69 @@ function StockInner() {
                   <p className="text-[11px] tracking-wider uppercase" style={dim}>Add stock from a new order</p>
                   <DatePicker value={orderDate} onChange={setOrderDate} />
                 </div>
-                {/* Excel-style grid — no column-gap, border-bottom on cells 2–4 only for seamless line */}
-                <div
-                  className="mb-5"
-                  style={{ display: "grid", gridTemplateColumns: "20px 1fr 70px 140px 28px", columnGap: 0, marginLeft: "-4px" }}
-                >
-                  {/* Header row — border-bottom only on Product, Balance, Order Qty */}
-                  <div />
-                  <div className="pb-2 pr-4" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Order Qty</span>
-                  </div>
-                  <div />
-
-                  {/* Data rows */}
+                {/* Stacked rows — mobile friendly */}
+                <div className="mb-5">
                   {orderEntries.map((entry, idx) => {
                     const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
                     const currentBal = product?.["BOUDOIR BALANCE"] ?? null;
                     return (
-                      <React.Fragment key={entry.id}>
-                        {/* Row number — no border */}
-                        <div className="flex items-center justify-start">
-                          <span className="text-[13px]" style={dim}>{idx + 1}</span>
-                        </div>
-                        {/* Product cell — border-bottom */}
-                        <div className="pr-4" style={{ borderBottom: `1px solid ${border}` }}>
-                          <ProductDropdown
-                            entry={entry}
-                            sortedProducts={sortedProducts}
-                            onSelect={name => updateOrderEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
-                            onSearch={val => updateOrderEntry(entry.id, { productSearch: val })}
-                            onToggle={() => {
-                              closeAllOrderDropdowns(entry.id);
-                              updateOrderEntry(entry.id, { showProductDropdown: !entry.showProductDropdown });
-                            }}
-                            onClose={() => updateOrderEntry(entry.id, { showProductDropdown: false })}
-                            showBalance
-                            lineStyle
-                          />
-                        </div>
-                        {/* Balance cell — border-bottom */}
-                        <div className="flex items-center justify-center px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                          <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
-                            {currentBal === null ? "—" : currentBal}
-                          </span>
-                        </div>
-                        {/* Qty stepper cell — border-bottom */}
-                        <div className="flex items-center justify-between py-1 px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                          <button
-                            onClick={() => updateOrderEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
-                            className="px-1.5 py-1 transition-colors" style={dim}
-                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                            <ChevronLeft size={13} />
-                          </button>
-                          <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
-                          <button
-                            onClick={() => updateOrderEntry(entry.id, { qty: entry.qty + 1 })}
-                            className="px-1.5 py-1 transition-colors" style={dim}
-                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                            <ChevronRight size={13} />
-                          </button>
-                        </div>
-                        {/* Remove button — no border */}
-                        <div className="flex items-center justify-center pl-2">
+                      <div key={entry.id} className="mb-3">
+                        {/* Line 1: Product + Remove */}
+                        <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
+                          <div className="flex-1">
+                            <ProductDropdown
+                              entry={entry}
+                              sortedProducts={sortedProducts}
+                              onSelect={name => updateOrderEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
+                              onSearch={val => updateOrderEntry(entry.id, { productSearch: val })}
+                              onToggle={() => {
+                                closeAllOrderDropdowns(entry.id);
+                                updateOrderEntry(entry.id, { showProductDropdown: !entry.showProductDropdown });
+                              }}
+                              onClose={() => updateOrderEntry(entry.id, { showProductDropdown: false })}
+                              showBalance
+                              lineStyle
+                            />
+                          </div>
                           <button onClick={() => {
-                            if (orderEntries.length > 5) {
+                            if (orderEntries.length > 1) {
                               removeOrderEntry(entry.id);
                             } else {
                               updateOrderEntry(entry.id, { productName: "", qty: 1, productSearch: "", showProductDropdown: false });
                             }
-                          }} className="transition-colors" style={dim}
+                          }} className="transition-colors flex-shrink-0" style={dim}
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                             <X size={13} />
                           </button>
                         </div>
-                      </React.Fragment>
+                        {/* Line 2: Balance + Qty */}
+                        <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] tracking-wider uppercase" style={dim}>Bal</span>
+                            <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
+                              {currentBal === null ? "—" : currentBal}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <button
+                              onClick={() => updateOrderEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
+                              className="px-1.5 py-1 transition-colors" style={dim}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                              <ChevronLeft size={13} />
+                            </button>
+                            <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
+                            <button
+                              onClick={() => updateOrderEntry(entry.id, { qty: entry.qty + 1 })}
+                              className="px-1.5 py-1 transition-colors" style={dim}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                              <ChevronRight size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
