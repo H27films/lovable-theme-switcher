@@ -2166,11 +2166,11 @@ function StockInner() {
                           onClick={() => setDateSortAsc(prev => !prev)}
                           onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                           onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                        >Date</th>
+                        >D</th>
                         <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                         <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
                         <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                        <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
+                        <th className="label-uppercase font-normal text-center pb-3 pt-2">Bal</th>
                         <th className="w-6" />
                       </tr>
                     </thead>
@@ -2187,10 +2187,10 @@ function StockInner() {
                               {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </td>
                             <td
-                              className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
+                              className="text-[11px] font-light py-3 text-dim cursor-pointer hover:underline"
                               onClick={() => setSelectedActivityProduct(row["PRODUCT NAME"])}
                             >{row["PRODUCT NAME"]}</td>
-                            <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                            <td className="text-[10px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                             <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
                             <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
                             <td className="py-3 text-center">
@@ -2240,10 +2240,10 @@ function StockInner() {
                               <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
                                 <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
                                 <td
-                                  className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
+                                  className="text-[11px] font-light py-2.5 text-dim cursor-pointer hover:underline"
                                   onClick={() => setSelectedActivityProduct(row["PRODUCT NAME"])}
                                 >{row["PRODUCT NAME"]}</td>
-                                <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                <td className="text-[10px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
                                 <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
                                 <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
                                 <td />
