@@ -1545,7 +1545,7 @@ function StockInner() {
                         {/* Line 2: Balance + Qty */}
                         <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] tracking-wider uppercase" style={dim}>Bal</span>
+                            <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
                             <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
                               {currentBal === null ? "—" : currentBal}
                             </span>
@@ -1796,7 +1796,7 @@ function StockInner() {
                   {/* ── Most recent order (editable) ── */}
                   {pendingOrder !== null ? (
                     <>
-                      <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Pending confirmation · Click qty to edit · × to remove</p>
+                      <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>PREVIEW · CLICK × TO REMOVE</p>
                       <table className="w-full border-collapse mb-8">
                         <thead>
                           <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
