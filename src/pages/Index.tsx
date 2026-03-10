@@ -47,6 +47,10 @@ interface EntryProduct {
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "OFFICE FAVOURITE": boolean | null;
+  "BOUDOIR FAVOURITE": boolean | null;
+  "CHIC NAILSPA FAVOURITE": boolean | null;
+  "NUR YADI FAVOURITE": boolean | null;
+  "COLOUR": any;
 }
 
 interface EntryItem {
@@ -298,17 +302,45 @@ const Index = () => {
     return ["Salon Use", "Customer", "Staff"];
   };
 
+  const entryFavCol = (branch: string): keyof EntryProduct => {
+    if (branch === "Boudoir") return "BOUDOIR FAVOURITE";
+    if (branch === "Chic Nailspa") return "CHIC NAILSPA FAVOURITE";
+    if (branch === "Nur Yadi") return "NUR YADI FAVOURITE";
+    return "OFFICE FAVOURITE";
+  };
+
   const entryDropdownResults = entrySearch.length > 0 ? (() => {
     const lower = entrySearch.toLowerCase();
+    const favKey = entryFavCol(entryBranch);
     if (entryBranch === "Office" && entryType === "Order") {
       return entryProductsRaw
         .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(lower))
+        .sort((a, b) => {
+          const aFav = a[favKey] ? 0 : 1;
+          const bFav = b[favKey] ? 0 : 1;
+          if (aFav !== bFav) return aFav - bFav;
+          const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
+          const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
+          if (aCol !== bCol) return aCol - bCol;
+          return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
+        })
         .slice(0, 15);
     } else {
       const seen = new Set<string>();
       const results: EntryProduct[] = [];
-      for (const p of entryProductsRaw) {
-        if (p["PRODUCT NAME"]?.toLowerCase().includes(lower) && !seen.has(p["PRODUCT NAME"])) {
+      const matched = entryProductsRaw
+        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(lower))
+        .sort((a, b) => {
+          const aFav = a[favKey] ? 0 : 1;
+          const bFav = b[favKey] ? 0 : 1;
+          if (aFav !== bFav) return aFav - bFav;
+          const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
+          const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
+          if (aCol !== bCol) return aCol - bCol;
+          return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
+        });
+      for (const p of matched) {
+        if (!seen.has(p["PRODUCT NAME"])) {
           seen.add(p["PRODUCT NAME"]);
           results.push(p);
           if (results.length >= 15) break;
@@ -874,7 +906,7 @@ const Index = () => {
   const fetchEntryProducts = useCallback(async () => {
     const { data } = await (supabase as any)
       .from("AllFileProducts")
-      .select("id, \"PRODUCT NAME\", \"SUPPLIER\", \"OFFICE BALANCE\", \"BOUDOIR BALANCE\", \"CHIC NAILSPA BALANCE\", \"NUR YADI BALANCE\", \"OFFICE FAVOURITE\"")
+      .select("id, \"PRODUCT NAME\", \"SUPPLIER\", \"OFFICE BALANCE\", \"BOUDOIR BALANCE\", \"CHIC NAILSPA BALANCE\", \"NUR YADI BALANCE\", \"OFFICE FAVOURITE\", \"BOUDOIR FAVOURITE\", \"CHIC NAILSPA FAVOURITE\", \"NUR YADI FAVOURITE\", \"COLOUR\"")
       .order("PRODUCT NAME", { ascending: true });
     setEntryProductsRaw(data ?? []);
   }, []);
