@@ -1387,7 +1387,7 @@ function StockInner() {
           </div>
 
           {/* ── SECTION 2: Mode Toggle ── */}
-          <div className="mb-12" style={fade(260)}>
+          <div className="mb-12" style={{ ...fade(260), position: "relative", zIndex: 10 }}>
 
             {/* Tab buttons */}
             <div className="flex items-center border-b mb-8" style={{ borderColor: border }}>
