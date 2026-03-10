@@ -1223,13 +1223,7 @@ function StockInner() {
                 <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1" style={{ fontVariantNumeric: "lining-nums" }}>{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
                   <p className="text-[28px] font-light tracking-tight uppercase">Boudoir</p>
                 </div>
-                <span
-                  className="nav-link mb-1"
-                  style={{ color: saveFlash ? "hsl(var(--green))" : "hsl(var(--foreground))" }}
-                  onClick={handleSave}
-                >
-                  {saveFlash ? "✓ Saved" : "Save"} &nbsp;<Lock size={13} className="inline -mt-0.5" />
-                </span>
+
               </div>
               <div className="flex items-center justify-between mt-1">
                 <p className="text-[11px] tracking-wider uppercase" style={dim}>{products.length} products</p>
