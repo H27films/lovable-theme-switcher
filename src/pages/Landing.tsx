@@ -108,7 +108,7 @@ export default function Landing() {
 
         .l3-b-text {
           display: block;
-          font-size: clamp(16px, 2vw, 22px);
+          font-size: clamp(14px, 2vw, 22px);
           font-weight: 300;
           letter-spacing: 0.12em;
           text-transform: uppercase;
@@ -128,7 +128,7 @@ export default function Landing() {
 
         .l3-nav-item {
           display: block;
-          font-size: clamp(12px, 1.3vw, 15px);
+          font-size: clamp(10px, 1.3vw, 15px);
           font-weight: 400;
           letter-spacing: 0.18em;
           text-transform: uppercase;
@@ -197,6 +197,17 @@ export default function Landing() {
           transform: scale(1.15);
         }
         .l3-mode-toggle:focus { outline: none; }
+
+        /* ── Mobile tweaks ── */
+        @media (max-width: 480px) {
+          .l3-topbar { padding: 18px 24px 0 !important; }
+          .l3-hero   { padding: 0 24px !important; }
+          .l3-bottom { padding: 16px 24px !important; }
+          .l3-topbar-gap { gap: 16px !important; }
+          .l3-select-label { font-size: 8px !important; letter-spacing: 0.12em !important; white-space: nowrap !important; }
+          .l3-b-text { font-size: 13px !important; }
+          .l3-nav-item { font-size: 10px !important; }
+        }
       `}</style>
 
       <div
@@ -214,6 +225,7 @@ export default function Landing() {
       >
         {/* Top bar */}
         <div
+          className="l3-topbar"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -228,7 +240,7 @@ export default function Landing() {
         >
           <span
             style={{
-              fontSize: "11px",
+              fontSize: "clamp(9px, 2vw, 11px)",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: "hsl(var(--foreground))",
@@ -242,6 +254,7 @@ export default function Landing() {
           </span>
 
           <div
+            className="l3-topbar-gap"
             style={{
               display: "flex",
               alignItems: "center",
@@ -347,6 +360,7 @@ export default function Landing() {
 
         {/* Hero title */}
         <div
+          className="l3-hero"
           style={{
             flex: 1,
             display: "flex",
@@ -359,7 +373,7 @@ export default function Landing() {
         >
           <h1
             style={{
-              fontSize: "70px",
+              fontSize: "clamp(42px, 11vw, 70px)",
               fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
               fontWeight: 300,
               letterSpacing: "-0.03em",
@@ -388,6 +402,7 @@ export default function Landing() {
 
         {/* Bottom bar */}
         <div
+          className="l3-bottom"
           style={{
             flexShrink: 0,
             borderTop: "1px solid hsl(var(--border))",
@@ -474,11 +489,13 @@ export default function Landing() {
             }}
           >
             <span
+              className="l3-select-label"
               style={{
                 fontSize: "10px",
                 letterSpacing: "0.25em",
                 textTransform: "uppercase",
                 color: "hsl(var(--muted-foreground))",
+                whiteSpace: "nowrap",
               }}
             >
               Select to continue
