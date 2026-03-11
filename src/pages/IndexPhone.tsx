@@ -97,7 +97,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
   const ref = React.useRef<HTMLDivElement>(null);
   const border = "hsl(var(--border))";
   const borderActive = "hsl(var(--border-active))";
-  const cardBg = "hsl(var(--card))";
+  const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -109,18 +109,17 @@ function EntryTypeDropdown({ value, options, onChange }: {
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <div
+        className="flex items-center gap-1 cursor-pointer"
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 h-[28px] px-3 text-[11px] tracking-wider uppercase transition-colors"
-        style={{ border: `1px solid ${borderActive}`, background: cardBg, color: "hsl(var(--foreground))", borderRadius: "5px" }}
       >
-        {value}
-        <ChevronDown size={10} />
-      </button>
+        <span className="text-[11px] font-light" style={{ color: "hsl(var(--foreground))" }}>{value}</span>
+        <ChevronDown size={10} style={dim} />
+      </div>
       {open && (
         <div
           className="absolute top-full left-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "130px", borderRadius: "5px" }}
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "120px" }}
         >
           {options.map((opt, i) => (
             <div
@@ -2220,7 +2219,7 @@ const IndexPhone = () => {
                         <div key={item.id} className="mb-3">
                           {/* Line 1: Product + Remove */}
                           <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
-                            <span className="flex-1 py-2.5 text-[13px] font-light" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</span>
+                            <span className="flex-1 py-1.5 text-[11px] font-light" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</span>
                             <button
                               onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}
                               className="flex-shrink-0 transition-colors py-2.5" style={dim}
@@ -2231,7 +2230,7 @@ const IndexPhone = () => {
                             </button>
                           </div>
                           {/* Line 2: Type (usage only) + Qty */}
-                          <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                          <div className="flex items-center justify-between py-0.5" style={{ borderBottom: `1px solid ${border}` }}>
                             <div className="flex-1">
                               {entryType === "Usage" && (
                                 <EntryTypeDropdown
@@ -2244,20 +2243,20 @@ const IndexPhone = () => {
                             <div className="flex items-center">
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))}
-                                className="px-1.5 py-1 transition-colors" style={dim}
+                                className="px-1.5 py-0.5 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
-                                <ChevronLeft size={13} />
+                                <ChevronLeft size={11} />
                               </button>
-                              <span className="text-[13px] font-light min-w-[32px] text-center">{item.qty}</span>
+                              <span className="text-[11px] font-light min-w-[28px] text-center">{item.qty}</span>
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))}
-                                className="px-1.5 py-1 transition-colors" style={dim}
+                                className="px-1.5 py-0.5 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
-                                <ChevronRight size={13} />
+                                <ChevronRight size={11} />
                               </button>
                             </div>
                           </div>
