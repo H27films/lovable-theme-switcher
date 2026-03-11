@@ -2433,17 +2433,17 @@ const IndexPhone = () => {
               {/* Colour toggle */}
               <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
                 <div className="flex items-center gap-2">
-                  <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>Product</p>
+                  <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))", textDecoration: newProduct["COLOUR"] ? "none" : "line-through" }}>Product</p>
                   {!newProduct["COLOUR"] && (
-                    <span className="text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}>Colour</span>
+                    <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>Colour</p>
                   )}
                 </div>
                 <button
                   onClick={() => setNewProduct(p => ({ ...p, "COLOUR": !p["COLOUR"] }))}
                   className="rounded px-3 py-1 text-[12px] font-light transition-colors"
                   style={{
-                    background: newProduct["COLOUR"] ? "hsl(var(--foreground))" : "transparent",
-                    color: newProduct["COLOUR"] ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                    background: newProduct["COLOUR"] ? "transparent" : "hsl(var(--foreground))",
+                    color: newProduct["COLOUR"] ? "hsl(var(--muted-foreground))" : "hsl(var(--background))",
                     border: "1px solid hsl(var(--border))"
                   }}
                 >
