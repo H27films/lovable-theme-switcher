@@ -2808,8 +2808,7 @@ const IndexPhone = () => {
 
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-8 mb-2 gap-1" style={{ opacity: 0.25 }}>
-                      <span className="text-[10px] tracking-widest uppercase">Order Summary</span>
+                    <div className="flex flex-col items-center mt-40 mb-2 gap-1" style={{ opacity: 0.25 }}>
                       <ChevronDown size={12} />
                     </div>
                   )}
@@ -2831,7 +2830,7 @@ const IndexPhone = () => {
           className="fixed inset-0 z-[55] overflow-hidden"
           style={{
             transform: summaryExpanded ? "translateY(0)" : "translateY(100%)",
-            transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1)",
+            transition: "transform 0.45s cubic-bezier(0.4,0,0.2,1)",
             background: "hsl(var(--background))",
             borderLeft: `1px solid hsl(var(--border))`,
             maxWidth: "500px",
@@ -2844,7 +2843,7 @@ const IndexPhone = () => {
             style={{
               filter: summaryExpanded ? "blur(0px)" : "blur(6px)",
               opacity: summaryExpanded ? 1 : 0,
-              transition: "filter 0.6s ease 0.1s, opacity 0.6s ease 0.1s",
+              transition: "filter 0.4s ease 0.05s, opacity 0.4s ease 0.05s",
             }}
             onWheel={(e) => {
               if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < 0) {
