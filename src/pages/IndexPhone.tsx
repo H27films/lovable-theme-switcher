@@ -1418,7 +1418,7 @@ const IndexPhone = () => {
             return (
               <div className="mb-8" style={fade(380)}>
                 {/* Branch selector — now includes Office */}
-                <div className="flex items-center gap-4 mb-6 flex-wrap">
+                <div className="flex items-center gap-4 mb-3 flex-wrap">
                   {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
                     <button
                       key={branch}
@@ -1426,11 +1426,14 @@ const IndexPhone = () => {
                       onMouseDown={e => e.preventDefault()}
                       className="transition-all duration-200"
                       style={{
-                        fontSize: selectedBranch === branch ? "15px" : hoveredBranch === branch ? "13px" : "12px",
+                        fontSize: selectedBranch === branch ? "13px" : hoveredBranch === branch ? "12px" : "11px",
                         fontWeight: 300,
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
                         color: selectedBranch === branch || hoveredBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
                       }}
                       onMouseEnter={() => setHoveredBranch(branch)}
                       onMouseLeave={() => setHoveredBranch(null)}
@@ -2111,7 +2114,7 @@ const IndexPhone = () => {
             <div style={{ paddingBottom: entryShowDropdown ? "260px" : "40px", transition: "padding-bottom 0.2s" }}>
               {/* ── Branch + Type selectors ── */}
               <div className="flex flex-col gap-2 mb-8">
-                <div className="flex items-center gap-6 mb-1">
+                <div className="flex items-center gap-4 mb-3 flex-wrap">
                   {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
                     <button
                       key={branch}
@@ -2121,7 +2124,7 @@ const IndexPhone = () => {
                       onMouseLeave={() => setEntryHoveredBranch(null)}
                       className="transition-all duration-200"
                       style={{
-                        fontSize: entryBranch === branch ? "15px" : entryHoveredBranch === branch ? "13px" : "12px",
+                        fontSize: entryBranch === branch ? "13px" : entryHoveredBranch === branch ? "12px" : "11px",
                         fontWeight: 300,
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
