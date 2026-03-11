@@ -1220,7 +1220,7 @@ function StockNurYadiPhoneInner() {
           <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim pl-0">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
         </div>
 
-        <div className="pt-3 pb-0">
+        <div className="py-6">
 
           {/* ── SECTION 1: Nur Yadi Stock ── */}
           <div className="mb-4">
@@ -1230,7 +1230,7 @@ function StockNurYadiPhoneInner() {
               style={{...fade(170), position: "relative", zIndex: 40}}
             >
               <div
-                className="relative mb-6"
+                className="relative mb-12"
                 onMouseEnter={() => setStockSearchHovered(true)}
               onMouseLeave={() => setStockSearchHovered(false)}
             >
