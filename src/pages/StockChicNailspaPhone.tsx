@@ -1186,8 +1186,21 @@ function StockChicNailspaPhoneInner() {
   return (
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
       <div className="max-w-full mx-auto px-3">
+        {/* ── Search blur overlay ── */}
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backdropFilter: stockSearchFocused ? "blur(4px)" : "blur(0px)",
+            WebkitBackdropFilter: stockSearchFocused ? "blur(4px)" : "blur(0px)",
+            opacity: stockSearchFocused ? 1 : 0,
+            transition: "opacity 300ms ease, backdrop-filter 300ms ease, -webkit-backdrop-filter 300ms ease",
+            zIndex: 30,
+            pointerEvents: "none",
+          }}
+        />
+
         {/* Top bar */}
-        <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, ...fade(0) }}>
+        <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, position: "relative", zIndex: 35, ...fade(0) }}>
           <span
             className="text-[16px] font-light tracking-[0.25em] uppercase"
             style={{ color: "hsl(var(--foreground))" }}
