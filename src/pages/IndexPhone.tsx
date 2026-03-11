@@ -1804,6 +1804,15 @@ const IndexPhone = () => {
 
               </div>
 
+              {/* Office Section */}
+              <input
+                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
+                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
+                value={newProduct["OFFICE SECTION"]}
+                onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
+                placeholder="Office section (e.g. 12B)"
+              />
+
               {/* Prices */}
               <div className="grid grid-cols-2 gap-2 mb-4">
                 <div>
@@ -2291,10 +2300,7 @@ const IndexPhone = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-[20px] font-light tracking-tight">New Product</h2>
-                <p className="text-[11px] tracking-wider uppercase mt-0.5" style={dim}>Add to product database</p>
-              </div>
+              <h2 className="text-[16px] font-light tracking-widest uppercase">New Product</h2>
               <button onClick={() => setShowNewProductModal(false)} style={dim}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
@@ -2350,6 +2356,15 @@ const IndexPhone = () => {
                 )}
               </div>
 
+              {/* Office Section */}
+              <input
+                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
+                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
+                value={newProduct["OFFICE SECTION"]}
+                onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
+                placeholder="Office section (e.g. 12B)"
+              />
+
               {/* Prices */}
               <div className="py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
                 <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
@@ -2402,15 +2417,6 @@ const IndexPhone = () => {
                 </div>
               </div>
 
-              {/* Office Section */}
-              <input
-                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
-                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
-                value={newProduct["OFFICE SECTION"]}
-                onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
-                placeholder="Office section (e.g. 12B)"
-              />
-
               {/* Colour toggle */}
               <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
                 <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>Colour product</p>
@@ -2436,14 +2442,14 @@ const IndexPhone = () => {
               <button
                 onClick={handleSaveNewProduct}
                 disabled={savingNewProduct}
-                className="flex-1 rounded py-2 text-[13px] font-light transition-opacity"
+                className="rounded px-4 py-1.5 text-[11px] font-light tracking-wider uppercase transition-opacity"
                 style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", opacity: savingNewProduct ? 0.5 : 1 }}
               >
                 {savingNewProduct ? "Saving..." : "Save Product"}
               </button>
               <button
                 onClick={() => setShowNewProductModal(false)}
-                className="rounded px-4 py-2 text-[13px] font-light"
+                className="rounded px-4 py-1.5 text-[11px] font-light tracking-wider uppercase"
                 style={{ border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}
               >
                 Cancel
@@ -2452,7 +2458,7 @@ const IndexPhone = () => {
 
             <div className="mt-4" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: "16px" }}>
               <label
-                className="flex items-center gap-2 cursor-pointer text-[13px] font-light tracking-wider uppercase transition-colors w-fit"
+                className="flex items-center gap-2 cursor-pointer text-[10px] font-light tracking-wider uppercase transition-colors w-fit"
                 style={{ color: importingCSV ? "hsl(var(--muted-foreground))" : "hsl(var(--muted-foreground))" }}
                 onMouseEnter={e => { if (!importingCSV) e.currentTarget.style.color = "hsl(var(--foreground))"; }}
                 onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
@@ -2464,7 +2470,7 @@ const IndexPhone = () => {
                   disabled={importingCSV}
                   onChange={handleImportCSV}
                 />
-                <Upload size={13} />{importingCSV ? "Importing..." : "Import CSV"}
+                <Upload size={10} />{importingCSV ? "Importing..." : "Import CSV"}
               </label>
               {csvImportResult && (
                 <p className="mt-2 text-[12px]" style={{ color: csvImportResult.startsWith("✓") ? "hsl(var(--foreground))" : "hsl(var(--destructive))" }}>
