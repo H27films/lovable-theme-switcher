@@ -1236,39 +1236,11 @@ const IndexPhone = () => {
         </div>
 
         {/* ── Date just below header ── */}
-        <div className="px-4 pt-2 pb-0" style={fade(90)}>
-          <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
+        <div className="pt-2 pb-0" style={fade(90)}>
+          <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim pl-0">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
         </div>
 
         <div className="py-6">
-
-          {/* ── Page header ── */}
-          <div className="mb-6" style={fade(90)}>
-            <div>
-              <div className="flex items-end justify-between">
-                <p className="text-[22px] font-light tracking-tight uppercase">Office Database</p>
-                <span
-                  className="nav-link flex items-center gap-0.5 mb-1"
-                  style={{ color: "hsl(var(--foreground))" }}
-                  onClick={() => setShowNewProductModal(true)}
-                >
-                  New Product <Plus size={13} className="inline -mt-0.5" />
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase" style={dim}>
-                {products.length} products
-              </p>
-              <span
-                className="nav-link flex items-center gap-0.5"
-                style={{ color: "hsl(var(--foreground))" }}
-                onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
-              >
-                Order <ClipboardList size={13} className="inline -mt-0.5" />
-              </span>
-            </div>
-          </div>
 
           {/* ── Search bar ── */}
           <div style={{...fade(170), position: "relative", zIndex: 40}}>
@@ -1381,6 +1353,24 @@ const IndexPhone = () => {
               </div>
             )}
           </div>
+          </div>
+
+          {/* ── New Product + Order buttons ── */}
+          <div className="flex items-center justify-between mt-3 mb-4" style={fade(90)}>
+            <span
+              className="nav-link flex items-center gap-0.5"
+              style={{ color: "hsl(var(--foreground))" }}
+              onClick={() => setShowNewProductModal(true)}
+            >
+              New Product <Plus size={13} className="inline -mt-0.5" />
+            </span>
+            <span
+              className="nav-link flex items-center gap-0.5"
+              style={{ color: "hsl(var(--foreground))" }}
+              onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
+            >
+              Order <ClipboardList size={13} className="inline -mt-0.5" />
+            </span>
           </div>
 
           {/* ── Tab switcher ── */}
