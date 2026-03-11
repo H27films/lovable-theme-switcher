@@ -1719,16 +1719,16 @@ const IndexPhone = () => {
 
           {/* ── Selected product card ── */}
           {selectedProduct && (
-            <div className="surface-box p-6 mb-8" style={{ borderRadius: "5px" }}>
-              <div className="flex items-start justify-between mb-4">
+            <div className="surface-box p-4 mb-8" style={{ borderRadius: "5px" }}>
+              <div className="flex items-start justify-between mb-3">
                 <div>
-                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={dim}>
+                  <p className="text-[10px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={dim}>
                     {selectedProduct["COLOUR"] === true ? "Colour Product" : "Product"}
                     {selectedProduct["OFFICE SECTION"] && ` · Section ${selectedProduct["OFFICE SECTION"]}`}
                   </p>
-                  <p className="text-[20px] font-light tracking-tight">{selectedProduct["PRODUCT NAME"]}</p>
+                  <p className="text-[16px] font-light tracking-tight">{selectedProduct["PRODUCT NAME"]}</p>
                   {selectedProduct["SUPPLIER"] && (
-                    <p className="text-[12px] mt-0.5" style={dim}>{selectedProduct["SUPPLIER"]}</p>
+                    <p className="text-[11px] mt-0.5" style={dim}>{selectedProduct["SUPPLIER"]}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
@@ -1757,61 +1757,65 @@ const IndexPhone = () => {
               </div>
 
               {/* Balance */}
-              <div className="grid grid-cols-2 gap-3 mb-5 pb-5 border-b" style={{ borderColor: border }}>
-                <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Office</p>
-                  <p className="text-[20px] font-light" style={{
+              <div className="mb-4 pb-4 border-b" style={{ borderColor: border }}>
+                {/* Office — full row */}
+                <div className="mb-3">
+                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Office</p>
+                  <p className="text-[15px] font-light" style={{
                     color: checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR"])
                       ? "hsl(var(--red))" : "hsl(var(--foreground))"
                   }}>
                     {selectedProduct["OFFICE BALANCE"] ?? "—"}
                     {checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR"]) && (
-                      <AlertTriangle size={12} className="inline ml-1 mb-1" style={{ color: "hsl(var(--red))" }} />
+                      <AlertTriangle size={11} className="inline ml-1 mb-0.5" style={{ color: "hsl(var(--red))" }} />
                     )}
                   </p>
                 </div>
-                <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Boudoir</p>
-                  <p className="text-[20px] font-light">{selectedProduct["BOUDOIR BALANCE"] ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Chic Nailspa</p>
-                  <p className="text-[20px] font-light">{selectedProduct["CHIC NAILSPA BALANCE"] ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Nur Yadi</p>
-                  <p className="text-[20px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
+                {/* Branches — 3 columns */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Boudoir</p>
+                    <p className="text-[14px] font-light">{selectedProduct["BOUDOIR BALANCE"] ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Chic</p>
+                    <p className="text-[14px] font-light">{selectedProduct["CHIC NAILSPA BALANCE"] ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Nur Yadi</p>
+                    <p className="text-[14px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
+                  </div>
                 </div>
                 {selectedProduct["OFFICE SECTION"] && (
-                  <div>
-                    <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Section</p>
-                    <p className="text-[20px] font-light">{selectedProduct["OFFICE SECTION"]}</p>
+                  <div className="mt-2">
+                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Section</p>
+                    <p className="text-[14px] font-light">{selectedProduct["OFFICE SECTION"]}</p>
                   </div>
                 )}
               </div>
 
               {/* Prices */}
-              <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="grid grid-cols-2 gap-2 mb-4">
                 <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Supplier Price</p>
-                  <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["SUPPLIER PRICE"])}</p>
+                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Supplier Price</p>
+                  <p className="text-[13px] font-light">RM {fmtPrice(selectedProduct["SUPPLIER PRICE"])}</p>
                   {(selectedProduct["UNITS/ORDER"] ?? 1) > 1 && (
-                    <p className="text-[11px] [font-variant-numeric:lining-nums] mt-1" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
+                    <p className="text-[10px] [font-variant-numeric:lining-nums] mt-0.5" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
                       × {selectedProduct["UNITS/ORDER"]} units/order
                     </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
-                  <p className="text-[15px] font-light">RM {fmtPrice(getBranchPrice(selectedProduct["SUPPLIER PRICE"]))}</p>
+                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Branch Price</p>
+                  <p className="text-[13px] font-light">RM {fmtPrice(getBranchPrice(selectedProduct["SUPPLIER PRICE"]))}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
-                  <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["STAFF PRICE"])}</p>
+                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Staff Price</p>
+                  <p className="text-[13px] font-light">RM {fmtPrice(selectedProduct["STAFF PRICE"])}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
-                  <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
+                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Customer Price</p>
+                  <p className="text-[13px] font-light">RM {fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
                 </div>
               </div>
 
