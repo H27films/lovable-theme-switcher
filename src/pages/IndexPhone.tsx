@@ -2379,7 +2379,20 @@ const IndexPhone = () => {
                         step="0.01"
                         min="0"
                         value={newProduct[field]}
-                        onChange={e => setNewProduct(p => ({ ...p, [field]: e.target.value }))}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (field === "SUPPLIER PRICE") {
+                            const parsed = parseFloat(val);
+                            const auto = !isNaN(parsed) ? getBranchPrice(parsed) : null;
+                            setNewProduct(p => ({
+                              ...p,
+                              "SUPPLIER PRICE": val,
+                              "BRANCH PRICE": auto !== null ? auto.toFixed(2) : ""
+                            }));
+                          } else {
+                            setNewProduct(p => ({ ...p, [field]: val }));
+                          }
+                        }}
                         placeholder="0.00"
                       />
                     </div>
