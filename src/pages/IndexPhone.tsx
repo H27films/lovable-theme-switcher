@@ -128,7 +128,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
               style={{
                 borderBottom: i < options.length - 1 ? `1px solid ${border}` : "none",
                 color: value === opt ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                background: value === opt ? "hsl(var(--card))" : "transparent",
+                background: value === opt ? cardBg : "transparent",
               }}
               onMouseDown={() => { onChange(opt); setOpen(false); }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -2219,7 +2219,7 @@ const IndexPhone = () => {
                         <div key={item.id} className="mb-3">
                           {/* Line 1: Product + Remove */}
                           <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
-                            <span className="flex-1 py-1.5 text-[11px] font-light" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</span>
+                            <span className="flex-1 py-2.5 text-[13px] font-light" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</span>
                             <button
                               onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}
                               className="flex-shrink-0 transition-colors py-2.5" style={dim}
@@ -2230,7 +2230,7 @@ const IndexPhone = () => {
                             </button>
                           </div>
                           {/* Line 2: Type (usage only) + Qty */}
-                          <div className="flex items-center justify-between py-0.5" style={{ borderBottom: `1px solid ${border}` }}>
+                          <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
                             <div className="flex-1">
                               {entryType === "Usage" && (
                                 <EntryTypeDropdown
@@ -2243,20 +2243,20 @@ const IndexPhone = () => {
                             <div className="flex items-center">
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))}
-                                className="px-1.5 py-0.5 transition-colors" style={dim}
+                                className="px-1.5 py-1 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
-                                <ChevronLeft size={11} />
+                                <ChevronLeft size={13} />
                               </button>
-                              <span className="text-[11px] font-light min-w-[28px] text-center">{item.qty}</span>
+                              <span className="text-[13px] font-light min-w-[32px] text-center">{item.qty}</span>
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))}
-                                className="px-1.5 py-0.5 transition-colors" style={dim}
+                                className="px-1.5 py-1 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
-                                <ChevronRight size={11} />
+                                <ChevronRight size={13} />
                               </button>
                             </div>
                           </div>
@@ -2290,7 +2290,7 @@ const IndexPhone = () => {
                         <button
                           onClick={handleEntryConfirmOrder}
                           disabled={entrySubmitting}
-                          className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
+                          className="text-[10px] tracking-[0.12em] uppercase px-4 py-1 transition-opacity"
                           style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
                         >
                           {entrySubmitting ? "Confirming..." : "Confirm Order"}
@@ -2300,7 +2300,7 @@ const IndexPhone = () => {
                       <button
                         onClick={handleEntrySubmit}
                         disabled={entrySubmitting}
-                        className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
+                        className="text-[10px] tracking-[0.12em] uppercase px-4 py-1 transition-opacity"
                         style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
                       >
                         {entrySubmitting ? "Submitting..." : "Submit"}
