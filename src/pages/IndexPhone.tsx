@@ -264,7 +264,7 @@ const IndexPhone = () => {
     "CHIC NAILSPA BALANCE": "0",
     "PAR": "",
     "UNITS/ORDER": "1",
-    "COLOUR": false as boolean,
+    "COLOUR": true as boolean,
     "OFFICE SECTION": "",
   });
   const [savingNewProduct, setSavingNewProduct] = useState(false);
@@ -2367,7 +2367,7 @@ const IndexPhone = () => {
 
               {/* Prices */}
               <div className="py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
-                <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
+                <p className="text-[11px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--foreground))" }}>Prices (RM)</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {(["SUPPLIER PRICE", "BRANCH PRICE", "STAFF PRICE", "CUSTOMER PRICE"] as const).map(field => (
                     <div key={field}>
@@ -2432,7 +2432,12 @@ const IndexPhone = () => {
 
               {/* Colour toggle */}
               <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
-                <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>Colour product</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>Product</p>
+                  {!newProduct["COLOUR"] && (
+                    <span className="text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}>Colour</span>
+                  )}
+                </div>
                 <button
                   onClick={() => setNewProduct(p => ({ ...p, "COLOUR": !p["COLOUR"] }))}
                   className="rounded px-3 py-1 text-[12px] font-light transition-colors"
