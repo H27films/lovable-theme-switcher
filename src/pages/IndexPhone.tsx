@@ -1928,7 +1928,7 @@ const IndexPhone = () => {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse" style={{ minWidth: "1050px" }}>
+                <table className="w-full border-collapse" style={{ minWidth: "520px" }}>
                   <thead>
                     <tr className="border-b" style={{ borderColor: borderActive }}>
 
@@ -1975,46 +1975,11 @@ const IndexPhone = () => {
                         Branch<br /><span>RM</span>
                       </th>
 
-                      {/* Staff RM */}
-                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Staff<br /><span>RM</span>
-                      </th>
-
-                      {/* Customer RM */}
-                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Customer<br /><span>RM</span>
-                      </th>
-
-                      {/* Section */}
-                      <th className={`${thBase} text-left pr-4 align-top`} style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Section
-                      </th>
-
                       {/* Type */}
-                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Type
-                      </th>
-
-                      {/* Par */}
-                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Par
-                      </th>
-
-                      {/* Units/Order */}
                       <th className={`${thBase} text-center align-top`} style={dim}
                         onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                         onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Units/<br /><span>Order</span>
+                        Type
                       </th>
 
                     </tr>
@@ -2032,7 +1997,7 @@ const IndexPhone = () => {
                           onMouseEnter={e => (e.currentTarget.style.background = cardBg)}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
-                          <td className="text-[11px] font-light py-2 pr-3" style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p["PRODUCT NAME"]}</td>
+                          <td className="text-[11px] font-light py-2 pr-3" style={{ maxWidth: "140px", wordBreak: "break-word" }}>{p["PRODUCT NAME"]}</td>
                           <td className="text-[10px] font-light py-2 pr-3" style={dim}>{p["SUPPLIER"] || "—"}</td>
                           <td className="text-[11px] font-light py-2 pr-3 text-center" style={{ color: belowPar ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
                             {p["OFFICE BALANCE"] ?? "—"}
@@ -2040,15 +2005,8 @@ const IndexPhone = () => {
                           </td>
                           <td className="text-[10px] font-light py-2 pr-3 text-center" style={{ color: "hsl(var(--foreground))" }}>{fmtPrice(p["SUPPLIER PRICE"])}</td>
                           <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(branchPrice)}</td>
-                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(p["STAFF PRICE"])}</td>
-                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(p["CUSTOMER PRICE"])}</td>
-                          <td className="text-[10px] font-light py-2 pr-3" style={dim}>{p["OFFICE SECTION"] || "—"}</td>
-                          <td className="text-[10px] [font-variant-numeric:lining-nums] font-light py-2 pr-3 text-center tracking-wider uppercase" style={dim}>
+                          <td className="text-[10px] [font-variant-numeric:lining-nums] font-light py-2 text-center tracking-wider uppercase" style={dim}>
                             {p["COLOUR"] === true ? "Colour" : "Product"}
-                          </td>
-                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{p["PAR"] ?? "—"}</td>
-                          <td className="text-[10px] font-light py-2 text-center" style={(p["UNITS/ORDER"] ?? 1) > 1 ? { color: "hsl(var(--foreground))", fontWeight: 500 } : dim}>
-                            {(p["UNITS/ORDER"] ?? 1) > 1 ? `${p["UNITS/ORDER"]} units` : "—"}
                           </td>
                         </tr>
                       );
