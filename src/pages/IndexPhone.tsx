@@ -107,105 +107,6 @@ function EntryTypeDropdown({ value, options, onChange }: {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // ── Pre-compute overlay summary content (avoids IIFE in JSX for bundler compatibility) ──
-  const overlaySummaryContent: React.ReactNode = (() => {
-    if (orderLines.length === 0) {
-      return <p className="text-[13px]" style={{ color: "hsl(var(--muted-foreground))" }}>No items added yet.</p>;
-    }
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, "0");
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const yy = String(today.getFullYear()).slice(-2);
-    const dateStr = `${dd}${mm}${yy}`;
-
-    const groups: Record<string, typeof orderLines> = {};
-    orderLines.forEach(line => {
-      const sup = line.supplierChoice ?? line.product["SUPPLIER"] ?? "Unknown";
-      if (!groups[sup]) groups[sup] = [];
-      groups[sup].push(line);
-    });
-    const supplierNames = Object.keys(groups);
-    const multi = supplierNames.length > 1;
-
-    const grandTotal = orderLines.reduce((sum, line) => {
-      const rp = line.supplierChoice
-        ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
-        : line.product;
-      return sum + (rp["SUPPLIER PRICE"] ?? 0) * line.qty;
-    }, 0);
-    const grandUnits = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1), 0);
-
-    const bdr = "hsl(var(--border))";
-    const dm: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
-
-    return (
-      <div>
-        {supplierNames.map((supplier, sIdx) => {
-          const grpLines = groups[supplier];
-          const grn = multi ? `OFFICE ${dateStr} (${sIdx + 1})` : `OFFICE ${dateStr}`;
-          const subtotal = grpLines.reduce((s, l) => {
-            const rp = l.supplierChoice
-              ? products.find(p => p["PRODUCT NAME"] === l.product["PRODUCT NAME"] && p["SUPPLIER"] === l.supplierChoice) ?? l.product
-              : l.product;
-            return s + (rp["SUPPLIER PRICE"] ?? 0) * l.qty;
-          }, 0);
-
-          return (
-            <div key={supplier} className={sIdx > 0 ? "mb-5 mt-8 pt-6 border-t" : "mb-5"} style={sIdx > 0 ? { borderColor: bdr } : {}}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] font-semibold tracking-wide" style={{ color: "hsl(var(--foreground))" }}>{supplier}</span>
-                <span className="text-[11px] tracking-wider font-mono" style={dm}>{grn}</span>
-              </div>
-              {grpLines.map((line, lIdx) => {
-                const rp = line.supplierChoice
-                  ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
-                  : line.product;
-                const unitPrice = rp["SUPPLIER PRICE"] ?? 0;
-                const unitsPerOrder = line.product["UNITS/ORDER"] ?? 1;
-                const lineTotal = unitPrice * line.qty;
-                const globalIdx = orderLines.indexOf(line);
-                return (
-                  <div key={lIdx} className="flex items-center gap-2 py-1.5 border-b" style={{ borderColor: bdr }}>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
-                      {unitsPerOrder > 1 && (
-                        <p className="text-[11px]" style={dm}>{line.qty * unitsPerOrder} units received</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button className="w-5 h-5 flex items-center justify-center rounded text-[11px]" style={dm}
-                        onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx && ol.qty > 1 ? { ...ol, qty: ol.qty - 1 } : ol))}>−</button>
-                      <span className="text-[11px] w-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{line.qty}</span>
-                      <button className="w-5 h-5 flex items-center justify-center rounded text-[11px]" style={dm}
-                        onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx ? { ...ol, qty: ol.qty + 1 } : ol))}>+</button>
-                    </div>
-                    <span className="text-[11px] w-16 text-right shrink-0" style={dm}>RM {lineTotal.toFixed(2)}</span>
-                    <button className="shrink-0 text-[11px] leading-none ml-1" style={{ color: "hsl(var(--red))" }}
-                      onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== globalIdx))}>×</button>
-                  </div>
-                );
-              })}
-              <div className="flex justify-between mt-1.5">
-                <span className="text-[11px] tracking-wider uppercase" style={dm}>
-                  {grpLines.reduce((s, l) => s + l.qty, 0)} orders
-                </span>
-                <span className="text-[11px] font-medium" style={{ color: "hsl(var(--foreground))" }}>RM {subtotal.toFixed(2)}</span>
-              </div>
-            </div>
-          );
-        })}
-        <div className="pt-3 mt-2 border-t" style={{ borderColor: bdr }}>
-          <div className="flex justify-between">
-            <span className="text-[11px] tracking-wider uppercase" style={dm}>
-              {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {grandUnits} units{multi ? ` · ${supplierNames.length} suppliers` : ""}
-            </span>
-            <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>RM {grandTotal.toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-    );
-  })();
-
   return (
     <div ref={ref} className="relative">
       <div
@@ -341,7 +242,6 @@ const IndexPhone = () => {
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
-  const [panelScrollTop, setPanelScrollTop] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -1049,8 +949,7 @@ const IndexPhone = () => {
     const el = panelScrollRef.current;
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
-      setPanelScrollTop(el.scrollTop);
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 80) {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
         setSummaryExpanded(true);
       }
     };
@@ -1058,9 +957,9 @@ const IndexPhone = () => {
     return () => el.removeEventListener('scroll', handleScroll);
   }, [showOrderPanel]);
 
-  // Reset summaryExpanded + panelScrollTop when panel closes
+  // Reset summaryExpanded when panel closes
   useEffect(() => {
-    if (!showOrderPanel) { setSummaryExpanded(false); setPanelScrollTop(0); }
+    if (!showOrderPanel) setSummaryExpanded(false);
   }, [showOrderPanel]);
 
 
@@ -2627,19 +2526,10 @@ const IndexPhone = () => {
       {/* ── Order Panel ── */}
       {showOrderPanel && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
-          <div className="relative h-full w-full max-w-[500px]" style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }} onClick={e => e.stopPropagation()}>
-            {/* Top fade blur — appears as you scroll down */}
-            <div style={{
-              position: "absolute", top: 0, left: 0, right: 0, height: "80px",
-              background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)",
-              opacity: Math.min(panelScrollTop / 60, 1),
-              transition: "opacity 0.25s ease",
-              zIndex: 2, pointerEvents: "none"
-            }} />
           <div
             ref={panelScrollRef}
-            className="h-full w-full overflow-y-auto p-5"
-            style={{}}
+            className="h-full w-full max-w-[500px] overflow-y-auto p-5"
+            style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
             {/* Panel header */}
@@ -2918,11 +2808,8 @@ const IndexPhone = () => {
 
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-64 mb-4" style={{ opacity: 0.3 }}>
-                      <svg width="14" height="64" viewBox="0 0 14 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="7" y1="0" x2="7" y2="54" stroke="white" strokeWidth="1.2"/>
-                        <polyline points="2,48 7,58 12,48" stroke="white" strokeWidth="1.2" fill="none" strokeLinejoin="round"/>
-                      </svg>
+                    <div className="flex flex-col items-center mt-40 mb-2 gap-1" style={{ opacity: 0.25 }}>
+                      <ChevronDown size={12} />
                     </div>
                   )}
 
@@ -2959,7 +2846,7 @@ const IndexPhone = () => {
               transition: "filter 0.4s ease 0.05s, opacity 0.4s ease 0.05s",
             }}
             onWheel={(e) => {
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -30) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < 0) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
@@ -2987,7 +2874,99 @@ const IndexPhone = () => {
               </button>
             </div>
 
-            {overlaySummaryContent}
+            {orderLines.length === 0 ? (
+              <p className="text-[13px]" style={dim}>No items added yet.</p>
+            ) : (() => {
+              const today = new Date();
+              const dd = String(today.getDate()).padStart(2, "0");
+              const mm = String(today.getMonth() + 1).padStart(2, "0");
+              const yy = String(today.getFullYear()).slice(-2);
+              const dateStr = `${dd}${mm}${yy}`;
+
+              const groups: Record<string, typeof orderLines> = {};
+              orderLines.forEach(line => {
+                const sup = line.supplierChoice ?? line.product["SUPPLIER"] ?? "Unknown";
+                if (!groups[sup]) groups[sup] = [];
+                groups[sup].push(line);
+              });
+              const supplierNames = Object.keys(groups);
+              const multi = supplierNames.length > 1;
+
+              const grandTotal = orderLines.reduce((sum, line) => {
+                const rp = line.supplierChoice
+                  ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
+                  : line.product;
+                return sum + (rp["SUPPLIER PRICE"] ?? 0) * line.qty;
+              }, 0);
+              const grandUnits = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1), 0);
+
+              return (
+                <div>
+                  {supplierNames.map((supplier, sIdx) => {
+                    const grpLines = groups[supplier];
+                    const grn = multi ? `OFFICE ${dateStr} (${sIdx + 1})` : `OFFICE ${dateStr}`;
+                    const subtotal = grpLines.reduce((s, l) => {
+                      const rp = l.supplierChoice
+                        ? products.find(p => p["PRODUCT NAME"] === l.product["PRODUCT NAME"] && p["SUPPLIER"] === l.supplierChoice) ?? l.product
+                        : l.product;
+                      return s + (rp["SUPPLIER PRICE"] ?? 0) * l.qty;
+                    }, 0);
+
+                    return (
+                      <div key={supplier} className={sIdx > 0 ? "mb-5 mt-8 pt-6 border-t" : "mb-5"} style={sIdx > 0 ? { borderColor: border } : {}}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[12px] font-semibold tracking-wide" style={{ color: "hsl(var(--foreground))" }}>{supplier}</span>
+                          <span className="text-[11px] tracking-wider font-mono" style={dim}>{grn}</span>
+                        </div>
+                        {grpLines.map((line, lIdx) => {
+                          const rp = line.supplierChoice
+                            ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
+                            : line.product;
+                          const unitPrice = rp["SUPPLIER PRICE"] ?? 0;
+                          const unitsPerOrder = line.product["UNITS/ORDER"] ?? 1;
+                          const lineTotal = unitPrice * line.qty;
+                          const globalIdx = orderLines.indexOf(line);
+                          return (
+                            <div key={lIdx} className="flex items-center gap-2 py-1.5 border-b" style={{ borderColor: border }}>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
+                                {unitsPerOrder > 1 && (
+                                  <p className="text-[11px]" style={dim}>{line.qty * unitsPerOrder} units received</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button className="w-5 h-5 flex items-center justify-center rounded text-[11px]" style={dim}
+                                  onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx && ol.qty > 1 ? { ...ol, qty: ol.qty - 1 } : ol))}>−</button>
+                                <span className="text-[11px] w-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{line.qty}</span>
+                                <button className="w-5 h-5 flex items-center justify-center rounded text-[11px]" style={dim}
+                                  onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx ? { ...ol, qty: ol.qty + 1 } : ol))}>+</button>
+                              </div>
+                              <span className="text-[11px] w-16 text-right shrink-0" style={dim}>RM {lineTotal.toFixed(2)}</span>
+                              <button className="shrink-0 text-[11px] leading-none ml-1" style={{ color: "hsl(var(--red))" }}
+                                onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== globalIdx))}>×</button>
+                            </div>
+                          );
+                        })}
+                        <div className="flex justify-between mt-1.5">
+                          <span className="text-[11px] tracking-wider uppercase" style={dim}>
+                            {grpLines.reduce((s, l) => s + l.qty, 0)} orders
+                          </span>
+                          <span className="text-[11px] font-medium" style={{ color: "hsl(var(--foreground))" }}>RM {subtotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="pt-3 mt-2 border-t" style={{ borderColor: border }}>
+                    <div className="flex justify-between">
+                      <span className="text-[11px] tracking-wider uppercase" style={dim}>
+                        {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {grandUnits} units{multi ? ` · ${supplierNames.length} suppliers` : ""}
+                      </span>
+                      <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>RM {grandTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
