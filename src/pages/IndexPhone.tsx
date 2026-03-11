@@ -1452,11 +1452,11 @@ const IndexPhone = () => {
                   });
                   return (
                     <div className="mb-8">
-                      <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Office · Last 60 Days</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Last 60 Days</p>
                       {allActivityLoading ? (
                         <p className="text-[12px]" style={dim}>Loading…</p>
                       ) : allActivity.length === 0 ? (
-                        <p className="text-[12px]" style={dim}>No order activity in the last 60 days</p>
+                        <p className="text-[12px]" style={dim}>No entries...</p>
                       ) : (
                         <div className="border-t" style={{ borderColor: border }}>
                           <table className="w-full border-collapse">
@@ -1632,11 +1632,11 @@ const IndexPhone = () => {
                       )}
                     </div>
                   )}
-                  <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>{selectedBranch} · Last 60 Days</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Last 60 Days</p>
                   {branchActivityLoading ? (
                     <p className="text-[12px]" style={dim}>Loading…</p>
                   ) : branchActivity.length === 0 ? (
-                    <p className="text-[12px]" style={dim}>No activity in the last 60 days</p>
+                    <p className="text-[12px]" style={dim}>No entries...</p>
                   ) : (
                     <div className="border-t" style={{ borderColor: border }}>
                       <table className="w-full border-collapse">
