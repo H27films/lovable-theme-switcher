@@ -949,7 +949,8 @@ const IndexPhone = () => {
     const el = panelScrollRef.current;
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
+      setPanelScrollTop(el.scrollTop);
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
         setSummaryExpanded(true);
       }
     };
@@ -957,9 +958,9 @@ const IndexPhone = () => {
     return () => el.removeEventListener('scroll', handleScroll);
   }, [showOrderPanel]);
 
-  // Reset summaryExpanded when panel closes
+  // Reset summaryExpanded + panelScrollTop when panel closes
   useEffect(() => {
-    if (!showOrderPanel) setSummaryExpanded(false);
+    if (!showOrderPanel) { setSummaryExpanded(false); setPanelScrollTop(0); }
   }, [showOrderPanel]);
 
 
@@ -2526,10 +2527,19 @@ const IndexPhone = () => {
       {/* ── Order Panel ── */}
       {showOrderPanel && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
+          <div className="relative h-full w-full max-w-[500px]" style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }} onClick={e => e.stopPropagation()}>
+            {/* Top fade blur — appears as you scroll down */}
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: "80px",
+              background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)",
+              opacity: Math.min(panelScrollTop / 60, 1),
+              transition: "opacity 0.25s ease",
+              zIndex: 2, pointerEvents: "none"
+            }} />
           <div
             ref={panelScrollRef}
-            className="h-full w-full max-w-[500px] overflow-y-auto p-5"
-            style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
+            className="h-full w-full overflow-y-auto p-5"
+            style={{}}
             onClick={e => e.stopPropagation()}
           >
             {/* Panel header */}
@@ -2808,8 +2818,11 @@ const IndexPhone = () => {
 
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-40 mb-2 gap-1" style={{ opacity: 0.25 }}>
-                      <ChevronDown size={12} />
+                    <div className="flex flex-col items-center mt-64 mb-4" style={{ opacity: 0.3 }}>
+                      <svg width="14" height="64" viewBox="0 0 14 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="7" y1="0" x2="7" y2="54" stroke="white" strokeWidth="1.2"/>
+                        <polyline points="2,48 7,58 12,48" stroke="white" strokeWidth="1.2" fill="none" strokeLinejoin="round"/>
+                      </svg>
                     </div>
                   )}
 
@@ -2846,7 +2859,7 @@ const IndexPhone = () => {
               transition: "filter 0.4s ease 0.05s, opacity 0.4s ease 0.05s",
             }}
             onWheel={(e) => {
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < 0) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -60) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
@@ -2855,7 +2868,7 @@ const IndexPhone = () => {
             onTouchMove={(e) => {
               const startY = (summaryOverlayRef.current as any)._touchY ?? 0;
               const deltaY = startY - e.touches[0].clientY;
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -30) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -90) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
