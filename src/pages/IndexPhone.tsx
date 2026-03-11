@@ -2185,14 +2185,14 @@ const IndexPhone = () => {
                         >
                           <div>
                             <div className="flex items-center gap-1.5">
-                              {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
-                              <span className="text-[14.5px] font-light" style={{ color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</span>
+                              {p[entryFavCol(entryBranch)] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                              <span className="text-[12px] font-light" style={{ color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</span>
                             </div>
                             {entryBranch === "Office" && entryType === "Order" && p["SUPPLIER"] && (
-                              <span className="text-[13px]" style={dim}>{p["SUPPLIER"]}</span>
+                              <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>
                             )}
                           </div>
-                          <span className="text-[14.5px] font-light" style={dim}>{balance ?? "—"}</span>
+                          <span className="text-[12px] font-light" style={dim}>{balance ?? "—"}</span>
                         </div>
                       );
                     })}
