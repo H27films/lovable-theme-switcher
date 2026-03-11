@@ -1888,33 +1888,34 @@ const IndexPhone = () => {
           )}
 
           {/* ── Filters ── */}
-          <div className="flex items-center gap-6 mb-5">
-            <div className="flex items-center gap-3">
-              {(["all", "no", "yes"] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilterColour(f)}
-                  className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase transition-colors"
-                  style={{ color: filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
-                >
-                  {f === "all" ? "All" : f === "yes" ? "Colours" : "Products"}
-                </button>
-              ))}
+          <div className="flex flex-col gap-1.5 mb-5">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                {(["all", "no", "yes"] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFilterColour(f)}
+                    className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase transition-colors"
+                    style={{ color: filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                    onMouseLeave={e => (e.currentTarget.style.color = filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+                  >
+                    {f === "all" ? "All" : f === "yes" ? "Colours" : "Products"}
+                  </button>
+                ))}
+              </div>
+              <div style={{ width: "1px", height: "14px", background: border }} />
+              <button
+                onClick={() => setFilterLowStock(v => !v)}
+                className="text-[11px] tracking-wider uppercase transition-colors whitespace-nowrap"
+                style={{ color: filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))" }}
+                onMouseEnter={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))")}
+              >
+                Below Par{lowStockCount > 0 ? ` (${lowStockCount})` : ""}
+              </button>
             </div>
-            <div style={{ width: "1px", height: "14px", background: border }} />
-            <button
-              onClick={() => setFilterLowStock(v => !v)}
-              className="flex items-center gap-1.5 text-[11px] tracking-wider uppercase transition-colors"
-              style={{ color: filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))" }}
-              onMouseEnter={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--foreground))")}
-              onMouseLeave={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))")}
-            >
-              <AlertTriangle size={11} />
-              Below Par {lowStockCount > 0 && `(${lowStockCount})`}
-            </button>
-            <div className="ml-auto text-[11px] tracking-wider uppercase" style={dim}>
+            <div className="text-[10px] tracking-wider uppercase" style={dim}>
               {filteredProducts.length} results
             </div>
           </div>
@@ -2031,22 +2032,22 @@ const IndexPhone = () => {
                           onMouseEnter={e => (e.currentTarget.style.background = cardBg)}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
-                          <td className="text-[13px] font-light py-3 pr-4">{p["PRODUCT NAME"]}</td>
-                          <td className="text-[12px] font-light py-3 pr-4" style={dim}>{p["SUPPLIER"] || "—"}</td>
-                          <td className="text-[13px] font-light py-3 pr-4 text-center" style={{ color: belowPar ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
+                          <td className="text-[11px] font-light py-2 pr-3" style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p["PRODUCT NAME"]}</td>
+                          <td className="text-[10px] font-light py-2 pr-3" style={dim}>{p["SUPPLIER"] || "—"}</td>
+                          <td className="text-[11px] font-light py-2 pr-3 text-center" style={{ color: belowPar ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
                             {p["OFFICE BALANCE"] ?? "—"}
-                            {belowPar && <AlertTriangle size={10} className="inline ml-1 mb-0.5" />}
+                            {belowPar && <AlertTriangle size={9} className="inline ml-0.5 mb-0.5" />}
                           </td>
-                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{fmtPrice(p["SUPPLIER PRICE"])}</td>
-                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(branchPrice)}</td>
-                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["STAFF PRICE"])}</td>
-                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["CUSTOMER PRICE"])}</td>
-                          <td className="text-[12px] font-light py-3 pr-4" style={dim}>{p["OFFICE SECTION"] || "—"}</td>
-                          <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 pr-4 text-center tracking-wider uppercase" style={dim}>
+                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={{ color: "hsl(var(--foreground))" }}>{fmtPrice(p["SUPPLIER PRICE"])}</td>
+                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(branchPrice)}</td>
+                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(p["STAFF PRICE"])}</td>
+                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(p["CUSTOMER PRICE"])}</td>
+                          <td className="text-[10px] font-light py-2 pr-3" style={dim}>{p["OFFICE SECTION"] || "—"}</td>
+                          <td className="text-[10px] [font-variant-numeric:lining-nums] font-light py-2 pr-3 text-center tracking-wider uppercase" style={dim}>
                             {p["COLOUR"] === true ? "Colour" : "Product"}
                           </td>
-                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{p["PAR"] ?? "—"}</td>
-                          <td className="text-[12px] font-light py-3 text-center" style={(p["UNITS/ORDER"] ?? 1) > 1 ? { color: "hsl(var(--foreground))", fontWeight: 500 } : dim}>
+                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{p["PAR"] ?? "—"}</td>
+                          <td className="text-[10px] font-light py-2 text-center" style={(p["UNITS/ORDER"] ?? 1) > 1 ? { color: "hsl(var(--foreground))", fontWeight: 500 } : dim}>
                             {(p["UNITS/ORDER"] ?? 1) > 1 ? `${p["UNITS/ORDER"]} units` : "—"}
                           </td>
                         </tr>
