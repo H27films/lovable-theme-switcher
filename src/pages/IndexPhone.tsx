@@ -1869,13 +1869,13 @@ const IndexPhone = () => {
                       {allSupplierRows.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
                           <div
-                            className="px-3 py-2"
+                            className="px-2 py-1.5"
                             style={{ border: `1px solid ${s.id === selectedProduct.id ? borderActive : border}` }}
                           >
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>{s["SUPPLIER"] || "Unknown"}</p>
-                            <p className="text-[15px] font-light">RM {fmtPrice(s["SUPPLIER PRICE"])}</p>
+                            <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>{s["SUPPLIER"] || "Unknown"}</p>
+                            <p className="text-[12px] font-light">RM {fmtPrice(s["SUPPLIER PRICE"])}</p>
                             {(s["UNITS/ORDER"] ?? 1) > 1 && (
-                              <p className="text-[10px] mt-0.5 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {s["UNITS/ORDER"]} units/order</p>
+                              <p className="text-[9px] mt-0.5 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {s["UNITS/ORDER"]} units/order</p>
                             )}
                           </div>
                         </div>
