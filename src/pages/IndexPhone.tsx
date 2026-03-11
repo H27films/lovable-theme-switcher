@@ -309,37 +309,26 @@ const IndexPhone = () => {
     return "OFFICE FAVOURITE";
   };
 
-  const entryDropdownResults = entrySearch.length > 0 ? (() => {
+  const entryDropdownResults = (() => {
     const lower = entrySearch.toLowerCase();
     const favKey = entryFavCol(entryBranch);
+    const matchFn = (p: EntryProduct) =>
+      entrySearch.length === 0 || p["PRODUCT NAME"]?.toLowerCase().includes(lower);
+    const sortFn = (a: EntryProduct, b: EntryProduct) => {
+      const aFav = a[favKey] ? 0 : 1;
+      const bFav = b[favKey] ? 0 : 1;
+      if (aFav !== bFav) return aFav - bFav;
+      const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
+      const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
+      if (aCol !== bCol) return aCol - bCol;
+      return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
+    };
     if (entryBranch === "Office" && entryType === "Order") {
-      return entryProductsRaw
-        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(lower))
-        .sort((a, b) => {
-          const aFav = a[favKey] ? 0 : 1;
-          const bFav = b[favKey] ? 0 : 1;
-          if (aFav !== bFav) return aFav - bFav;
-          const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
-          const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
-          if (aCol !== bCol) return aCol - bCol;
-          return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
-        })
-        .slice(0, 15);
+      return entryProductsRaw.filter(matchFn).sort(sortFn).slice(0, 15);
     } else {
       const seen = new Set<string>();
       const results: EntryProduct[] = [];
-      const matched = entryProductsRaw
-        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(lower))
-        .sort((a, b) => {
-          const aFav = a[favKey] ? 0 : 1;
-          const bFav = b[favKey] ? 0 : 1;
-          if (aFav !== bFav) return aFav - bFav;
-          const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
-          const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
-          if (aCol !== bCol) return aCol - bCol;
-          return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
-        });
-      for (const p of matched) {
+      for (const p of entryProductsRaw.filter(matchFn).sort(sortFn)) {
         if (!seen.has(p["PRODUCT NAME"])) {
           seen.add(p["PRODUCT NAME"]);
           results.push(p);
@@ -348,7 +337,7 @@ const IndexPhone = () => {
       }
       return results;
     }
-  })() : [];
+  })();
 
   const addEntryItem = (p: EntryProduct) => {
     const defaultType = entryUsageTypes(entryBranch)[0];
@@ -1329,7 +1318,7 @@ const IndexPhone = () => {
                       onMouseEnter={() => setActiveIndex(idx)}
                     >
                       <div className="flex items-center gap-3">
-                        {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                        {p[entryFavCol(entryBranch)] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                         <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
                         {p["SUPPLIER"] && <span className="text-[11px] [font-variant-numeric:lining-nums]" style={dim}>{p["SUPPLIER"]}</span>}
                         {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
@@ -2154,7 +2143,7 @@ const IndexPhone = () => {
 
               {/* ── Search bar ── */}
               <div ref={entrySearchRef} className="relative mb-6">
-                <p className="text-[14.5px] tracking-wider uppercase mb-2" style={dim}>
+                <p className="text-[12px] tracking-wider uppercase mb-2" style={dim}>
                   {entryType === "Usage" ? `${entryBranch} Usage` : `${entryBranch} Order`}
                 </p>
                 <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
@@ -2165,7 +2154,7 @@ const IndexPhone = () => {
                     placeholder="Search to add..."
                     value={entrySearch}
                     onChange={e => { setEntrySearch(e.target.value); setEntryShowDropdown(true); setEntryActiveIndex(-1); }}
-                    onFocus={() => entrySearch && setEntryShowDropdown(true)}
+                    onFocus={() => setEntryShowDropdown(true)}
                     onKeyDown={handleEntryKeyDown}
                     style={{ color: "hsl(var(--foreground))" }}
                   />
