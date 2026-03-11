@@ -1722,9 +1722,11 @@ const IndexPhone = () => {
             <div className="surface-box p-4 mb-8" style={{ borderRadius: "5px" }}>
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <p className="text-[10px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={dim}>
-                    {selectedProduct["COLOUR"] === true ? "Colour Product" : "Product"}
-                    {selectedProduct["OFFICE SECTION"] && ` · Section ${selectedProduct["OFFICE SECTION"]}`}
+                  <p className="text-[10px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1">
+                    {selectedProduct["OFFICE SECTION"]
+                      ? <span style={{ color: "hsl(var(--foreground))" }}>Section {selectedProduct["OFFICE SECTION"]}</span>
+                      : <span style={dim}>{selectedProduct["COLOUR"] === true ? "Colour Product" : "Product"}</span>
+                    }
                   </p>
                   <p className="text-[16px] font-light tracking-tight">{selectedProduct["PRODUCT NAME"]}</p>
                   {selectedProduct["SUPPLIER"] && (
@@ -1786,12 +1788,7 @@ const IndexPhone = () => {
                     <p className="text-[14px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
                   </div>
                 </div>
-                {selectedProduct["OFFICE SECTION"] && (
-                  <div className="mt-2">
-                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Section</p>
-                    <p className="text-[14px] font-light">{selectedProduct["OFFICE SECTION"]}</p>
-                  </div>
-                )}
+
               </div>
 
               {/* Prices */}
