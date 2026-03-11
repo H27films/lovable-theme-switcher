@@ -43,13 +43,17 @@ const PhoneIcon = () => (
 );
 
 // Letter-lift hover component — each character lifts individually with staggered delay
-const HoverText = ({ text, staggerMs = 28 }: { text: string; staggerMs?: number }) => (
-  <span className="l3-hover-word">
+// intro=true adds the l3-intro class which plays the lift animation once on load
+const HoverText = ({ text, staggerMs = 28, intro = false }: { text: string; staggerMs?: number; intro?: boolean }) => (
+  <span className={`l3-hover-word${intro ? " l3-intro" : ""}`}>
     {text.split("").map((char, i) => (
       <span
         key={i}
         className="l3-char"
-        style={{ transitionDelay: `${i * staggerMs}ms` }}
+        style={{
+          transitionDelay: `${i * staggerMs}ms`,
+          animationDelay: intro ? `${i * staggerMs}ms` : undefined,
+        }}
       >
         {char}
       </span>
@@ -61,6 +65,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const { theme, setTheme, font, setFont } = useTheme();
   const [visible, setVisible] = useState(false);
+  const [introPlayed, setIntroPlayed] = useState(false);
   const [branchesOpen, setBranchesOpen] = useState(false);
   const [orderConfirmMode, setOrderConfirmMode] = useState(
     () => localStorage.getItem("orderConfirmation") !== "false"
@@ -73,6 +78,12 @@ export default function Landing() {
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Trigger letter-lift intro animation after title has faded in
+  useEffect(() => {
+    const t = setTimeout(() => setIntroPlayed(true), 1900);
     return () => clearTimeout(t);
   }, []);
 
@@ -109,7 +120,12 @@ export default function Landing() {
           to   { opacity: 1; }
         }
 
-        /* ── Letter-lift hover ── */
+        /* ── Letter-lift hover + intro ── */
+        @keyframes l3LiftChar {
+          0%   { transform: translateY(0); }
+          45%  { transform: translateY(-8px); }
+          100% { transform: translateY(0); }
+        }
         .l3-hover-word {
           display: inline-block;
           cursor: default;
@@ -120,6 +136,9 @@ export default function Landing() {
         }
         .l3-hover-word:hover .l3-char {
           transform: translateY(-8px);
+        }
+        .l3-intro .l3-char {
+          animation: l3LiftChar 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
         .l3-b-item {
@@ -236,6 +255,7 @@ export default function Landing() {
           .l3-b-text { font-size: 13px !important; }
           .l3-nav-item { font-size: 10px !important; }
           .l3-hover-word:hover .l3-char { transform: translateY(-5px); }
+          @keyframes l3LiftChar { 45% { transform: translateY(-5px); } }
         }
       `}</style>
 
@@ -415,7 +435,7 @@ export default function Landing() {
             }}
           >
             <span style={{ color: "hsl(var(--foreground))", display: "block", transition: "filter 0.4s ease, opacity 0.4s ease" }}>
-              <HoverText text="Product" />
+              <HoverText text="Product" intro={introPlayed} />
             </span>
             <span
               style={{
@@ -424,7 +444,7 @@ export default function Landing() {
                 transition: "color 0.4s ease",
               }}
             >
-              <HoverText text="Database." />
+              <HoverText text="Database." intro={introPlayed} />
             </span>
           </h1>
         </div>
