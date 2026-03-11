@@ -2204,7 +2204,7 @@ const IndexPhone = () => {
               {entryItems.length > 0 ? (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                    <p className="text-[11px] tracking-wider uppercase" style={dim}>
                       {entryItems.length} item{entryItems.length !== 1 ? "s" : ""}
                     </p>
                     <button
@@ -2215,62 +2215,55 @@ const IndexPhone = () => {
                       Clear
                     </button>
                   </div>
-                  <table className="w-full border-collapse mb-6">
-                    <thead>
-                      <tr style={{ borderBottom: `1px solid ${border}` }}>
-                        <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "32px" }}>#</th>
-                        <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={dim}>Product</th>
-                        {entryType === "Usage" && (
-                          <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "160px" }}>Type</th>
-                        )}
-                        <th className="text-center pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "80px" }}>Qty</th>
-                        <th style={{ width: "32px" }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <div className="mb-6">
                       {entryItems.map((item, idx) => (
-                        <tr key={item.id} style={{ borderBottom: `1px solid ${border}` }}>
-                          <td className="py-3 text-[12px] font-light" style={dim}>{idx + 1}</td>
-                          <td className="py-3 text-[13px] font-light pr-4" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</td>
-                          {entryType === "Usage" && (
-                            <td className="py-3 pr-4">
-                              <EntryTypeDropdown
-                                value={item.type}
-                                options={entryUsageTypes(entryBranch)}
-                                onChange={type => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, type } : i))}
-                              />
-                            </td>
-                          )}
-                          <td className="py-3 text-center">
-                            <div className="flex items-center justify-center gap-1">
+                        <div key={item.id} className="mb-3">
+                          {/* Line 1: Product + Remove */}
+                          <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
+                            <span className="flex-1 py-2.5 text-[13px] font-light" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</span>
+                            <button
+                              onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}
+                              className="flex-shrink-0 transition-colors py-2.5" style={dim}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                          {/* Line 2: Type (usage only) + Qty */}
+                          <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                            <div className="flex-1">
+                              {entryType === "Usage" && (
+                                <EntryTypeDropdown
+                                  value={item.type}
+                                  options={entryUsageTypes(entryBranch)}
+                                  onChange={type => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, type } : i))}
+                                />
+                              )}
+                            </div>
+                            <div className="flex items-center">
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))}
-                                className="px-1 py-0.5 transition-colors" style={dim}
+                                className="px-1.5 py-1 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
                                 <ChevronLeft size={13} />
                               </button>
-                              <span className="text-[13px] font-light min-w-[28px] text-center">{item.qty}</span>
+                              <span className="text-[13px] font-light min-w-[32px] text-center">{item.qty}</span>
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))}
-                                className="px-1 py-0.5 transition-colors" style={dim}
+                                className="px-1.5 py-1 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
                                 <ChevronRight size={13} />
                               </button>
                             </div>
-                          </td>
-                          <td className="py-3 text-right">
-                            <button onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}>
-                              <X size={13} style={dim} />
-                            </button>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
 
                   {/* Submit row */}
                   <div className="flex items-center justify-between pt-2">
