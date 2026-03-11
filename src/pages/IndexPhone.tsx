@@ -242,6 +242,7 @@ const IndexPhone = () => {
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [panelScrollTop, setPanelScrollTop] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
