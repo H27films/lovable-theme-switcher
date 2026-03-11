@@ -2939,7 +2939,7 @@ const IndexPhone = () => {
           className="fixed inset-0 z-[55] overflow-hidden"
           style={{
             transform: summaryExpanded ? "translateY(0)" : "translateY(100%)",
-            transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)",
+            transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1)",
             background: "hsl(var(--background))",
             borderLeft: `1px solid hsl(var(--border))`,
             maxWidth: "500px",
@@ -2949,9 +2949,24 @@ const IndexPhone = () => {
           <div
             ref={summaryOverlayRef}
             className="h-full overflow-y-auto p-5"
+            style={{
+              filter: summaryExpanded ? "blur(0px)" : "blur(6px)",
+              opacity: summaryExpanded ? 1 : 0,
+              transition: "filter 0.6s ease 0.1s, opacity 0.6s ease 0.1s",
+            }}
             onWheel={(e) => {
               if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < 0) {
                 setSummaryExpanded(false);
+                panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+            onTouchStart={(e) => { (summaryOverlayRef.current as any)._touchY = e.touches[0].clientY; }}
+            onTouchMove={(e) => {
+              const startY = (summaryOverlayRef.current as any)._touchY ?? 0;
+              const deltaY = startY - e.touches[0].clientY;
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -30) {
+                setSummaryExpanded(false);
+                panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
             }}
           >
@@ -2959,7 +2974,7 @@ const IndexPhone = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-[16px] font-light tracking-[0.15em] uppercase">Order Summary</h2>
               <button
-                onClick={() => setSummaryExpanded(false)}
+                onClick={() => { setSummaryExpanded(false); panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}
                 style={dim}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
