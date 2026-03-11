@@ -1228,6 +1228,19 @@ const IndexPhone = () => {
           <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim pl-0">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
         </div>
 
+        {/* ── Search blur overlay ── */}
+        {searchFocused && (
+          <div
+            style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+              backdropFilter: "blur(4px)",
+              WebkitBackdropFilter: "blur(4px)",
+              zIndex: 30,
+              pointerEvents: "none",
+            }}
+          />
+        )}
+
         <div className="py-6">
 
           {/* ── Search bar ── */}
