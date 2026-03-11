@@ -950,7 +950,7 @@ const IndexPhone = () => {
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
       setPanelScrollTop(el.scrollTop);
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
         setSummaryExpanded(true);
       }
     };
