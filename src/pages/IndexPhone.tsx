@@ -152,9 +152,9 @@ const IndexPhone = () => {
   const [showBranchDropdown, setShowBranchDropdown] = useState(false);
 
   const branchRoutes: Record<string, string> = {
-    "Boudoir": "/stock",
-    "Chic Nailspa": "/stockchicnailspa",
-    "Nur Yadi": "/stocknuryadi",
+    "Boudoir": "/stock/mobile",
+    "Chic Nailspa": "/stockchicnailspa/mobile",
+    "Nur Yadi": "/stocknuryadi/mobile",
   };
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
@@ -1186,7 +1186,12 @@ const IndexPhone = () => {
 
         {/* ── Top bar ── */}
         <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, position: "relative", zIndex: 10, ...fadeTop(0) }}>
-          <div className="flex items-center gap-4">
+          {/* Left: OFFICE title */}
+          <span className="text-[16px] font-light tracking-[0.25em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
+            OFFICE
+          </span>
+          {/* Right: icons + branch arrow dropdown */}
+          <div className="flex items-center gap-3">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
             <button
               onClick={() => navigate("/")}
@@ -1198,44 +1203,37 @@ const IndexPhone = () => {
             >
               <Home size={14} />
             </button>
-            <span className="text-[11px] [font-variant-numeric:lining-nums] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
-              OFFICE
-            </span>
-          </div>
-          <div className="relative">
-            <button
-              onClick={() => {
-                if (fromBranch && branchRoutes[fromBranch]) {
-                  navigate(branchRoutes[fromBranch]);
-                } else {
-                  setShowBranchDropdown(prev => !prev);
-                }
-              }}
-              className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase transition-colors"
-              style={{ color: "hsl(var(--foreground))" }}
-            >
-              <span>STOCK</span>
-              <ArrowRight size={15} />
-            </button>
-            {showBranchDropdown && (
-              <div
-                className="absolute right-0 top-8 z-50 flex flex-col gap-1 p-2 rounded-xl"
-                style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", minWidth: "160px" }}
+            <div className="relative">
+              <button
+                onClick={() => setShowBranchDropdown(prev => !prev)}
+                className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
+                style={{ ...dim, borderColor: border }}
+                onMouseEnter={e => { e.currentTarget.style.color = "hsl(var(--foreground))"; e.currentTarget.style.backgroundColor = cardBg; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; e.currentTarget.style.backgroundColor = "transparent"; }}
+                aria-label="Switch branch"
               >
-                {Object.entries(branchRoutes).map(([branch, route]) => (
-                  <button
-                    key={branch}
-                    onClick={() => { setShowBranchDropdown(false); navigate(route); }}
-                    className="text-left px-4 py-2 rounded-lg text-[12px] tracking-[0.1em] uppercase transition-colors"
-                    style={{ color: "hsl(var(--foreground))" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
-                    {branch}
-                  </button>
-                ))}
-              </div>
-            )}
+                <ArrowRight size={14} />
+              </button>
+              {showBranchDropdown && (
+                <div
+                  className="absolute right-0 top-9 z-50 flex flex-col gap-1 p-2 rounded-xl"
+                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", minWidth: "160px" }}
+                >
+                  {Object.entries(branchRoutes).map(([branch, route]) => (
+                    <button
+                      key={branch}
+                      onClick={() => { setShowBranchDropdown(false); navigate(route); }}
+                      className="text-left px-4 py-2 rounded-lg text-[12px] tracking-[0.1em] uppercase transition-colors"
+                      style={{ color: "hsl(var(--foreground))" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      {branch}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
