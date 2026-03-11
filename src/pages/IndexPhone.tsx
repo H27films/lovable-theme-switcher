@@ -2286,14 +2286,14 @@ const IndexPhone = () => {
       {showNewProductModal && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowNewProductModal(false)}>
           <div
-            className="h-full w-full max-w-[500px] overflow-y-auto p-10"
+            className="h-full w-full max-w-[500px] overflow-y-auto p-5"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-[24px] font-light tracking-tight">New Product</h2>
-                <p className="text-[14.5px] tracking-wider uppercase mt-1" style={dim}>Add to product database</p>
+                <h2 className="text-[20px] font-light tracking-tight">New Product</h2>
+                <p className="text-[11px] tracking-wider uppercase mt-0.5" style={dim}>Add to product database</p>
               </div>
               <button onClick={() => setShowNewProductModal(false)} style={dim}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -2302,70 +2302,64 @@ const IndexPhone = () => {
               </button>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col">
               {/* Product Name */}
-              <div>
-                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Product Name *</p>
-                <input
-                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
-                  style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
-                  value={newProduct["PRODUCT NAME"]}
-                  onChange={e => setNewProduct(p => ({ ...p, "PRODUCT NAME": e.target.value }))}
-                  placeholder="Product name"
-                />
-              </div>
+              <input
+                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
+                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
+                value={newProduct["PRODUCT NAME"]}
+                onChange={e => setNewProduct(p => ({ ...p, "PRODUCT NAME": e.target.value }))}
+                placeholder="Product name *"
+              />
 
               {/* Supplier */}
-              <div>
-                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Supplier</p>
-                <div className="relative" ref={newProductSupplierRef}>
-                  <input
-                    className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
-                    style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }}
-                    value={newProduct["SUPPLIER"]}
-                    onChange={e => { setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value })); setShowNewProductSupplierDropdown(true); }}
-                    onFocus={() => setShowNewProductSupplierDropdown(true)}
-                    onKeyDown={e => { if (e.key === "Escape") setShowNewProductSupplierDropdown(false); }}
-                    placeholder="Select or type supplier"
-                  />
-                  {showNewProductSupplierDropdown && (
-                    <div
-                      className="absolute top-full left-0 z-50 w-full border rounded mt-0.5 max-h-[180px] overflow-y-auto scrollbar-thin"
-                      style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "5px" }}
-                    >
-                      {supplierOptions
-                        .filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase()))
-                        .map(s => (
-                          <button
-                            key={s}
-                            type="button"
-                            className="w-full text-left px-3 py-2 text-[13px] font-light transition-colors"
-                            style={{ color: "hsl(var(--foreground))" }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
-                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                            onClick={() => { setNewProduct(p => ({ ...p, "SUPPLIER": s })); setShowNewProductSupplierDropdown(false); }}
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      {supplierOptions.filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase())).length === 0 && (
-                        <p className="px-3 py-2 text-[12px]" style={{ color: "hsl(var(--muted-foreground))" }}>No match — will create new</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+              <div className="relative" ref={newProductSupplierRef}>
+                <input
+                  className="w-full bg-transparent outline-none text-[13px] font-light py-3"
+                  style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
+                  value={newProduct["SUPPLIER"]}
+                  onChange={e => { setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value })); setShowNewProductSupplierDropdown(true); }}
+                  onFocus={() => setShowNewProductSupplierDropdown(true)}
+                  onKeyDown={e => { if (e.key === "Escape") setShowNewProductSupplierDropdown(false); }}
+                  placeholder="Supplier"
+                />
+                {showNewProductSupplierDropdown && (
+                  <div
+                    className="absolute top-full left-0 z-50 w-full border rounded mt-0.5 max-h-[180px] overflow-y-auto scrollbar-thin"
+                    style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                  >
+                    {supplierOptions
+                      .filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase()))
+                      .map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          className="w-full text-left px-3 py-2 text-[13px] font-light transition-colors"
+                          style={{ color: "hsl(var(--foreground))" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          onClick={() => { setNewProduct(p => ({ ...p, "SUPPLIER": s })); setShowNewProductSupplierDropdown(false); }}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    {supplierOptions.filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase())).length === 0 && (
+                      <p className="px-3 py-2 text-[12px]" style={{ color: "hsl(var(--muted-foreground))" }}>No match — will create new</p>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* Prices row */}
-              <div>
-                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
-                <div className="grid grid-cols-2 gap-2">
+              {/* Prices */}
+              <div className="py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+                <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {(["SUPPLIER PRICE", "BRANCH PRICE", "STAFF PRICE", "CUSTOMER PRICE"] as const).map(field => (
                     <div key={field}>
-                      <p className="text-[10px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" PRICE", "")}</p>
+                      <p className="text-[9px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" PRICE", "")}</p>
                       <input
-                        className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
-                        style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                        className="w-full bg-transparent outline-none text-[13px] font-light py-1"
+                        style={{ borderBottom: "1px solid hsl(var(--border))" }}
                         type="number"
                         step="0.01"
                         min="0"
@@ -2378,51 +2372,48 @@ const IndexPhone = () => {
                 </div>
               </div>
 
-
-
               {/* PAR and Units/Order */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>PAR Level</p>
-                  <input
-                    className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
-                    style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
-                    type="number"
-                    min="0"
-                    value={newProduct["PAR"]}
-                    onChange={e => setNewProduct(p => ({ ...p, "PAR": e.target.value }))}
-                    placeholder="—"
-                  />
-                </div>
-                <div>
-                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
-                  <input
-                    className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
-                    style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
-                    type="number"
-                    min="1"
-                    value={newProduct["UNITS/ORDER"]}
-                    onChange={e => setNewProduct(p => ({ ...p, "UNITS/ORDER": e.target.value }))}
-                    placeholder="1"
-                  />
+              <div className="py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+                <div className="grid grid-cols-2 gap-x-4">
+                  <div>
+                    <p className="text-[9px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>Par Level</p>
+                    <input
+                      className="w-full bg-transparent outline-none text-[13px] font-light py-1"
+                      style={{ borderBottom: "1px solid hsl(var(--border))" }}
+                      type="number"
+                      min="0"
+                      value={newProduct["PAR"]}
+                      onChange={e => setNewProduct(p => ({ ...p, "PAR": e.target.value }))}
+                      placeholder="—"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
+                    <input
+                      className="w-full bg-transparent outline-none text-[13px] font-light py-1"
+                      style={{ borderBottom: "1px solid hsl(var(--border))" }}
+                      type="number"
+                      min="1"
+                      value={newProduct["UNITS/ORDER"]}
+                      onChange={e => setNewProduct(p => ({ ...p, "UNITS/ORDER": e.target.value }))}
+                      placeholder="1"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Office Section */}
-              <div>
-                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Office Section</p>
-                <input
-                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
-                  style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
-                  value={newProduct["OFFICE SECTION"]}
-                  onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
-                  placeholder="e.g. 12B"
-                />
-              </div>
+              <input
+                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
+                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
+                value={newProduct["OFFICE SECTION"]}
+                onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
+                placeholder="Office section (e.g. 12B)"
+              />
 
               {/* Colour toggle */}
-              <div className="flex items-center gap-3">
-                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>Colour Product</p>
+              <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+                <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>Colour product</p>
                 <button
                   onClick={() => setNewProduct(p => ({ ...p, "COLOUR": !p["COLOUR"] }))}
                   className="rounded px-3 py-1 text-[12px] font-light transition-colors"
