@@ -2808,8 +2808,11 @@ const IndexPhone = () => {
 
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-36 gap-1" style={{ opacity: 0.25 }}>
-                      <ChevronDown size={14} />
+                    <div className="flex flex-col items-center mt-16 gap-1">
+                      <svg width="16" height="72" viewBox="0 0 16 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="8" y1="0" x2="8" y2="60" stroke="white" strokeWidth="1"/>
+                        <polyline points="2,52 8,66 14,52" fill="none" stroke="white" strokeWidth="1"/>
+                      </svg>
                     </div>
                   )}
                   {orderLines.length > 0 && <div style={{ paddingBottom: "160px" }} />}
@@ -2847,7 +2850,7 @@ const IndexPhone = () => {
               transition: "filter 0.4s ease 0.05s, opacity 0.4s ease 0.05s",
             }}
             onWheel={(e) => {
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -120) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -50) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
@@ -2856,7 +2859,7 @@ const IndexPhone = () => {
             onTouchMove={(e) => {
               const startY = (summaryOverlayRef.current as any)._touchY ?? 0;
               const deltaY = startY - e.touches[0].clientY;
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -120) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -50) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
