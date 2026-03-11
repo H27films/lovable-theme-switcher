@@ -1206,24 +1206,22 @@ const IndexPhone = () => {
             <div className="relative">
               <button
                 onClick={() => setShowBranchDropdown(prev => !prev)}
-                className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
-                style={{ ...dim, borderColor: border }}
-                onMouseEnter={e => { e.currentTarget.style.color = "hsl(var(--foreground))"; e.currentTarget.style.backgroundColor = cardBg; }}
-                onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; e.currentTarget.style.backgroundColor = "transparent"; }}
+                className="flex items-center justify-center transition-colors"
+                style={{ color: "hsl(var(--foreground))" }}
                 aria-label="Switch branch"
               >
-                <ArrowRight size={14} />
+                <ArrowRight size={15} />
               </button>
               {showBranchDropdown && (
                 <div
-                  className="absolute right-0 top-9 z-50 flex flex-col gap-1 p-2 rounded-xl"
-                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", minWidth: "160px" }}
+                  className="absolute right-0 top-7 z-50 flex flex-col p-1 rounded-lg"
+                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", minWidth: "120px" }}
                 >
                   {Object.entries(branchRoutes).map(([branch, route]) => (
                     <button
                       key={branch}
                       onClick={() => { setShowBranchDropdown(false); navigate(route); }}
-                      className="text-left px-4 py-2 rounded-lg text-[12px] tracking-[0.1em] uppercase transition-colors"
+                      className="text-left px-3 py-1.5 rounded-md text-[10px] tracking-[0.08em] uppercase transition-colors"
                       style={{ color: "hsl(var(--foreground))" }}
                       onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
