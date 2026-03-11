@@ -2123,7 +2123,7 @@ const IndexPhone = () => {
                   <input
                     ref={entryInputRef}
                     type="text"
-                    className="flex-1 bg-transparent outline-none text-[14.5px] font-light"
+                    className="flex-1 bg-transparent outline-none text-[12px] font-light"
                     placeholder="Search to add..."
                     value={entrySearch}
                     onChange={e => { setEntrySearch(e.target.value); setEntryShowDropdown(true); setEntryActiveIndex(-1); }}
@@ -2523,7 +2523,7 @@ const IndexPhone = () => {
               <button
                 onClick={() => setShowSupplierDropdown(v => !v)}
                 onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setShowSupplierDropdown(false); }}
-                className="flex items-center gap-2 text-[14.5px] tracking-wider uppercase transition-colors px-3 py-1.5"
+                className="flex items-center gap-2 text-[12px] tracking-wider uppercase transition-colors px-3 py-1.5"
                 style={{
                   border: `1px solid ${borderActive}`,
                   color: "hsl(var(--foreground))",
@@ -2547,7 +2547,7 @@ const IndexPhone = () => {
                 >
                   {/* Clear all */}
                   <button
-                    className="w-full text-left px-3 py-2 text-[14.5px] tracking-wider uppercase transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-[11px] tracking-wider uppercase transition-colors flex items-center gap-2"
                     style={{ color: "hsl(var(--foreground))", background: orderSupplierFilter.length === 0 ? cardBg : "transparent", borderBottom: `1px solid ${border}` }}
                     onClick={() => setOrderSupplierFilter([])}
                   >
@@ -2560,7 +2560,7 @@ const IndexPhone = () => {
                     return (
                       <button
                         key={s}
-                        className="w-full text-left px-3 py-2 text-[14.5px] tracking-wider uppercase transition-colors flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 text-[11px] tracking-wider uppercase transition-colors flex items-center gap-2"
                         style={{ color: "hsl(var(--foreground))", background: selected ? cardBg : "transparent" }}
                         onClick={() => setOrderSupplierFilter(prev =>
                           prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
@@ -2577,11 +2577,11 @@ const IndexPhone = () => {
 
             {/* Add product search */}
             <div ref={orderSearchRef} className="relative mb-6">
-              <p className="text-[14.5px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
+              <p className="text-[11px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
               <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
                 <input
                   type="text"
-                  className="flex-1 bg-transparent outline-none text-[14.5px] font-light"
+                  className="flex-1 bg-transparent outline-none text-[12px] font-light"
                   placeholder="Search to add..."
                   value={orderSearch}
                   onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); setOrderActiveIndex(-1); }}
@@ -2614,16 +2614,16 @@ const IndexPhone = () => {
                       <div>
                         <div className="flex items-center gap-1.5">
                           {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
-                          <span className="text-[14.5px] font-light">{p["PRODUCT NAME"]}</span>
+                          <span className="text-[12px] font-light">{p["PRODUCT NAME"]}</span>
                         </div>
                         {orderSupplierFilter.length === 0 && p["SUPPLIER"] && (
-                          <span className="text-[14.5px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
+                          <span className="text-[11px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
                         )}
                         {(p["UNITS/ORDER"] ?? 1) > 1 && (
-                          <span className="text-[14.5px] ml-2 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {p["UNITS/ORDER"]} units/order</span>
+                          <span className="text-[11px] ml-2 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {p["UNITS/ORDER"]} units/order</span>
                         )}
                       </div>
-                      <span className="text-[14.5px] font-light" style={{
+                      <span className="text-[12px] font-light" style={{
                         color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
                           ? "hsl(var(--red))" : "hsl(var(--muted-foreground))"
                       }}>
@@ -2639,7 +2639,7 @@ const IndexPhone = () => {
             {orderLines.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[14.5px] tracking-wider uppercase" style={dim}>Order Items</p>
+                  <p className="text-[11px] tracking-wider uppercase" style={dim}>Order Items</p>
                   {orderLines.length > 0 && (
                     <button
                       onClick={() => setOrderLines([])}
@@ -2650,7 +2650,7 @@ const IndexPhone = () => {
                     </button>
                   )}
                 </div>
-                <div className="space-y-3">
+                <div>
                   {orderLines.map((line, idx) => {
                     const siblings = products.filter(
                       s => s["PRODUCT NAME"] === line.product["PRODUCT NAME"] && s.id !== line.product.id
@@ -2662,89 +2662,75 @@ const IndexPhone = () => {
                       ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice)
                       : line.product;
                     return (
-                      <div key={idx} className="p-3" style={{ border: `1px solid ${needsChoice ? borderActive : border}` }}>
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="text-[14.5px] font-light">{line.product["PRODUCT NAME"]}</p>
-                            {/* Supplier choice prompt */}
-                            {siblings.length > 0 && (
-                              <div className="flex items-center gap-2 mt-1.5">
-                                {[line.product, ...siblings].map(s => (
-                                  <button
-                                    key={s.id}
-                                    onClick={() => setOrderLines(prev => prev.map((l, i) =>
-                                      i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
-                                    ))}
-                                    className="text-[11.5px] tracking-wider uppercase px-2 py-1 transition-colors"
-                                    style={{
-                                      border: `1px solid ${line.supplierChoice === s["SUPPLIER"] ? borderActive : border}`,
-                                      color: line.supplierChoice === s["SUPPLIER"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                                      background: line.supplierChoice === s["SUPPLIER"] ? cardBg : "transparent",
-                                    }}
-                                  >
-                                    {s["SUPPLIER"] || "Unknown"}
-                                    {s["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(s["SUPPLIER PRICE"])}`}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                            {/* Single supplier — show supplier name + price */}
-                            {siblings.length === 0 && (
-                              <p className="text-[14.5px] mt-0.5" style={dim}>
-                                {line.product["SUPPLIER"]}
-                                {line.product["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(line.product["SUPPLIER PRICE"])}`}
-                              </p>
-                            )}
-                            {/* Units/Order badge */}
-                            {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
-                              <p className="text-[14.5px] mt-0.5" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
-                                × {line.product["UNITS/ORDER"]} units/order
-                              </p>
-                            )}
-                          </div>
+                      <div key={idx}>
+                        {/* Line 1: Product name + × remove */}
+                        <div className="flex items-center justify-between py-2.5" style={{ borderBottom: `1px solid ${border}` }}>
+                          <p className="text-[13px] font-light">{line.product["PRODUCT NAME"]}</p>
                           <button
                             onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))}
                             style={dim}
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                           >
-                            <X size={12} />
+                            <X size={11} />
                           </button>
                         </div>
-                        {/* Balance + Qty */}
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-[14.5px]" style={dim}>
-                            Balance: <span style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
+                        {/* Supplier choice — plain text, no boxes */}
+                        {siblings.length > 0 && (
+                          <div className="flex items-center gap-4 py-1.5" style={{ borderBottom: `1px solid ${border}` }}>
+                            {[line.product, ...siblings].map(s => (
+                              <button
+                                key={s.id}
+                                onClick={() => setOrderLines(prev => prev.map((l, i) =>
+                                  i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
+                                ))}
+                                className="text-[11px] transition-colors"
+                                style={{
+                                  color: line.supplierChoice === s["SUPPLIER"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                                  textDecoration: line.supplierChoice === s["SUPPLIER"] ? "underline" : "none",
+                                }}
+                              >
+                                {s["SUPPLIER"] || "Unknown"}
+                                {s["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(s["SUPPLIER PRICE"])}`}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {/* Line 2: Supplier · Price · Balance + qty arrows (no box) */}
+                        <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                          <span className="text-[11px]" style={dim}>
+                            {chosenSupplier?.["SUPPLIER"] ?? ""}
+                            {chosenSupplier?.["SUPPLIER PRICE"] !== null && chosenSupplier?.["SUPPLIER PRICE"] !== undefined ? ` · RM ${fmtPrice(chosenSupplier["SUPPLIER PRICE"])}` : ""}
+                            {" · Bal "}
+                            <span style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
                               {chosenSupplier?.["OFFICE BALANCE"] ?? line.product["OFFICE BALANCE"] ?? "—"}
                             </span>
+                            {(line.product["UNITS/ORDER"] ?? 1) > 1 && ` · ×${line.product["UNITS/ORDER"]} units`}
                           </span>
-                          {/* Qty stepper */}
-                          <div className="flex items-center" style={{ border: `1px solid ${borderActive}` }}>
+                          <div className="flex items-center gap-2">
                             <button
-                              className="px-2 py-1.5 transition-colors text-[14.5px]"
-                              style={dim}
                               onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: Math.max(1, l.qty - 1) } : l))}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                            >
-                              <ChevronLeft size={12} />
-                            </button>
-                            <span className="text-[14.5px] font-light px-3 min-w-[32px] text-center">
-              {line.qty}
-              {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
-                <span className="text-[14.5px] ml-1" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
-                  ({line.qty * (line.product["UNITS/ORDER"] ?? 1)} units)
-                </span>
-              )}
-            </span>
-                            <button
-                              className="px-2 py-1.5 transition-colors text-[14.5px]"
                               style={dim}
+                            >
+                              <ChevronLeft size={11} />
+                            </button>
+                            <span className="text-[13px] font-light min-w-[20px] text-center">
+                              {line.qty}
+                              {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
+                                <span className="text-[11px] ml-1" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
+                                  ({line.qty * (line.product["UNITS/ORDER"] ?? 1)})
+                                </span>
+                              )}
+                            </span>
+                            <button
                               onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                              style={dim}
                             >
-                              <ChevronRight size={12} />
+                              <ChevronRight size={11} />
                             </button>
                           </div>
                         </div>
@@ -2756,12 +2742,12 @@ const IndexPhone = () => {
                 {/* Summary + Confirm */}
                 <div className="mt-6 pt-4 border-t" style={{ borderColor: border }}>
                   {orderLines.some(l => l.supplierChoice === null && products.filter(s => s["PRODUCT NAME"] === l.product["PRODUCT NAME"] && s.id !== l.product.id).length > 0) && (
-                    <p className="text-[14.5px] mb-2" style={{ color: "hsl(var(--red))" }}>
+                    <p className="text-[11px] mb-2" style={{ color: "hsl(var(--red))" }}>
                       Please select a supplier for all items before submitting
                     </p>
                   )}
                   {orderSuccess ? (
-                    <p className="text-[14.5px]" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
+                    <p className="text-[12px]" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
                       ✓ Order confirmed — office balances updated
                     </p>
                   ) : (
@@ -2775,7 +2761,7 @@ const IndexPhone = () => {
                     </button>
                   )}
                   {confirmError && (
-                    <p className="text-[14.5px] mt-2" style={{ color: "hsl(var(--red))" }}>✗ {confirmError}</p>
+                    <p className="text-[11px] mt-2" style={{ color: "hsl(var(--red))" }}>✗ {confirmError}</p>
                   )}
 
                   {/* Order Summary grouped by supplier / GRN */}
@@ -2806,7 +2792,7 @@ const IndexPhone = () => {
 
                     return (
                       <div className="mt-5">
-                        <p className="text-[14.5px] tracking-widest uppercase mb-3" style={dim}>Order Summary</p>
+                        <p className="text-[11px] tracking-widest uppercase mb-3" style={dim}>Order Summary</p>
 
                         {supplierNames.map((supplier, sIdx) => {
                           const grpLines = groups[supplier];
@@ -2822,8 +2808,8 @@ const IndexPhone = () => {
                             <div key={supplier} className={sIdx > 0 ? "mb-5 mt-8 pt-6 border-t" : "mb-5"} style={sIdx > 0 ? { borderColor: border } : {}}>
                               {/* Supplier header */}
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-[14.5px] font-semibold tracking-wide" style={{ color: "hsl(var(--foreground))" }}>{supplier}</span>
-                                <span className="text-[14.5px] tracking-wider font-mono" style={dim}>{grn}</span>
+                                <span className="text-[12px] font-semibold tracking-wide" style={{ color: "hsl(var(--foreground))" }}>{supplier}</span>
+                                <span className="text-[11px] tracking-wider font-mono" style={dim}>{grn}</span>
                               </div>
 
                               {/* Product lines */}
@@ -2840,9 +2826,9 @@ const IndexPhone = () => {
                                   <div key={lIdx} className="flex items-center gap-2 py-1.5 border-b" style={{ borderColor: border }}>
                                     {/* Name */}
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-[14.5px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
+                                      <p className="text-[12px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
                                       {unitsPerOrder > 1 && (
-                                        <p className="text-[14.5px]" style={dim}>{line.qty * unitsPerOrder} units received</p>
+                                        <p className="text-[11px]" style={dim}>{line.qty * unitsPerOrder} units received</p>
                                       )}
                                     </div>
                                     {/* Qty editor */}
