@@ -949,7 +949,7 @@ const IndexPhone = () => {
     const el = panelScrollRef.current;
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 150) {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
         setSummaryExpanded(true);
       }
     };
@@ -2808,7 +2808,7 @@ const IndexPhone = () => {
 
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-40 mb-2 gap-1" style={{ opacity: 0.25 }}>
+                    <div className="flex flex-col items-center mt-6 mb-2 gap-1" style={{ opacity: 0.25 }}>
                       <ChevronDown size={12} />
                     </div>
                   )}
