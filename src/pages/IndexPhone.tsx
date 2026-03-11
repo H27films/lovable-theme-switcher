@@ -169,7 +169,7 @@ const IndexPhone = () => {
   const searchExpanded = searchHovered || searchFocused || search.length > 0 || !!filterSupplier;
   const [page, setPage] = useState(0);
   const [filterLowStock, setFilterLowStock] = useState(false);
-  const [filterColour, setFilterColour] = useState<"all" | "yes" | "no">("all");
+  const [filterColour, setFilterColour] = useState<"all" | "yes" | "no">("no");
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
@@ -1891,7 +1891,7 @@ const IndexPhone = () => {
           <div className="flex flex-col gap-1.5 mb-5">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                {(["all", "no", "yes"] as const).map(f => (
+                {(["no", "yes"] as const).map(f => (
                   <button
                     key={f}
                     onClick={() => setFilterColour(f)}
@@ -1900,7 +1900,7 @@ const IndexPhone = () => {
                     onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                     onMouseLeave={e => (e.currentTarget.style.color = filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
                   >
-                    {f === "all" ? "All" : f === "yes" ? "Colours" : "Products"}
+                    {f === "yes" ? "Colours" : "Products"}
                   </button>
                 ))}
               </div>
