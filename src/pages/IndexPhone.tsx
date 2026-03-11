@@ -949,7 +949,7 @@ const IndexPhone = () => {
     const el = panelScrollRef.current;
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 150) {
         setSummaryExpanded(true);
       }
     };
