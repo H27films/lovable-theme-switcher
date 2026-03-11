@@ -249,6 +249,7 @@ const IndexPhone = () => {
   const [orderLines, setOrderLines] = useState<{ product: OfficeProduct; supplierChoice: string | null; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
+  const [forceOrderDropdown, setForceOrderDropdown] = useState(false);
   const [orderActiveIndex, setOrderActiveIndex] = useState(-1);
   const [showNewProductModal, setShowNewProductModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -825,10 +826,10 @@ const IndexPhone = () => {
     : products.filter(p => orderSupplierFilter.includes(p["SUPPLIER"] ?? ""));
 
   // Unique product names in order panel (after supplier filter)
-  const orderDropdownResults = orderSearch.length > 0
+  const orderDropdownResults = (orderSearch.length > 0 || forceOrderDropdown)
     ? (() => {
         const matched = orderPanelProducts.filter(p =>
-          p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase()) &&
+          (orderSearch.length === 0 || p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase())) &&
           !orderLines.some(l => l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"])
         );
         // Deduplicate: for same PRODUCT NAME + SUPPLIER, keep only the row with smallest UNITS/ORDER (prefer 1)
@@ -850,7 +851,7 @@ const IndexPhone = () => {
           if (isColourA !== isColourB) return isColourA - isColourB;
           return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
         })
-          .slice(0, 30);
+          .slice(0, forceOrderDropdown && orderSearch.length === 0 ? 15 : 30);
       })()
     : [];
 
@@ -865,6 +866,7 @@ const IndexPhone = () => {
     }]);
     setOrderSearch("");
     setShowOrderDropdown(false);
+    setForceOrderDropdown(false);
     setOrderActiveIndex(-1);
   };
 
@@ -2123,7 +2125,7 @@ const IndexPhone = () => {
                   <input
                     ref={entryInputRef}
                     type="text"
-                    className="flex-1 bg-transparent outline-none text-[12px] font-light"
+                    className="flex-1 bg-transparent outline-none text-[13px] font-light"
                     placeholder="Search to add..."
                     value={entrySearch}
                     onChange={e => { setEntrySearch(e.target.value); setEntryShowDropdown(true); setEntryActiveIndex(-1); }}
@@ -2523,22 +2525,17 @@ const IndexPhone = () => {
               <button
                 onClick={() => setShowSupplierDropdown(v => !v)}
                 onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setShowSupplierDropdown(false); }}
-                className="flex items-center gap-2 text-[12px] tracking-wider uppercase transition-colors px-3 py-1.5"
-                style={{
-                  border: `1px solid ${borderActive}`,
-                  color: "hsl(var(--foreground))",
-                  minWidth: "180px",
-                  background: "transparent",
-                }}
+                className="flex items-center gap-1.5 text-[11px] tracking-wider uppercase transition-colors"
+                style={{ color: "hsl(var(--muted-foreground))", background: "transparent" }}
               >
-                <span className="flex-1 text-left">
+                <ChevronRight size={10} style={{ transform: showSupplierDropdown ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s", flexShrink: 0 }} />
+                <span>
                   {orderSupplierFilter.length === 0
                     ? "All Suppliers"
                     : orderSupplierFilter.length === 1
                       ? orderSupplierFilter[0]
                       : `${orderSupplierFilter.length} suppliers`}
                 </span>
-                <ChevronRight size={10} style={{ transform: showSupplierDropdown ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }} />
               </button>
               {showSupplierDropdown && (
                 <div
@@ -2551,7 +2548,7 @@ const IndexPhone = () => {
                     style={{ color: "hsl(var(--foreground))", background: orderSupplierFilter.length === 0 ? cardBg : "transparent", borderBottom: `1px solid ${border}` }}
                     onClick={() => setOrderSupplierFilter([])}
                   >
-                    <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: orderSupplierFilter.length === 0 ? "hsl(var(--foreground))" : "transparent", flexShrink: 0 }} />
+                    <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: orderSupplierFilter.length === 0 ? "hsl(var(--foreground))" : "transparent", flexShrink: 0, borderRadius: "50%" }} />
                     All Suppliers
                   </button>
                   {allSuppliers.map(s => {
@@ -2566,7 +2563,7 @@ const IndexPhone = () => {
                           prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
                         )}
                       >
-                        <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: selected ? "hsl(var(--foreground))" : "transparent", flexShrink: 0 }} />
+                        <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: selected ? "hsl(var(--foreground))" : "transparent", flexShrink: 0, borderRadius: "50%" }} />
                         {s}
                       </button>
                     );
@@ -2577,7 +2574,7 @@ const IndexPhone = () => {
 
             {/* Add product search */}
             <div ref={orderSearchRef} className="relative mb-6">
-              <p className="text-[11px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
+              <p className="text-[12px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
               <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
                 <input
                   type="text"
@@ -2590,11 +2587,18 @@ const IndexPhone = () => {
                   style={{ color: "hsl(var(--foreground))" }}
                 />
                 {orderSearch && (
-                  <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); }} style={dim}>
+                  <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); setForceOrderDropdown(false); }} style={dim}>
                     <X size={12} />
                   </button>
                 )}
-                <Plus size={12} style={dim} />
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); setForceOrderDropdown(true); setShowOrderDropdown(true); setOrderActiveIndex(-1); }}
+                  style={dim}
+                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                >
+                  <Plus size={12} />
+                </button>
               </div>
               {showOrderDropdown && orderDropdownResults.length > 0 && (
                 <div
@@ -2639,7 +2643,7 @@ const IndexPhone = () => {
             {orderLines.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[11px] tracking-wider uppercase" style={dim}>Order Items</p>
+                  <p className="text-[12px] tracking-wider uppercase" style={dim}>Order Items</p>
                   {orderLines.length > 0 && (
                     <button
                       onClick={() => setOrderLines([])}
@@ -2792,7 +2796,7 @@ const IndexPhone = () => {
 
                     return (
                       <div className="mt-5">
-                        <p className="text-[11px] tracking-widest uppercase mb-3" style={dim}>Order Summary</p>
+                        <p className="text-[12px] tracking-widest uppercase mb-3" style={dim}>Order Summary</p>
 
                         {supplierNames.map((supplier, sIdx) => {
                           const grpLines = groups[supplier];
