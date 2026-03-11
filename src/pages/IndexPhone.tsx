@@ -2666,7 +2666,7 @@ const IndexPhone = () => {
                       ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice)
                       : line.product;
                     return (
-                      <div key={idx}>
+                      <div key={idx} className="mb-3">
                         {/* Line 1: Product name + balance + × remove */}
                         <div className="flex items-center justify-between py-2.5" style={{ borderBottom: `1px solid ${border}` }}>
                           <div className="flex items-center gap-2 min-w-0">
@@ -2684,29 +2684,40 @@ const IndexPhone = () => {
                             <X size={11} />
                           </button>
                         </div>
-                        {/* Supplier choice — plain text, no boxes */}
+                        {/* Supplier choice — stacked rows with circle indicator */}
                         {siblings.length > 0 && (
-                          <div className="flex items-center gap-4 py-1.5" style={{ borderBottom: `1px solid ${border}` }}>
-                            {[line.product, ...siblings].map(s => (
-                              <button
-                                key={s.id}
-                                onClick={() => setOrderLines(prev => prev.map((l, i) =>
-                                  i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
-                                ))}
-                                className="text-[11px] transition-colors"
-                                style={{
-                                  color: "hsl(var(--foreground))",
-                                  opacity: line.supplierChoice !== null && line.supplierChoice !== s["SUPPLIER"] ? 0.3 : 1,
-                                  textDecoration: line.supplierChoice === s["SUPPLIER"] ? "underline" : "none",
-                                  transition: "opacity 0.2s",
-                                }}
-                                onMouseEnter={e => { if (line.supplierChoice !== s["SUPPLIER"]) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
-                                onMouseLeave={e => { if (line.supplierChoice !== s["SUPPLIER"]) (e.currentTarget as HTMLElement).style.opacity = line.supplierChoice !== null ? "0.3" : "1"; }}
-                              >
-                                {s["SUPPLIER"] || "Unknown"}
-                                {s["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(s["SUPPLIER PRICE"])}`}
-                              </button>
-                            ))}
+                          <div className="py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                            {[line.product, ...siblings].map(s => {
+                              const isSelected = line.supplierChoice === s["SUPPLIER"];
+                              const hasChoice = line.supplierChoice !== null;
+                              return (
+                                <button
+                                  key={s.id}
+                                  onClick={() => setOrderLines(prev => prev.map((l, i) =>
+                                    i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
+                                  ))}
+                                  className="flex items-center gap-2 w-full py-1 text-left transition-opacity"
+                                  style={{
+                                    opacity: hasChoice && !isSelected ? 0.3 : 1,
+                                    transition: "opacity 0.2s",
+                                  }}
+                                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
+                                  onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.opacity = hasChoice ? "0.3" : "1"; }}
+                                >
+                                  <span className="text-[10px] shrink-0" style={{ color: isSelected ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}>
+                                    {isSelected ? "●" : "○"}
+                                  </span>
+                                  <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>
+                                    {s["SUPPLIER"] || "Unknown"}
+                                  </span>
+                                  {s["SUPPLIER PRICE"] !== null && s["SUPPLIER PRICE"] !== undefined && (
+                                    <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                                      · RM {fmtPrice(s["SUPPLIER PRICE"])}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                         {/* Line 2: Supplier · Price · Balance + qty arrows (no box) */}
@@ -2761,7 +2772,7 @@ const IndexPhone = () => {
                     </p>
                   ) : (
                     <button
-                      className="minimal-btn text-[11px] px-4 py-1.5"
+                      className="minimal-btn text-[10px] px-3 py-1"
                       style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", opacity: (orderLines.length === 0 || orderSubmitting) ? 0.4 : 1, borderRadius: "5px" }}
                       disabled={orderLines.length === 0 || orderSubmitting}
                       onClick={handleOrderConfirm}
