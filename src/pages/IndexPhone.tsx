@@ -282,6 +282,8 @@ const IndexPhone = () => {
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
   const panelScrollRef = useRef<HTMLDivElement>(null);
   const summaryOverlayRef = useRef<HTMLDivElement>(null);
+  const summaryOuterRef = useRef<HTMLDivElement>(null);
+  const summaryDragRef = useRef({ startY: 0, isDragging: false });
   const [showNewProductSupplierDropdown, setShowNewProductSupplierDropdown] = useState(false);
   const newProductSupplierRef = useRef<HTMLDivElement>(null);
 
@@ -2831,6 +2833,7 @@ const IndexPhone = () => {
       {/* ── ORDER SUMMARY EXPANDED OVERLAY ── */}
       {showOrderPanel && (
         <div
+          ref={summaryOuterRef}
           className="fixed inset-0 z-[55] overflow-hidden"
           style={{
             transform: summaryExpanded ? "translateY(0)" : "translateY(100%)",
@@ -2850,18 +2853,42 @@ const IndexPhone = () => {
               transition: "filter 0.4s ease 0.05s, opacity 0.4s ease 0.05s",
             }}
             onWheel={(e) => {
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -50) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -80) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
             }}
-            onTouchStart={(e) => { (summaryOverlayRef.current as any)._touchY = e.touches[0].clientY; }}
+            onTouchStart={(e) => {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0) {
+                summaryDragRef.current = { startY: e.touches[0].clientY, isDragging: true };
+                if (summaryOuterRef.current) {
+                  summaryOuterRef.current.style.transition = "none";
+                }
+              }
+            }}
             onTouchMove={(e) => {
-              const startY = (summaryOverlayRef.current as any)._touchY ?? 0;
-              const deltaY = startY - e.touches[0].clientY;
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -50) {
-                setSummaryExpanded(false);
-                panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+              if (!summaryDragRef.current.isDragging) return;
+              const dy = e.touches[0].clientY - summaryDragRef.current.startY;
+              if (dy > 0 && summaryOuterRef.current) {
+                summaryOuterRef.current.style.transform = `translateY(${dy}px)`;
+              }
+            }}
+            onTouchEnd={(e) => {
+              if (!summaryDragRef.current.isDragging) return;
+              summaryDragRef.current.isDragging = false;
+              const dy = e.changedTouches[0].clientY - summaryDragRef.current.startY;
+              if (summaryOuterRef.current) {
+                summaryOuterRef.current.style.transition = "transform 0.7s cubic-bezier(0.4,0,0.2,1)";
+                if (dy > window.innerHeight * 0.45) {
+                  summaryOuterRef.current.style.transform = "translateY(100%)";
+                  setTimeout(() => {
+                    setSummaryExpanded(false);
+                    panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                    if (summaryOuterRef.current) summaryOuterRef.current.style.transform = "";
+                  }, 700);
+                } else {
+                  summaryOuterRef.current.style.transform = "translateY(0)";
+                }
               }
             }}
           >
