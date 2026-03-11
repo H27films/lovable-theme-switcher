@@ -2525,10 +2525,9 @@ const IndexPhone = () => {
               <button
                 onClick={() => setShowSupplierDropdown(v => !v)}
                 onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setShowSupplierDropdown(false); }}
-                className="flex items-center gap-1.5 text-[11px] tracking-wider uppercase transition-colors"
-                style={{ color: "hsl(var(--muted-foreground))", background: "transparent" }}
+                className="flex items-center gap-1.5 text-[12px] tracking-wider uppercase transition-colors"
+                style={{ color: "hsl(var(--foreground))", background: "transparent" }}
               >
-                <ChevronRight size={10} style={{ transform: showSupplierDropdown ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s", flexShrink: 0 }} />
                 <span>
                   {orderSupplierFilter.length === 0
                     ? "All Suppliers"
@@ -2536,6 +2535,7 @@ const IndexPhone = () => {
                       ? orderSupplierFilter[0]
                       : `${orderSupplierFilter.length} suppliers`}
                 </span>
+                <ChevronRight size={10} style={{ transform: showSupplierDropdown ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s", flexShrink: 0 }} />
               </button>
               {showSupplierDropdown && (
                 <div
@@ -2667,9 +2667,14 @@ const IndexPhone = () => {
                       : line.product;
                     return (
                       <div key={idx}>
-                        {/* Line 1: Product name + × remove */}
+                        {/* Line 1: Product name + balance + × remove */}
                         <div className="flex items-center justify-between py-2.5" style={{ borderBottom: `1px solid ${border}` }}>
-                          <p className="text-[13px] font-light">{line.product["PRODUCT NAME"]}</p>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <p className="text-[13px] font-light truncate">{line.product["PRODUCT NAME"]}</p>
+                            <span className="text-[11px] shrink-0" style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : "hsl(var(--muted-foreground))" }}>
+                              {line.product["OFFICE BALANCE"] ?? "—"}
+                            </span>
+                          </div>
                           <button
                             onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))}
                             style={dim}
@@ -2690,9 +2695,13 @@ const IndexPhone = () => {
                                 ))}
                                 className="text-[11px] transition-colors"
                                 style={{
-                                  color: line.supplierChoice === s["SUPPLIER"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                                  color: "hsl(var(--foreground))",
+                                  opacity: line.supplierChoice !== null && line.supplierChoice !== s["SUPPLIER"] ? 0.3 : 1,
                                   textDecoration: line.supplierChoice === s["SUPPLIER"] ? "underline" : "none",
+                                  transition: "opacity 0.2s",
                                 }}
+                                onMouseEnter={e => { if (line.supplierChoice !== s["SUPPLIER"]) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
+                                onMouseLeave={e => { if (line.supplierChoice !== s["SUPPLIER"]) (e.currentTarget as HTMLElement).style.opacity = line.supplierChoice !== null ? "0.3" : "1"; }}
                               >
                                 {s["SUPPLIER"] || "Unknown"}
                                 {s["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(s["SUPPLIER PRICE"])}`}
@@ -2705,10 +2714,6 @@ const IndexPhone = () => {
                           <span className="text-[11px]" style={dim}>
                             {chosenSupplier?.["SUPPLIER"] ?? ""}
                             {chosenSupplier?.["SUPPLIER PRICE"] !== null && chosenSupplier?.["SUPPLIER PRICE"] !== undefined ? ` · RM ${fmtPrice(chosenSupplier["SUPPLIER PRICE"])}` : ""}
-                            {" · Bal "}
-                            <span style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
-                              {chosenSupplier?.["OFFICE BALANCE"] ?? line.product["OFFICE BALANCE"] ?? "—"}
-                            </span>
                             {(line.product["UNITS/ORDER"] ?? 1) > 1 && ` · ×${line.product["UNITS/ORDER"]} units`}
                           </span>
                           <div className="flex items-center gap-2">
@@ -2756,7 +2761,7 @@ const IndexPhone = () => {
                     </p>
                   ) : (
                     <button
-                      className="minimal-btn"
+                      className="minimal-btn text-[11px] px-4 py-1.5"
                       style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", opacity: (orderLines.length === 0 || orderSubmitting) ? 0.4 : 1, borderRadius: "5px" }}
                       disabled={orderLines.length === 0 || orderSubmitting}
                       onClick={handleOrderConfirm}
@@ -2830,7 +2835,7 @@ const IndexPhone = () => {
                                   <div key={lIdx} className="flex items-center gap-2 py-1.5 border-b" style={{ borderColor: border }}>
                                     {/* Name */}
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-[12px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
+                                      <p className="text-[11px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
                                       {unitsPerOrder > 1 && (
                                         <p className="text-[11px]" style={dim}>{line.qty * unitsPerOrder} units received</p>
                                       )}
@@ -2838,22 +2843,22 @@ const IndexPhone = () => {
                                     {/* Qty editor */}
                                     <div className="flex items-center gap-1 shrink-0">
                                       <button
-                                        className="w-5 h-5 flex items-center justify-center rounded text-[14.5px]"
+                                        className="w-5 h-5 flex items-center justify-center rounded text-[11px]"
                                         style={dim}
                                         onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx && ol.qty > 1 ? { ...ol, qty: ol.qty - 1 } : ol))}
                                       >−</button>
-                                      <span className="text-[14.5px] w-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{line.qty}</span>
+                                      <span className="text-[11px] w-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{line.qty}</span>
                                       <button
-                                        className="w-5 h-5 flex items-center justify-center rounded text-[14.5px]"
+                                        className="w-5 h-5 flex items-center justify-center rounded text-[11px]"
                                         style={dim}
                                         onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx ? { ...ol, qty: ol.qty + 1 } : ol))}
                                       >+</button>
                                     </div>
                                     {/* Line total */}
-                                    <span className="text-[14.5px] w-16 text-right shrink-0" style={dim}>RM {lineTotal.toFixed(2)}</span>
+                                    <span className="text-[11px] w-16 text-right shrink-0" style={dim}>RM {lineTotal.toFixed(2)}</span>
                                     {/* Remove */}
                                     <button
-                                      className="shrink-0 text-[14.5px] leading-none ml-1"
+                                      className="shrink-0 text-[11px] leading-none ml-1"
                                       style={{ color: "hsl(var(--red))" }}
                                       onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== globalIdx))}
                                     >×</button>
@@ -2863,10 +2868,10 @@ const IndexPhone = () => {
 
                               {/* Subtotal */}
                               <div className="flex justify-between mt-1.5">
-                                <span className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                                <span className="text-[11px] tracking-wider uppercase" style={dim}>
                                   {grpLines.reduce((s, l) => s + l.qty, 0)} orders
                                 </span>
-                                <span className="text-[14.5px] font-medium" style={{ color: "hsl(var(--foreground))" }}>RM {subtotal.toFixed(2)}</span>
+                                <span className="text-[11px] font-medium" style={{ color: "hsl(var(--foreground))" }}>RM {subtotal.toFixed(2)}</span>
                               </div>
                             </div>
                           );
@@ -2875,10 +2880,10 @@ const IndexPhone = () => {
                         {/* Grand total */}
                         <div className="pt-3 mt-2 border-t" style={{ borderColor: border }}>
                           <div className="flex justify-between">
-                            <span className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                            <span className="text-[11px] tracking-wider uppercase" style={dim}>
                               {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {grandUnits} units{multi ? ` · ${supplierNames.length} suppliers` : ""}
                             </span>
-                            <span className="text-[14.5px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>RM {grandTotal.toFixed(2)}</span>
+                            <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>RM {grandTotal.toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
