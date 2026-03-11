@@ -2504,16 +2504,13 @@ const IndexPhone = () => {
       {showOrderPanel && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
           <div
-            className="h-full w-full max-w-[500px] overflow-y-auto p-10"
+            className="h-full w-full max-w-[500px] overflow-y-auto p-5"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
             {/* Panel header */}
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-[24px] font-light tracking-tight">New Order</h2>
-                <p className="text-[14.5px] tracking-wider uppercase mt-1" style={dim}>Office stock order</p>
-              </div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-[16px] font-light tracking-[0.15em] uppercase">New Order</h2>
               <button onClick={() => setShowOrderPanel(false)} style={dim}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
