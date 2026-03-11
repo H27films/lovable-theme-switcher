@@ -42,6 +42,21 @@ const PhoneIcon = () => (
   </svg>
 );
 
+// Letter-lift hover component — each character lifts individually with staggered delay
+const HoverText = ({ text, staggerMs = 28 }: { text: string; staggerMs?: number }) => (
+  <span className="l3-hover-word">
+    {text.split("").map((char, i) => (
+      <span
+        key={i}
+        className="l3-char"
+        style={{ transitionDelay: `${i * staggerMs}ms` }}
+      >
+        {char}
+      </span>
+    ))}
+  </span>
+);
+
 export default function Landing() {
   const navigate = useNavigate();
   const { theme, setTheme, font, setFont } = useTheme();
@@ -92,6 +107,19 @@ export default function Landing() {
         @keyframes l3FadeIn {
           from { opacity: 0; }
           to   { opacity: 1; }
+        }
+
+        /* ── Letter-lift hover ── */
+        .l3-hover-word {
+          display: inline-block;
+          cursor: default;
+        }
+        .l3-char {
+          display: inline-block;
+          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .l3-hover-word:hover .l3-char {
+          transform: translateY(-8px);
         }
 
         .l3-b-item {
@@ -207,6 +235,7 @@ export default function Landing() {
           .l3-select-label { font-size: 8px !important; letter-spacing: 0.12em !important; white-space: nowrap !important; }
           .l3-b-text { font-size: 13px !important; }
           .l3-nav-item { font-size: 10px !important; }
+          .l3-hover-word:hover .l3-char { transform: translateY(-5px); }
         }
       `}</style>
 
@@ -366,7 +395,6 @@ export default function Landing() {
             display: "flex",
             alignItems: "center",
             padding: "0 44px",
-            pointerEvents: "none",
             position: "relative",
             zIndex: 1,
           }}
@@ -383,10 +411,11 @@ export default function Landing() {
               transform: visible ? "translateY(0)" : "translateY(20px)",
               transition: "opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s",
               filter: branchesOpen ? blurAmount : "none",
+              userSelect: "none",
             }}
           >
             <span style={{ color: "hsl(var(--foreground))", display: "block", transition: "filter 0.4s ease, opacity 0.4s ease" }}>
-              Product
+              <HoverText text="Product" />
             </span>
             <span
               style={{
@@ -395,7 +424,7 @@ export default function Landing() {
                 transition: "color 0.4s ease",
               }}
             >
-              Database.
+              <HoverText text="Database." />
             </span>
           </h1>
         </div>
