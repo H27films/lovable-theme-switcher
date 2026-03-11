@@ -1355,38 +1355,30 @@ const IndexPhone = () => {
           </div>
           </div>
 
-          {/* ── New Product + Order buttons ── */}
-          <div className="flex items-center justify-between mt-3 mb-4" style={fade(90)}>
-            <span
-              className="nav-link flex items-center gap-0.5"
-              style={{ color: "hsl(var(--foreground))" }}
-              onClick={() => setShowNewProductModal(true)}
-            >
-              New Product <Plus size={13} className="inline -mt-0.5" />
-            </span>
-            <span
-              className="nav-link flex items-center gap-0.5"
-              style={{ color: "hsl(var(--foreground))" }}
-              onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
-            >
-              Order <ClipboardList size={13} className="inline -mt-0.5" />
-            </span>
-          </div>
-
           {/* ── Tab switcher ── */}
-          <div className="flex items-center gap-8 mb-8 border-b" style={{ borderColor: border, ...fade(260) }}>
-            {(["branches", "table", "entry"] as const).map(tab => (
+          <div className="flex items-center gap-7 mb-3 border-b overflow-x-auto" style={{ borderColor: border, ...fade(260) }}>
+            {([
+              { id: "branches", label: "Branches" },
+              { id: "entry", label: "Entry" },
+              { id: "order", label: "Order" },
+              { id: "table", label: "Table" },
+              { id: "product", label: "Product +" },
+            ] as const).map(({ id, label }) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+                key={id}
+                onClick={() => {
+                  if (id === "order") { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }
+                  else if (id === "product") { setShowNewProductModal(true); }
+                  else setActiveTab(id as "branches" | "table" | "entry");
+                }}
                 onMouseDown={e => e.preventDefault()}
-                className="text-[13px] tracking-[0.15em] uppercase pb-3 transition-colors relative"
-                style={{ color: activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                className="text-[13px] tracking-[0.15em] uppercase pb-3 transition-colors relative shrink-0"
+                style={{ color: (id !== "order" && id !== "product" && activeTab === id) ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = (id !== "order" && id !== "product" && activeTab === id) ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
               >
-                {tab === "branches" ? "Branches" : tab === "table" ? "Table" : "Entry"}
-                {activeTab === tab && (
+                {label}
+                {(id !== "order" && id !== "product" && activeTab === id) && (
                   <span className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "hsl(var(--foreground))" }} />
                 )}
               </button>
