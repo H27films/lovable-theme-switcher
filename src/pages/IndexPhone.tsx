@@ -2318,7 +2318,6 @@ const IndexPhone = () => {
       {showNewProductModal && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowNewProductModal(false)}>
           <div
-            ref={panelScrollRef}
             className="h-full w-full max-w-[500px] overflow-y-auto p-5"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
@@ -2528,6 +2527,7 @@ const IndexPhone = () => {
       {showOrderPanel && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
           <div
+            ref={panelScrollRef}
             className="h-full w-full max-w-[500px] overflow-y-auto p-5"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
