@@ -496,7 +496,7 @@ export default function Landing() {
               className="l3-nav-item"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate("/prices");
+                navigate(phoneMode ? "/office/mobile" : "/prices");
               }}
               style={{
                 marginTop: "14px",
