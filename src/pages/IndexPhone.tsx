@@ -1345,7 +1345,7 @@ const IndexPhone = () => {
                         )}
                         <span className="text-[12px] font-light" style={{
                           color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
-                            ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                            ? "hsl(var(--red))" : (p["OFFICE BALANCE"] != null && p["PAR"] != null && Number(p["OFFICE BALANCE"]) >= Number(p["PAR"]) ? "#4ade80" : "hsl(var(--foreground))")
                         }}>
                           {p["OFFICE BALANCE"] ?? "—"}
                         </span>
@@ -2671,7 +2671,7 @@ const IndexPhone = () => {
                         <div className="flex items-center justify-between py-2.5" style={{ borderBottom: `1px solid ${border}` }}>
                           <div className="flex items-center gap-2 min-w-0">
                             <p className="text-[13px] font-light truncate">{line.product["PRODUCT NAME"]}</p>
-                            <span className="text-[11px] shrink-0" style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : "hsl(var(--muted-foreground))" }}>
+                            <span className="text-[12px] shrink-0" style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : (line.product["OFFICE BALANCE"] != null && line.product["PAR"] != null && Number(line.product["OFFICE BALANCE"]) >= Number(line.product["PAR"]) ? "#4ade80" : "hsl(var(--muted-foreground))") }}>
                               {line.product["OFFICE BALANCE"] ?? "—"}
                             </span>
                           </div>
