@@ -1245,7 +1245,6 @@ const IndexPhone = () => {
           {/* ── Page header ── */}
           <div className="mb-6" style={fade(90)}>
             <div>
-              <h1 className="hidden">
               <div className="flex items-end justify-between">
                 <p className="text-[22px] font-light tracking-tight uppercase">Office Database</p>
                 <span
