@@ -949,7 +949,7 @@ const IndexPhone = () => {
     const el = panelScrollRef.current;
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
         setSummaryExpanded(true);
       }
     };
@@ -2808,10 +2808,11 @@ const IndexPhone = () => {
 
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-6 mb-2 gap-1" style={{ opacity: 0.25 }}>
-                      <ChevronDown size={12} />
+                    <div className="flex flex-col items-center mt-36 gap-1" style={{ opacity: 0.25 }}>
+                      <ChevronDown size={14} />
                     </div>
                   )}
+                  {orderLines.length > 0 && <div style={{ paddingBottom: "160px" }} />}
 
                 </div>
               </div>
@@ -2830,7 +2831,7 @@ const IndexPhone = () => {
           className="fixed inset-0 z-[55] overflow-hidden"
           style={{
             transform: summaryExpanded ? "translateY(0)" : "translateY(100%)",
-            transition: "transform 0.45s cubic-bezier(0.4,0,0.2,1)",
+            transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1)",
             background: "hsl(var(--background))",
             borderLeft: `1px solid hsl(var(--border))`,
             maxWidth: "500px",
@@ -2846,7 +2847,7 @@ const IndexPhone = () => {
               transition: "filter 0.4s ease 0.05s, opacity 0.4s ease 0.05s",
             }}
             onWheel={(e) => {
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < 0) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -120) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
@@ -2855,7 +2856,7 @@ const IndexPhone = () => {
             onTouchMove={(e) => {
               const startY = (summaryOverlayRef.current as any)._touchY ?? 0;
               const deltaY = startY - e.touches[0].clientY;
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -30) {
+              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -120) {
                 setSummaryExpanded(false);
                 panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }
