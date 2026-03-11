@@ -2809,9 +2809,9 @@ const IndexPhone = () => {
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
                     <div className="flex flex-col items-center mt-16 gap-1">
-                      <svg width="16" height="72" viewBox="0 0 16 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="8" y1="0" x2="8" y2="60" stroke="white" strokeWidth="1"/>
-                        <polyline points="2,52 8,66 14,52" fill="none" stroke="white" strokeWidth="1"/>
+                      <svg width="16" height="36" viewBox="0 0 16 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="8" y1="0" x2="8" y2="28" stroke="white" strokeWidth="1"/>
+                        <polyline points="2,22 8,34 14,22" fill="none" stroke="white" strokeWidth="1"/>
                       </svg>
                     </div>
                   )}
