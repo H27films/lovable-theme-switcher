@@ -1173,7 +1173,7 @@ const IndexPhone = () => {
       <div className="max-w-full mx-auto px-3">
 
         {/* ── Top bar ── */}
-        <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, position: "relative", zIndex: 10, ...fadeTop(0) }}>
+        <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, position: "relative", zIndex: 35, ...fadeTop(0) }}>
           {/* Left: OFFICE title */}
           <span className="text-[16px] font-light tracking-[0.25em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
             OFFICE
@@ -1229,17 +1229,17 @@ const IndexPhone = () => {
         </div>
 
         {/* ── Search blur overlay ── */}
-        {searchFocused && (
-          <div
-            style={{
-              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
-              zIndex: 30,
-              pointerEvents: "none",
-            }}
-          />
-        )}
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
+            WebkitBackdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
+            opacity: searchFocused ? 1 : 0,
+            transition: "opacity 300ms ease, backdrop-filter 300ms ease, -webkit-backdrop-filter 300ms ease",
+            zIndex: 30,
+            pointerEvents: "none",
+          }}
+        />
 
         <div className="py-6">
 
