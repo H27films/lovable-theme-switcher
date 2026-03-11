@@ -1975,12 +1975,6 @@ const IndexPhone = () => {
                         Branch<br /><span>RM</span>
                       </th>
 
-                      {/* Type */}
-                      <th className={`${thBase} text-center align-top`} style={dim}
-                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                        Type
-                      </th>
 
                     </tr>
                   </thead>
@@ -1997,7 +1991,7 @@ const IndexPhone = () => {
                           onMouseEnter={e => (e.currentTarget.style.background = cardBg)}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
-                          <td className="text-[11px] font-light py-2 pr-3" style={{ maxWidth: "140px", wordBreak: "break-word" }}>{p["PRODUCT NAME"]}</td>
+                          <td className="text-[11px] font-light py-2 pr-3" style={{ maxWidth: "180px", wordBreak: "break-word" }}>{p["PRODUCT NAME"]}</td>
                           <td className="text-[10px] font-light py-2 pr-3" style={dim}>{p["SUPPLIER"] || "—"}</td>
                           <td className="text-[11px] font-light py-2 pr-3 text-center" style={{ color: belowPar ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
                             {p["OFFICE BALANCE"] ?? "—"}
@@ -2005,9 +1999,7 @@ const IndexPhone = () => {
                           </td>
                           <td className="text-[10px] font-light py-2 pr-3 text-center" style={{ color: "hsl(var(--foreground))" }}>{fmtPrice(p["SUPPLIER PRICE"])}</td>
                           <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(branchPrice)}</td>
-                          <td className="text-[10px] [font-variant-numeric:lining-nums] font-light py-2 text-center tracking-wider uppercase" style={dim}>
-                            {p["COLOUR"] === true ? "Colour" : "Product"}
-                          </td>
+
                         </tr>
                       );
                     })}
