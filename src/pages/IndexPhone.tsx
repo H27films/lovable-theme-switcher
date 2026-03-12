@@ -2565,11 +2565,16 @@ const IndexPhone = () => {
             {/* NEW ORDER content — blurs + shrinks as ORDER SUMMARY scrolls in */}
             <div
               style={{
-                opacity: 1 - summaryProgress * 0.55,
-                filter: `blur(${summaryProgress * 5}px)`,
                 transform: `scale(${1 - summaryProgress * 0.06})`,
                 transformOrigin: "top center",
-                transition: "opacity 0.1s ease, filter 0.1s ease, transform 0.1s ease",
+                transition: "filter 0.1s ease, transform 0.1s ease, mask-image 0.1s ease, WebkitMaskImage 0.1s ease",
+                filter: summaryProgress > 0 ? `blur(${summaryProgress * 4}px)` : "none",
+                WebkitMaskImage: summaryProgress > 0
+                  ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
+                  : "none",
+                maskImage: summaryProgress > 0
+                  ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
+                  : "none",
               }}
             >
             {/* Panel header */}
@@ -2864,7 +2869,7 @@ const IndexPhone = () => {
               <div
                 ref={summaryInlineRef}
                 style={{
-                  marginTop: "64px",
+                  marginTop: "38px",
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
