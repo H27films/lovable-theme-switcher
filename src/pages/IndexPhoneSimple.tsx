@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import SearchPage from "./SearchPage";
+import BranchesPage from "./BranchesPage";
+import OrderPage from "./OrderPage";
 import { ArrowRight, Home, X, ChevronLeft, ChevronRight, AlertTriangle, ChevronUp, ChevronDown, ClipboardList, Plus, Star, Search, Building2, RefreshCw, Upload } from "lucide-react";
 
 interface OfficeProduct {
@@ -241,7 +244,7 @@ const IndexPhoneSimple = () => {
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
-  const [activeSection, setActiveSection] = useState<"search" | "branches" | null>(null);
+  const [activeSection, setActiveSection] = useState<"search" | "branches" | "order" | null>(null);
   const [transitionPhase, setTransitionPhase] = useState<'at-menu'|'menu-leaving'|'section-entering'|'at-section'|'section-leaving'|'menu-entering'>('at-menu');
   const [summaryProgress, setSummaryProgress] = useState(0);
   const [panelScrollDir, setPanelScrollDir] = useState<"up" | "down">("down");
@@ -1189,7 +1192,7 @@ const IndexPhoneSimple = () => {
     transition: `opacity 0.55s ease ${delay}ms`,
   });
 
-  const navigateTo = (section: 'search' | 'branches', tab: 'table' | 'branches') => {
+  const navigateTo = (section: 'search' | 'branches' | 'order', tab: 'table' | 'branches' | 'entry') => {
     setTransitionPhase('menu-leaving');
     setTimeout(() => {
       setActiveSection(section);
@@ -1263,7 +1266,7 @@ const IndexPhoneSimple = () => {
               <button
                 key={item}
                 onClick={() => {
-                  if (item === "ORDER") { setShowOrderPanel(true); setOrderSearch(""); }
+                  if (item === "ORDER") { navigateTo("order", "entry"); }
                   else if (item === "SEARCH") { navigateTo("search", "table"); }
                   else { navigateTo("branches", "branches"); }
                 }}
@@ -1338,18 +1341,10 @@ const IndexPhoneSimple = () => {
 
         {activeSection !== null && (
           <div style={{ transition: "transform 0.38s cubic-bezier(0.4,0,0.2,1), filter 0.38s ease, opacity 0.38s ease", transform: transitionPhase === 'section-entering' ? 'translateY(25%)' : transitionPhase === 'section-leaving' ? 'translateY(-20%)' : 'translateY(0)', filter: (transitionPhase === 'section-entering' || transitionPhase === 'section-leaving') ? 'blur(14px)' : 'blur(0px)', opacity: (transitionPhase === 'section-entering' || transitionPhase === 'section-leaving') ? 0 : 1 }}>
-            {/* ── Back button ── */}
-            <div style={{ paddingTop: "20px", paddingBottom: "8px" }}>
-              <button
-                onClick={navigateBack}
-                style={{ display: "flex", alignItems: "center", gap: "6px", color: "hsl(var(--muted-foreground))", background: "none", border: "none", fontSize: "13px", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-              >
-                <ChevronLeft size={14} /> Back
-              </button>
-            </div>
-        <div className="py-6">
+            {activeSection === "search" && <SearchPage onBack={navigateBack} />}
+            {activeSection === "branches" && <BranchesPage onBack={navigateBack} />}
+            {activeSection === "order" && <OrderPage onBack={navigateBack} />}
+        <div className="py-6" style={{ display: "none" }}>
 
           {/* ── Search bar ── */}
           <div style={{...fade(170), position: "relative", zIndex: 40}}>
