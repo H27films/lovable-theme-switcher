@@ -147,7 +147,9 @@ function EntryTypeDropdown({ value, options, onChange }: {
 }
 
 const IndexPhoneSimple = () => {
-  const { theme, toggle, font, cycleFont } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const isSandTheme = theme === "sand";
+  const toggleTheme = () => setTheme(isSandTheme ? "light" : "sand");
   const navigate = useNavigate();
   const location = useLocation();
   const fromBranch = (location.state as { fromBranch?: string } | null)?.fromBranch ?? null;
@@ -1248,7 +1250,7 @@ const IndexPhoneSimple = () => {
         {/* ── Fixed theme toggle (always visible) ── */}
         <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 60 }}>
           <span
-            onClick={toggle}
+            onClick={toggleTheme}
             style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}
             title="Switch theme"
           >

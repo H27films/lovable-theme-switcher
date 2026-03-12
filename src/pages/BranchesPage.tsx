@@ -1,37 +1,50 @@
 import React from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 
-interface Props {
+interface BranchesPageProps {
   onBack: () => void;
 }
 
-const BranchesPage: React.FC<Props> = ({ onBack }) => {
+export default function BranchesPage({ onBack }: BranchesPageProps) {
+  const { theme, setTheme } = useTheme();
+  const isSand = theme === "sand";
+  const handleToggle = () => setTheme(isSand ? "light" : "sand");
+
+  const fg = "hsl(var(--foreground))";
+
   return (
-    <div style={{ minHeight: "100dvh", padding: "0 16px" }}>
-      {/* Back arrow */}
-      <div style={{ paddingTop: "24px", paddingBottom: "16px" }}>
+    <div
+      style={{
+        minHeight: "100dvh",
+        background: "hsl(var(--background))",
+        color: fg,
+        fontFamily: "'Raleway', sans-serif",
+      }}
+    >
+      {/* ── Top bar ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "16px 16px 12px 12px",
+        }}
+      >
         <button
           onClick={onBack}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "hsl(var(--muted-foreground))",
-            padding: "8px",
-            margin: "-8px",
-            display: "flex",
-            alignItems: "center",
-          }}
-          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: fg, display: "flex", alignItems: "center", touchAction: "manipulation" }}
         >
-          <ChevronLeft size={28} />
+          <ChevronLeft size={24} strokeWidth={1.5} />
+        </button>
+        <button
+          onClick={handleToggle}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: fg, display: "flex", alignItems: "center", touchAction: "manipulation" }}
+          title={isSand ? "Switch to Light" : "Switch to Sand"}
+        >
+          <Sun size={18} strokeWidth={1.5} />
         </button>
       </div>
-
-      {/* Content — blank for now */}
     </div>
   );
-};
-
-export default BranchesPage;
+}
