@@ -1370,7 +1370,7 @@ const IndexPhoneSimple = () => {
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column",
               paddingLeft: "12px", paddingRight: "12px",
-              paddingTop: "100px", paddingBottom: "40px",
+              paddingTop: "56px", paddingBottom: "100px",
               opacity: simpleSearchMode !== "idle" ? 1 : 0,
               transition: "opacity 0.38s ease 0.22s",
               pointerEvents: simpleSearchMode !== "idle" ? "auto" : "none",
