@@ -2851,26 +2851,14 @@ const IndexPhone = () => {
             {orderLines.length > 0 && (
               <div
                 ref={summaryInlineRef}
-                style={{ marginTop: "64px" }}
+                style={{
+                  marginTop: "64px",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                  background: "hsl(var(--background))",
+                }}
               >
-                {/* Sticky header — NO transform parent so position:sticky works */}
-                <div
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 10,
-                    background: "hsl(var(--background))",
-                    opacity: summaryProgress,
-                    filter: `blur(${(1 - summaryProgress) * 6}px)`,
-                    transition: "opacity 0.1s ease, filter 0.1s ease",
-                    paddingBottom: "4px",
-                  }}
-                >
-                {/* divider */}
-                <div style={{ borderTop: `1px solid hsl(var(--border))`, marginBottom: "24px" }} />
-                <h2 className="text-[16px] font-light tracking-[0.15em] uppercase mb-6">Order Summary</h2>
-                </div>
-                {/* Content — scale animation here, no sticky needed */}
                 <div
                   style={{
                     opacity: summaryProgress,
@@ -2881,6 +2869,9 @@ const IndexPhone = () => {
                     pointerEvents: summaryProgress > 0.05 ? "auto" : "none",
                   }}
                 >
+                {/* divider */}
+                <div style={{ borderTop: `1px solid hsl(var(--border))`, marginBottom: "24px" }} />
+                <h2 className="text-[16px] font-light tracking-[0.15em] uppercase mb-6">Order Summary</h2>
                 {/* ORDER SUMMARY CONTENT */}
                 {(() => {
                   const today = new Date();
@@ -2974,7 +2965,6 @@ const IndexPhone = () => {
                 })()}
                 </div>
               </div>
-            </div>
             )}
             {/* Spacer: exact height so ORDER SUMMARY can reach top, no over-scroll */}
             <div style={{ height: summarySpacerHeight }} />
