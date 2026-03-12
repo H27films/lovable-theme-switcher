@@ -1276,76 +1276,116 @@ const IndexPhoneSimple = () => {
             opacity: (transitionPhase === "menu-leaving" || transitionPhase === "menu-entering") ? 0 : 1,
           }}>
 
-            {/* ── Idle layer: all 3 items centered ── */}
+            {/* ── Items layer: each item moves independently ── */}
             <div style={{
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column", justifyContent: "center",
               paddingLeft: "12px",
-              opacity: simpleSearchMode === "idle" ? 1 : 0,
-              transform: simpleSearchMode === "idle" ? "translateY(0)" : "translateY(-5%)",
-              transition: "opacity 0.38s ease, transform 0.38s ease",
-              pointerEvents: simpleSearchMode === "idle" ? "auto" : "none",
+              overflow: "hidden",
             }}>
-              {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
-                <button
-                  key={item}
-                  onClick={() => {
-                    if (item === "SEARCH") {
-                      setSimpleSearchMode("active");
-                      setTimeout(() => simpleInputRef.current?.focus(), 420);
-                    } else if (item === "ORDER") { navigateTo("order", "entry"); }
-                    else { navigateTo("branches", "branches"); }
-                  }}
-                  style={{
-                    display: "block", textAlign: "left", padding: "2px 0",
-                    background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                    fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
-                    color: "hsl(var(--foreground))", lineHeight: 1,
-                    transition: "opacity 0.2s ease", overflow: "hidden", width: "100%",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                >
-                  <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
-                    <span style={{ flexShrink: 0 }}>{item}</span>
-                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>{item}</span>
-                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>{item}</span>
-                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>{item}</span>
-                  </div>
-                </button>
-              ))}
+
+              {/* SEARCH — slides up to top */}
+              <button
+                onClick={() => {
+                  if (simpleSearchMode === "idle") {
+                    setSimpleSearchMode("active");
+                    setTimeout(() => simpleInputRef.current?.focus(), 560);
+                  } else {
+                    setSimpleSearchMode("idle");
+                    setSimpleSearch("");
+                    setSimpleSelectedProduct(null);
+                    setSimpleShowDropdown(false);
+                  }
+                }}
+                style={{
+                  display: "block", textAlign: "left", padding: "2px 0",
+                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                  fontSize: simpleSearchMode === "idle" ? "clamp(40px, 12vw, 64px)" : simpleSearchMode === "active" ? "clamp(22px, 5.5vw, 28px)" : "clamp(18px, 4.5vw, 22px)",
+                  fontWeight: 300, letterSpacing: "0.05em",
+                  color: "hsl(var(--foreground))", lineHeight: 1,
+                  opacity: simpleSearchMode === "result" ? 0 : simpleSearchMode === "active" ? 0.7 : 1,
+                  filter: "none",
+                  transform: simpleSearchMode !== "idle" ? "translateY(calc(-50dvh + 150px))" : "translateY(0)",
+                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease, filter 0.4s ease, font-size 0.4s ease",
+                  width: "100%",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
+                  <span style={{ flexShrink: 0 }}>SEARCH</span>
+                  {([0.07, 0.08, 0.03] as const).map((op, i) => (
+                    <span key={i} style={{
+                      fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                      opacity: simpleSearchMode !== "idle" ? 0 : op,
+                      color: "hsl(var(--foreground))", marginLeft: "0.25em",
+                      transition: "opacity 0.3s ease",
+                    }}>SEARCH</span>
+                  ))}
+                </div>
+              </button>
+
+              {/* BRANCHES — slides down + fades */}
+              <button
+                onClick={() => { navigateTo("branches", "branches"); }}
+                style={{
+                  display: "block", textAlign: "left", padding: "2px 0",
+                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                  fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                  color: "hsl(var(--foreground))", lineHeight: 1,
+                  transform: simpleSearchMode !== "idle" ? "translateY(50dvh)" : "translateY(0)",
+                  opacity: simpleSearchMode !== "idle" ? 0 : 1,
+                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease",
+                  pointerEvents: simpleSearchMode !== "idle" ? "none" : "auto",
+                  width: "100%",
+                }}
+                onMouseEnter={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "0.5"; }}
+                onMouseLeave={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "1"; }}
+              >
+                <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
+                  <span style={{ flexShrink: 0 }}>BRANCHES</span>
+                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
+                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
+                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
+                </div>
+              </button>
+
+              {/* ORDER — slides down + fades (slight cascade delay) */}
+              <button
+                onClick={() => { navigateTo("order", "entry"); }}
+                style={{
+                  display: "block", textAlign: "left", padding: "2px 0",
+                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                  fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                  color: "hsl(var(--foreground))", lineHeight: 1,
+                  transform: simpleSearchMode !== "idle" ? "translateY(50dvh)" : "translateY(0)",
+                  opacity: simpleSearchMode !== "idle" ? 0 : 1,
+                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1) 60ms, opacity 0.38s ease 60ms",
+                  pointerEvents: simpleSearchMode !== "idle" ? "none" : "auto",
+                  width: "100%",
+                }}
+                onMouseEnter={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "0.5"; }}
+                onMouseLeave={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "1"; }}
+              >
+                <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
+                  <span style={{ flexShrink: 0 }}>ORDER</span>
+                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
+                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
+                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
+                </div>
+              </button>
             </div>
 
-            {/* ── Active/Result layer: SEARCH at top, BRANCHES+ORDER at bottom ── */}
+            {/* ── Content layer: search bar + dropdown + product card ── */}
             <div style={{
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column",
               paddingLeft: "12px", paddingRight: "12px",
-              paddingTop: "20px", paddingBottom: "40px",
+              paddingTop: "100px", paddingBottom: "40px",
               opacity: simpleSearchMode !== "idle" ? 1 : 0,
-              transform: simpleSearchMode !== "idle" ? "translateY(0)" : "translateY(5%)",
-              transition: "opacity 0.38s ease, transform 0.38s ease",
+              transition: "opacity 0.38s ease 0.22s",
               pointerEvents: simpleSearchMode !== "idle" ? "auto" : "none",
             }}>
-              {/* SEARCH label — tap to dismiss / go back */}
-              <button
-                onClick={() => { setSimpleSearchMode("idle"); setSimpleSearch(""); setSimpleSelectedProduct(null); setSimpleShowDropdown(false); }}
-                style={{
-                  fontSize: simpleSearchMode === "result" ? "clamp(18px, 4.5vw, 22px)" : "clamp(40px, 12vw, 64px)",
-                  fontWeight: 300, letterSpacing: "0.05em",
-                  color: "hsl(var(--foreground))",
-                  opacity: simpleSearchMode === "result" ? 0.18 : 1,
-                  filter: simpleSearchMode === "result" ? "blur(3px)" : "none",
-                  background: "none", border: "none", cursor: "pointer", textAlign: "left",
-                  padding: 0, fontFamily: "inherit", lineHeight: 1,
-                  transition: "opacity 0.35s ease, font-size 0.35s ease, filter 0.35s ease",
-                }}
-              >
-                SEARCH
-              </button>
-
               {/* Search input row */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
                 <Search size={18} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                 <input
                   ref={simpleInputRef}
@@ -1373,11 +1413,14 @@ const IndexPhoneSimple = () => {
                 )}
               </div>
 
+              {/* Divider below search bar */}
+              <div style={{ height: "0.5px", background: "hsl(var(--border))", marginTop: "10px", marginBottom: "4px", opacity: 0.5 }} />
+
               {/* Dropdown results */}
               {simpleShowDropdown && simpleSearch.length > 0 && (
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {products
-                    .filter(p => p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase()))
+                    .filter(p => (p["UNITS/ORDER"] ?? 1) <= 1 && p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase()))
                     .slice(0, 18)
                     .map((p, i, arr) => (
                       <div
@@ -1399,7 +1442,7 @@ const IndexPhoneSimple = () => {
                       </div>
                     ))
                   }
-                  {products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase())).length === 0 && (
+                  {products.filter(p => (p["UNITS/ORDER"] ?? 1) <= 1 && p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase())).length === 0 && (
                     <div style={{ padding: "20px 0", fontSize: "15px", color: "hsl(var(--muted-foreground))" }}>No products found</div>
                   )}
                 </div>
@@ -1407,7 +1450,7 @@ const IndexPhoneSimple = () => {
 
               {/* Product card — result mode */}
               {simpleSearchMode === "result" && simpleSelectedProduct && !simpleShowDropdown && (
-                <div style={{ flex: 1, overflowY: "auto", marginTop: "20px" }}>
+                <div style={{ flex: 1, overflowY: "auto", marginTop: "16px" }}>
                   {/* Product name */}
                   <div style={{ fontSize: "clamp(22px, 6.5vw, 34px)", fontWeight: 300, lineHeight: 1.2, color: "hsl(var(--foreground))" }}>
                     {simpleSelectedProduct["PRODUCT NAME"]}
@@ -1444,9 +1487,9 @@ const IndexPhoneSimple = () => {
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Par</div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Store Room</div>
                       <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
-                        {simpleSelectedProduct["PAR"] ?? "—"}
+                        {(simpleSelectedProduct as any)["OFFICE SECTION"] || "—"}
                       </div>
                     </div>
                   </div>
@@ -1467,32 +1510,8 @@ const IndexPhoneSimple = () => {
                 </div>
               )}
 
-              {/* Idle middle spacer */}
-              {!simpleShowDropdown && simpleSearchMode === "active" && <div style={{ flex: 1 }} />}
-
-              {/* BRANCHES + ORDER dimmed at bottom */}
-              <div style={{ marginTop: "auto", paddingTop: "12px" }}>
-                {(["BRANCHES", "ORDER"] as const).map(item => (
-                  <button
-                    key={item}
-                    onClick={() => {
-                      setSimpleSearchMode("idle");
-                      setSimpleSearch("");
-                      setSimpleSelectedProduct(null);
-                      setSimpleShowDropdown(false);
-                    }}
-                    style={{
-                      display: "block", fontSize: "clamp(18px, 4.5vw, 24px)", fontWeight: 300,
-                      letterSpacing: "0.05em", color: "hsl(var(--foreground))",
-                      background: "none", border: "none", cursor: "pointer", textAlign: "left",
-                      fontFamily: "inherit", lineHeight: 1, padding: "1px 0",
-                      opacity: 0.3, filter: "blur(2px)",
-                    }}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
+              {/* Spacer when just search bar is showing */}
+              {!simpleShowDropdown && simpleSearchMode === "active" && !simpleSelectedProduct && <div style={{ flex: 1 }} />}
             </div>
 
           </div>
