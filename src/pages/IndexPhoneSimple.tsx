@@ -242,6 +242,7 @@ const IndexPhoneSimple = () => {
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [activeSection, setActiveSection] = useState<"search" | "branches" | null>(null);
+  const [transitionPhase, setTransitionPhase] = useState<'at-menu'|'menu-leaving'|'section-entering'|'at-section'|'section-leaving'|'menu-entering'>('at-menu');
   const [summaryProgress, setSummaryProgress] = useState(0);
   const [panelScrollDir, setPanelScrollDir] = useState<"up" | "down">("down");
   const panelPrevScrollTop = React.useRef(0);
@@ -1188,6 +1189,28 @@ const IndexPhoneSimple = () => {
     transition: `opacity 0.55s ease ${delay}ms`,
   });
 
+  const navigateTo = (section: 'search' | 'branches', tab: 'table' | 'branches') => {
+    setTransitionPhase('menu-leaving');
+    setTimeout(() => {
+      setActiveSection(section);
+      setActiveTab(tab);
+      setTransitionPhase('section-entering');
+      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase('at-section')));
+    }, 350);
+  };
+
+  const navigateBack = () => {
+    setTransitionPhase('section-leaving');
+    setTimeout(() => {
+      setActiveSection(null);
+      setSearch('');
+      setSelectedProduct(null);
+      setFilterSupplier(null);
+      setTransitionPhase('menu-entering');
+      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase('at-menu')));
+    }, 350);
+  };
+
   return (
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
@@ -1235,14 +1258,14 @@ const IndexPhoneSimple = () => {
 
         {/* ── Home Menu ── */}
         {activeSection === null && (
-          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "12px" }}>
+          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "12px", transition: "transform 0.38s cubic-bezier(0.4,0,0.2,1), filter 0.38s ease, opacity 0.38s ease", transform: transitionPhase === 'menu-leaving' ? 'translateY(-20%)' : transitionPhase === 'menu-entering' ? 'translateY(20%)' : 'translateY(0)', filter: (transitionPhase === 'menu-leaving' || transitionPhase === 'menu-entering') ? 'blur(14px)' : 'blur(0px)', opacity: (transitionPhase === 'menu-leaving' || transitionPhase === 'menu-entering') ? 0 : 1 }}>
             {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
               <button
                 key={item}
                 onClick={() => {
                   if (item === "ORDER") { setShowOrderPanel(true); setOrderSearch(""); }
-                  else if (item === "SEARCH") { setActiveSection("search"); setActiveTab("table"); }
-                  else { setActiveSection("branches"); setActiveTab("branches"); }
+                  else if (item === "SEARCH") { navigateTo("search", "table"); }
+                  else { navigateTo("branches", "branches"); }
                 }}
                 style={{
                   display: "block",
@@ -1297,19 +1320,7 @@ const IndexPhoneSimple = () => {
           </div>
         )}
 
-        {/* ── Back button ── */}
-        {activeSection !== null && (
-          <div style={{ paddingTop: "20px", paddingBottom: "8px" }}>
-            <button
-              onClick={() => { setActiveSection(null); setSearch(""); setSelectedProduct(null); setFilterSupplier(null); }}
-              style={{ display: "flex", alignItems: "center", gap: "6px", color: "hsl(var(--muted-foreground))", background: "none", border: "none", fontSize: "13px", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-            >
-              <ChevronLeft size={14} /> Back
-            </button>
-          </div>
-        )}
+
 
 
         {/* ── Search blur overlay ── */}
@@ -1326,6 +1337,18 @@ const IndexPhoneSimple = () => {
         />
 
         {activeSection !== null && (
+          <div style={{ transition: "transform 0.38s cubic-bezier(0.4,0,0.2,1), filter 0.38s ease, opacity 0.38s ease", transform: transitionPhase === 'section-entering' ? 'translateY(25%)' : transitionPhase === 'section-leaving' ? 'translateY(-20%)' : 'translateY(0)', filter: (transitionPhase === 'section-entering' || transitionPhase === 'section-leaving') ? 'blur(14px)' : 'blur(0px)', opacity: (transitionPhase === 'section-entering' || transitionPhase === 'section-leaving') ? 0 : 1 }}>
+            {/* ── Back button ── */}
+            <div style={{ paddingTop: "20px", paddingBottom: "8px" }}>
+              <button
+                onClick={navigateBack}
+                style={{ display: "flex", alignItems: "center", gap: "6px", color: "hsl(var(--muted-foreground))", background: "none", border: "none", fontSize: "13px", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+              >
+                <ChevronLeft size={14} /> Back
+              </button>
+            </div>
         <div className="py-6">
 
           {/* ── Search bar ── */}
@@ -2387,6 +2410,7 @@ const IndexPhoneSimple = () => {
           )}
 
         </div>
+          </div>
         )}
       </div>
       {/* New Product Panel */}
@@ -3036,7 +3060,7 @@ const IndexPhoneSimple = () => {
             <div style={{ height: summarySpacerHeight }} />
           </div>
         </div>
-      )}
+        )}
 
     </div>
   );
