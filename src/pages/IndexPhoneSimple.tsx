@@ -247,7 +247,7 @@ const IndexPhoneSimple = () => {
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [activeSection, setActiveSection] = useState<"search" | "branches" | "order" | null>(null);
-  const [transitionPhase, setTransitionPhase] = useState<'at-menu'|'pre-section'|'to-section'|'at-section'|'to-menu'>('at-menu');
+  const [transitionPhase, setTransitionPhase] = useState<'at-menu'|'menu-leaving'|'section-entering'|'at-section'|'section-leaving'|'menu-entering'>('at-menu');
   const [summaryProgress, setSummaryProgress] = useState(0);
   const [panelScrollDir, setPanelScrollDir] = useState<"up" | "down">("down");
   const panelPrevScrollTop = React.useRef(0);
@@ -1195,49 +1195,60 @@ const IndexPhoneSimple = () => {
   });
 
   const navigateTo = (section: 'search' | 'branches' | 'order', tab: 'table' | 'branches' | 'entry') => {
-    setActiveSection(section);
-    setActiveTab(tab);
-    setTransitionPhase('pre-section');
-    // setTimeout(30) ensures the browser has painted the initial off-screen position
-    // before the transition starts — more reliable than double-rAF on iOS Safari
+    setTransitionPhase('menu-leaving');
     setTimeout(() => {
-      setTransitionPhase('to-section');
-      setTimeout(() => setTransitionPhase('at-section'), 580);
-    }, 30);
+      setActiveSection(section);
+      setActiveTab(tab);
+      setTransitionPhase('section-entering');
+      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase('at-section')));
+    }, 350);
   };
 
   const navigateBack = () => {
-    setTransitionPhase('to-menu');
+    setTransitionPhase('section-leaving');
     setTimeout(() => {
       setActiveSection(null);
       setSearch('');
       setSelectedProduct(null);
       setFilterSupplier(null);
-      setTransitionPhase('at-menu');
-    }, 580);
+      setTransitionPhase('menu-entering');
+      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase('at-menu')));
+    }, 350);
   };
 
-  // ── Swipe transition helpers ──
-  const SWIPE = "transform 0.58s cubic-bezier(0.25,0.46,0.45,0.94)";
-  const isAnimating = transitionPhase === 'to-section' || transitionPhase === 'to-menu';
-  // Menu: slides left to -30% when section is shown, returns to 0 when going back
-  const menuX  = (transitionPhase === 'to-section' || transitionPhase === 'at-section') ? 'translateX(-30%)' : 'translateX(0%)';
-  const menuTx = (transitionPhase === 'to-section' || transitionPhase === 'to-menu') ? SWIPE : 'none';
-  // Section: starts off-screen right (100%), slides in to 0 on forward, slides back out on back
-  const sectX  = (transitionPhase === 'pre-section' || transitionPhase === 'to-menu') ? 'translateX(100%)' : 'translateX(0%)';
-  const sectTx = (transitionPhase === 'to-section' || transitionPhase === 'to-menu') ? SWIPE : 'none';
-
   return (
-    <div style={{ position: "relative", overflow: "hidden", height: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
+    <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
+      {/* ── Scroll direction blur overlays ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: "80px",
+        background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        maskImage: "linear-gradient(to bottom, black 30%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to bottom, black 30%, transparent 100%)",
+        opacity: scrollDir === "down" ? 1 : 0,
+        transition: "opacity 0.5s ease",
+        pointerEvents: "none",
+        zIndex: 50,
+      }} />
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, height: "80px",
+        background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        maskImage: "linear-gradient(to top, black 30%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to top, black 30%, transparent 100%)",
+        opacity: scrollDir === "up" ? 1 : 0,
+        transition: "opacity 0.5s ease",
+        pointerEvents: "none",
+        zIndex: 50,
+      }} />
 
-
-      {/* ── Menu layer ── */}
-      <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflowY: "auto", transform: menuX, transition: menuTx, willChange: "transform", background: "hsl(var(--background))", pointerEvents: isAnimating ? "none" : "auto" }}>
       <div className="max-w-full mx-auto px-3">
 
         {/* ── Fixed theme toggle (always visible) ── */}
-        <div style={{ position: "absolute", top: "20px", right: "20px", zIndex: 10 }}>
+        <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 60 }}>
           <span
             onClick={toggleTheme}
             style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}
@@ -1251,7 +1262,8 @@ const IndexPhoneSimple = () => {
         </div>
 
         {/* ── Home Menu ── */}
-          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "12px" }}>
+        {activeSection === null && (
+          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "12px", transition: "transform 0.38s cubic-bezier(0.4,0,0.2,1), filter 0.38s ease, opacity 0.38s ease", transform: transitionPhase === 'menu-leaving' ? 'translateY(-20%)' : transitionPhase === 'menu-entering' ? 'translateY(20%)' : 'translateY(0)', filter: (transitionPhase === 'menu-leaving' || transitionPhase === 'menu-entering') ? 'blur(14px)' : 'blur(0px)', opacity: (transitionPhase === 'menu-leaving' || transitionPhase === 'menu-entering') ? 0 : 1 }}>
             {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
               <button
                 key={item}
@@ -1311,12 +1323,26 @@ const IndexPhoneSimple = () => {
               </button>
             ))}
           </div>
-      </div>{/* close max-w-full */}
-      </div>{/* close menu layer */}
+        )}
 
-      {/* ── Section layer ── */}
-      {activeSection !== null && (
-        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflowY: "auto", transform: sectX, transition: sectTx, willChange: "transform", zIndex: 1, background: "hsl(var(--background))", pointerEvents: isAnimating ? "none" : "auto" }}>
+
+
+
+        {/* ── Search blur overlay ── */}
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
+            WebkitBackdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
+            opacity: searchFocused ? 1 : 0,
+            transition: "opacity 300ms ease, backdrop-filter 300ms ease, -webkit-backdrop-filter 300ms ease",
+            zIndex: 30,
+            pointerEvents: "none",
+          }}
+        />
+
+        {activeSection !== null && (
+          <div style={{ transition: "transform 0.38s cubic-bezier(0.4,0,0.2,1), filter 0.38s ease, opacity 0.38s ease", transform: transitionPhase === 'section-entering' ? 'translateY(25%)' : transitionPhase === 'section-leaving' ? 'translateY(-20%)' : 'translateY(0)', filter: (transitionPhase === 'section-entering' || transitionPhase === 'section-leaving') ? 'blur(14px)' : 'blur(0px)', opacity: (transitionPhase === 'section-entering' || transitionPhase === 'section-leaving') ? 0 : 1 }}>
             {activeSection === "search" && <SearchPage onBack={navigateBack} />}
             {activeSection === "branches" && <BranchesPage onBack={navigateBack} />}
             {activeSection === "order" && <OrderPage onBack={navigateBack} />}
