@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme, type Theme } from "@/hooks/useTheme";
 import React, { useState, useEffect } from "react";
-import { Sun, Palette } from "lucide-react";
+// icons via inline SVG
 
 export default function LandingSimple() {
   const navigate = useNavigate();
@@ -37,25 +37,24 @@ export default function LandingSimple() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        .ls-theme-toggle {
+        .ls-icon-btn {
           background: none;
           border: none;
           cursor: pointer;
-          padding: 6px;
+          padding: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: hsl(var(--muted-foreground));
-          border-radius: 4px;
-          transition: color 0.2s ease, transform 0.2s cubic-bezier(0.16,1,0.3,1);
           -webkit-tap-highlight-color: transparent;
         }
-        .ls-theme-toggle:hover,
-        .ls-theme-toggle:active {
-          color: hsl(var(--foreground));
-          transform: scale(1.15);
+        .ls-icon-btn svg {
+          transition: stroke 0.2s, transform 0.2s cubic-bezier(0.16,1,0.3,1);
         }
-        .ls-theme-toggle:focus { outline: none; }
+        .ls-icon-btn:hover svg {
+          stroke: hsl(var(--foreground)) !important;
+          transform: scale(1.2);
+        }
+        .ls-icon-btn:focus { outline: none; }
 
         .ls-enter-btn {
           cursor: pointer;
@@ -110,7 +109,7 @@ export default function LandingSimple() {
         >
           <span
             style={{
-              fontSize: "clamp(9px, 2vw, 11px)",
+              fontSize: "clamp(13px, 2.5vw, 16px)",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: "hsl(var(--foreground))",
@@ -122,11 +121,14 @@ export default function LandingSimple() {
 
           {/* Light ↔ Sand toggle */}
           <button
-            className="ls-theme-toggle"
+            className="ls-icon-btn"
             onClick={toggleTheme}
             title={isSand ? "Switch to Light" : "Switch to Sand"}
           >
-            {isSand ? <Sun size={17} strokeWidth={1.4} /> : <Palette size={17} strokeWidth={1.4} />}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--dim))" strokeWidth="1.4">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
           </button>
         </div>
 
@@ -177,7 +179,7 @@ export default function LandingSimple() {
             borderTop: "1px solid hsl(var(--border))",
             padding: "22px 44px",
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "flex-start",
             alignItems: "center",
             opacity: visible ? 1 : 0,
             transition: "opacity 0.9s ease 1.0s",
