@@ -143,7 +143,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
   );
 }
 
-const IndexPhone = () => {
+const IndexPhoneSimple = () => {
   const { theme, toggle, font, cycleFont } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
