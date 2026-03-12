@@ -956,7 +956,7 @@ const IndexPhone = () => {
       const sumRect = summary.getBoundingClientRect();
       // progress = how far the summary top has entered the panel (0 = just entering, 1 = at top of panel)
       const entered = panelRect.bottom - sumRect.top;
-      const total = panelRect.height * 0.72;
+      const total = panelRect.height * 0.95;
       setSummaryProgress(Math.min(1, Math.max(0, entered / total)));
     };
     panel.addEventListener('scroll', handleScroll);
@@ -2562,6 +2562,16 @@ const IndexPhone = () => {
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
+            {/* NEW ORDER content — blurs + shrinks as ORDER SUMMARY scrolls in */}
+            <div
+              style={{
+                opacity: 1 - summaryProgress * 0.55,
+                filter: `blur(${summaryProgress * 5}px)`,
+                transform: `scale(${1 - summaryProgress * 0.06})`,
+                transformOrigin: "top center",
+                transition: "opacity 0.1s ease, filter 0.1s ease, transform 0.1s ease",
+              }}
+            >
             {/* Panel header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-[16px] font-light tracking-[0.15em] uppercase">New Order</h2>
@@ -2847,6 +2857,8 @@ const IndexPhone = () => {
               <p className="text-[14.5px]" style={dim}>No items added yet</p>
             )}
 
+            </div>{/* end NEW ORDER blur wrapper */}
+
             {/* ── Inline ORDER SUMMARY (scroll-driven fade+scale) ── */}
             {orderLines.length > 0 && (
               <div
@@ -2862,7 +2874,7 @@ const IndexPhone = () => {
                 <div
                   style={{
                     opacity: summaryProgress,
-                    transform: `scale(${0.72 + 0.28 * summaryProgress})`,
+                    transform: `scale(${0.5 + 0.5 * summaryProgress})`,
                     transformOrigin: "top center",
                     filter: `blur(${(1 - summaryProgress) * 6}px)`,
                     transition: "opacity 0.1s ease, transform 0.1s ease, filter 0.1s ease",
