@@ -2945,8 +2945,6 @@ const IndexPhone = () => {
         </div>
       )}
 
-      )}
-
     </div>
   );
 };
