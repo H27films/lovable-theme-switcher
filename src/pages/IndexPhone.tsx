@@ -2836,7 +2836,7 @@ const IndexPhone = () => {
               <div
                 ref={summaryInlineRef}
                 style={{
-                  marginTop: "16px",
+                  marginTop: "64px",
                   opacity: summaryProgress,
                   transform: `scale(${0.72 + 0.28 * summaryProgress})`,
                   transformOrigin: "top center",
