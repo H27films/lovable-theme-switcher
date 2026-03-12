@@ -242,6 +242,7 @@ const IndexPhone = () => {
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [summaryProgress, setSummaryProgress] = useState(0);
+  const [summarySpacerHeight, setSummarySpacerHeight] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -961,6 +962,21 @@ const IndexPhone = () => {
     panel.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => panel.removeEventListener('scroll', handleScroll);
+  }, [showOrderPanel, orderLines]);
+
+  // Dynamic spacer: allows ORDER SUMMARY to reach top but no over-scroll
+  useEffect(() => {
+    if (!showOrderPanel || !panelScrollRef.current || !summaryInlineRef.current) return;
+    const calc = () => {
+      const panelH = panelScrollRef.current!.clientHeight;
+      const sumH = summaryInlineRef.current!.clientHeight;
+      setSummarySpacerHeight(Math.max(0, panelH - sumH));
+    };
+    calc();
+    const obs = new ResizeObserver(calc);
+    obs.observe(panelScrollRef.current!);
+    obs.observe(summaryInlineRef.current!);
+    return () => obs.disconnect();
   }, [showOrderPanel, orderLines]);
 
 
@@ -2843,7 +2859,8 @@ const IndexPhone = () => {
                   filter: `blur(${(1 - summaryProgress) * 6}px)`,
                   transition: "opacity 0.1s ease, transform 0.1s ease, filter 0.1s ease",
                   pointerEvents: summaryProgress > 0.05 ? "auto" : "none",
-                  paddingBottom: "120vh",
+                  position: "sticky",
+                  top: 0,
                 }}
               >
                 {/* divider */}
@@ -2942,6 +2959,8 @@ const IndexPhone = () => {
                 })()}
               </div>
             )}
+            {/* Spacer: exact height so ORDER SUMMARY can reach top, no over-scroll */}
+            <div style={{ height: summarySpacerHeight }} />
           </div>
         </div>
       )}
