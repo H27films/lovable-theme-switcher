@@ -1221,12 +1221,21 @@ const IndexPhoneSimple = () => {
 
         {/* ── Fixed theme toggle (always visible) ── */}
         <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 60 }}>
-          <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
+          <span
+            onClick={toggle}
+            style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}
+            title="Switch theme"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+          </span>
         </div>
 
         {/* ── Home Menu ── */}
         {activeSection === null && (
-          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "36px" }}>
+          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "20px" }}>
             {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
               <button
                 key={item}
@@ -1238,7 +1247,7 @@ const IndexPhoneSimple = () => {
                 style={{
                   display: "block",
                   textAlign: "left",
-                  padding: "20px 0",
+                  padding: "5px 0",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
@@ -1252,8 +1261,26 @@ const IndexPhoneSimple = () => {
                 }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
                 onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                onTouchStart={() => {}}
               >
-                {item}
+                <div style={{ display: "flex", alignItems: "baseline", gap: "10px", overflow: "hidden" }}>
+                  <span style={{ flexShrink: 0 }}>{item}</span>
+                  <span style={{
+                    color: "hsl(var(--muted-foreground))",
+                    opacity: 0.35,
+                    fontSize: "clamp(10px, 3vw, 14px)",
+                    fontWeight: 300,
+                    letterSpacing: "0.08em",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "clip",
+                    lineHeight: 1,
+                    alignSelf: "flex-end",
+                    paddingBottom: "0.15em",
+                  }}>
+                    {item}{item}{item}
+                  </span>
+                </div>
               </button>
             ))}
           </div>
