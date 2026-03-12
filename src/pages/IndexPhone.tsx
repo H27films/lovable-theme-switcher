@@ -952,12 +952,12 @@ const IndexPhone = () => {
     const summary = summaryInlineRef.current;
     if (!panel || !summary) return;
     const handleScroll = () => {
-      const panelRect = panel.getBoundingClientRect();
-      const sumRect = summary.getBoundingClientRect();
-      // progress = how far the summary top has entered the panel (0 = just entering, 1 = at top of panel)
-      const entered = panelRect.bottom - sumRect.top;
-      const total = panelRect.height * 0.95;
-      setSummaryProgress(Math.min(1, Math.max(0, entered / total)));
+      const scrollTop = panel.scrollTop;
+      if (scrollTop === 0) { setSummaryProgress(0); return; }
+      // progress: 0 when not scrolled, 1 when summary.offsetTop reached (summary at panel top)
+      const summaryTop = summary.offsetTop;
+      const progress = summaryTop > 0 ? scrollTop / summaryTop : 0;
+      setSummaryProgress(Math.min(1, Math.max(0, progress)));
     };
     panel.addEventListener('scroll', handleScroll);
     handleScroll();
