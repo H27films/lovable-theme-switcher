@@ -1301,7 +1301,7 @@ const IndexPhoneSimple = () => {
                 style={{
                   display: "block", textAlign: "left", padding: "2px 0",
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: simpleSearchMode === "idle" ? "clamp(40px, 12vw, 64px)" : simpleSearchMode === "active" ? "clamp(22px, 5.5vw, 28px)" : "clamp(18px, 4.5vw, 22px)",
+                  fontSize: simpleSearchMode === "idle" ? "clamp(32px, 9vw, 48px)" : simpleSearchMode === "active" ? "clamp(20px, 5vw, 26px)" : "clamp(16px, 4vw, 20px)",
                   fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))", lineHeight: 1,
                   opacity: simpleSearchMode === "result" ? 0 : simpleSearchMode === "active" ? 0.7 : 1,
