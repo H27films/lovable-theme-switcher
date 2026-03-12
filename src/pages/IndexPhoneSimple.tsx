@@ -131,7 +131,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
               style={{
                 borderBottom: i < options.length - 1 ? `1px solid ${border}` : "none",
                 color: value === opt ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                background: value === opt ? "hsl(var(--card))" : "transparent",
+                background: value === opt ? cardBg : "transparent",
               }}
               onMouseDown={() => { onChange(opt); setOpen(false); }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -1276,107 +1276,74 @@ const IndexPhoneSimple = () => {
             opacity: (transitionPhase === "menu-leaving" || transitionPhase === "menu-entering") ? 0 : 1,
           }}>
 
-            {/* ── Items layer: each item moves independently ── */}
+            {/* ── Idle layer: all 3 items centered ── */}
             <div style={{
               position: "absolute", inset: 0,
-              display: "flex", flexDirection: "column",
+              display: "flex", flexDirection: "column", justifyContent: "center",
               paddingLeft: "12px",
-              overflow: "hidden",
+              opacity: simpleSearchMode === "idle" ? 1 : 0,
+              transform: simpleSearchMode === "idle" ? "translateY(0)" : "translateY(-5%)",
+              transition: "opacity 0.38s ease, transform 0.38s ease",
+              pointerEvents: simpleSearchMode === "idle" ? "auto" : "none",
             }}>
-
-              {/* SEARCH — at top area */}
-              <button
-                onClick={() => {
-                  if (simpleSearchMode === "idle") {
-                    setSimpleSearchMode("active");
-                    setTimeout(() => simpleInputRef.current?.focus(), 560);
-                  } else {
-                    setSimpleSearchMode("idle");
-                    setSimpleSearch("");
-                    setSimpleSelectedProduct(null);
-                    setSimpleShowDropdown(false);
-                  }
-                }}
-                style={{
-                  display: "block", textAlign: "left", padding: "2px 0",
-                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: simpleSearchMode === "idle" ? "clamp(32px, 9vw, 48px)" : "clamp(20px, 5vw, 26px)",
-                  fontWeight: 300, letterSpacing: "0.05em",
-                  color: "hsl(var(--foreground))", lineHeight: 1,
-                  opacity: simpleSearchMode === "result" ? 0.35 : simpleSearchMode === "active" ? 0.5 : 1,
-                  filter: simpleSearchMode !== "idle" ? "blur(0.5px)" : "none",
-                  marginTop: simpleSearchMode !== "idle" ? "28px" : "15dvh",
-                  transition: "margin-top 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease, filter 0.4s ease, font-size 0.4s ease",
-                  width: "100%",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
-                  <span style={{ flexShrink: 0 }}>SEARCH</span>
-                  {([0.07, 0.08, 0.03] as const).map((op, i) => (
-                    <span key={i} style={{
-                      fontSize: "clamp(32px, 9vw, 48px)", fontWeight: 300, letterSpacing: "0.05em",
-                      opacity: simpleSearchMode !== "idle" ? 0 : op,
-                      color: "hsl(var(--foreground))", marginLeft: "0.25em",
-                      transition: "opacity 0.3s ease",
-                    }}>SEARCH</span>
-                  ))}
-                </div>
-              </button>
-
-              {/* Spacer to push BRANCHES/ORDER to bottom */}
-              <div style={{ flex: 1 }} />
-
-              {/* BRANCHES — at bottom, blurred */}
-              <button
-                onClick={() => { navigateTo("branches", "branches"); }}
-                style={{
-                  display: "block", textAlign: "left", padding: "2px 0",
-                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em",
-                  color: "hsl(var(--foreground))", lineHeight: 1,
-                  opacity: 0.35,
-                  filter: "blur(1.5px)",
-                  transition: "opacity 0.38s ease, filter 0.38s ease",
-                  width: "100%",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "0.35"; e.currentTarget.style.filter = "blur(1.5px)"; }}
-              >
-                <span>BRANCHES</span>
-              </button>
-
-              {/* ORDER — at bottom, blurred */}
-              <button
-                onClick={() => { navigateTo("order", "entry"); }}
-                style={{
-                  display: "block", textAlign: "left", padding: "2px 0",
-                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em",
-                  color: "hsl(var(--foreground))", lineHeight: 1,
-                  opacity: 0.35,
-                  filter: "blur(1.5px)",
-                  transition: "opacity 0.38s ease, filter 0.38s ease",
-                  width: "100%", marginBottom: "40px",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "0.35"; e.currentTarget.style.filter = "blur(1.5px)"; }}
-              >
-                <span>ORDER</span>
-              </button>
+              {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
+                <button
+                  key={item}
+                  onClick={() => {
+                    if (item === "SEARCH") {
+                      setSimpleSearchMode("active");
+                      setTimeout(() => simpleInputRef.current?.focus(), 420);
+                    } else if (item === "ORDER") { navigateTo("order", "entry"); }
+                    else { navigateTo("branches", "branches"); }
+                  }}
+                  style={{
+                    display: "block", textAlign: "left", padding: "2px 0",
+                    background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                    fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                    color: "hsl(var(--foreground))", lineHeight: 1,
+                    transition: "opacity 0.2s ease", overflow: "hidden", width: "100%",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                >
+                  <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
+                    <span style={{ flexShrink: 0 }}>{item}</span>
+                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>{item}</span>
+                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>{item}</span>
+                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>{item}</span>
+                  </div>
+                </button>
+              ))}
             </div>
 
-            {/* ── Content layer: search bar + dropdown + product card ── */}
+            {/* ── Active/Result layer: SEARCH at top, BRANCHES+ORDER at bottom ── */}
             <div style={{
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column",
               paddingLeft: "12px", paddingRight: "12px",
-              paddingTop: "56px", paddingBottom: "100px",
+              paddingTop: "72px", paddingBottom: "40px",
               opacity: simpleSearchMode !== "idle" ? 1 : 0,
-              transition: "opacity 0.38s ease 0.22s",
+              transform: simpleSearchMode !== "idle" ? "translateY(0)" : "translateY(5%)",
+              transition: "opacity 0.38s ease, transform 0.38s ease",
               pointerEvents: simpleSearchMode !== "idle" ? "auto" : "none",
             }}>
+              {/* SEARCH label — tap to dismiss / go back */}
+              <button
+                onClick={() => { setSimpleSearchMode("idle"); setSimpleSearch(""); setSimpleSelectedProduct(null); setSimpleShowDropdown(false); }}
+                style={{
+                  fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                  color: "hsl(var(--foreground))",
+                  opacity: simpleSearchMode === "result" ? 0.25 : 1,
+                  background: "none", border: "none", cursor: "pointer", textAlign: "left",
+                  padding: 0, fontFamily: "inherit", lineHeight: 1,
+                  transition: "opacity 0.35s ease",
+                }}
+              >
+                SEARCH
+              </button>
+
               {/* Search input row */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "16px" }}>
                 <Search size={18} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                 <input
                   ref={simpleInputRef}
@@ -1403,22 +1370,21 @@ const IndexPhoneSimple = () => {
                   </button>
                 )}
               </div>
-
-              {/* Divider below search bar */}
-              <div style={{ height: "0.5px", background: "hsl(var(--border))", marginTop: "10px", marginBottom: "4px", opacity: 0.5 }} />
+              {/* Hairline under search row */}
+              <div style={{ borderBottom: "0.5px solid hsl(var(--border))", marginTop: "10px" }} />
 
               {/* Dropdown results */}
               {simpleShowDropdown && simpleSearch.length > 0 && (
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {products
-                    .filter(p => (p["UNITS/ORDER"] ?? 1) <= 1 && p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase()))
+                    .filter(p => p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase()))
                     .slice(0, 18)
                     .map((p, i, arr) => (
                       <div
                         key={i}
                         onClick={() => {
                           setSimpleSelectedProduct(p);
-                          setSimpleSearch("");
+                          setSimpleSearch(p["PRODUCT NAME"]);
                           setSimpleShowDropdown(false);
                           setSimpleSearchMode("result");
                         }}
@@ -1433,7 +1399,7 @@ const IndexPhoneSimple = () => {
                       </div>
                     ))
                   }
-                  {products.filter(p => (p["UNITS/ORDER"] ?? 1) <= 1 && p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase())).length === 0 && (
+                  {products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase())).length === 0 && (
                     <div style={{ padding: "20px 0", fontSize: "15px", color: "hsl(var(--muted-foreground))" }}>No products found</div>
                   )}
                 </div>
@@ -1441,68 +1407,58 @@ const IndexPhoneSimple = () => {
 
               {/* Product card — result mode */}
               {simpleSearchMode === "result" && simpleSelectedProduct && !simpleShowDropdown && (
-                <div style={{ flex: 1, overflowY: "auto", marginTop: "16px" }}>
-                  {/* Product name */}
+                <div style={{ flex: 1, overflowY: "auto", marginTop: "24px" }}>
                   <div style={{ fontSize: "clamp(22px, 6.5vw, 34px)", fontWeight: 300, lineHeight: 1.2, color: "hsl(var(--foreground))" }}>
                     {simpleSelectedProduct["PRODUCT NAME"]}
                   </div>
-                  <div style={{ borderBottom: "0.5px solid hsl(var(--foreground))", marginTop: "14px", marginBottom: "18px", opacity: 0.15 }} />
-
-                  {/* Supplier */}
-                  <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Supplier</div>
-                  <div style={{ fontSize: "14px", fontWeight: 300, marginBottom: "20px", color: "hsl(var(--foreground))" }}>{simpleSelectedProduct["SUPPLIER"] || "—"}</div>
-
-                  {/* Prices 2-col */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", marginBottom: "20px" }}>
+                  <div style={{ borderBottom: "0.5px solid hsl(var(--foreground))", marginTop: "14px", marginBottom: "18px", opacity: 0.18 }} />
+                  <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "4px", color: "hsl(var(--foreground))" }}>Supplier</div>
+                  <div style={{ fontSize: "15px", fontWeight: 300, marginBottom: "24px", color: "hsl(var(--foreground))" }}>{simpleSelectedProduct["SUPPLIER"] || "—"}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "20px" }}>
                     {([
-                      { label: "Supplier Price", val: simpleSelectedProduct["SUPPLIER PRICE"], rm: true },
-                      { label: "Branch Price", val: simpleSelectedProduct["BRANCH PRICE"], rm: true },
-                      { label: "Customer Price", val: simpleSelectedProduct["CUSTOMER PRICE"], rm: true },
-                      { label: "Staff Price", val: simpleSelectedProduct["STAFF PRICE"], rm: true },
-                    ] as { label: string; val: number | null; rm: boolean }[]).map(({ label, val, rm }) => (
+                      { label: "Supplier Price", val: simpleSelectedProduct["SUPPLIER PRICE"] },
+                      { label: "Branch Price", val: simpleSelectedProduct["BRANCH PRICE"] },
+                      { label: "Customer Price", val: simpleSelectedProduct["CUSTOMER PRICE"] },
+                      { label: "Staff Price", val: simpleSelectedProduct["STAFF PRICE"] },
+                    ] as { label: string; val: number | null }[]).map(({ label, val }) => (
                       <div key={label}>
-                        <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>{label}</div>
-                        <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
-                          {val != null ? (rm ? `RM ${(val as number).toFixed(2)}` : String(val)) : "—"}
+                        <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px", color: "hsl(var(--foreground))" }}>{label}</div>
+                        <div style={{ fontSize: "14px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
+                          {val != null ? `RM ${(val as number).toFixed(2)}` : "—"}
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  {/* Office Balance + PAR 2-col */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", marginBottom: "20px" }}>
-                    <div>
-                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Office Balance</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, color: simpleSelectedProduct["OFFICE BALANCE"] != null && simpleSelectedProduct["PAR"] != null && simpleSelectedProduct["OFFICE BALANCE"]! < simpleSelectedProduct["PAR"]! ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}>
-                        {simpleSelectedProduct["OFFICE BALANCE"] ?? "—"}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Store Room</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
-                        {(simpleSelectedProduct as any)["OFFICE SECTION"] || "—"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Branch balances 3-col */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", rowGap: "6px" }}>
-                    {(["Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => {
-                      const col = branch === "Boudoir" ? "BOUDOIR BALANCE" : branch === "Chic Nailspa" ? "CHIC NAILSPA BALANCE" : "NUR YADI BALANCE";
-                      const val = (simpleSelectedProduct as any)[col];
-                      return (
-                        <div key={branch}>
-                          <div style={{ fontSize: "12px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>{branch}</div>
-                          <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--foreground))" }}>{val ?? "—"}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </div>
               )}
 
-              {/* Spacer when just search bar is showing */}
-              {!simpleShowDropdown && simpleSearchMode === "active" && !simpleSelectedProduct && <div style={{ flex: 1 }} />}
+              {/* Idle middle spacer */}
+              {!simpleShowDropdown && simpleSearchMode === "active" && <div style={{ flex: 1 }} />}
+
+              {/* BRANCHES + ORDER dimmed at bottom */}
+              <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+                {(["BRANCHES", "ORDER"] as const).map(item => (
+                  <button
+                    key={item}
+                    onClick={() => {
+                      setSimpleSearchMode("idle");
+                      setTimeout(() => {
+                        if (item === "ORDER") navigateTo("order", "entry");
+                        else navigateTo("branches", "branches");
+                      }, 200);
+                    }}
+                    style={{
+                      display: "block", fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300,
+                      letterSpacing: "0.05em", color: "hsl(var(--muted-foreground))",
+                      background: "none", border: "none", cursor: "pointer", textAlign: "left",
+                      fontFamily: "inherit", lineHeight: 1, padding: "1px 0",
+                      opacity: 0.4,
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
 
           </div>

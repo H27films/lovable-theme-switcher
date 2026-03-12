@@ -17,6 +17,7 @@ interface AllFileProduct {
   "CUSTOMER PRICE": number | null;
   "CHIC NAILSPA BALANCE": number;
   "NUR YADI BALANCE": number;
+  "CHIC NAILSPA BALANCE": number;
   "OFFICE BALANCE": number;
   "PAR": number | null;
   "UNITS/ORDER": number | null;

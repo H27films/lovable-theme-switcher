@@ -128,7 +128,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
               style={{
                 borderBottom: i < options.length - 1 ? `1px solid ${border}` : "none",
                 color: value === opt ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                background: value === opt ? "hsl(var(--card))" : "transparent",
+                background: value === opt ? cardBg : "transparent",
               }}
               onMouseDown={() => { onChange(opt); setOpen(false); }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}

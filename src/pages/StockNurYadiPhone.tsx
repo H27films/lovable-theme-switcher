@@ -16,6 +16,7 @@ interface AllFileProduct {
   "STAFF PRICE": number | null;
   "CUSTOMER PRICE": number | null;
   "NUR YADI BALANCE": number;
+  "NUR YADI BALANCE": number;
   "CHIC NAILSPA BALANCE": number;
   "OFFICE BALANCE": number;
   "PAR": number | null;
