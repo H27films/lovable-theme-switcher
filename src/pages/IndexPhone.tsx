@@ -2853,16 +2853,22 @@ const IndexPhone = () => {
                 ref={summaryInlineRef}
                 style={{
                   marginTop: "64px",
-                  opacity: summaryProgress,
-                  transform: `scale(${0.72 + 0.28 * summaryProgress})`,
-                  transformOrigin: "top center",
-                  filter: `blur(${(1 - summaryProgress) * 6}px)`,
-                  transition: "opacity 0.1s ease, transform 0.1s ease, filter 0.1s ease",
-                  pointerEvents: summaryProgress > 0.05 ? "auto" : "none",
                   position: "sticky",
                   top: 0,
+                  zIndex: 10,
+                  background: "hsl(var(--background))",
                 }}
               >
+                <div
+                  style={{
+                    opacity: summaryProgress,
+                    transform: `scale(${0.72 + 0.28 * summaryProgress})`,
+                    transformOrigin: "top center",
+                    filter: `blur(${(1 - summaryProgress) * 6}px)`,
+                    transition: "opacity 0.1s ease, transform 0.1s ease, filter 0.1s ease",
+                    pointerEvents: summaryProgress > 0.05 ? "auto" : "none",
+                  }}
+                >
                 {/* divider */}
                 <div style={{ borderTop: `1px solid hsl(var(--border))`, marginBottom: "24px" }} />
                 <h2 className="text-[16px] font-light tracking-[0.15em] uppercase mb-6">Order Summary</h2>
@@ -2957,6 +2963,7 @@ const IndexPhone = () => {
                     </div>
                   );
                 })()}
+                </div>
               </div>
             )}
             {/* Spacer: exact height so ORDER SUMMARY can reach top, no over-scroll */}
