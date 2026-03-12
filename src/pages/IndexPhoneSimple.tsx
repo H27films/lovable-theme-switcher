@@ -1321,7 +1321,7 @@ const IndexPhoneSimple = () => {
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column",
               paddingLeft: "12px", paddingRight: "12px",
-              paddingTop: "72px", paddingBottom: "40px",
+              paddingTop: "20px", paddingBottom: "40px",
               opacity: simpleSearchMode !== "idle" ? 1 : 0,
               transform: simpleSearchMode !== "idle" ? "translateY(0)" : "translateY(5%)",
               transition: "opacity 0.38s ease, transform 0.38s ease",
@@ -1331,12 +1331,14 @@ const IndexPhoneSimple = () => {
               <button
                 onClick={() => { setSimpleSearchMode("idle"); setSimpleSearch(""); setSimpleSelectedProduct(null); setSimpleShowDropdown(false); }}
                 style={{
-                  fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                  fontSize: simpleSearchMode === "result" ? "clamp(18px, 4.5vw, 22px)" : "clamp(40px, 12vw, 64px)",
+                  fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))",
-                  opacity: simpleSearchMode === "result" ? 0.25 : 1,
+                  opacity: simpleSearchMode === "result" ? 0.18 : 1,
+                  filter: simpleSearchMode === "result" ? "blur(3px)" : "none",
                   background: "none", border: "none", cursor: "pointer", textAlign: "left",
                   padding: 0, fontFamily: "inherit", lineHeight: 1,
-                  transition: "opacity 0.35s ease",
+                  transition: "opacity 0.35s ease, font-size 0.35s ease, filter 0.35s ease",
                 }}
               >
                 SEARCH
@@ -1370,8 +1372,6 @@ const IndexPhoneSimple = () => {
                   </button>
                 )}
               </div>
-              {/* Hairline under search row */}
-              <div style={{ borderBottom: "0.5px solid hsl(var(--border))", marginTop: "10px" }} />
 
               {/* Dropdown results */}
               {simpleShowDropdown && simpleSearch.length > 0 && (
@@ -1384,7 +1384,7 @@ const IndexPhoneSimple = () => {
                         key={i}
                         onClick={() => {
                           setSimpleSelectedProduct(p);
-                          setSimpleSearch(p["PRODUCT NAME"]);
+                          setSimpleSearch("");
                           setSimpleShowDropdown(false);
                           setSimpleSearchMode("result");
                         }}
@@ -1407,27 +1407,62 @@ const IndexPhoneSimple = () => {
 
               {/* Product card — result mode */}
               {simpleSearchMode === "result" && simpleSelectedProduct && !simpleShowDropdown && (
-                <div style={{ flex: 1, overflowY: "auto", marginTop: "24px" }}>
+                <div style={{ flex: 1, overflowY: "auto", marginTop: "20px" }}>
+                  {/* Product name */}
                   <div style={{ fontSize: "clamp(22px, 6.5vw, 34px)", fontWeight: 300, lineHeight: 1.2, color: "hsl(var(--foreground))" }}>
                     {simpleSelectedProduct["PRODUCT NAME"]}
                   </div>
-                  <div style={{ borderBottom: "0.5px solid hsl(var(--foreground))", marginTop: "14px", marginBottom: "18px", opacity: 0.18 }} />
-                  <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "4px", color: "hsl(var(--foreground))" }}>Supplier</div>
-                  <div style={{ fontSize: "15px", fontWeight: 300, marginBottom: "24px", color: "hsl(var(--foreground))" }}>{simpleSelectedProduct["SUPPLIER"] || "—"}</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "20px" }}>
+                  <div style={{ borderBottom: "0.5px solid hsl(var(--foreground))", marginTop: "14px", marginBottom: "18px", opacity: 0.15 }} />
+
+                  {/* Supplier */}
+                  <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Supplier</div>
+                  <div style={{ fontSize: "14px", fontWeight: 300, marginBottom: "20px", color: "hsl(var(--foreground))" }}>{simpleSelectedProduct["SUPPLIER"] || "—"}</div>
+
+                  {/* Prices 2-col */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", marginBottom: "20px" }}>
                     {([
-                      { label: "Supplier Price", val: simpleSelectedProduct["SUPPLIER PRICE"] },
-                      { label: "Branch Price", val: simpleSelectedProduct["BRANCH PRICE"] },
-                      { label: "Customer Price", val: simpleSelectedProduct["CUSTOMER PRICE"] },
-                      { label: "Staff Price", val: simpleSelectedProduct["STAFF PRICE"] },
-                    ] as { label: string; val: number | null }[]).map(({ label, val }) => (
+                      { label: "Supplier Price", val: simpleSelectedProduct["SUPPLIER PRICE"], rm: true },
+                      { label: "Branch Price", val: simpleSelectedProduct["BRANCH PRICE"], rm: true },
+                      { label: "Customer Price", val: simpleSelectedProduct["CUSTOMER PRICE"], rm: true },
+                      { label: "Staff Price", val: simpleSelectedProduct["STAFF PRICE"], rm: true },
+                    ] as { label: string; val: number | null; rm: boolean }[]).map(({ label, val, rm }) => (
                       <div key={label}>
-                        <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px", color: "hsl(var(--foreground))" }}>{label}</div>
-                        <div style={{ fontSize: "14px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
-                          {val != null ? `RM ${(val as number).toFixed(2)}` : "—"}
+                        <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>{label}</div>
+                        <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
+                          {val != null ? (rm ? `RM ${(val as number).toFixed(2)}` : String(val)) : "—"}
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Office Balance + PAR 2-col */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", marginBottom: "20px" }}>
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Office Balance</div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, color: simpleSelectedProduct["OFFICE BALANCE"] != null && simpleSelectedProduct["PAR"] != null && simpleSelectedProduct["OFFICE BALANCE"]! < simpleSelectedProduct["PAR"]! ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}>
+                        {simpleSelectedProduct["OFFICE BALANCE"] ?? "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>Par</div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
+                        {simpleSelectedProduct["PAR"] ?? "—"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Branch balances 3-col */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", rowGap: "6px" }}>
+                    {(["Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => {
+                      const col = branch === "Boudoir" ? "BOUDOIR BALANCE" : branch === "Chic Nailspa" ? "CHIC NAILSPA BALANCE" : "NUR YADI BALANCE";
+                      const val = (simpleSelectedProduct as any)[col];
+                      return (
+                        <div key={branch}>
+                          <div style={{ fontSize: "12px", fontWeight: 600, marginBottom: "3px", color: "hsl(var(--foreground))" }}>{branch}</div>
+                          <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--foreground))" }}>{val ?? "—"}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1442,17 +1477,16 @@ const IndexPhoneSimple = () => {
                     key={item}
                     onClick={() => {
                       setSimpleSearchMode("idle");
-                      setTimeout(() => {
-                        if (item === "ORDER") navigateTo("order", "entry");
-                        else navigateTo("branches", "branches");
-                      }, 200);
+                      setSimpleSearch("");
+                      setSimpleSelectedProduct(null);
+                      setSimpleShowDropdown(false);
                     }}
                     style={{
-                      display: "block", fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300,
-                      letterSpacing: "0.05em", color: "hsl(var(--muted-foreground))",
+                      display: "block", fontSize: "clamp(18px, 4.5vw, 24px)", fontWeight: 300,
+                      letterSpacing: "0.05em", color: "hsl(var(--foreground))",
                       background: "none", border: "none", cursor: "pointer", textAlign: "left",
                       fontFamily: "inherit", lineHeight: 1, padding: "1px 0",
-                      opacity: 0.4,
+                      opacity: 0.3, filter: "blur(2px)",
                     }}
                   >
                     {item}
