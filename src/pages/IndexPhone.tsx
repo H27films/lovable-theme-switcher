@@ -2879,7 +2879,7 @@ const IndexPhone = () => {
               <div
                 ref={summaryInlineRef}
                 style={{
-                  marginTop: "38px",
+                  marginTop: "18px",
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
