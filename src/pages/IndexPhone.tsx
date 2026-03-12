@@ -242,6 +242,7 @@ const IndexPhone = () => {
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [arrowProgress, setArrowProgress] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -949,6 +950,7 @@ const IndexPhone = () => {
     const el = panelScrollRef.current;
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
+      setArrowProgress(Math.min(1, el.scrollTop / 80));
       if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
         setSummaryExpanded(true);
       }
@@ -959,7 +961,7 @@ const IndexPhone = () => {
 
   // Reset summaryExpanded when panel closes
   useEffect(() => {
-    if (!showOrderPanel) setSummaryExpanded(false);
+    if (!showOrderPanel) { setSummaryExpanded(false); setArrowProgress(0); }
   }, [showOrderPanel]);
 
 
@@ -2806,15 +2808,7 @@ const IndexPhone = () => {
                     <p className="text-[11px] mt-2" style={{ color: "hsl(var(--red))" }}>✗ {confirmError}</p>
                   )}
 
-                  {/* Scroll hint */}
-                  {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-16 gap-1">
-                      <svg width="16" height="36" viewBox="0 0 16 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="8" y1="0" x2="8" y2="28" stroke="white" strokeWidth="1"/>
-                        <polyline points="2,22 8,34 14,22" fill="none" stroke="white" strokeWidth="1"/>
-                      </svg>
-                    </div>
-                  )}
+                  {/* Scroll hint — rendered as fixed overlay below */}
                   {orderLines.length > 0 && <div style={{ paddingBottom: "160px" }} />}
 
                 </div>
@@ -2825,6 +2819,27 @@ const IndexPhone = () => {
               <p className="text-[14.5px]" style={dim}>No items added yet</p>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Fixed scroll-hint arrow (fades/grows as user scrolls) ── */}
+      {showOrderPanel && !summaryExpanded && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "40px",
+            left: "50%",
+            transform: `translateX(-50%) scale(${0.25 + 0.75 * arrowProgress})`,
+            opacity: arrowProgress,
+            transformOrigin: "center bottom",
+            pointerEvents: "none",
+            zIndex: 52,
+          }}
+        >
+          <svg width="16" height="36" viewBox="0 0 16 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="8" y1="0" x2="8" y2="28" stroke="white" strokeWidth="1"/>
+            <polyline points="2,22 8,34 14,22" fill="none" stroke="white" strokeWidth="1"/>
+          </svg>
         </div>
       )}
 
