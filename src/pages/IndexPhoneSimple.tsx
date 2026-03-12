@@ -1198,10 +1198,12 @@ const IndexPhoneSimple = () => {
     setActiveSection(section);
     setActiveTab(tab);
     setTransitionPhase('pre-section');
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+    // setTimeout(30) ensures the browser has painted the initial off-screen position
+    // before the transition starts — more reliable than double-rAF on iOS Safari
+    setTimeout(() => {
       setTransitionPhase('to-section');
       setTimeout(() => setTransitionPhase('at-section'), 580);
-    }));
+    }, 30);
   };
 
   const navigateBack = () => {
@@ -1216,11 +1218,14 @@ const IndexPhoneSimple = () => {
   };
 
   // ── Swipe transition helpers ──
-  const SWIPE = "transform 0.56s cubic-bezier(0.25,0.46,0.45,0.94)";
-  const menuX   = (transitionPhase === 'to-section' || transitionPhase === 'at-section') ? 'translateX(-30%)' : 'translateX(0)';
-  const menuTx  = (transitionPhase === 'to-section' || transitionPhase === 'to-menu')    ? SWIPE : 'none';
-  const sectX   = (transitionPhase === 'pre-section' || transitionPhase === 'to-menu') ? 'translateX(100%)' : 'translateX(0)';
-  const sectTx  = (transitionPhase === 'to-section' || transitionPhase === 'to-menu')    ? SWIPE : 'none';
+  const SWIPE = "transform 0.58s cubic-bezier(0.25,0.46,0.45,0.94)";
+  const isAnimating = transitionPhase === 'to-section' || transitionPhase === 'to-menu';
+  // Menu: slides left to -30% when section is shown, returns to 0 when going back
+  const menuX  = (transitionPhase === 'to-section' || transitionPhase === 'at-section') ? 'translateX(-30%)' : 'translateX(0%)';
+  const menuTx = (transitionPhase === 'to-section' || transitionPhase === 'to-menu') ? SWIPE : 'none';
+  // Section: starts off-screen right (100%), slides in to 0 on forward, slides back out on back
+  const sectX  = (transitionPhase === 'pre-section' || transitionPhase === 'to-menu') ? 'translateX(100%)' : 'translateX(0%)';
+  const sectTx = (transitionPhase === 'to-section' || transitionPhase === 'to-menu') ? SWIPE : 'none';
 
   return (
     <div style={{ position: "relative", overflow: "hidden", height: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
@@ -1228,7 +1233,7 @@ const IndexPhoneSimple = () => {
 
 
       {/* ── Menu layer ── */}
-      <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflowY: "auto", transform: menuX, transition: menuTx, willChange: "transform", background: "hsl(var(--background))" }}>
+      <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflowY: "auto", transform: menuX, transition: menuTx, willChange: "transform", background: "hsl(var(--background))", pointerEvents: isAnimating ? "none" : "auto" }}>
       <div className="max-w-full mx-auto px-3">
 
         {/* ── Fixed theme toggle (always visible) ── */}
@@ -1311,7 +1316,7 @@ const IndexPhoneSimple = () => {
 
       {/* ── Section layer ── */}
       {activeSection !== null && (
-        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflowY: "auto", transform: sectX, transition: sectTx, willChange: "transform", zIndex: 1, background: "hsl(var(--background))" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflowY: "auto", transform: sectX, transition: sectTx, willChange: "transform", zIndex: 1, background: "hsl(var(--background))", pointerEvents: isAnimating ? "none" : "auto" }}>
             {activeSection === "search" && <SearchPage onBack={navigateBack} />}
             {activeSection === "branches" && <BranchesPage onBack={navigateBack} />}
             {activeSection === "order" && <OrderPage onBack={navigateBack} />}
