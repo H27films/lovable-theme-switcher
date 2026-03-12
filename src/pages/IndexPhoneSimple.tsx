@@ -1279,8 +1279,9 @@ const IndexPhoneSimple = () => {
             {/* ── Items layer: each item moves independently ── */}
             <div style={{
               position: "absolute", inset: 0,
-              display: "flex", flexDirection: "column", justifyContent: "center",
+              display: "flex", flexDirection: "column", justifyContent: "flex-start",
               paddingLeft: "12px",
+              paddingTop: "15dvh",
               overflow: "hidden",
             }}>
 
