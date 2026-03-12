@@ -2808,14 +2808,14 @@ const IndexPhone = () => {
 
                   {/* Scroll hint */}
                   {orderLines.length > 0 && (
-                    <div className="flex flex-col items-center mt-20 gap-1">
-                      <svg width="14" height="24" viewBox="0 0 14 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="7" y1="0" x2="7" y2="17" stroke="white" strokeWidth="1"/>
-                        <polyline points="1,12 7,23 13,12" fill="none" stroke="white" strokeWidth="1"/>
+                    <div className="flex flex-col items-center mt-16 gap-1">
+                      <svg width="16" height="36" viewBox="0 0 16 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="8" y1="0" x2="8" y2="28" stroke="white" strokeWidth="1"/>
+                        <polyline points="2,22 8,34 14,22" fill="none" stroke="white" strokeWidth="1"/>
                       </svg>
                     </div>
                   )}
-                  {orderLines.length > 0 && <div style={{ paddingBottom: "60px" }} />}
+                  {orderLines.length > 0 && <div style={{ paddingBottom: "160px" }} />}
 
                 </div>
               </div>
