@@ -1279,13 +1279,12 @@ const IndexPhoneSimple = () => {
             {/* ── Items layer: each item moves independently ── */}
             <div style={{
               position: "absolute", inset: 0,
-              display: "flex", flexDirection: "column", justifyContent: "flex-start",
+              display: "flex", flexDirection: "column",
               paddingLeft: "12px",
-              paddingTop: "15dvh",
               overflow: "hidden",
             }}>
 
-              {/* SEARCH — slides up to top */}
+              {/* SEARCH — at top area */}
               <button
                 onClick={() => {
                   if (simpleSearchMode === "idle") {
@@ -1301,13 +1300,13 @@ const IndexPhoneSimple = () => {
                 style={{
                   display: "block", textAlign: "left", padding: "2px 0",
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: simpleSearchMode === "idle" ? "clamp(32px, 9vw, 48px)" : simpleSearchMode === "active" ? "clamp(20px, 5vw, 26px)" : "clamp(16px, 4vw, 20px)",
+                  fontSize: simpleSearchMode === "idle" ? "clamp(32px, 9vw, 48px)" : "clamp(20px, 5vw, 26px)",
                   fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))", lineHeight: 1,
-                  opacity: simpleSearchMode === "result" ? 0 : simpleSearchMode === "active" ? 0.7 : 1,
-                  filter: "none",
-                  transform: simpleSearchMode !== "idle" ? "translateY(calc(-50dvh + 150px))" : "translateY(0)",
-                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease, filter 0.4s ease, font-size 0.4s ease",
+                  opacity: simpleSearchMode === "result" ? 0.35 : simpleSearchMode === "active" ? 0.5 : 1,
+                  filter: simpleSearchMode !== "idle" ? "blur(0.5px)" : "none",
+                  marginTop: simpleSearchMode !== "idle" ? "28px" : "15dvh",
+                  transition: "margin-top 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease, filter 0.4s ease, font-size 0.4s ease",
                   width: "100%",
                 }}
               >
@@ -1324,7 +1323,10 @@ const IndexPhoneSimple = () => {
                 </div>
               </button>
 
-              {/* BRANCHES — slides down + fades + blurred */}
+              {/* Spacer to push BRANCHES/ORDER to bottom */}
+              <div style={{ flex: 1 }} />
+
+              {/* BRANCHES — at bottom, blurred */}
               <button
                 onClick={() => { navigateTo("branches", "branches"); }}
                 style={{
@@ -1332,25 +1334,18 @@ const IndexPhoneSimple = () => {
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
                   fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))", lineHeight: 1,
-                  transform: simpleSearchMode !== "idle" ? "translateY(50dvh)" : "translateY(0)",
-                  opacity: simpleSearchMode !== "idle" ? 0 : 0.45,
-                  filter: simpleSearchMode !== "idle" ? "blur(6px)" : "blur(1.5px)",
-                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease, filter 0.38s ease",
-                  pointerEvents: simpleSearchMode !== "idle" ? "none" : "auto",
-                  width: "100%", marginTop: "8px",
+                  opacity: 0.35,
+                  filter: "blur(1.5px)",
+                  transition: "opacity 0.38s ease, filter 0.38s ease",
+                  width: "100%",
                 }}
-                onMouseEnter={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.8"; e.currentTarget.style.filter = "blur(0px)"; } }}
-                onMouseLeave={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.45"; e.currentTarget.style.filter = "blur(1.5px)"; } }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "0.35"; e.currentTarget.style.filter = "blur(1.5px)"; }}
               >
-                <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
-                  <span style={{ flexShrink: 0 }}>BRANCHES</span>
-                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
-                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
-                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
-                </div>
+                <span>BRANCHES</span>
               </button>
 
-              {/* ORDER — slides down + fades + blurred */}
+              {/* ORDER — at bottom, blurred */}
               <button
                 onClick={() => { navigateTo("order", "entry"); }}
                 style={{
@@ -1358,22 +1353,15 @@ const IndexPhoneSimple = () => {
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
                   fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))", lineHeight: 1,
-                  transform: simpleSearchMode !== "idle" ? "translateY(50dvh)" : "translateY(0)",
-                  opacity: simpleSearchMode !== "idle" ? 0 : 0.45,
-                  filter: simpleSearchMode !== "idle" ? "blur(6px)" : "blur(1.5px)",
-                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1) 60ms, opacity 0.38s ease 60ms, filter 0.38s ease 60ms",
-                  pointerEvents: simpleSearchMode !== "idle" ? "none" : "auto",
-                  width: "100%", marginTop: "4px",
+                  opacity: 0.35,
+                  filter: "blur(1.5px)",
+                  transition: "opacity 0.38s ease, filter 0.38s ease",
+                  width: "100%", marginBottom: "40px",
                 }}
-                onMouseEnter={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.8"; e.currentTarget.style.filter = "blur(0px)"; } }}
-                onMouseLeave={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.45"; e.currentTarget.style.filter = "blur(1.5px)"; } }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "0.35"; e.currentTarget.style.filter = "blur(1.5px)"; }}
               >
-                <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
-                  <span style={{ flexShrink: 0 }}>ORDER</span>
-                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
-                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
-                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
-                </div>
+                <span>ORDER</span>
               </button>
             </div>
 
@@ -1382,7 +1370,7 @@ const IndexPhoneSimple = () => {
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column",
               paddingLeft: "12px", paddingRight: "12px",
-              paddingTop: "100px", paddingBottom: "40px",
+              paddingTop: "56px", paddingBottom: "100px",
               opacity: simpleSearchMode !== "idle" ? 1 : 0,
               transition: "opacity 0.38s ease 0.22s",
               pointerEvents: simpleSearchMode !== "idle" ? "auto" : "none",
