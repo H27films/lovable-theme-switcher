@@ -1271,7 +1271,7 @@ const IndexPhoneSimple = () => {
                     fontSize: "clamp(40px, 12vw, 64px)",
                     fontWeight: 300,
                     letterSpacing: "0.05em",
-                    opacity: 0.18,
+                    opacity: 0.07,
                     color: "hsl(var(--foreground))",
                     marginLeft: "0.25em",
                   }}>{item}</span>
