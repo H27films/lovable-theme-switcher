@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Landing3 from "./pages/Landing3";
+import LandingSimple from "./pages/LandingSimple";
 import Index from "./pages/Index";
 import Stock from "./pages/Stock";
 import StockPhone from "./pages/StockPhone";
@@ -28,6 +29,9 @@ const App = () => (
           <Route path="/landing3" element={<Landing3 />} />
           <Route path="/prices" element={<Index />} />
           <Route path="/office/mobile" element={<IndexPhone />} />
+          {/* ── Simple / Boss routes ── */}
+          <Route path="/simple" element={<LandingSimple />} />
+          <Route path="/simple/office" element={<IndexPhone />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/stock/mobile" element={<StockPhone />} />
           <Route path="/stocknuryadi" element={<StockNurYadi />} />
