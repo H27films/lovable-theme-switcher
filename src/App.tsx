@@ -14,6 +14,7 @@ import StockChicNailspa from "./pages/StockChicNailspa";
 import StockChicNailspaPhone from "./pages/StockChicNailspaPhone";
 import StockNurYadiPhone from "./pages/StockNurYadiPhone";
 import IndexPhone from "./pages/IndexPhone";
+import IndexPhoneSimple from "./pages/IndexPhoneSimple";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,7 +32,7 @@ const App = () => (
           <Route path="/office/mobile" element={<IndexPhone />} />
           {/* ── Simple / Boss routes ── */}
           <Route path="/simple" element={<LandingSimple />} />
-          <Route path="/simple/office" element={<IndexPhone />} />
+          <Route path="/simple/office" element={<IndexPhoneSimple />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/stock/mobile" element={<StockPhone />} />
           <Route path="/stocknuryadi" element={<StockNurYadi />} />
