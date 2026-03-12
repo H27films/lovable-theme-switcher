@@ -1315,7 +1315,7 @@ const IndexPhoneSimple = () => {
                   <span style={{ flexShrink: 0 }}>SEARCH</span>
                   {([0.07, 0.08, 0.03] as const).map((op, i) => (
                     <span key={i} style={{
-                      fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                      fontSize: "clamp(32px, 9vw, 48px)", fontWeight: 300, letterSpacing: "0.05em",
                       opacity: simpleSearchMode !== "idle" ? 0 : op,
                       color: "hsl(var(--foreground))", marginLeft: "0.25em",
                       transition: "opacity 0.3s ease",
