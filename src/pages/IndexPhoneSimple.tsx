@@ -179,7 +179,6 @@ const IndexPhoneSimple = () => {
 
   // Tab toggle: activity vs table
   const [activeTab, setActiveTab] = useState<"table" | "branches" | "entry">("branches");
-  const [activeSection, setActiveSection] = useState<null | "search" | "branches">(null);
 
   // All-orders recent activity (main page, 60 days)
   const [allActivity, setAllActivity] = useState<AllFileLogRow[]>([]);
@@ -242,6 +241,7 @@ const IndexPhoneSimple = () => {
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
+  const [activeSection, setActiveSection] = useState<"search" | "branches" | null>(null);
   const [summaryProgress, setSummaryProgress] = useState(0);
   const [panelScrollDir, setPanelScrollDir] = useState<"up" | "down">("down");
   const panelPrevScrollTop = React.useRef(0);
@@ -1219,40 +1219,39 @@ const IndexPhoneSimple = () => {
 
       <div className="max-w-full mx-auto px-3">
 
-        {/* ── Fixed theme toggle ── */}
-        <div style={{ position: "fixed", top: "16px", right: "16px", zIndex: 60 }}>
+        {/* ── Fixed theme toggle (always visible) ── */}
+        <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 60 }}>
           <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
         </div>
 
         {/* ── Home Menu ── */}
         {activeSection === null && (
-          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "32px", paddingRight: "80px" }}>
+          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "36px" }}>
             {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
               <button
                 key={item}
                 onClick={() => {
-                  if (item === "ORDER") { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }
-                  else setActiveSection(item.toLowerCase() as "search" | "branches");
+                  if (item === "ORDER") { setShowOrderPanel(true); setOrderSearch(""); }
+                  else if (item === "SEARCH") { setActiveSection("search"); setActiveTab("table"); }
+                  else { setActiveSection("branches"); setActiveTab("branches"); }
                 }}
                 style={{
                   display: "block",
                   textAlign: "left",
-                  padding: "16px 0",
-                  fontSize: "clamp(40px, 12vw, 64px)",
-                  fontWeight: 300,
-                  letterSpacing: "0.04em",
-                  color: "hsl(var(--muted-foreground))",
+                  padding: "20px 0",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  width: "100%",
-                  transition: "color 0.2s ease",
                   fontFamily: "inherit",
+                  fontSize: "clamp(40px, 12vw, 64px)",
+                  fontWeight: 300,
+                  letterSpacing: "0.05em",
+                  color: "hsl(var(--foreground))",
+                  lineHeight: 1,
+                  transition: "opacity 0.2s ease",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                onTouchStart={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onTouchEnd={e => { setTimeout(() => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }, 200); }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
               >
                 {item}
               </button>
@@ -1260,9 +1259,8 @@ const IndexPhoneSimple = () => {
           </div>
         )}
 
-        {/* ── Section back button + content ── */}
+        {/* ── Back button ── */}
         {activeSection !== null && (
-        <div>
           <div style={{ paddingTop: "20px", paddingBottom: "8px" }}>
             <button
               onClick={() => { setActiveSection(null); setSearch(""); setSelectedProduct(null); setFilterSupplier(null); }}
@@ -1273,12 +1271,27 @@ const IndexPhoneSimple = () => {
               <ChevronLeft size={14} /> Back
             </button>
           </div>
+        )}
 
+
+        {/* ── Search blur overlay ── */}
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
+            WebkitBackdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
+            opacity: searchFocused ? 1 : 0,
+            transition: "opacity 300ms ease, backdrop-filter 300ms ease, -webkit-backdrop-filter 300ms ease",
+            zIndex: 30,
+            pointerEvents: "none",
+          }}
+        />
+
+        {activeSection !== null && (
         <div className="py-6">
 
-          {/* ── Search bar (Search section only) ── */}
-          {activeSection === "search" && (
-          <div style={{ position: "relative", zIndex: 40 }}>
+          {/* ── Search bar ── */}
+          <div style={{...fade(170), position: "relative", zIndex: 40}}>
           <div
             ref={searchRef}
             className="relative mb-12"
@@ -1291,17 +1304,16 @@ const IndexPhoneSimple = () => {
             >
               <Search size={18} strokeWidth={1.5} className={`transition-colors duration-300 ${searchHovered || searchExpanded ? "text-muted-foreground" : "text-foreground"}`} />
               {!searchExpanded && (
-                <span className={`text-[16px] font-light transition-colors duration-300 ${searchHovered ? "text-muted-foreground" : "text-foreground"}`}>Search</span>
+                <span className={`text-[15px] font-light transition-colors duration-300 ${searchHovered ? "text-muted-foreground" : "text-foreground"}`}>Search</span>
               )}
               {searchExpanded && (
                 <input
                   ref={searchInputRef}
                   type="text"
-                  className="flex-1 bg-transparent outline-none font-light"
-                  style={{ fontSize: "16px" }}
-                  placeholder="Search products..."
+                  className="flex-1 bg-transparent outline-none text-[15px] font-light"
+                  placeholder="Search"
                   value={search}
-                  onChange={e => { setSearch(e.target.value); setSelectedProduct(null); setShowDropdown(true); }}
+                  onChange={e => { setSearch(e.target.value); setSelectedProduct(null); setShowDropdown(true); setActiveTab("table"); }}
                   onFocus={() => { setSearchFocused(true); setShowDropdown(true); }}
                   onBlur={() => setTimeout(() => { setShowDropdown(false); setSearchFocused(false); }, 150)}
                   onKeyDown={handleKeyDown}
@@ -1313,7 +1325,7 @@ const IndexPhoneSimple = () => {
                 </button>
               )}
               {filterSupplier && !search && (
-                <span className="text-[14px] font-light text-muted-foreground">{filterSupplier}</span>
+                <span className="text-[13px] font-light text-muted-foreground">{filterSupplier}</span>
               )}
               <span
                 className="absolute bottom-0 left-0 h-px transition-all duration-[600ms] ease-out"
@@ -1329,46 +1341,60 @@ const IndexPhoneSimple = () => {
                 className="absolute top-full left-0 right-0 z-50 border max-h-[240px] overflow-y-auto scrollbar-thin"
                 style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
               >
+                {/* Supplier matches */}
                 {supplierMatches.map((supplier, i) => (
                   <div
                     key={`supplier-${supplier}`}
                     data-item
-                    className="flex items-center justify-between px-4 py-3 cursor-pointer"
+                    className="flex items-center justify-between px-4 py-2.5 cursor-pointer"
                     style={{ borderBottom: `1px solid ${border}`, background: i === activeIndex ? cardBg : "transparent" }}
                     onMouseDown={() => {
                       setFilterSupplier(supplier);
                       setSearch("");
                       setSelectedProduct(null);
                       setShowDropdown(false);
+                      setActiveTab("table");
                     }}
                     onMouseEnter={() => setActiveIndex(i)}
                   >
                     <div className="flex items-center gap-2">
-                      <Building2 size={13} style={dim} />
-                      <span style={{ fontSize: "15px", fontWeight: 300 }}>{supplier}</span>
+                      <Building2 size={12} style={dim} />
+                      <span className="text-[13px] font-light">{supplier}</span>
                     </div>
-                    <span className="text-[11px] tracking-wider uppercase" style={dim}>Supplier</span>
+                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Supplier</span>
                   </div>
                 ))}
+                {/* Product matches */}
                 {dropdownResults.map((p, i) => {
                   const idx = supplierMatches.length + i;
                   return (
                     <div
                       key={p.id}
                       data-item
-                      className="flex items-center justify-between px-4 py-3 cursor-pointer"
+                      className="flex items-center justify-between px-4 py-2.5 cursor-pointer"
                       style={{ borderBottom: `1px solid ${border}`, background: idx === activeIndex ? cardBg : "transparent" }}
                       onMouseDown={() => { setSelectedProduct(p); setSearch(p["PRODUCT NAME"]); setShowDropdown(false); setFilterSupplier(null); }}
                       onMouseEnter={() => setActiveIndex(idx)}
                     >
                       <div className="flex items-center gap-3">
-                        {p[entryFavCol(entryBranch)] && <Star size={11} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
-                        <span style={{ fontSize: "15px", fontWeight: 300 }}>{p["PRODUCT NAME"]}</span>
-                        {p["SUPPLIER"] && <span style={{ fontSize: "12px", ...dim }}>{p["SUPPLIER"]}</span>}
+                        {p[entryFavCol(entryBranch)] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                        <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
+                        {p["SUPPLIER"] && <span className="text-[11px] [font-variant-numeric:lining-nums]" style={dim}>{p["SUPPLIER"]}</span>}
+                        {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
+                          <span className="text-[10px] tracking-wider uppercase" style={dim}>Colour</span>
+                        )}
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 300, color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
-                        {p["OFFICE BALANCE"] ?? "—"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {(p["UNITS/ORDER"] ?? 1) > 1 && (
+                          <span className="text-[11px] [font-variant-numeric:lining-nums]" style={dim}>{p["UNITS/ORDER"]} units</span>
+                        )}
+                        <span className="text-[12px] font-light" style={{
+                          color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
+                            ? "hsl(var(--red))" : (p["OFFICE BALANCE"] != null && p["PAR"] != null && Number(p["OFFICE BALANCE"]) >= Number(p["PAR"]) ? "#4ade80" : "hsl(var(--foreground))")
+                        }}>
+                          {p["OFFICE BALANCE"] ?? "—"}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
@@ -1376,9 +1402,38 @@ const IndexPhoneSimple = () => {
             )}
           </div>
           </div>
-          )}
 
-          {activeSection === "branches" && (() => {
+          {/* ── Tab switcher ── */}
+          <div className="flex items-center gap-7 mb-3 border-b overflow-x-auto" style={{ borderColor: border, ...fade(260) }}>
+            {([
+              { id: "branches", label: "Branches" },
+              { id: "entry", label: "Entry" },
+              { id: "order", label: "Order" },
+              { id: "table", label: "Table" },
+              { id: "product", label: "Product +" },
+            ] as const).map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => {
+                  if (id === "order") { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }
+                  else if (id === "product") { setShowNewProductModal(true); }
+                  else setActiveTab(id as "branches" | "table" | "entry");
+                }}
+                onMouseDown={e => e.preventDefault()}
+                className="text-[13px] tracking-[0.15em] uppercase pb-3 transition-colors relative shrink-0"
+                style={{ color: (id !== "order" && id !== "product" && activeTab === id) ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = (id !== "order" && id !== "product" && activeTab === id) ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+              >
+                {label}
+                {(id !== "order" && id !== "product" && activeTab === id) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "hsl(var(--foreground))" }} />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "branches" && (() => {
             // Group branch activity by date (7-day split)
             const cutoff7 = new Date();
             cutoff7.setDate(cutoff7.getDate() - 7);
@@ -1720,7 +1775,7 @@ const IndexPhoneSimple = () => {
 
 
 
-          {activeSection === "search" && (<>
+          {activeTab === "table" && (<>
 
           {/* ── Selected product card ── */}
           {selectedProduct && (
@@ -1798,7 +1853,7 @@ const IndexPhoneSimple = () => {
 
               {/* Office Section */}
               <input
-                className="w-full bg-transparent outline-none font-light py-3" style={{ fontSize: "16px" }}
+                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
                 style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
                 value={newProduct["OFFICE SECTION"]}
                 onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
@@ -2056,14 +2111,246 @@ const IndexPhoneSimple = () => {
 
           </>)}
 
+          {activeTab === "entry" && (
+            <div style={{ paddingBottom: entryShowDropdown ? "260px" : "40px", transition: "padding-bottom 0.2s" }}>
+              {/* ── Branch + Type selectors ── */}
+              <div className="flex flex-col gap-2 mb-8">
+                <div className="flex items-center gap-4 mb-3 flex-wrap">
+                  {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
+                    <button
+                      key={branch}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => { setEntryBranch(branch); setEntryItems([]); setEntrySearch(""); }}
+                      onMouseEnter={() => setEntryHoveredBranch(branch)}
+                      onMouseLeave={() => setEntryHoveredBranch(null)}
+                      className="transition-all duration-200"
+                      style={{
+                        fontSize: entryBranch === branch ? "13px" : entryHoveredBranch === branch ? "12px" : "11px",
+                        fontWeight: 300,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: entryBranch === branch || entryHoveredBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                      }}
+                    >
+                      {branch}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  {(["Usage", "Order"] as const).map(type => (
+                    <button
+                      key={type}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => { setEntryType(type); setEntryItems([]); setEntrySearch(""); }}
+                      onMouseEnter={() => setEntryHoveredType(type)}
+                      onMouseLeave={() => setEntryHoveredType(null)}
+                      className="text-[11px] tracking-[0.12em] uppercase px-3 py-1.5 transition-colors"
+                      style={{
+                        borderRadius: "5px",
+                        border: `1px solid ${entryType === type || entryHoveredType === type ? "hsl(var(--foreground))" : border}`,
+                        background: entryType === type ? "hsl(var(--foreground))" : "transparent",
+                        color: entryType === type ? "hsl(var(--background))" : entryHoveredType === type ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      }}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        </div>
+              {/* ── Search bar ── */}
+              <div ref={entrySearchRef} className="relative mb-6">
+                <p className="text-[12px] tracking-wider uppercase mb-2" style={dim}>
+                  {entryType === "Usage" ? `${entryBranch} Usage` : `${entryBranch} Order`}
+                </p>
+                <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
+                  <input
+                    ref={entryInputRef}
+                    type="text"
+                    className="flex-1 bg-transparent outline-none text-[13px] font-light"
+                    placeholder="Search to add..."
+                    value={entrySearch}
+                    onChange={e => { setEntrySearch(e.target.value); setEntryShowDropdown(true); setEntryActiveIndex(-1); }}
+                    onFocus={() => setEntryShowDropdown(true)}
+                    onKeyDown={handleEntryKeyDown}
+                    style={{ color: "hsl(var(--foreground))" }}
+                  />
+                  {entrySearch && (
+                    <button onClick={() => { setEntrySearch(""); setEntryShowDropdown(false); }} style={dim}>
+                      <X size={12} />
+                    </button>
+                  )}
+                  <Plus size={12} style={dim} />
+                </div>
+                {entryShowDropdown && entryDropdownResults.length > 0 && (
+                  <div
+                    ref={entryDropdownRef}
+                    className="absolute top-full left-0 right-0 z-50 border max-h-[220px] overflow-y-auto scrollbar-thin"
+                    style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+                  >
+                    {entryDropdownResults.map((p, i) => {
+                      const balCol = entryBalanceCol(entryBranch);
+                      const balance = (p as any)[balCol];
+                      return (
+                        <div
+                          key={p.id}
+                          data-entry-item
+                          className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
+                          style={{ borderBottom: `1px solid ${border}`, background: i === entryActiveIndex ? cardBg : "transparent" }}
+                          onMouseDown={() => addEntryItem(p)}
+                          onMouseEnter={() => setEntryActiveIndex(i)}
+                        >
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              {p[entryFavCol(entryBranch)] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                              <span className="text-[12px] font-light" style={{ color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</span>
+                            </div>
+                            {entryBranch === "Office" && entryType === "Order" && p["SUPPLIER"] && (
+                              <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>
+                            )}
+                          </div>
+                          <span className="text-[12px] font-light" style={dim}>{balance ?? "—"}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Items table ── */}
+              {entryItems.length > 0 ? (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] tracking-wider uppercase" style={dim}>
+                      {entryItems.length} item{entryItems.length !== 1 ? "s" : ""}
+                    </p>
+                    <button
+                      onClick={() => setEntryItems([])}
+                      className="text-[11px] tracking-wider uppercase px-2 py-0.5 rounded transition-colors"
+                      style={{ color: "hsl(var(--muted-foreground))", border: `1px solid ${border}` }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="mb-6">
+                      {entryItems.map((item, idx) => {
+                        const entryProduct = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
+                        const balKey = entryBalanceCol(entryBranch) as keyof EntryProduct;
+                        const currentBal = entryProduct ? (entryProduct[balKey] as number | null) : null;
+                        return (
+                        <div key={item.id} className="mb-3">
+                          {/* Line 1: Product + Remove */}
+                          <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
+                            <span className="flex-1 py-2.5 text-[13px] font-light" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</span>
+                            <button
+                              onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}
+                              className="flex-shrink-0 transition-colors py-2.5" style={dim}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                          {/* Line 2: Type (usage only) / Balance (order, non-office) + Qty */}
+                          <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                            <div className="flex-1">
+                              {entryType === "Usage" && (
+                                <EntryTypeDropdown
+                                  value={item.type}
+                                  options={entryUsageTypes(entryBranch)}
+                                  onChange={type => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, type } : i))}
+                                />
+                              )}
+                              {entryType === "Order" && entryBranch !== "Office" && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
+                                  <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
+                                    {currentBal === null ? "—" : currentBal}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center">
+                              <button
+                                onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))}
+                                className="px-1.5 py-1 transition-colors" style={dim}
+                                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                              >
+                                <ChevronLeft size={13} />
+                              </button>
+                              <span className="text-[13px] font-light min-w-[32px] text-center">{item.qty}</span>
+                              <button
+                                onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))}
+                                className="px-1.5 py-1 transition-colors" style={dim}
+                                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                              >
+                                <ChevronRight size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        );
+                      })}
+                    </div>
+
+                  {/* Submit row */}
+                  <div className="flex items-center justify-between pt-2">
+                    <div>
+                      {entryError && <span className="text-[12px]" style={{ color: "hsl(var(--red))" }}>{entryError}</span>}
+                      {entrySuccessMsg && <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{entrySuccessMsg}</span>}
+                      {entryPendingGRN && !entryError && !entrySuccessMsg && (
+                        <span className="text-[11px] tracking-wider uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>
+                          Pending · {entryPendingGRN}
+                        </span>
+                      )}
+                    </div>
+                    {entryPendingGRN && entryType === "Order" && entryBranch !== "Office" ? (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleEntryEditOrder}
+                          disabled={entrySubmitting}
+                          className="text-[12px] tracking-[0.12em] uppercase px-4 py-2 transition-opacity"
+                          style={{ border: "1px solid hsl(var(--border))", borderRadius: "5px", color: "hsl(var(--muted-foreground))", opacity: entrySubmitting ? 0.4 : 1 }}
+                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={handleEntryConfirmOrder}
+                          disabled={entrySubmitting}
+                          className="text-[10px] tracking-[0.12em] uppercase px-4 py-1 transition-opacity"
+                          style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
+                        >
+                          {entrySubmitting ? "Confirming..." : "Confirm Order"}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleEntrySubmit}
+                        disabled={entrySubmitting}
+                        className="text-[10px] tracking-[0.12em] uppercase px-4 py-1 transition-opacity"
+                        style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
+                      >
+                        {entrySubmitting ? "Submitting..." : "Submit"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[13px] font-light" style={dim}>No items added yet</p>
+              )}
+            </div>
+          )}
+
         </div>
         )}
-
-        </div>
       </div>
-
       {/* New Product Panel */}
       {showNewProductModal && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowNewProductModal(false)}>
@@ -2084,7 +2371,7 @@ const IndexPhoneSimple = () => {
             <div className="flex flex-col">
               {/* Product Name */}
               <input
-                className="w-full bg-transparent outline-none font-light py-3" style={{ fontSize: "16px" }}
+                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
                 style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
                 value={newProduct["PRODUCT NAME"]}
                 onChange={e => setNewProduct(p => ({ ...p, "PRODUCT NAME": e.target.value }))}
@@ -2094,7 +2381,7 @@ const IndexPhoneSimple = () => {
               {/* Supplier */}
               <div className="relative" ref={newProductSupplierRef}>
                 <input
-                  className="w-full bg-transparent outline-none font-light py-3" style={{ fontSize: "16px" }}
+                  className="w-full bg-transparent outline-none text-[13px] font-light py-3"
                   style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
                   value={newProduct["SUPPLIER"]}
                   onChange={e => { setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value })); setShowNewProductSupplierDropdown(true); }}
@@ -2131,7 +2418,7 @@ const IndexPhoneSimple = () => {
 
               {/* Office Section */}
               <input
-                className="w-full bg-transparent outline-none font-light py-3" style={{ fontSize: "16px" }}
+                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
                 style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
                 value={newProduct["OFFICE SECTION"]}
                 onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
