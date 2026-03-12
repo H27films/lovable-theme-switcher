@@ -1324,53 +1324,55 @@ const IndexPhoneSimple = () => {
                 </div>
               </button>
 
-              {/* BRANCHES — slides down + fades */}
+              {/* BRANCHES — slides down + fades + blurred */}
               <button
                 onClick={() => { navigateTo("branches", "branches"); }}
                 style={{
                   display: "block", textAlign: "left", padding: "2px 0",
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                  fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))", lineHeight: 1,
                   transform: simpleSearchMode !== "idle" ? "translateY(50dvh)" : "translateY(0)",
-                  opacity: simpleSearchMode !== "idle" ? 0 : 1,
-                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease",
+                  opacity: simpleSearchMode !== "idle" ? 0 : 0.45,
+                  filter: simpleSearchMode !== "idle" ? "blur(6px)" : "blur(1.5px)",
+                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease, filter 0.38s ease",
                   pointerEvents: simpleSearchMode !== "idle" ? "none" : "auto",
-                  width: "100%",
+                  width: "100%", marginTop: "8px",
                 }}
-                onMouseEnter={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "0.5"; }}
-                onMouseLeave={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "1"; }}
+                onMouseEnter={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.8"; e.currentTarget.style.filter = "blur(0px)"; } }}
+                onMouseLeave={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.45"; e.currentTarget.style.filter = "blur(1.5px)"; } }}
               >
                 <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
                   <span style={{ flexShrink: 0 }}>BRANCHES</span>
-                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
-                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
-                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
+                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
+                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
+                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>BRANCHES</span>
                 </div>
               </button>
 
-              {/* ORDER — slides down + fades (slight cascade delay) */}
+              {/* ORDER — slides down + fades + blurred */}
               <button
                 onClick={() => { navigateTo("order", "entry"); }}
                 style={{
                   display: "block", textAlign: "left", padding: "2px 0",
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                  fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))", lineHeight: 1,
                   transform: simpleSearchMode !== "idle" ? "translateY(50dvh)" : "translateY(0)",
-                  opacity: simpleSearchMode !== "idle" ? 0 : 1,
-                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1) 60ms, opacity 0.38s ease 60ms",
+                  opacity: simpleSearchMode !== "idle" ? 0 : 0.45,
+                  filter: simpleSearchMode !== "idle" ? "blur(6px)" : "blur(1.5px)",
+                  transition: "transform 0.58s cubic-bezier(0.4,0,0.2,1) 60ms, opacity 0.38s ease 60ms, filter 0.38s ease 60ms",
                   pointerEvents: simpleSearchMode !== "idle" ? "none" : "auto",
-                  width: "100%",
+                  width: "100%", marginTop: "4px",
                 }}
-                onMouseEnter={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "0.5"; }}
-                onMouseLeave={e => { if (simpleSearchMode === "idle") e.currentTarget.style.opacity = "1"; }}
+                onMouseEnter={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.8"; e.currentTarget.style.filter = "blur(0px)"; } }}
+                onMouseLeave={e => { if (simpleSearchMode === "idle") { e.currentTarget.style.opacity = "0.45"; e.currentTarget.style.filter = "blur(1.5px)"; } }}
               >
                 <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
                   <span style={{ flexShrink: 0 }}>ORDER</span>
-                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
-                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
-                  <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
+                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
+                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.08, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
+                  <span style={{ fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, color: "hsl(var(--foreground))", marginLeft: "0.25em" }}>ORDER</span>
                 </div>
               </button>
             </div>
