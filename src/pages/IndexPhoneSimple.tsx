@@ -1235,7 +1235,7 @@ const IndexPhoneSimple = () => {
 
         {/* ── Home Menu ── */}
         {activeSection === null && (
-          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "20px" }}>
+          <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "12px" }}>
             {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
               <button
                 key={item}
@@ -1247,7 +1247,7 @@ const IndexPhoneSimple = () => {
                 style={{
                   display: "block",
                   textAlign: "left",
-                  padding: "5px 0",
+                  padding: "2px 0",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
@@ -1258,28 +1258,39 @@ const IndexPhoneSimple = () => {
                   color: "hsl(var(--foreground))",
                   lineHeight: 1,
                   transition: "opacity 0.2s ease",
+                  overflow: "hidden",
+                  width: "100%",
                 }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
                 onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                 onTouchStart={() => {}}
               >
-                <div style={{ display: "flex", alignItems: "baseline", gap: "10px", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "0px", whiteSpace: "nowrap" }}>
                   <span style={{ flexShrink: 0 }}>{item}</span>
                   <span style={{
-                    color: "hsl(var(--muted-foreground))",
-                    opacity: 0.35,
-                    fontSize: "clamp(10px, 3vw, 14px)",
+                    fontSize: "clamp(40px, 12vw, 64px)",
                     fontWeight: 300,
-                    letterSpacing: "0.08em",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "clip",
-                    lineHeight: 1,
-                    alignSelf: "flex-end",
-                    paddingBottom: "0.15em",
-                  }}>
-                    {item}{item}{item}
-                  </span>
+                    letterSpacing: "0.05em",
+                    opacity: 0.18,
+                    color: "hsl(var(--foreground))",
+                    marginLeft: "0.25em",
+                  }}>{item}</span>
+                  <span style={{
+                    fontSize: "clamp(40px, 12vw, 64px)",
+                    fontWeight: 300,
+                    letterSpacing: "0.05em",
+                    opacity: 0.08,
+                    color: "hsl(var(--foreground))",
+                    marginLeft: "0.25em",
+                  }}>{item}</span>
+                  <span style={{
+                    fontSize: "clamp(40px, 12vw, 64px)",
+                    fontWeight: 300,
+                    letterSpacing: "0.05em",
+                    opacity: 0.03,
+                    color: "hsl(var(--foreground))",
+                    marginLeft: "0.25em",
+                  }}>{item}</span>
                 </div>
               </button>
             ))}
