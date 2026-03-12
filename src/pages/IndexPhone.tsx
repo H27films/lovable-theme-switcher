@@ -2214,7 +2214,11 @@ const IndexPhone = () => {
                     </button>
                   </div>
                   <div className="mb-6">
-                      {entryItems.map((item, idx) => (
+                      {entryItems.map((item, idx) => {
+                        const entryProduct = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
+                        const balKey = entryBalanceCol(entryBranch) as keyof EntryProduct;
+                        const currentBal = entryProduct ? (entryProduct[balKey] as number | null) : null;
+                        return (
                         <div key={item.id} className="mb-3">
                           {/* Line 1: Product + Remove */}
                           <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
@@ -2228,7 +2232,7 @@ const IndexPhone = () => {
                               <X size={13} />
                             </button>
                           </div>
-                          {/* Line 2: Type (usage only) + Qty */}
+                          {/* Line 2: Type (usage only) / Balance (order, non-office) + Qty */}
                           <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
                             <div className="flex-1">
                               {entryType === "Usage" && (
@@ -2237,6 +2241,14 @@ const IndexPhone = () => {
                                   options={entryUsageTypes(entryBranch)}
                                   onChange={type => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, type } : i))}
                                 />
+                              )}
+                              {entryType === "Order" && entryBranch !== "Office" && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
+                                  <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
+                                    {currentBal === null ? "—" : currentBal}
+                                  </span>
+                                </div>
                               )}
                             </div>
                             <div className="flex items-center">
@@ -2260,7 +2272,8 @@ const IndexPhone = () => {
                             </div>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                   {/* Submit row */}
