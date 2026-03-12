@@ -231,6 +231,8 @@ const IndexPhone = () => {
     } catch { setEntryPendingGRN(null); }
   }, [entryBranch]);
   useEffect(() => { try { localStorage.setItem("entry_type", entryType); } catch {} }, [entryType]);
+  // Persist ORDER lines to localStorage so they survive panel close/tab switch
+  useEffect(() => { try { localStorage.setItem("order_lines", JSON.stringify(orderLines)); } catch {} }, [orderLines]);
   useEffect(() => { try { localStorage.setItem(`entry_items_${entryBranch}`, JSON.stringify(entryItems)); } catch {} }, [entryItems]); // entryBranch captured from render closure
   useEffect(() => {
     try {
@@ -248,7 +250,9 @@ const IndexPhone = () => {
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [orderSupplierFilter, setOrderSupplierFilter] = useState<string[]>([]);
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
-  const [orderLines, setOrderLines] = useState<{ product: OfficeProduct; supplierChoice: string | null; qty: number }[]>([]);
+  const [orderLines, setOrderLines] = useState<{ product: OfficeProduct; supplierChoice: string | null; qty: number }[]>(() => {
+    try { const s = localStorage.getItem("order_lines"); return s ? JSON.parse(s) : []; } catch { return []; }
+  });
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
   const [forceOrderDropdown, setForceOrderDropdown] = useState(false);
@@ -715,6 +719,7 @@ const IndexPhone = () => {
       }
       await fetchProducts();
       setOrderLines([]);
+      try { localStorage.removeItem("order_lines"); } catch {}
       setOrderSuccess(true);
       setTimeout(() => { setOrderSuccess(false); setShowOrderPanel(false); }, 2000);
     } catch (err) { console.error("Order confirm error:", err); }
