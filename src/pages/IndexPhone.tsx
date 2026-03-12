@@ -2571,7 +2571,7 @@ const IndexPhone = () => {
             {/* NEW ORDER content — blurs + shrinks as ORDER SUMMARY scrolls in */}
             <div
               style={{
-                transform: `scale(${1 - summaryProgress * 0.06})`,
+                transform: `scale(${1 - summaryProgress * 0.20})`,
                 transformOrigin: "top center",
                 transition: "filter 0.1s ease, transform 0.1s ease, mask-image 0.1s ease, WebkitMaskImage 0.1s ease",
                 filter: summaryProgress > 0 ? `blur(${summaryProgress * 4}px)` : "none",
@@ -2889,7 +2889,7 @@ const IndexPhone = () => {
                 <div
                   style={{
                     opacity: summaryProgress,
-                    transform: `scale(${0.5 + 0.5 * summaryProgress})`,
+                    transform: `scale(${0.8 + 0.2 * summaryProgress})`,
                     transformOrigin: "top center",
                     filter: `blur(${(1 - summaryProgress) * 6}px)`,
                     transition: "opacity 0.1s ease, transform 0.1s ease, filter 0.1s ease",
