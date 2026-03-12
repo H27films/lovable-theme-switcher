@@ -243,8 +243,7 @@ const IndexPhone = () => {
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
-  const [arrowProgress, setArrowProgress] = useState(0);
+  const [summaryProgress, setSummaryProgress] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -286,7 +285,7 @@ const IndexPhone = () => {
   const listRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
   const panelScrollRef = useRef<HTMLDivElement>(null);
-  const summaryOverlayRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const [showNewProductSupplierDropdown, setShowNewProductSupplierDropdown] = useState(false);
   const newProductSupplierRef = useRef<HTMLDivElement>(null);
 
@@ -950,23 +949,25 @@ const IndexPhone = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-  // Panel scroll → expand order summary overlay
+  // Panel scroll → fade in ORDER SUMMARY as it scrolls into view
   useEffect(() => {
     const el = panelScrollRef.current;
     if (!el || !showOrderPanel) return;
     const handleScroll = () => {
-      setArrowProgress(Math.min(1, el.scrollTop / 80));
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
-        setSummaryExpanded(true);
+      if (summaryRef.current) {
+        const elRect = el.getBoundingClientRect();
+        const sumRect = summaryRef.current.getBoundingClientRect();
+        const visible = elRect.bottom - sumRect.top;
+        setSummaryProgress(Math.min(1, Math.max(0, visible / 250)));
       }
     };
-    el.addEventListener('scroll', handleScroll);
+    el.addEventListener('scroll', handleScroll, { passive: true });
     return () => el.removeEventListener('scroll', handleScroll);
   }, [showOrderPanel]);
 
-  // Reset summaryExpanded when panel closes
+  // Reset summary progress when panel closes
   useEffect(() => {
-    if (!showOrderPanel) { setSummaryExpanded(false); setArrowProgress(0); }
+    if (!showOrderPanel) { setSummaryProgress(0); }
   }, [showOrderPanel]);
 
 
@@ -2813,8 +2814,8 @@ const IndexPhone = () => {
                     <p className="text-[11px] mt-2" style={{ color: "hsl(var(--red))" }}>✗ {confirmError}</p>
                   )}
 
-                  {/* Scroll hint — rendered as fixed overlay below */}
-                  {orderLines.length > 0 && <div style={{ paddingBottom: "160px" }} />}
+                  {/* spacer before inline ORDER SUMMARY */}
+                  {orderLines.length > 0 && <div style={{ height: "168px" }} />}
 
                 </div>
               </div>
@@ -2823,84 +2824,9 @@ const IndexPhone = () => {
             {orderLines.length === 0 && (
               <p className="text-[14.5px]" style={dim}>No items added yet</p>
             )}
-          </div>
-        </div>
-      )}
 
-      {/* ── Fixed scroll-hint arrow (fades/grows as user scrolls) ── */}
-      {showOrderPanel && !summaryExpanded && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "40px",
-            left: "50%",
-            transform: `translateX(-50%) scale(${0.25 + 0.75 * arrowProgress})`,
-            opacity: arrowProgress,
-            transformOrigin: "center bottom",
-            pointerEvents: "none",
-            zIndex: 52,
-          }}
-        >
-          <svg width="16" height="36" viewBox="0 0 16 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="8" y1="0" x2="8" y2="28" stroke="white" strokeWidth="1"/>
-            <polyline points="2,22 8,34 14,22" fill="none" stroke="white" strokeWidth="1"/>
-          </svg>
-        </div>
-      )}
-
-      {/* ── ORDER SUMMARY EXPANDED OVERLAY ── */}
-      {showOrderPanel && (
-        <div
-          className="fixed inset-0 z-[55] overflow-hidden"
-          style={{
-            transform: summaryExpanded ? "translateY(0)" : "translateY(100%)",
-            transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1)",
-            background: "hsl(var(--background))",
-            borderLeft: `1px solid hsl(var(--border))`,
-            maxWidth: "500px",
-            marginLeft: "auto",
-          }}
-        >
-          <div
-            ref={summaryOverlayRef}
-            className="h-full overflow-y-auto p-5"
-            style={{
-              filter: summaryExpanded ? "blur(0px)" : "blur(6px)",
-              opacity: summaryExpanded ? 1 : 0,
-              transition: "filter 0.4s ease 0.05s, opacity 0.4s ease 0.05s",
-            }}
-            onWheel={(e) => {
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && e.deltaY < -50) {
-                setSummaryExpanded(false);
-                panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
-            onTouchStart={(e) => { (summaryOverlayRef.current as any)._touchY = e.touches[0].clientY; }}
-            onTouchMove={(e) => {
-              const startY = (summaryOverlayRef.current as any)._touchY ?? 0;
-              const deltaY = startY - e.touches[0].clientY;
-              if ((summaryOverlayRef.current?.scrollTop ?? 1) === 0 && deltaY < -50) {
-                setSummaryExpanded(false);
-                panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
-          >
-            {/* Overlay header — same style as NEW ORDER */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[16px] font-light tracking-[0.15em] uppercase">Order Summary</h2>
-              <button
-                onClick={() => { setSummaryExpanded(false); panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}
-                style={dim}
-                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {orderLines.length === 0 ? (
-              <p className="text-[13px]" style={dim}>No items added yet.</p>
-            ) : (() => {
+            {/* ── Inline ORDER SUMMARY (fades/unblurs as you scroll) ── */}
+            {orderLines.length > 0 && (() => {
               const today = new Date();
               const dd = String(today.getDate()).padStart(2, "0");
               const mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -2925,7 +2851,17 @@ const IndexPhone = () => {
               const grandUnits = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1), 0);
 
               return (
-                <div>
+                <div
+                  ref={summaryRef}
+                  style={{
+                    opacity: summaryProgress,
+                    filter: `blur(${(1 - summaryProgress) * 8}px)`,
+                    transform: `scale(${0.95 + 0.05 * summaryProgress})`,
+                    transformOrigin: "top center",
+                    paddingBottom: "60px",
+                  }}
+                >
+                  <h2 className="text-[16px] font-light tracking-[0.15em] uppercase mb-6">Order Summary</h2>
                   {supplierNames.map((supplier, sIdx) => {
                     const grpLines = groups[supplier];
                     const grn = multi ? `OFFICE ${dateStr} (${sIdx + 1})` : `OFFICE ${dateStr}`;
@@ -2999,4 +2935,3 @@ const IndexPhone = () => {
 };
 
 export default IndexPhone;
-
