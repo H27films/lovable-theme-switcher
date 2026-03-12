@@ -242,6 +242,8 @@ const IndexPhone = () => {
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [summaryProgress, setSummaryProgress] = useState(0);
+  const [panelScrollDir, setPanelScrollDir] = useState<"up" | "down">("down");
+  const panelPrevScrollTop = React.useRef(0);
   const [summarySpacerHeight, setSummarySpacerHeight] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -953,6 +955,10 @@ const IndexPhone = () => {
     if (!panel || !summary) return;
     const handleScroll = () => {
       const scrollTop = panel.scrollTop;
+      // track panel scroll direction
+      if (scrollTop > panelPrevScrollTop.current) setPanelScrollDir("down");
+      else if (scrollTop < panelPrevScrollTop.current) setPanelScrollDir("up");
+      panelPrevScrollTop.current = scrollTop;
       if (scrollTop === 0) { setSummaryProgress(0); return; }
       // progress: 0 when not scrolled, 1 when summary.offsetTop reached (summary at panel top)
       const summaryTop = summary.offsetTop;
@@ -2570,10 +2576,14 @@ const IndexPhone = () => {
                 transition: "filter 0.1s ease, transform 0.1s ease, mask-image 0.1s ease, WebkitMaskImage 0.1s ease",
                 filter: summaryProgress > 0 ? `blur(${summaryProgress * 4}px)` : "none",
                 WebkitMaskImage: summaryProgress > 0
-                  ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
+                  ? panelScrollDir === "down"
+                    ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
+                    : `linear-gradient(to top, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
                   : "none",
                 maskImage: summaryProgress > 0
-                  ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
+                  ? panelScrollDir === "down"
+                    ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
+                    : `linear-gradient(to top, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
                   : "none",
               }}
             >
