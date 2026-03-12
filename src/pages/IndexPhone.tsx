@@ -2836,13 +2836,14 @@ const IndexPhone = () => {
               <div
                 ref={summaryInlineRef}
                 style={{
-                  marginTop: "32px",
+                  marginTop: "16px",
                   opacity: summaryProgress,
-                  transform: `scale(${0.88 + 0.12 * summaryProgress})`,
+                  transform: `scale(${0.72 + 0.28 * summaryProgress})`,
                   transformOrigin: "top center",
-                  transition: "opacity 0.1s ease, transform 0.1s ease",
+                  filter: `blur(${(1 - summaryProgress) * 6}px)`,
+                  transition: "opacity 0.1s ease, transform 0.1s ease, filter 0.1s ease",
                   pointerEvents: summaryProgress > 0.05 ? "auto" : "none",
-                  paddingBottom: "60px",
+                  paddingBottom: "120vh",
                 }}
               >
                 {/* divider */}
