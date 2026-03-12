@@ -964,6 +964,20 @@ const IndexPhone = () => {
     if (!showOrderPanel) { setSummaryExpanded(false); setArrowProgress(0); }
   }, [showOrderPanel]);
 
+  // If panel is open but content isn't scrollable (few items), make arrow fully visible
+  useEffect(() => {
+    if (!showOrderPanel || orderLines.length === 0) return;
+    const el = panelScrollRef.current;
+    if (!el) return;
+    // Use a short timeout to let the DOM update first
+    const t = setTimeout(() => {
+      if (el.scrollHeight <= el.clientHeight + 10) {
+        setArrowProgress(1);
+      }
+    }, 50);
+    return () => clearTimeout(t);
+  }, [showOrderPanel, orderLines]);
+
 
   useEffect(() => {
     if (orderActiveIndex >= 0 && orderListRef.current) {
@@ -2838,6 +2852,7 @@ const IndexPhone = () => {
       {/* ── Fixed scroll-hint arrow (fades/grows as user scrolls) ── */}
       {showOrderPanel && !summaryExpanded && (
         <div
+          onClick={() => setSummaryExpanded(true)}
           style={{
             position: "fixed",
             bottom: "40px",
@@ -2845,7 +2860,8 @@ const IndexPhone = () => {
             transform: `translateX(-50%) scale(${0.25 + 0.75 * arrowProgress})`,
             opacity: arrowProgress,
             transformOrigin: "center bottom",
-            pointerEvents: "none",
+            pointerEvents: arrowProgress > 0 ? "auto" : "none",
+            cursor: "pointer",
             zIndex: 52,
           }}
         >
