@@ -21,10 +21,11 @@ interface OfficeProduct {
 
 interface BranchNurYadiSimpleProps {
   onBack: () => void;
+  onBackToMain: () => void;
   products: OfficeProduct[];
 }
 
-const BranchNurYadiSimple = ({ onBack, products }: BranchNurYadiSimpleProps) => {
+const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSimpleProps) => {
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -280,14 +281,14 @@ const BranchNurYadiSimple = ({ onBack, products }: BranchNurYadiSimpleProps) => 
         paddingTop: "8px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)",
         filter: "blur(1px)", opacity: 0.25,
       }}>
-        {(["BRANCHES", "ORDER"] as const).map(item => (
+        {(["SEARCH", "ORDER"] as const).map(item => (
           <button
             key={item}
-            onClick={onBack}
+            onClick={item === "SEARCH" ? onBackToMain : undefined}
             style={{
               display: "block", fontSize: "clamp(13px, 3.5vw, 20px)", fontWeight: 300,
               letterSpacing: "0.06em", color: "hsl(var(--foreground))",
-              background: "none", border: "none", cursor: "pointer", textAlign: "left",
+              background: "none", border: "none", cursor: item === "SEARCH" ? "pointer" : "default", textAlign: "left",
               fontFamily: "Raleway, inherit", lineHeight: 1.35, padding: 0,
             }}
           >

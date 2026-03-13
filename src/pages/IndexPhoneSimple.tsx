@@ -108,6 +108,24 @@ const IndexPhoneSimple = () => {
     }, 280);
   };
 
+  const navigateBackToMain = () => {
+    // Animate back to main menu from branch page (full reset)
+    setBranchTransitionPhase("page-leaving");
+    setTransitionPhase("section-leaving");
+    setTimeout(() => {
+      setActiveBranch(null);
+      setActiveSection(null);
+      setBranchTransitionPhase("at-list");
+      setSimpleSearchMode("idle");
+      setSimpleSearch("");
+      setSimpleSelectedProduct(null);
+      setSimpleSelectedSupplier(null);
+      setSimpleShowDropdown(false);
+      setTransitionPhase("menu-entering");
+      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
+    }, 280);
+  };
+
   const [simpleSearchMode, setSimpleSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
   const [simpleSearch, setSimpleSearch] = useState("");
   const [simpleShowDropdown, setSimpleShowDropdown] = useState(false);
@@ -550,10 +568,10 @@ const IndexPhoneSimple = () => {
                   opacity: branchTransitionPhase === "at-page" ? 1 : 0,
                   pointerEvents: branchTransitionPhase === "at-page" ? "auto" : "none",
                 }}>
-                  {activeBranch === "office"   && <BranchOfficeSimple  onBack={navigateBackToBranches} products={products} />}
-                  {activeBranch === "boudoir"  && <BranchBoudoirSimple onBack={navigateBackToBranches} products={products} />}
-                  {activeBranch === "chic"     && <BranchChicSimple    onBack={navigateBackToBranches} products={products} />}
-                  {activeBranch === "nuryadi"  && <BranchNurYadiSimple onBack={navigateBackToBranches} products={products} />}
+                  {activeBranch === "office"   && <BranchOfficeSimple  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "boudoir"  && <BranchBoudoirSimple onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "chic"     && <BranchChicSimple    onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "nuryadi"  && <BranchNurYadiSimple onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                 </div>
 
               </div>
