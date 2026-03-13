@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { X, Search, Building2 } from "lucide-react";
+import { X, Search } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -91,7 +91,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
             onFocus={() => {
               // Keep result/supplier view on focus — typing will clear it
             }}
-            placeholder="Enter Product / Supplier"
+            placeholder="Enter Product"
             style={{
               flex: 1, background: "none", border: "none", outline: "none",
               fontSize: "15px", fontFamily: "Raleway, inherit",
@@ -123,10 +123,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
           const favourites = allMatched.filter(p => isTrue(p["OfficeFavourites"])).slice(0, 6);
           const colours = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && isTrue(p["Colour"])).slice(0, 6);
           const regular = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && !isTrue(p["Colour"])).slice(0, 6);
-          const matchedSuppliers = Array.from(new Set(
-            products.map(p => p["SUPPLIER"]).filter((s): s is string => !!s && s.toLowerCase().includes(q))
-          )).sort().slice(0, 5);
-          const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0 || matchedSuppliers.length > 0;
+          const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
             <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", paddingTop: "14px", paddingBottom: "4px" }}>
@@ -146,22 +143,13 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
                   <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>{(p as any)[BALANCE_KEY]}</div>
                 )}
               </div>
-              <div style={{ fontSize: "12px", marginTop: "2px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{p["SUPPLIER"]}</div>
+
             </div>
           );
 
           return (
             <div>
-              {matchedSuppliers.map((supplier) => (
-                <div
-                  key={`sup-${supplier}`}
-                  onClick={() => { setSelectedSupplier(supplier); setSearch(supplier); setShowDropdown(false); setSearchMode("supplier"); }}
-                  style={{ padding: "12px 0", borderBottom: "0.5px solid hsl(var(--border))", cursor: "pointer", display: "flex", alignItems: "center" }}
-                >
-                  <span style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{supplier}</span>
-                  <Building2 size={11} style={{ color: "hsl(var(--muted-foreground))", opacity: 0.4, flexShrink: 0, marginLeft: "5px" }} />
-                </div>
-              ))}
+
               {favourites.length > 0 && (
                 <>
                   <SectionHeader label="Office Favourites" />
