@@ -422,7 +422,7 @@ const IndexPhoneSimple = () => {
               <div style={{
                 flexShrink: 0, paddingLeft: "20px", paddingRight: "20px",
                 paddingTop: "8px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)",
-                filter: "blur(2px)", opacity: 0.25,
+                filter: "blur(1px)", opacity: 0.25,
               }}>
                 {(["BRANCHES", "ORDER"] as const).map(item => (
                   <button
@@ -454,14 +454,14 @@ const IndexPhoneSimple = () => {
                 {/* Branch list */}
                 <div style={{ display: "flex", position: "relative", minHeight: "100dvh", overflow: "hidden" }}>
 
-                  {/* Ghost menu on left — blurred, partially visible, tappable to go back */}
+                  {/* Ghost menu on left — partially visible, tappable to go back */}
                   <div
                     onClick={navigateBack}
                     style={{
-                      position: "absolute", left: 0, top: 0, bottom: 0, width: "30%",
+                      position: "absolute", left: "-15%", top: 0, bottom: 0, width: "35%",
                       display: "flex", flexDirection: "column", justifyContent: "center",
                       paddingLeft: "12px", cursor: "pointer",
-                      filter: "blur(6px)", opacity: 0.25,
+                      opacity: 0.3,
                       userSelect: "none", zIndex: 1,
                     }}
                   >
@@ -470,6 +470,7 @@ const IndexPhoneSimple = () => {
                         fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
                         color: "hsl(var(--foreground))", lineHeight: 1, padding: "2px 0",
                         overflow: "hidden", whiteSpace: "nowrap",
+                        filter: item === "BRANCHES" ? "blur(2px)" : "blur(4px)",
                       }}>{item}</div>
                     ))}
                   </div>
