@@ -521,15 +521,18 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
         />
       )}
 
+      {/* Slide-in panel animation */}
+      <style>{`@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
+
       {/* USAGE Panel */}
+      {activePanel === "USAGE" && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        width: "100%",
+        width: "100vw",
         background: "hsl(var(--background))",
         zIndex: 60,
         display: "flex", flexDirection: "column",
-        transform: activePanel === "USAGE" ? "translateX(0)" : "translateX(100%)",
-        transition: "transform 0.3s ease-in-out",
+        animation: "slideInRight 0.3s ease-in-out",
       }}>
         {/* USAGE top bar */}
         <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
@@ -709,16 +712,17 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
         )}
       </div>
 
+      )}
+
       {/* ORDER Panel (placeholder) */}
+      {activePanel === "ORDER" && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        width: "100%",
+        width: "100vw",
         background: "hsl(var(--background))",
         zIndex: 60,
         display: "flex", flexDirection: "column",
-        transform: activePanel === "ORDER" ? "translateX(0)" : "translateX(100%)",
-        transition: "transform 0.3s ease-in-out",
-        boxShadow: "-4px 0 20px rgba(0,0,0,0.08)",
+        animation: "slideInRight 0.3s ease-in-out",
       }}>
         <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -733,16 +737,17 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
         </div>
       </div>
 
+      )}
+
       {/* CASH Panel (placeholder) */}
+      {activePanel === "CASH" && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        width: "100%",
+        width: "100vw",
         background: "hsl(var(--background))",
         zIndex: 60,
         display: "flex", flexDirection: "column",
-        transform: activePanel === "CASH" ? "translateX(0)" : "translateX(100%)",
-        transition: "transform 0.3s ease-in-out",
-        boxShadow: "-4px 0 20px rgba(0,0,0,0.08)",
+        animation: "slideInRight 0.3s ease-in-out",
       }}>
         <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -756,6 +761,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
           <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Cash entry — coming soon</span>
         </div>
       </div>
+      )}
 
     </div>
   );
