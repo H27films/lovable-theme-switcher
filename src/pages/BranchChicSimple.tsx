@@ -315,17 +315,17 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
             )}
 
             {/* Log table */}
-            <div>
+            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               {/* Column headers */}
               {selectedProduct ? (
-                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.6fr 0.7fr 1fr", gap: "6px", marginBottom: "6px" }}>
-                  {["Date", "Type", "Qty", "End Bal"].map(h => (
+                <div style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", marginBottom: "6px" }}>
+                  {["Date", "Qty", "End Bal", "Type"].map(h => (
                     <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
                   ))}
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 1.1fr 0.6fr 0.9fr", gap: "6px", marginBottom: "6px" }}>
-                  {["Date", "Product", "Type", "Qty", "End Bal"].map(h => (
+                <div style={{ display: "grid", gridTemplateColumns: "60px 110px 50px 65px 130px", gap: "6px", minWidth: "439px", marginBottom: "6px" }}>
+                  {["Date", "Product", "Qty", "End Bal", "Type"].map(h => (
                     <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
                   ))}
                 </div>
@@ -341,27 +341,27 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
                 const prevDateStr = idx > 0 ? new Date(activeLog[idx - 1].DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : null;
                 const showDate = dateStr !== prevDateStr;
                 return selectedProduct ? (
-                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.6fr 0.7fr 1fr", gap: "6px", padding: "8px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
+                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", padding: "8px 0" }}>
                     <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
                       {showDate ? dateStr : ""}
                     </div>
-                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
                     <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
                       {row.QTY > 0 ? "+" : ""}{row.QTY}
                     </div>
                     <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                   </div>
                 ) : (
-                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 1.1fr 0.6fr 0.9fr", gap: "6px", padding: "8px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
+                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "60px 110px 50px 65px 130px", gap: "6px", minWidth: "439px", padding: "8px 0" }}>
                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
                       {showDate ? dateStr : ""}
                     </div>
                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row["PRODUCT NAME"] || "—"}</div>
-                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
                       {row.QTY > 0 ? "+" : ""}{row.QTY}
                     </div>
                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                   </div>
                 );
               })}
