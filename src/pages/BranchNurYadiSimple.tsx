@@ -205,7 +205,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
       </div>
 
       {/* MIDDLE SCROLLABLE */}
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
+      <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
 
         {/* Dropdown */}
         {showDropdown && search.length > 0 && (() => {
@@ -270,7 +270,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
 
         {/* Content area — tabs log (always shown when no dropdown) */}
         {!showDropdown && (
-          <div style={{ paddingTop: "16px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+          <div style={{ paddingTop: "16px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
 
             {/* Product card (when product selected) */}
             {selectedProduct && (
@@ -325,8 +325,8 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
             )}
 
             {/* Log table */}
-            <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", display: "flex", flexDirection: "column", WebkitOverflowScrolling: "touch" }}>
-              <div style={{ minWidth: selectedProduct ? "345px" : "479px", flex: 1, display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0, WebkitOverflowScrolling: "touch" }}>
+              <div style={{ minWidth: selectedProduct ? "345px" : "479px", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               {/* Column headers */}
               {selectedProduct ? (
                 <div style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", marginBottom: "6px" }}>
@@ -341,7 +341,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
                   ))}
                 </div>
               )}
-              <div style={{ flex: 1, overflowY: "auto" }}>
+              <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
               {loadingLog && (
                 <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
               )}
