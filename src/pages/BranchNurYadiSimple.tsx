@@ -317,29 +317,54 @@ const BranchNuryadiSimple = ({ onBack, onBackToMain, products }: BranchNuryadiSi
             {/* Log table */}
             <div>
               {/* Column headers */}
-              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                {["Date", "Type", "Qty", "End Bal"].map(h => (
-                  <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
-                ))}
-              </div>
+              {selectedProduct ? (
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.6fr 0.7fr 1fr", gap: "6px", marginBottom: "6px" }}>
+                  {["Date", "Type", "Qty", "End Bal"].map(h => (
+                    <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 1.1fr 0.6fr 0.9fr", gap: "6px", marginBottom: "6px" }}>
+                  {["Date", "Product", "Type", "Qty", "End Bal"].map(h => (
+                    <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
+                  ))}
+                </div>
+              )}
               {loadingLog && (
-                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
+                <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
               )}
               {!loadingLog && activeLog.length === 0 && (
-                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
+                <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
               )}
-              {!loadingLog && activeLog.map(row => (
-                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", padding: "10px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                    {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+              {!loadingLog && activeLog.map((row, idx) => {
+                const dateStr = new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                const prevDateStr = idx > 0 ? new Date(activeLog[idx - 1].DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : null;
+                const showDate = dateStr !== prevDateStr;
+                return selectedProduct ? (
+                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.6fr 0.7fr 1fr", gap: "6px", padding: "8px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                      {showDate ? dateStr : ""}
+                    </div>
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
+                      {row.QTY > 0 ? "+" : ""}{row.QTY}
+                    </div>
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                   </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
-                    {row.QTY > 0 ? "+" : ""}{row.QTY}
+                ) : (
+                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 1.1fr 0.6fr 0.9fr", gap: "6px", padding: "8px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                      {showDate ? dateStr : ""}
+                    </div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row["PRODUCT NAME"] || "—"}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
+                      {row.QTY > 0 ? "+" : ""}{row.QTY}
+                    </div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                   </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
