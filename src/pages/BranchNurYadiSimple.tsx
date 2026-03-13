@@ -324,7 +324,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
                   ))}
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "60px 110px 50px 65px 130px", gap: "6px", minWidth: "439px", marginBottom: "6px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "60px 160px 50px 65px 130px", gap: "6px", minWidth: "489px", marginBottom: "6px" }}>
                   {["Date", "Product", "Qty", "End Bal", "Type"].map(h => (
                     <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
                   ))}
@@ -352,7 +352,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
                     <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                   </div>
                 ) : (
-                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "60px 110px 50px 65px 130px", gap: "6px", minWidth: "439px", padding: "8px 0" }}>
+                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "60px 160px 50px 65px 130px", gap: "6px", minWidth: "489px", padding: "8px 0" }}>
                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
                       {showDate ? dateStr : ""}
                     </div>
