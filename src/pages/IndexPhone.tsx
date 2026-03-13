@@ -1852,17 +1852,8 @@ const IndexPhone = () => {
 
               </div>
 
-              {/* Office Section */}
-              <input
-                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
-                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
-                value={newProduct["OFFICE SECTION"]}
-                onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
-                placeholder="Office section (e.g. 12B)"
-              />
-
               {/* Prices */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-2 gap-2 mb-4 mt-8" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: "1.5rem" }}>
                 <div>
                   <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Supplier Price</p>
                   <p className="text-[13px] font-light">RM {fmtPrice(selectedProduct["SUPPLIER PRICE"])}</p>
