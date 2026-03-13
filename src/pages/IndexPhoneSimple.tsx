@@ -16,6 +16,7 @@ interface OfficeProduct {
   "CUSTOMER PRICE": number | null;
   "OFFICE BALANCE": number | null;
   "OFFICE SECTION": string | null;
+  "UNITS/ORDER": number | null;
   "BOUDOIR BALANCE": number | null;
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
@@ -166,7 +167,7 @@ const IndexPhoneSimple = () => {
             {/* Active/Result: Search expanded */}
             <div style={{
               position: "absolute", inset: 0, display: "flex", flexDirection: "column",
-              paddingLeft: "12px", paddingRight: "12px", paddingTop: "72px", paddingBottom: "40px",
+              paddingLeft: "12px", paddingRight: "12px", paddingTop: "32px", paddingBottom: "max(40px, env(safe-area-inset-bottom, 40px))",
               opacity: simpleSearchMode !== "idle" ? 1 : 0,
               transform: simpleSearchMode !== "idle" ? "translateY(0)" : "translateY(5%)",
               transition: "opacity 0.38s ease, transform 0.38s ease",
@@ -177,9 +178,9 @@ const IndexPhoneSimple = () => {
               <button
                 onClick={() => { setSimpleSearchMode("idle"); setSimpleSearch(""); setSimpleSelectedProduct(null); setSimpleShowDropdown(false); }}
                 style={{
-                  fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                  fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em",
                   color: "hsl(var(--foreground))",
-                  opacity: simpleSearchMode === "result" ? 0.25 : 1,
+                  opacity: simpleSearchMode === "result" ? 0.12 : 1,
                   background: "none", border: "none", cursor: "pointer", textAlign: "left",
                   padding: 0, fontFamily: "inherit", lineHeight: 1, transition: "opacity 0.35s ease",
                 }}
@@ -187,9 +188,9 @@ const IndexPhoneSimple = () => {
                 SEARCH
               </button>
 
-              {/* Search input row */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "16px" }}>
-                <Search size={18} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+              {/* Search input row — hidden once product selected */}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px", opacity: simpleSearchMode === "result" ? 0 : 1, pointerEvents: simpleSearchMode === "result" ? "none" : "auto", transition: "opacity 0.25s ease" }}>
+                <Search size={16} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                 <input
                   ref={simpleInputRef}
                   type="text"
@@ -218,13 +219,15 @@ const IndexPhoneSimple = () => {
                   </button>
                 )}
               </div>
-              <div style={{ borderBottom: "0.5px solid hsl(var(--border))", marginTop: "10px" }} />
 
               {/* Dropdown */}
               {simpleShowDropdown && simpleSearch.length > 0 && (
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {products
-                    .filter(p => p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase()))
+                    .filter(p =>
+                      p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase()) &&
+                      (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
+                    )
                     .slice(0, 18)
                     .map((p, i, arr) => (
                       <div
@@ -240,7 +243,10 @@ const IndexPhoneSimple = () => {
                         <div style={{ fontSize: "13px", marginTop: "2px", color: "hsl(var(--muted-foreground))" }}>{p["SUPPLIER"]}</div>
                       </div>
                     ))}
-                  {products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase())).length === 0 && (
+                  {products.filter(p =>
+                    p["PRODUCT NAME"].toLowerCase().includes(simpleSearch.toLowerCase()) &&
+                    (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
+                  ).length === 0 && (
                     <div style={{ padding: "20px 0", fontSize: "15px", color: "hsl(var(--muted-foreground))" }}>No products found</div>
                   )}
                 </div>
@@ -248,19 +254,15 @@ const IndexPhoneSimple = () => {
 
               {/* Product result card */}
               {simpleSearchMode === "result" && simpleSelectedProduct && !simpleShowDropdown && (
-                <div style={{ flex: 1, overflowY: "auto", marginTop: "24px" }}>
-                  <div style={{ fontSize: "clamp(22px, 6.5vw, 34px)", fontWeight: 300, lineHeight: 1.2, color: "hsl(var(--foreground))" }}>
-                    {simpleSelectedProduct["PRODUCT NAME"]}
-                  </div>
-                  <div style={{ borderBottom: "0.5px solid hsl(var(--foreground))", marginTop: "14px", marginBottom: "18px", opacity: 0.18 }} />
+                <div style={{ flex: 1, overflowY: "auto", marginTop: "20px" }}>
 
-                  <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Supplier</div>
-                  <div style={{ fontSize: "15px", fontWeight: 300, marginBottom: "24px", color: "hsl(var(--foreground))" }}>
-                    {simpleSelectedProduct["SUPPLIER"] || "—"}
+                  {/* Product name only — no supplier row, no divider */}
+                  <div style={{ fontSize: "clamp(18px, 5vw, 26px)", fontWeight: 300, lineHeight: 1.2, color: "hsl(var(--foreground))", marginBottom: "28px" }}>
+                    {simpleSelectedProduct["PRODUCT NAME"]}
                   </div>
 
                   {/* Prices */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "20px", marginBottom: "28px" }}>
                     {([
                       { label: "Supplier Price", val: simpleSelectedProduct["SUPPLIER PRICE"] },
                       { label: "Branch Price", val: simpleSelectedProduct["BRANCH PRICE"] },
@@ -268,7 +270,7 @@ const IndexPhoneSimple = () => {
                       { label: "Staff Price", val: simpleSelectedProduct["STAFF PRICE"] },
                     ] as { label: string; val: number | null }[]).map(({ label, val }) => (
                       <div key={label}>
-                        <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>{label}</div>
+                        <div style={{ fontSize: "10px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "5px" }}>{label}</div>
                         <div style={{ fontSize: "15px", fontWeight: 300, color: "hsl(var(--foreground))" }}>
                           {val != null ? `RM ${val.toFixed(2)}` : "—"}
                         </div>
@@ -276,18 +278,20 @@ const IndexPhoneSimple = () => {
                     ))}
                   </div>
 
-                  {/* Balance + Section */}
-                  <div style={{ borderTop: "0.5px solid hsl(var(--border))", marginTop: "28px", paddingTop: "20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "18px" }}>
-                      <div>
-                        <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "5px" }}>Office Balance</div>
+                  {/* Balance + Section — all labels same size, Section aligned to Nur Yadi column */}
+                  <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "20px" }}>
+                    {/* Row 1: Office Balance | gap | Section (right-aligned to 3rd col) */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "18px" }}>
+                      <div style={{ gridColumn: "1 / 3" }}>
+                        <div style={{ fontSize: "10px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "5px" }}>Office Balance</div>
                         <div style={{ fontSize: "15px", fontWeight: 300, color: "hsl(var(--foreground))" }}>{simpleSelectedProduct["OFFICE BALANCE"] ?? "—"}</div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "5px" }}>Section</div>
+                      <div>
+                        <div style={{ fontSize: "10px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "5px" }}>Section</div>
                         <div style={{ fontSize: "15px", fontWeight: 300, color: "hsl(var(--foreground))" }}>{simpleSelectedProduct["OFFICE SECTION"] || "—"}</div>
                       </div>
                     </div>
+                    {/* Row 2: Boudoir | Chic | Nur Yadi */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
                       {([
                         { label: "Boudoir", key: "BOUDOIR BALANCE" },
@@ -296,7 +300,7 @@ const IndexPhoneSimple = () => {
                       ] as { label: string; key: keyof OfficeProduct }[]).map(({ label, key }) => (
                         <div key={label}>
                           <div style={{ fontSize: "10px", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "5px" }}>{label}</div>
-                          <div style={{ fontSize: "14px", fontWeight: 300, color: "hsl(var(--foreground))" }}>{(simpleSelectedProduct as any)[key] ?? "—"}</div>
+                          <div style={{ fontSize: "15px", fontWeight: 300, color: "hsl(var(--foreground))" }}>{(simpleSelectedProduct as any)[key] ?? "—"}</div>
                         </div>
                       ))}
                     </div>
@@ -306,17 +310,17 @@ const IndexPhoneSimple = () => {
 
               {!simpleShowDropdown && simpleSearchMode === "active" && <div style={{ flex: 1 }} />}
 
-              {/* BRANCHES + ORDER at bottom */}
-              <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+              {/* BRANCHES + ORDER at bottom — just go back to idle, small + blurred */}
+              <div style={{ marginTop: "auto", paddingTop: "24px", paddingBottom: "env(safe-area-inset-bottom, 32px)", filter: "blur(2.5px)", opacity: 0.3 }}>
                 {(["BRANCHES", "ORDER"] as const).map(item => (
                   <button
                     key={item}
-                    onClick={() => { setSimpleSearchMode("idle"); setTimeout(() => { navigateTo(item === "ORDER" ? "order" : "branches"); }, 200); }}
+                    onClick={() => { setSimpleSearchMode("idle"); setSimpleSearch(""); setSimpleSelectedProduct(null); setSimpleShowDropdown(false); }}
                     style={{
-                      display: "block", fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300,
-                      letterSpacing: "0.05em", color: "hsl(var(--muted-foreground))",
+                      display: "block", fontSize: "clamp(20px, 5.5vw, 32px)", fontWeight: 300,
+                      letterSpacing: "0.06em", color: "hsl(var(--foreground))",
                       background: "none", border: "none", cursor: "pointer", textAlign: "left",
-                      fontFamily: "inherit", lineHeight: 1, padding: "1px 0", opacity: 0.4,
+                      fontFamily: "inherit", lineHeight: 1.2, padding: "1px 0",
                     }}
                   >
                     {item}
