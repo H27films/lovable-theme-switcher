@@ -1526,8 +1526,8 @@ const IndexPhone = () => {
                                       {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                     </td>
                                     <td className="text-[12px] font-light py-3">{row["PRODUCT NAME"] ?? "—"}</td>
-                                    <td className="text-[12px] font-light py-3 text-center" style={{ color: row.QTY > 0 ? "hsl(var(--green))" : "hsl(var(--red))" }}>
-                                      {row.QTY > 0 ? "+" : ""}{row.QTY}
+                                    <td className="text-[12px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--green))" : "hsl(var(--red))" }}>
+                                      {row.QTY < 0 ? "+" : ""}{-row.QTY}
                                     </td>
                                     <td className="text-[11px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
                                   </tr>
@@ -1558,8 +1558,8 @@ const IndexPhone = () => {
                                       <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 tracking-wide uppercase" style={dim}>{grn}</td>
                                       <td className="text-[12px] font-light py-3" style={dim}>{uniqueProducts} {uniqueProducts === 1 ? "product" : "products"}</td>
                                       <td className="text-[12px] font-light py-3" style={dim}>{counterparty}</td>
-                                      <td className="text-[12px] font-light py-3 text-center" style={{ color: isSupplier ? "#4ade80" : "#f87171" }}>
-                                        {isSupplier ? "+" : "−"}{totalUnits} units
+                                      <td className="text-[12px] font-light py-3 text-center" style={{ color: isSupplier ? "#f87171" : "#4ade80" }}>
+                                        {isSupplier ? "−" : "+"}{totalUnits} units
                                       </td>
                                       <td className="py-3 text-center">
                                         <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
@@ -1571,8 +1571,8 @@ const IndexPhone = () => {
                                         <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-2.5 tracking-wide uppercase" style={dim}>{r.GRN ?? "—"}</td>
                                         <td className="text-[13px] font-light py-2.5">{r["PRODUCT NAME"] ?? "—"}</td>
                                         <td className="text-[12px] font-light py-2.5" style={dim}>{isSupplier ? (r.SUPPLIER ?? "—") : (r.BRANCH ?? "—")}</td>
-                                        <td className="text-[13px] font-light py-2.5 text-center" style={{ color: isSupplier ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
-                                          {r.QTY > 0 ? "+" : ""}{r.QTY}
+                                        <td className="text-[13px] font-light py-2.5 text-center" style={{ color: r.QTY < 0 ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
+                                          {r.QTY < 0 ? "+" : ""}{-r.QTY}
                                         </td>
                                         <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{r["OFFICE BALANCE"] ?? "—"}</td>
                                       </tr>
