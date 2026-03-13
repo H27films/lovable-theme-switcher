@@ -316,10 +316,10 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
 
             {/* Spacer + RECENT label (only for branch-wide view) */}
             {!selectedProduct && (
-              <div style={{ height: "28vh" }} />
+              <div style={{ height: "16vh" }} />
             )}
             {!selectedProduct && (
-              <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>
                 {activeTab}
               </div>
             )}
@@ -384,7 +384,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
       {/* BOTTOM BLUR BAR */}
       <div style={{
         flexShrink: 0, paddingLeft: "20px", paddingRight: "20px",
-        paddingTop: "8px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)",
+        paddingTop: "4px", paddingBottom: "max(env(safe-area-inset-bottom, 12px), 12px)",
         filter: "blur(1px)", opacity: 0.25,
       }}>
         {(["SEARCH", "ORDER"] as const).map(item => (
@@ -392,7 +392,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
             key={item}
             onClick={item === "SEARCH" ? onBackToMain : undefined}
             style={{
-              display: "block", fontSize: "clamp(13px, 3.5vw, 20px)", fontWeight: 300,
+              display: "block", fontSize: "clamp(10px, 2.8vw, 15px)", fontWeight: 300,
               letterSpacing: "0.06em", color: "hsl(var(--foreground))",
               background: "none", border: "none", cursor: item === "SEARCH" ? "pointer" : "default", textAlign: "left",
               fontFamily: "Raleway, inherit", lineHeight: 1.35, padding: 0,
