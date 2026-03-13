@@ -210,12 +210,8 @@ const IndexPhoneSimple = () => {
                       setSimpleShowDropdown(val.length > 0);
                     }}
                     onFocus={() => {
-                      if (simpleSearchMode === "result" || simpleSearchMode === "supplier") {
-                        setSimpleSearch("");
-                        setSimpleSelectedProduct(null);
-                        setSimpleSelectedSupplier(null);
-                        setSimpleSearchMode("active");
-                      }
+                      // Do nothing on focus — keep result/supplier view intact.
+                      // Typing will trigger onChange which clears and shows dropdown.
                     }}
                     placeholder="Enter Product.."
                     style={{
