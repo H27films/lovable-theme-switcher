@@ -62,7 +62,7 @@ const IndexPhoneSimple = () => {
       setActiveSection(section);
       setTransitionPhase("section-entering");
       requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-section")));
-    }, 350);
+    }, 280);
   };
 
   const navigateBack = () => {
@@ -76,7 +76,7 @@ const IndexPhoneSimple = () => {
       setSimpleShowDropdown(false);
       setTransitionPhase("menu-entering");
       requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
-    }, 350);
+    }, 280);
   };
 
   const [simpleSearchMode, setSimpleSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
@@ -93,22 +93,22 @@ const IndexPhoneSimple = () => {
   }, []);
 
   const menuTransitionStyle: React.CSSProperties = {
-    transition: "transform 0.1s cubic-bezier(0.4,0,0.2,1), filter 0.1s ease, opacity 0.1s ease",
+    transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
     transform:
       transitionPhase === "menu-leaving" ? "translateX(-30%)" :
       transitionPhase === "menu-entering" ? "translateX(-30%)" : "translateX(0)",
     filter:
-      transitionPhase === "menu-leaving" || transitionPhase === "menu-entering" ? "blur(14px)" : "blur(0px)",
+      transitionPhase === "menu-leaving" || transitionPhase === "menu-entering" ? "blur(6px)" : "blur(0px)",
     opacity: transitionPhase === "menu-leaving" || transitionPhase === "menu-entering" ? 0 : 1,
   };
 
   const sectionTransitionStyle: React.CSSProperties = {
-    transition: "transform 0.2s cubic-bezier(0.4,0,0.2,1), filter 0.2s ease, opacity 0.2s ease",
+    transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
     transform:
       transitionPhase === "section-entering" ? "translateX(30%)" :
       transitionPhase === "section-leaving" ? "translateX(30%)" : "translateX(0)",
     filter:
-      transitionPhase === "section-entering" || transitionPhase === "section-leaving" ? "blur(14px)" : "blur(0px)",
+      transitionPhase === "section-entering" || transitionPhase === "section-leaving" ? "blur(6px)" : "blur(0px)",
     opacity: transitionPhase === "section-entering" || transitionPhase === "section-leaving" ? 0 : 1,
   };
 
