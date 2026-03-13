@@ -116,7 +116,7 @@ const IndexPhoneSimple = () => {
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
       {/* Fixed theme toggle */}
-      <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 60 }}>
+      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60 }}>
         <span onClick={toggleTheme} style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }} title="Switch theme">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
             <circle cx="12" cy="12" r="4" />
