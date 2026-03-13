@@ -93,7 +93,7 @@ const IndexPhoneSimple = () => {
   }, []);
 
   const menuTransitionStyle: React.CSSProperties = {
-    transition: "transform 0.38s cubic-bezier(0.4,0,0.2,1), filter 0.38s ease, opacity 0.38s ease",
+    transition: "transform 0.1s cubic-bezier(0.4,0,0.2,1), filter 0.1s ease, opacity 0.1s ease",
     transform:
       transitionPhase === "menu-leaving" ? "translateX(-30%)" :
       transitionPhase === "menu-entering" ? "translateX(-30%)" : "translateX(0)",
@@ -103,7 +103,7 @@ const IndexPhoneSimple = () => {
   };
 
   const sectionTransitionStyle: React.CSSProperties = {
-    transition: "transform 0.38s cubic-bezier(0.4,0,0.2,1), filter 0.38s ease, opacity 0.38s ease",
+    transition: "transform 0.2s cubic-bezier(0.4,0,0.2,1), filter 0.2s ease, opacity 0.2s ease",
     transform:
       transitionPhase === "section-entering" ? "translateX(30%)" :
       transitionPhase === "section-leaving" ? "translateX(30%)" : "translateX(0)",
@@ -458,25 +458,25 @@ const IndexPhoneSimple = () => {
                   <div
                     onClick={navigateBack}
                     style={{
-                      position: "absolute", left: "-20%", top: 0, bottom: 0, width: "30%",
+                      position: "absolute", left: "-70%", top: 0, bottom: 0, width: "100%",
                       display: "flex", flexDirection: "column", justifyContent: "center",
-                      paddingLeft: "12px", cursor: "pointer",
+                      paddingLeft: "0px", alignItems: "flex-end", cursor: "pointer",
                       opacity: 0.45,
                       userSelect: "none", zIndex: 1,
                     }}
                   >
                     {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
                       <div key={item} style={{
-                        fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                        fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.04em",
                         color: "hsl(var(--foreground))", lineHeight: 1, padding: "2px 0",
                         overflow: "hidden", whiteSpace: "nowrap",
-                        filter: item === "BRANCHES" ? "blur(1px)" : "blur(2px)",
+                        filter: item === "BRANCHES" ? "blur(0.5px)" : "blur(1px)",
                       }}>{item}</div>
                     ))}
                   </div>
 
                   {/* Branch names */}
-                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "18%", width: "100%" }}>
+                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "35%", width: "100%" }}>
                     {(["OFFICE", "BOUDOIR", "CHIC", "NUR YADI"] as const).map((branch) => (
                       <button
                         key={branch}
@@ -486,7 +486,7 @@ const IndexPhoneSimple = () => {
                           background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
                           fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
                           color: "hsl(var(--foreground))", lineHeight: 1,
-                          transition: "opacity 0.2s ease",
+                          transition: "opacity 0.1s ease",
                         }}
                         onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
                         onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
