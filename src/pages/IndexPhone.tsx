@@ -376,6 +376,9 @@ const IndexPhone = () => {
     const grn = entryType === "Order" ? `${entryGRNPrefix(entryBranch)} ${dd}${mm}${yy}` : null;
     const balCol = entryBalanceCol(entryBranch);
     try {
+      // Get next AllFileLog id to avoid sequence conflicts
+      const { data: _maxLogRow } = await (supabase as any).from("AllFileLog").select("id").order("id", { ascending: false }).limit(1).single();
+      let nextLogId = ((_maxLogRow?.id as number) ?? 0) + 1;
       for (const item of entryItems) {
         if (!item.productName || item.qty <= 0) continue;
         const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
@@ -385,6 +388,7 @@ const IndexPhone = () => {
           const endingBalance = currentBalance - Number(item.qty);
           const currentOfficeBalance = Number(product["OFFICE BALANCE"] ?? 0);
           const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+            "id": nextLogId++,
             "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": entryBranch,
             "SUPPLIER": null, "TYPE": item.type,
             "STARTING BALANCE": currentBalance, "QTY": -Number(item.qty), "ENDING BALANCE": endingBalance,
@@ -398,6 +402,7 @@ const IndexPhone = () => {
             const currentBalance = Number(product["OFFICE BALANCE"] ?? 0);
             const endingBalance = currentBalance + Number(item.qty);
             const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+              "id": nextLogId++,
               "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": "Office",
               "SUPPLIER": product["SUPPLIER"] ?? null, "TYPE": "Order",
               "STARTING BALANCE": currentBalance, "QTY": Number(item.qty), "ENDING BALANCE": endingBalance,
@@ -424,6 +429,7 @@ const IndexPhone = () => {
           if (!product) continue;
           const currentBranchBalance = Number((product as any)[balCol] ?? 0);
           const { error: reqErr } = await (supabase as any).from("AllFileLog").insert({
+            "id": nextLogId++,
             "DATE": today, "PRODUCT NAME": item.productName,
             "BRANCH": entryBranch, "SUPPLIER": "Office",
             "TYPE": "Order Request",
@@ -484,11 +490,14 @@ const IndexPhone = () => {
         .eq("TYPE", "Order Request")
         .eq("GRN", entryPendingGRN);
       // Write proper Order entries + update balances
+      const { data: _maxLogRow2 } = await (supabase as any).from("AllFileLog").select("id").order("id", { ascending: false }).limit(1).single();
+      let nextLogId2 = ((_maxLogRow2?.id as number) ?? 0) + 1;
       for (const row of reqRows) {
         const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === row["PRODUCT NAME"]);
         const currentOfficeBalance = Number((product as any)?.["OFFICE BALANCE"] ?? 0);
         const endingOfficeBalance = currentOfficeBalance - Number(row["QTY"] ?? 0);
         await (supabase as any).from("AllFileLog").insert({
+          "id": nextLogId2++,
           "DATE": row["DATE"],
           "PRODUCT NAME": row["PRODUCT NAME"],
           "BRANCH": entryBranch,
@@ -684,6 +693,9 @@ const IndexPhone = () => {
       const supplierKeys = Object.keys(supplierGroups);
       const multiSupplier = supplierKeys.length > 1;
 
+      const { data: _maxLogRow3 } = await (supabase as any).from("AllFileLog").select("id").order("id", { ascending: false }).limit(1).single();
+      let nextLogId3 = ((_maxLogRow3?.id as number) ?? 0) + 1;
+
       for (let gi = 0; gi < supplierKeys.length; gi++) {
         const supplierKey = supplierKeys[gi];
         const grn = multiSupplier ? `${baseGRN} (${gi + 1})` : baseGRN;
@@ -701,6 +713,7 @@ const IndexPhone = () => {
 
           // Log to AllFileLog
           const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+            "id": nextLogId3++,
             "DATE": today,
             "PRODUCT NAME": chosenProduct["PRODUCT NAME"],
             "BRANCH": "Office",
