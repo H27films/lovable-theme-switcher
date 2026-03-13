@@ -319,9 +319,9 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
             (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
           );
           const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-          const favourites = allMatched.filter(p => isTrue(p["OfficeFavourites"]));
-          const colours = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && isTrue(p["Colour"]));
-          const regular = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && !isTrue(p["Colour"]));
+          const favourites = allMatched.filter(p => isTrue(p["Boudoir Favourites"]));
+          const colours = allMatched.filter(p => !isTrue(p["Boudoir Favourites"]) && isTrue(p["Colour"]));
+          const regular = allMatched.filter(p => !isTrue(p["Boudoir Favourites"]) && !isTrue(p["Colour"]));
           const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
@@ -349,7 +349,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
             <div style={{ flex: 1, overflowY: "auto" }}>
               {favourites.length > 0 && (
                 <>
-                  <SectionHeader label="Office Favourites" />
+                  <SectionHeader label="Boudoir Favourites" />
                   {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}
                 </>
               )}
