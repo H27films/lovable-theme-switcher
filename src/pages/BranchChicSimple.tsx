@@ -52,6 +52,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
       return next;
     });
   };
+  const [activeTab, setActiveTab] = useState<"RECENT" | "ORDER" | "USAGE">("RECENT");
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -62,6 +63,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
   const [loadingLog, setLoadingLog] = useState(false);
 
   useEffect(() => {
+    setActiveTab("RECENT");
     if (!selectedProduct) { setProductLog([]); return; }
     setLoadingLog(true);
     (supabase as any)
@@ -70,7 +72,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
       .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
       .eq("BRANCH", BRANCH_LOG_NAME)
       .order("DATE", { ascending: false })
-      .limit(20)
+      .limit(50)
       .then(({ data }: { data: LogRow[] | null }) => {
         setProductLog(data || []);
         setLoadingLog(false);
@@ -257,33 +259,66 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
               </div>
             </div>
 
-            {/* Log table */}
-            <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px" }}>
-              {/* Header row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                {["Date", "Type", "Qty", "End Bal"].map(h => (
-                  <div key={h} style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{h}</div>
-                ))}
-              </div>
-              {loadingLog && (
-                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
-              )}
-              {!loadingLog && productLog.length === 0 && (
-                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>—</div>
-              )}
-              {!loadingLog && productLog.map(row => (
-                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", padding: "10px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                    {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(var(--red, 0 70% 50%))" : "hsl(var(--foreground))" }}>
-                    {row.QTY > 0 ? "+" : ""}{row.QTY}
-                  </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                </div>
+            {/* Tab switcher: RECENT · ORDER · USAGE */}
+            <div style={{ display: "flex", gap: "28px", marginBottom: "20px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "20px" }}>
+              {(["RECENT", "ORDER", "USAGE"] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer", padding: 0,
+                    fontSize: "clamp(14px, 3.8vw, 20px)", fontWeight: 300,
+                    letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
+                    color: "hsl(var(--foreground))",
+                    opacity: activeTab === tab ? 1 : 0.28,
+                    transition: "opacity 0.2s ease",
+                  }}
+                >
+                  {tab}
+                </button>
               ))}
             </div>
+
+            {/* Log table */}
+            {(() => {
+              const orderLog = productLog.filter(r => {
+                const t = (r.TYPE || "").toLowerCase();
+                return t.includes("order") || t.includes("grn") || t.includes("received") || t.includes("stock");
+              });
+              const usageLog = productLog.filter(r => {
+                const t = (r.TYPE || "").toLowerCase();
+                return t.includes("salon") || t.includes("customer") || t.includes("staff") || t.includes("use");
+              });
+              const displayLog = activeTab === "RECENT" ? productLog : activeTab === "ORDER" ? orderLog : usageLog;
+
+              return (
+                <div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                    {["Date", "Type", "Qty", "End Bal"].map(h => (
+                      <div key={h} style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{h}</div>
+                    ))}
+                  </div>
+                  {loadingLog && (
+                    <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
+                  )}
+                  {!loadingLog && displayLog.length === 0 && (
+                    <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>—</div>
+                  )}
+                  {!loadingLog && displayLog.map(row => (
+                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", padding: "10px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                        {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      </div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(var(--red, 0 70% 50%))" : "hsl(var(--foreground))" }}>
+                        {row.QTY > 0 ? "+" : ""}{row.QTY}
+                      </div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
