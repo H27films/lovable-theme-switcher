@@ -20,6 +20,8 @@ interface OfficeProduct {
   "BOUDOIR BALANCE": number | null;
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
+  "Colour": string | null;
+  "OfficeFavourites": string | null;
 }
 
 const IndexPhoneSimple = () => {
@@ -234,48 +236,70 @@ const IndexPhoneSimple = () => {
               {/* MIDDLE SCROLLABLE AREA */}
               <div style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
 
-                {/* Dropdown — products + suppliers */}
+                {/* Dropdown — Office Favourites / Products / Colours / Suppliers */}
                 {simpleShowDropdown && simpleSearch.length > 0 && (() => {
                   const q = simpleSearch.toLowerCase();
-                  const matchedProducts = products.filter(p =>
+                  const allMatched = products.filter(p =>
                     p["PRODUCT NAME"].toLowerCase().includes(q) &&
                     (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
-                  ).slice(0, 12);
+                  );
+                  const favourites = allMatched.filter(p => p["OfficeFavourites"]).slice(0, 6);
+                  const colours = allMatched.filter(p => !p["OfficeFavourites"] && p["Colour"]).slice(0, 6);
+                  const regular = allMatched.filter(p => !p["OfficeFavourites"] && !p["Colour"]).slice(0, 6);
                   const matchedSuppliers = Array.from(new Set(
                     products
                       .map(p => p["SUPPLIER"])
                       .filter((s): s is string => !!s && s.toLowerCase().includes(q))
                   )).sort().slice(0, 5);
-                  const hasResults = matchedProducts.length > 0 || matchedSuppliers.length > 0;
+                  const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0 || matchedSuppliers.length > 0;
+
+                  const SectionHeader = ({ label }: { label: string }) => (
+                    <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", paddingTop: "14px", paddingBottom: "4px" }}>
+                      {label}
+                    </div>
+                  );
+
+                  const ProductRow = ({ p, last }: { p: OfficeProduct; last: boolean }) => (
+                    <div
+                      key={p.id}
+                      onClick={() => { setSimpleSelectedProduct(p); setSimpleSearch(p["PRODUCT NAME"]); setSimpleShowDropdown(false); setSimpleSearchMode("result"); }}
+                      style={{ padding: "12px 0", borderBottom: last ? "none" : "0.5px solid hsl(var(--border))", cursor: "pointer" }}
+                    >
+                      <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</div>
+                      <div style={{ fontSize: "12px", marginTop: "2px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{p["SUPPLIER"]}</div>
+                    </div>
+                  );
+
                   return (
                     <div>
-                      {matchedSuppliers.map((supplier) => (
+                      {matchedSuppliers.map((supplier, i) => (
                         <div
                           key={`sup-${supplier}`}
                           onClick={() => { setSimpleSelectedSupplier(supplier); setSimpleSearch(supplier); setSimpleShowDropdown(false); setSimpleSearchMode("supplier"); }}
-                          style={{
-                            padding: "12px 0", borderBottom: "0.5px solid hsl(var(--border))",
-                            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between",
-                          }}
+                          style={{ padding: "12px 0", borderBottom: "0.5px solid hsl(var(--border))", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
                         >
                           <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{supplier}</div>
                           <div style={{ fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Supplier</div>
                         </div>
                       ))}
-                      {matchedProducts.map((p, i, arr) => (
-                        <div
-                          key={p.id}
-                          onClick={() => { setSimpleSelectedProduct(p); setSimpleSearch(p["PRODUCT NAME"]); setSimpleShowDropdown(false); setSimpleSearchMode("result"); }}
-                          style={{
-                            padding: "12px 0",
-                            borderBottom: i < arr.length - 1 ? "0.5px solid hsl(var(--border))" : "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</div>
-                          <div style={{ fontSize: "12px", marginTop: "2px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{p["SUPPLIER"]}</div>
-                        </div>
-                      ))}
+                      {favourites.length > 0 && (
+                        <>
+                          <SectionHeader label="Office Favourites" />
+                          {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}
+                        </>
+                      )}
+                      {regular.length > 0 && (
+                        <>
+                          <SectionHeader label="Products" />
+                          {regular.map((p, i) => <ProductRow key={p.id} p={p} last={i === regular.length - 1} />)}
+                        </>
+                      )}
+                      {colours.length > 0 && (
+                        <>
+                          <SectionHeader label="Colours" />
+                          {colours.map((p, i) => <ProductRow key={p.id} p={p} last={i === colours.length - 1} />)}
+                        </>
+                      )}
                       {!hasResults && (
                         <div style={{ padding: "20px 0", fontSize: "15px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>No results found</div>
                       )}
