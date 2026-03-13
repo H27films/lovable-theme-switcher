@@ -79,7 +79,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
 
   return (
     <div style={{
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "hsl(var(--background))",
       color: "hsl(var(--foreground))",
       fontFamily: "'Raleway', sans-serif",
