@@ -205,7 +205,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
       </div>
 
       {/* MIDDLE SCROLLABLE */}
-      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
 
         {/* Dropdown */}
         {showDropdown && search.length > 0 && (() => {
@@ -242,7 +242,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
           );
 
           return (
-            <div>
+            <div style={{ flex: 1, overflowY: "auto" }}>
               {favourites.length > 0 && (
                 <>
                   <SectionHeader label="Office Favourites" />
@@ -270,11 +270,11 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
 
         {/* Content area — tabs log (always shown when no dropdown) */}
         {!showDropdown && (
-          <div style={{ paddingTop: "16px" }}>
+          <div style={{ paddingTop: "16px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
 
             {/* Product card (when product selected) */}
             {selectedProduct && (
-              <div style={{ marginBottom: "24px", paddingBottom: "20px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+              <div style={{ flexShrink: 0, marginBottom: "24px", paddingBottom: "20px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                 {/* Product name + balance + star */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px" }}>
                   <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
@@ -316,16 +316,17 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
 
             {/* Spacer + RECENT label (only for branch-wide view) */}
             {!selectedProduct && (
-              <div style={{ height: "16vh" }} />
+              <div style={{ flexShrink: 0, height: "16vh" }} />
             )}
             {!selectedProduct && (
-              <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>
+              <div style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>
                 {activeTab}
               </div>
             )}
 
             {/* Log table */}
-            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", display: "flex", flexDirection: "column", WebkitOverflowScrolling: "touch" }}>
+              <div style={{ minWidth: selectedProduct ? "345px" : "479px", flex: 1, display: "flex", flexDirection: "column" }}>
               {/* Column headers */}
               {selectedProduct ? (
                 <div style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", marginBottom: "6px" }}>
@@ -340,6 +341,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
                   ))}
                 </div>
               )}
+              <div style={{ flex: 1, overflowY: "auto" }}>
               {loadingLog && (
                 <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
               )}
@@ -375,6 +377,8 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
                   </div>
                 );
               })}
+              </div>
+              </div>
             </div>
           </div>
         )}
