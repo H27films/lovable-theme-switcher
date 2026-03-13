@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
@@ -52,12 +53,12 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
   const [savedFavourites, setSavedFavourites] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("nuryadi_favourites") || "[]"); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem("boudoir_favourites") || "[]"); } catch { return []; }
   });
   const toggleFavourite = (name: string) => {
     setSavedFavourites(prev => {
       const next = prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name];
-      localStorage.setItem("nuryadi_favourites", JSON.stringify(next));
+      localStorage.setItem("boudoir_favourites", JSON.stringify(next));
       return next;
     });
   };
@@ -76,9 +77,9 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const BRANCH_NAME = "NUR YADI";
-  const BALANCE_KEY = "NUR YADI BALANCE" as keyof OfficeProduct;
-  const BRANCH_LOG_NAME = "Nur Yadi";
+  const BRANCH_NAME = "BOUDOIR";
+  const BALANCE_KEY = "BOUDOIR BALANCE" as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = "Boudoir";
 
   // Branch-wide log (loaded on mount)
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
@@ -202,9 +203,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
     setActivePanel(panel);
     setShowDropdown(false);
     setShowUsageDropdown(false);
-    if (panel === "USAGE") {
-      setTimeout(() => usageInputRef.current?.focus(), 100);
-    }
+
   };
 
   const closePanel = () => {
@@ -509,12 +508,12 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
       {/* ── PANELS ── */}
 
       {/* USAGE Panel */}
-      {activePanel === "USAGE" && (
+      {activePanel === "USAGE" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
         width: "100vw", height: "100dvh",
         background: "hsl(var(--background))",
-        zIndex: 100,
+        zIndex: 200,
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
@@ -546,7 +545,6 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
                 inputMode="search"
                 value={usageSearch}
                 onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
-                onFocus={() => setShowUsageDropdown(true)}
                 placeholder="Select product..."
                 style={{
                   flex: 1, background: "none", border: "none", outline: "none",
@@ -584,32 +582,41 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
           <div style={{
             flexShrink: 0,
             background: "hsl(var(--background))",
-            borderBottom: "0.5px solid hsl(var(--border))",
-            maxHeight: "220px", overflowY: "auto",
+            maxHeight: "55vh", overflowY: "auto",
             paddingLeft: "20px", paddingRight: "20px",
           }}>
-            {usageFiltered.slice(0, 50).map((p, i) => (
-              <div
-                key={p.id}
-                onMouseDown={() => handleAddUsageProduct(p)}
-                style={{
-                  padding: "11px 14px",
-                  borderBottom: i < usageFiltered.length - 1 ? "0.5px solid hsl(var(--border))" : "none",
-                  cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit",
-                  color: usageEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))",
-                }}
-              >
-                <span>{p["PRODUCT NAME"]}</span>
-                {(p as any)[BALANCE_KEY] != null && (
-                  <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
-                )}
-              </div>
-            ))}
-            {usageFiltered.length === 0 && (
-              <div style={{ padding: "14px", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>
-            )}
+            {(() => {
+              const favs = usageFiltered.filter(p => p["OfficeFavourites"] === true || p["OfficeFavourites"] === "TRUE" || p["OfficeFavourites"] === "true");
+              const colours = usageFiltered.filter(p => p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true");
+              const regular = usageFiltered.filter(p => !(p["OfficeFavourites"] === true || p["OfficeFavourites"] === "TRUE" || p["OfficeFavourites"] === "true") && !(p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true"));
+              const renderRow = (p: any) => (
+                <div
+                  key={p.id}
+                  onMouseDown={() => handleAddUsageProduct(p)}
+                  style={{
+                    padding: "11px 0",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    color: usageEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))",
+                  }}
+                >
+                  <span>{p["PRODUCT NAME"]}</span>
+                  {(p as any)[BALANCE_KEY] != null && (
+                    <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
+                  )}
+                </div>
+              );
+              const sectionLabel = (label: string) => (
+                <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
+              );
+              const sections: React.ReactNode[] = [];
+              if (favs.length > 0) { sections.push(sectionLabel("Branch Favourites")); favs.forEach(p => sections.push(renderRow(p))); }
+              if (regular.length > 0) { sections.push(sectionLabel("Products")); regular.forEach(p => sections.push(renderRow(p))); }
+              if (colours.length > 0) { sections.push(sectionLabel("Colours")); colours.forEach(p => sections.push(renderRow(p))); }
+              if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
+              return sections;
+            })()}
           </div>
         )}
 
@@ -693,17 +700,16 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
             )}
           </div>
         )}
-      </div>
-
+      </div>, document.body
       )}
 
       {/* ORDER Panel (placeholder) */}
-      {activePanel === "ORDER" && (
+      {activePanel === "ORDER" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
         width: "100vw", height: "100dvh",
         background: "hsl(var(--background))",
-        zIndex: 100,
+        zIndex: 200,
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
@@ -718,17 +724,16 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
         <div style={{ flex: 1, paddingLeft: "20px", paddingRight: "20px", display: "flex", alignItems: "center" }}>
           <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Order entry — coming soon</span>
         </div>
-      </div>
-
+      </div>, document.body
       )}
 
       {/* CASH Panel (placeholder) */}
-      {activePanel === "CASH" && (
+      {activePanel === "CASH" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
         width: "100vw", height: "100dvh",
         background: "hsl(var(--background))",
-        zIndex: 100,
+        zIndex: 200,
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
@@ -743,7 +748,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
         <div style={{ flex: 1, paddingLeft: "20px", paddingRight: "20px", display: "flex", alignItems: "center" }}>
           <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Cash entry — coming soon</span>
         </div>
-      </div>
+      </div>, document.body
       )}
 
     </div>
