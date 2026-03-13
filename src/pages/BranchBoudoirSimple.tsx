@@ -116,7 +116,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
   const loadingLog = selectedProduct ? loadingProductLog : loadingBranchLog;
   return (
     <div style={{
-      height: "100dvh",
+      position: "relative", height: "100dvh",
       background: "hsl(var(--background))",
       color: "hsl(var(--foreground))",
       fontFamily: "'Raleway', sans-serif",
@@ -381,21 +381,20 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
 
       </div>
 
-      {/* BOTTOM BLUR BAR */}
+      {/* BOTTOM FLOATING TEXT */}
       <div style={{
-        flexShrink: 0, paddingLeft: "20px", paddingRight: "20px",
-        paddingTop: "4px", paddingBottom: "max(env(safe-area-inset-bottom, 12px), 12px)",
-        filter: "blur(1px)", opacity: 0.25,
+        position: "absolute", bottom: "max(env(safe-area-inset-bottom, 18px), 18px)",
+        left: "20px", filter: "blur(1.5px)", opacity: 0.3, pointerEvents: "auto",
       }}>
         {(["SEARCH", "ORDER"] as const).map(item => (
           <button
             key={item}
             onClick={item === "SEARCH" ? onBackToMain : undefined}
             style={{
-              display: "block", fontSize: "clamp(10px, 2.8vw, 15px)", fontWeight: 300,
+              display: "block", fontSize: "clamp(18px, 4.5vw, 26px)", fontWeight: 300,
               letterSpacing: "0.06em", color: "hsl(var(--foreground))",
               background: "none", border: "none", cursor: item === "SEARCH" ? "pointer" : "default", textAlign: "left",
-              fontFamily: "Raleway, inherit", lineHeight: 1.35, padding: 0,
+              fontFamily: "Raleway, inherit", lineHeight: 1.3, padding: 0,
             }}
           >
             {item}
