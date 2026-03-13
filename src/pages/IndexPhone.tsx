@@ -1531,7 +1531,7 @@ const IndexPhone = () => {
                                       {row.QTY < 0 ? "+" : ""}{-row.QTY}
                                     </td>
                                     <td className="text-[11px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
-                                    <td className="text-[11px] font-light py-3" style={dim}>{row["SUPPLIER"] ? row["SUPPLIER"] : (row["BRANCH"] ?? "—")}</td>
+                                    <td className="text-[11px] font-light py-3" style={dim}>{row["SUPPLIER"] === "Office" ? (row["BRANCH"] ?? "—") : (row["SUPPLIER"] ?? "—")}</td>
                                   </tr>
                                 );
                               })}
