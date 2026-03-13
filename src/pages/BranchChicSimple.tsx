@@ -38,7 +38,7 @@ interface BranchChicSimpleProps {
 }
 
 const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimpleProps) => {
-  const [searchMode, setSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
+  const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
@@ -53,19 +53,40 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
     });
   };
   const [activeTab, setActiveTab] = useState<"RECENT" | "ORDER" | "USAGE">("RECENT");
-  const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const BRANCH_NAME = "CHIC";
   const BALANCE_KEY = "CHIC NAILSPA BALANCE" as keyof OfficeProduct;
-  const BRANCH_LOG_NAME = "Chic Nailspa";
-  const [productLog, setProductLog] = useState<LogRow[]>([]);
-  const [loadingLog, setLoadingLog] = useState(false);
+  const BRANCH_LOG_NAME = "Chic";
 
+  // Branch-wide log (loaded on mount)
+  const [branchLog, setBranchLog] = useState<LogRow[]>([]);
+  const [loadingBranchLog, setLoadingBranchLog] = useState(true);
+
+  // Product-specific log (loaded when product selected)
+  const [productLog, setProductLog] = useState<LogRow[]>([]);
+  const [loadingProductLog, setLoadingProductLog] = useState(false);
+
+  // Load branch-wide log on mount
   useEffect(() => {
-    setActiveTab("RECENT");
+    setLoadingBranchLog(true);
+    (supabase as any)
+      .from("AllFileLog")
+      .select("*")
+      .eq("BRANCH", BRANCH_LOG_NAME)
+      .order("DATE", { ascending: false })
+      .limit(50)
+      .then(({ data }: { data: LogRow[] | null }) => {
+        setBranchLog(data || []);
+        setLoadingBranchLog(false);
+      });
+  }, []);
+
+  // Load product log when product selected
+  useEffect(() => {
     if (!selectedProduct) { setProductLog([]); return; }
-    setLoadingLog(true);
+    setLoadingProductLog(true);
+    setActiveTab("RECENT");
     (supabase as any)
       .from("AllFileLog")
       .select("*")
@@ -75,10 +96,24 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
       .limit(50)
       .then(({ data }: { data: LogRow[] | null }) => {
         setProductLog(data || []);
-        setLoadingLog(false);
+        setLoadingProductLog(false);
       });
   }, [selectedProduct]);
 
+  const filterLog = (rows: LogRow[]) => {
+    if (activeTab === "ORDER") return rows.filter(r => {
+      const t = (r.TYPE || "").toLowerCase();
+      return t.includes("order") || t.includes("grn") || t.includes("received") || t.includes("stock");
+    });
+    if (activeTab === "USAGE") return rows.filter(r => {
+      const t = (r.TYPE || "").toLowerCase();
+      return t.includes("salon") || t.includes("customer") || t.includes("staff") || t.includes("use");
+    });
+    return rows;
+  };
+
+  const activeLog = selectedProduct ? productLog : filterLog(branchLog);
+  const loadingLog = selectedProduct ? loadingProductLog : loadingBranchLog;
   return (
     <div style={{
       height: "100dvh",
@@ -92,14 +127,13 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
       {/* TOP AREA */}
       <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", flexShrink: 0 }}>
 
-        {/* Branch name header — tappable to go back */}
+        {/* Branch name header */}
         <button
           onClick={() => {
             if (searchMode !== "idle") {
               setSearchMode("idle");
               setSearch("");
               setSelectedProduct(null);
-              setSelectedSupplier(null);
               setShowDropdown(false);
             } else {
               onBack();
@@ -116,40 +150,58 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
         </button>
 
         {/* Search input row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
           <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
           <input
             ref={inputRef}
             type="text"
             inputMode="search"
-            value={searchMode === "result" || searchMode === "supplier" ? "" : search}
+            value={searchMode === "result" ? "" : search}
             onChange={e => {
               const val = e.target.value;
               setSearch(val);
               setSelectedProduct(null);
-              setSelectedSupplier(null);
               setSearchMode("active");
               setShowDropdown(val.length > 0);
             }}
-            onFocus={() => {
-              // Keep result/supplier view on focus — typing will clear it
-            }}
-            placeholder="Enter Product"
+            placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Enter Product"}
             style={{
               flex: 1, background: "none", border: "none", outline: "none",
               fontSize: "15px", fontFamily: "Raleway, inherit",
               color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
             }}
           />
-          {search.length > 0 && searchMode !== "result" && searchMode !== "supplier" && (
+          {search.length > 0 && searchMode !== "result" && (
             <button
-              onClick={() => { setSearch(""); setSelectedProduct(null); setSelectedSupplier(null); setShowDropdown(false); setSearchMode("active"); }}
+              onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); setSearchMode("idle"); }}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
             >
               <X size={15} />
             </button>
           )}
         </div>
+
+        {/* Tab switcher — only when no product selected */}
+        {!showDropdown && !selectedProduct && (
+          <div style={{ display: "flex", gap: "28px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px" }}>
+            {(["RECENT", "ORDER", "USAGE"] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer", padding: 0,
+                  fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
+                  letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
+                  color: "hsl(var(--foreground))",
+                  opacity: activeTab === tab ? 1 : 0.28,
+                  transition: "opacity 0.2s ease",
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* MIDDLE SCROLLABLE */}
@@ -186,13 +238,11 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
                   <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>{(p as any)[BALANCE_KEY]}</div>
                 )}
               </div>
-
             </div>
           );
 
           return (
             <div>
-
               {favourites.length > 0 && (
                 <>
                   <SectionHeader label="Office Favourites" />
@@ -218,144 +268,79 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
           );
         })()}
 
-        {/* Product result card */}
-        {searchMode === "result" && selectedProduct && !showDropdown && (
-          <div style={{ paddingTop: "20px" }}>
-            {/* Product name + balance + star */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px", gap: "12px" }}>
-              <div style={{ fontSize: "clamp(18px, 5vw, 26px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
-                {selectedProduct["PRODUCT NAME"]}
-              </div>
-              {(selectedProduct as any)[BALANCE_KEY] != null && (
-                <div style={{ fontSize: "clamp(18px, 5vw, 26px)", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-                  {(selectedProduct as any)[BALANCE_KEY]}
-                </div>
-              )}
-              <button
-                onClick={() => toggleFavourite(selectedProduct["PRODUCT NAME"])}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}
-              >
-                <Star
-                  size={18}
-                  fill={savedFavourites.includes(selectedProduct["PRODUCT NAME"]) ? "hsl(var(--foreground))" : "none"}
-                  color="hsl(var(--foreground))"
-                />
-              </button>
-            </div>
+        {/* Content area — tabs log (always shown when no dropdown) */}
+        {!showDropdown && (
+          <div style={{ paddingTop: "16px" }}>
 
-            {/* Staff Price + Customer Price */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Staff Price</div>
-                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                  {selectedProduct["STAFF PRICE"] != null ? `RM ${Number(selectedProduct["STAFF PRICE"]).toFixed(2)}` : "—"}
+            {/* Product card (when product selected) */}
+            {selectedProduct && (
+              <div style={{ marginBottom: "24px", paddingBottom: "20px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                {/* Product name + balance + star */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px" }}>
+                  <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
+                    {selectedProduct["PRODUCT NAME"]}
+                  </div>
+                  {(selectedProduct as any)[BALANCE_KEY] != null && (
+                    <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
+                      {(selectedProduct as any)[BALANCE_KEY]}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => toggleFavourite(selectedProduct["PRODUCT NAME"])}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}
+                  >
+                    <Star
+                      size={16}
+                      fill={savedFavourites.includes(selectedProduct["PRODUCT NAME"]) ? "hsl(var(--foreground))" : "none"}
+                      color="hsl(var(--foreground))"
+                    />
+                  </button>
+                </div>
+                {/* Staff + Customer price */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Staff</div>
+                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                      {selectedProduct["STAFF PRICE"] != null ? `RM ${Number(selectedProduct["STAFF PRICE"]).toFixed(2)}` : "—"}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Customer</div>
+                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                      {selectedProduct["CUSTOMER PRICE"] != null ? `RM ${Number(selectedProduct["CUSTOMER PRICE"]).toFixed(2)}` : "—"}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Customer Price</div>
-                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                  {selectedProduct["CUSTOMER PRICE"] != null ? `RM ${Number(selectedProduct["CUSTOMER PRICE"]).toFixed(2)}` : "—"}
-                </div>
-              </div>
-            </div>
-
-            {/* Tab switcher: RECENT · ORDER · USAGE */}
-            <div style={{ display: "flex", gap: "28px", marginBottom: "20px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "20px" }}>
-              {(["RECENT", "ORDER", "USAGE"] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer", padding: 0,
-                    fontSize: "clamp(14px, 3.8vw, 20px)", fontWeight: 300,
-                    letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
-                    color: "hsl(var(--foreground))",
-                    opacity: activeTab === tab ? 1 : 0.28,
-                    transition: "opacity 0.2s ease",
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+            )}
 
             {/* Log table */}
-            {(() => {
-              const orderLog = productLog.filter(r => {
-                const t = (r.TYPE || "").toLowerCase();
-                return t.includes("order") || t.includes("grn") || t.includes("received") || t.includes("stock");
-              });
-              const usageLog = productLog.filter(r => {
-                const t = (r.TYPE || "").toLowerCase();
-                return t.includes("salon") || t.includes("customer") || t.includes("staff") || t.includes("use");
-              });
-              const displayLog = activeTab === "RECENT" ? productLog : activeTab === "ORDER" ? orderLog : usageLog;
-
-              return (
-                <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                    {["Date", "Type", "Qty", "End Bal"].map(h => (
-                      <div key={h} style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{h}</div>
-                    ))}
+            <div>
+              {/* Column headers */}
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                {["Date", "Type", "Qty", "End Bal"].map(h => (
+                  <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
+                ))}
+              </div>
+              {loadingLog && (
+                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
+              )}
+              {!loadingLog && activeLog.length === 0 && (
+                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
+              )}
+              {!loadingLog && activeLog.map(row => (
+                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", padding: "10px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                    {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                   </div>
-                  {loadingLog && (
-                    <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
-                  )}
-                  {!loadingLog && displayLog.length === 0 && (
-                    <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>—</div>
-                  )}
-                  {!loadingLog && displayLog.map(row => (
-                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", padding: "10px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                        {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                      </div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(var(--red, 0 70% 50%))" : "hsl(var(--foreground))" }}>
-                        {row.QTY > 0 ? "+" : ""}{row.QTY}
-                      </div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
-          </div>
-        )}
-
-        {/* Supplier result */}
-        {searchMode === "supplier" && selectedSupplier && !showDropdown && (
-          <div style={{ paddingTop: "20px" }}>
-            <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "20px" }}>
-              {selectedSupplier}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))", marginBottom: "4px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em" }}>Product</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right", minWidth: "64px" }}>Price</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right", minWidth: "36px" }}>Bal</div>
-            </div>
-            {products
-              .filter(p => p["SUPPLIER"] === selectedSupplier && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1))
-              .sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]))
-              .map((p, i, arr) => (
-                <div
-                  key={p.id}
-                  onClick={() => { setSelectedProduct(p); setSelectedSupplier(null); setSearchMode("result"); }}
-                  style={{
-                    display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px",
-                    padding: "11px 0",
-                    borderBottom: i < arr.length - 1 ? "0.5px solid hsl(var(--border))" : "none",
-                    cursor: "pointer", alignItems: "center",
-                  }}
-                >
-                  <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "right", minWidth: "64px" }}>
-                    {p["SUPPLIER PRICE"] != null ? `RM ${p["SUPPLIER PRICE"].toFixed(2)}` : "—"}
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
+                    {row.QTY > 0 ? "+" : ""}{row.QTY}
                   </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "right", minWidth: "36px" }}>
-                    {(p as any)[BALANCE_KEY] ?? "—"}
-                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                 </div>
               ))}
+            </div>
           </div>
         )}
 
