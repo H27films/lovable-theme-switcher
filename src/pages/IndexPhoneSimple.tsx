@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import SearchPage from "./SearchPage";
 import BranchesPage from "./BranchesPage";
 import OrderPage from "./OrderPage";
+import BranchOfficeSimple from "./BranchOfficeSimple";
+import BranchBoudoirSimple from "./BranchBoudoirSimple";
+import BranchChicSimple from "./BranchChicSimple";
+import BranchNurYadiSimple from "./BranchNurYadiSimple";
 import { X, Search, Building2 } from "lucide-react";
 
 interface OfficeProduct {
@@ -69,6 +73,8 @@ const IndexPhoneSimple = () => {
     setTransitionPhase("section-leaving");
     setTimeout(() => {
       setActiveSection(null);
+      setActiveBranch(null);
+      setBranchTransitionPhase("at-list");
       setSimpleSearchMode("idle");
       setSimpleSearch("");
       setSimpleSelectedProduct(null);
@@ -76,6 +82,29 @@ const IndexPhoneSimple = () => {
       setSimpleShowDropdown(false);
       setTransitionPhase("menu-entering");
       requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
+    }, 280);
+  };
+
+  const [activeBranch, setActiveBranch] = useState<"office" | "boudoir" | "chic" | "nuryadi" | null>(null);
+  const [branchTransitionPhase, setBranchTransitionPhase] = useState<
+    "at-list" | "list-leaving" | "page-entering" | "at-page" | "page-leaving" | "list-entering"
+  >("at-list");
+
+  const navigateToBranch = (branch: "office" | "boudoir" | "chic" | "nuryadi") => {
+    setBranchTransitionPhase("list-leaving");
+    setTimeout(() => {
+      setActiveBranch(branch);
+      setBranchTransitionPhase("page-entering");
+      requestAnimationFrame(() => requestAnimationFrame(() => setBranchTransitionPhase("at-page")));
+    }, 280);
+  };
+
+  const navigateBackToBranches = () => {
+    setBranchTransitionPhase("page-leaving");
+    setTimeout(() => {
+      setActiveBranch(null);
+      setBranchTransitionPhase("list-entering");
+      requestAnimationFrame(() => requestAnimationFrame(() => setBranchTransitionPhase("at-list")));
     }, 280);
   };
 
@@ -450,53 +479,83 @@ const IndexPhoneSimple = () => {
           <div style={sectionTransitionStyle}>
             {activeSection === "search" && <SearchPage onBack={navigateBack} />}
             {activeSection === "branches" && (
-              <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative" }}>
-                {/* Branch list */}
-                <div style={{ display: "flex", position: "relative", minHeight: "100dvh", overflow: "hidden" }}>
+              <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative", overflow: "hidden" }}>
 
-                  {/* Ghost menu on left — partially visible, tappable to go back */}
-                  <div
-                    onClick={navigateBack}
-                    style={{
-                      position: "absolute", left: "-70%", top: 0, bottom: 0, width: "100%",
-                      display: "flex", flexDirection: "column", justifyContent: "center",
-                      paddingLeft: "0px", alignItems: "flex-end", cursor: "pointer",
-                      opacity: 0.45,
-                      userSelect: "none", zIndex: 1,
-                    }}
-                  >
-                    {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
-                      <div key={item} style={{
-                        fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.04em",
-                        color: "hsl(var(--foreground))", lineHeight: 1, padding: "2px 0",
-                        overflow: "hidden", whiteSpace: "nowrap",
-                        filter: item === "BRANCHES" ? "blur(0.5px)" : "blur(1px)",
-                      }}>{item}</div>
-                    ))}
+                {/* LAYER 1: Branch list with ghost menu */}
+                <div style={{
+                  position: "absolute", inset: 0,
+                  transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
+                  transform: branchTransitionPhase === "list-leaving" || branchTransitionPhase === "page-entering" || branchTransitionPhase === "at-page" || branchTransitionPhase === "page-leaving" ? "translateX(-30%)" : "translateX(0)",
+                  filter: branchTransitionPhase === "list-leaving" ? "blur(6px)" : "blur(0px)",
+                  opacity: branchTransitionPhase === "list-leaving" || branchTransitionPhase === "page-entering" || branchTransitionPhase === "at-page" || branchTransitionPhase === "page-leaving" ? 0 : 1,
+                  pointerEvents: branchTransitionPhase === "at-list" ? "auto" : "none",
+                }}>
+                  <div style={{ display: "flex", position: "relative", minHeight: "100dvh", overflow: "hidden" }}>
+
+                    {/* Ghost menu on left */}
+                    <div
+                      onClick={navigateBack}
+                      style={{
+                        position: "absolute", left: "-70%", top: 0, bottom: 0, width: "100%",
+                        display: "flex", flexDirection: "column", justifyContent: "center",
+                        paddingLeft: "0px", alignItems: "flex-end", cursor: "pointer",
+                        opacity: 0.45, userSelect: "none", zIndex: 1,
+                      }}
+                    >
+                      {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
+                        <div key={item} style={{
+                          fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.04em",
+                          color: "hsl(var(--foreground))", lineHeight: 1, padding: "2px 0",
+                          overflow: "hidden", whiteSpace: "nowrap",
+                          filter: item === "BRANCHES" ? "blur(0.5px)" : "blur(1px)",
+                        }}>{item}</div>
+                      ))}
+                    </div>
+
+                    {/* Branch name buttons */}
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "35%", width: "100%" }}>
+                      {([
+                        { label: "OFFICE",   key: "office"   },
+                        { label: "BOUDOIR",  key: "boudoir"  },
+                        { label: "CHIC",     key: "chic"     },
+                        { label: "NUR YADI", key: "nuryadi"  },
+                      ] as { label: string; key: "office" | "boudoir" | "chic" | "nuryadi" }[]).map(({ label, key }) => (
+                        <button
+                          key={key}
+                          onClick={() => navigateToBranch(key)}
+                          style={{
+                            display: "block", textAlign: "left", padding: "2px 0",
+                            background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                            fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                            color: "hsl(var(--foreground))", lineHeight: 1,
+                            transition: "opacity 0.2s ease",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
                   </div>
-
-                  {/* Branch names */}
-                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "35%", width: "100%" }}>
-                    {(["OFFICE", "BOUDOIR", "CHIC", "NUR YADI"] as const).map((branch) => (
-                      <button
-                        key={branch}
-                        onClick={() => navigateBack()}
-                        style={{
-                          display: "block", textAlign: "left", padding: "2px 0",
-                          background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                          fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
-                          color: "hsl(var(--foreground))", lineHeight: 1,
-                          transition: "opacity 0.1s ease",
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
-                        onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                      >
-                        {branch}
-                      </button>
-                    ))}
-                  </div>
-
                 </div>
+
+                {/* LAYER 2: Branch page — slides in from right */}
+                <div style={{
+                  position: "absolute", inset: 0,
+                  transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
+                  transform: branchTransitionPhase === "page-entering" ? "translateX(30%)" : branchTransitionPhase === "page-leaving" ? "translateX(30%)" : "translateX(0)",
+                  filter: branchTransitionPhase === "page-entering" || branchTransitionPhase === "page-leaving" ? "blur(6px)" : "blur(0px)",
+                  opacity: branchTransitionPhase === "at-page" ? 1 : 0,
+                  pointerEvents: branchTransitionPhase === "at-page" ? "auto" : "none",
+                }}>
+                  {activeBranch === "office"   && <BranchOfficeSimple  onBack={navigateBackToBranches} products={products} />}
+                  {activeBranch === "boudoir"  && <BranchBoudoirSimple onBack={navigateBackToBranches} products={products} />}
+                  {activeBranch === "chic"     && <BranchChicSimple    onBack={navigateBackToBranches} products={products} />}
+                  {activeBranch === "nuryadi"  && <BranchNurYadiSimple onBack={navigateBackToBranches} products={products} />}
+                </div>
+
               </div>
             )}
             {activeSection === "order" && <OrderPage onBack={navigateBack} />}
