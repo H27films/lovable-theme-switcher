@@ -243,9 +243,10 @@ const IndexPhoneSimple = () => {
                     p["PRODUCT NAME"].toLowerCase().includes(q) &&
                     (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
                   );
-                  const favourites = allMatched.filter(p => p["OfficeFavourites"]).slice(0, 6);
-                  const colours = allMatched.filter(p => !p["OfficeFavourites"] && p["Colour"]).slice(0, 6);
-                  const regular = allMatched.filter(p => !p["OfficeFavourites"] && !p["Colour"]).slice(0, 6);
+                  const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
+                  const favourites = allMatched.filter(p => isTrue(p["OfficeFavourites"])).slice(0, 6);
+                  const colours = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && isTrue(p["Colour"])).slice(0, 6);
+                  const regular = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && !isTrue(p["Colour"])).slice(0, 6);
                   const matchedSuppliers = Array.from(new Set(
                     products
                       .map(p => p["SUPPLIER"])
