@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { X, Search } from "lucide-react";
 
 interface OfficeProduct {
@@ -19,6 +20,17 @@ interface OfficeProduct {
   "OfficeFavourites": string | null;
 }
 
+interface LogRow {
+  id: number;
+  DATE: string;
+  "PRODUCT NAME": string;
+  BRANCH: string;
+  TYPE: string;
+  QTY: number;
+  "STARTING BALANCE": number;
+  "ENDING BALANCE": number;
+}
+
 interface BranchChicSimpleProps {
   onBack: () => void;
   onBackToMain: () => void;
@@ -35,6 +47,25 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
 
   const BRANCH_NAME = "CHIC";
   const BALANCE_KEY = "CHIC NAILSPA BALANCE" as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = "Chic Nailspa";
+  const [productLog, setProductLog] = useState<LogRow[]>([]);
+  const [loadingLog, setLoadingLog] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProduct) { setProductLog([]); return; }
+    setLoadingLog(true);
+    (supabase as any)
+      .from("AllFileLog")
+      .select("*")
+      .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
+      .eq("BRANCH", BRANCH_LOG_NAME)
+      .order("DATE", { ascending: false })
+      .limit(20)
+      .then(({ data }: { data: LogRow[] | null }) => {
+        setProductLog(data || []);
+        setLoadingLog(false);
+      });
+  }, [selectedProduct]);
 
   return (
     <div style={{
@@ -178,46 +209,51 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
         {/* Product result card */}
         {searchMode === "result" && selectedProduct && !showDropdown && (
           <div style={{ paddingTop: "20px" }}>
-            <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", marginBottom: "0" }}>
+            {/* Product name */}
+            <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", marginBottom: "28px" }}>
               {selectedProduct["PRODUCT NAME"]}
             </div>
-            <div style={{ borderBottom: "0.5px solid hsl(var(--border))", margin: "16px 0" }} />
-            <div style={{ marginBottom: "20px" }}>
-              <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Supplier</div>
-              <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["SUPPLIER"] || "—"}</div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", columnGap: "12px", marginBottom: "20px" }}>
-              {([
-                { label: "Supplier Price", val: selectedProduct["SUPPLIER PRICE"] },
-                { label: "Branch Price", val: selectedProduct["BRANCH PRICE"] },
-                { label: "Customer Price", val: selectedProduct["CUSTOMER PRICE"] },
-                { label: "Staff Price", val: selectedProduct["STAFF PRICE"] },
-              ] as { label: string; val: number | null }[]).map(({ label, val }) => (
-                <div key={label}>
-                  <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>{label}</div>
-                  <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{val != null ? `RM ${val.toFixed(2)}` : "—"}</div>
+
+            {/* Staff Price + Customer Price */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Staff Price</div>
+                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                  {selectedProduct["STAFF PRICE"] != null ? `RM ${Number(selectedProduct["STAFF PRICE"]).toFixed(2)}` : "—"}
                 </div>
-              ))}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-              <div style={{ gridColumn: "1 / 3" }}>
-                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Office Balance</div>
-                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE BALANCE"] ?? "—"}</div>
               </div>
               <div>
-                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Store Room</div>
-                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE SECTION"] || "—"}</div>
+                <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Customer Price</div>
+                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                  {selectedProduct["CUSTOMER PRICE"] != null ? `RM ${Number(selectedProduct["CUSTOMER PRICE"]).toFixed(2)}` : "—"}
+                </div>
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "24px" }}>
-              {([
-                { label: "Boudoir", key: "BOUDOIR BALANCE" },
-                { label: "Chic Nailspa", key: "CHIC NAILSPA BALANCE" },
-                { label: "Nur Yadi", key: "NUR YADI BALANCE" },
-              ] as { label: string; key: keyof OfficeProduct }[]).map(({ label, key }) => (
-                <div key={label}>
-                  <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>{label}</div>
-                  <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{(selectedProduct as any)[key] ?? "—"}</div>
+
+            {/* Log table */}
+            <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px" }}>
+              {/* Header row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                {["Date", "Type", "Qty", "End Bal"].map(h => (
+                  <div key={h} style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{h}</div>
+                ))}
+              </div>
+              {loadingLog && (
+                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
+              )}
+              {!loadingLog && productLog.length === 0 && (
+                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>—</div>
+              )}
+              {!loadingLog && productLog.map(row => (
+                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 0.7fr 1fr", gap: "8px", padding: "10px 0", borderTop: "0.5px solid hsl(var(--border))" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                    {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{row.TYPE || "—"}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(var(--red, 0 70% 50%))" : "hsl(var(--foreground))" }}>
+                    {row.QTY > 0 ? "+" : ""}{row.QTY}
+                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                 </div>
               ))}
             </div>
