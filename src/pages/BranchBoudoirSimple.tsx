@@ -19,6 +19,7 @@ interface OfficeProduct {
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
   "OfficeFavourites": string | null;
+  "Boudoir Favourites": string | null;
 }
 
 interface LogRow {
@@ -545,6 +546,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
                 inputMode="search"
                 value={usageSearch}
                 onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
+                onFocus={() => setShowUsageDropdown(true)}
                 placeholder="Select product..."
                 style={{
                   flex: 1, background: "none", border: "none", outline: "none",
@@ -586,10 +588,12 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
             paddingLeft: "20px", paddingRight: "20px",
           }}>
             {(() => {
-              const favs = usageFiltered.filter(p => p["OfficeFavourites"] === true || p["OfficeFavourites"] === "TRUE" || p["OfficeFavourites"] === "true");
-              const colours = usageFiltered.filter(p => p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true");
-              const regular = usageFiltered.filter(p => !(p["OfficeFavourites"] === true || p["OfficeFavourites"] === "TRUE" || p["OfficeFavourites"] === "true") && !(p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true"));
-              const renderRow = (p: any) => (
+              const isBoFav = (p: any) => p["Boudoir Favourites"] === true || p["Boudoir Favourites"] === "TRUE" || p["Boudoir Favourites"] === "true";
+              const favs = usageFiltered.filter(p => isBoFav(p));
+              const isColour = (p: any) => p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true";
+              const colours = usageFiltered.filter(p => isColour(p) && !isBoFav(p));
+              const regular = usageFiltered.filter(p => !isBoFav(p) && !isColour(p));
+              const renderRow = (p: any, showStar?: boolean) => (
                 <div
                   key={p.id}
                   onMouseDown={() => handleAddUsageProduct(p)}
@@ -601,7 +605,10 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
                     color: usageEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))",
                   }}
                 >
-                  <span>{p["PRODUCT NAME"]}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {showStar && <Star size={11} style={{ color: "hsl(var(--muted-foreground))", opacity: 0.6, flexShrink: 0 }} />}
+                    {p["PRODUCT NAME"]}
+                  </span>
                   {(p as any)[BALANCE_KEY] != null && (
                     <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
                   )}
@@ -611,7 +618,7 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
                 <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
               );
               const sections: React.ReactNode[] = [];
-              if (favs.length > 0) { sections.push(sectionLabel("Branch Favourites")); favs.forEach(p => sections.push(renderRow(p))); }
+              if (favs.length > 0) { sections.push(sectionLabel("Boudoir Favourites")); favs.forEach(p => sections.push(renderRow(p, true))); }
               if (regular.length > 0) { sections.push(sectionLabel("Products")); regular.forEach(p => sections.push(renderRow(p))); }
               if (colours.length > 0) { sections.push(sectionLabel("Colours")); colours.forEach(p => sections.push(renderRow(p))); }
               if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
@@ -649,7 +656,6 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
                     background: "none", border: "none", cursor: "pointer", padding: 0,
                     fontSize: "11px", fontWeight: 300, letterSpacing: "0.06em",
                     fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))",
-                    textTransform: "uppercase",
                   }}
                 >
                   {entry.type}
