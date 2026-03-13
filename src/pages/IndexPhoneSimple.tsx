@@ -215,7 +215,7 @@ const IndexPhoneSimple = () => {
                       // Do nothing on focus — keep result/supplier view intact.
                       // Typing will trigger onChange which clears and shows dropdown.
                     }}
-                    placeholder="Enter Product.."
+                    placeholder="Enter Product / Supplier"
                     style={{
                       flex: 1, background: "none", border: "none", outline: "none",
                       fontSize: "15px", fontFamily: "Raleway, inherit",
