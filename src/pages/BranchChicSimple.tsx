@@ -13,7 +13,7 @@ interface OfficeProduct {
   "OFFICE BALANCE": number | null;
   "OFFICE SECTION": string | null;
   "UNITS/ORDER": number | null;
-  "BOUDOIR BALANCE": number | null;
+  "CHIC BALANCE": number | null;
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
@@ -43,12 +43,12 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
   const [savedFavourites, setSavedFavourites] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("chic_favourites") || "[]"); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem("boudoir_favourites") || "[]"); } catch { return []; }
   });
   const toggleFavourite = (name: string) => {
     setSavedFavourites(prev => {
       const next = prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name];
-      localStorage.setItem("chic_favourites", JSON.stringify(next));
+      localStorage.setItem("boudoir_favourites", JSON.stringify(next));
       return next;
     });
   };
@@ -56,8 +56,8 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
   const inputRef = useRef<HTMLInputElement>(null);
 
   const BRANCH_NAME = "CHIC";
-  const BALANCE_KEY = "CHIC NAILSPA BALANCE" as keyof OfficeProduct;
-  const BRANCH_LOG_NAME = "Chic";
+  const BALANCE_KEY = "CHIC BALANCE" as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = "Boudoir";
 
   // Branch-wide log (loaded on mount)
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
@@ -184,10 +184,10 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
         {/* Tab switcher — only when no product selected */}
         {!showDropdown && !selectedProduct && (
           <div style={{ display: "flex", gap: "28px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px" }}>
-            {(["RECENT", "ORDER", "USAGE"] as const).map(tab => (
+            {(["ORDER", "USAGE"] as const).map(tab => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => setActiveTab(activeTab === tab ? "RECENT" : tab)}
                 style={{
                   background: "none", border: "none", cursor: "pointer", padding: 0,
                   fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
@@ -314,6 +314,16 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
               </div>
             )}
 
+            {/* Spacer + RECENT label (only for branch-wide view) */}
+            {!selectedProduct && (
+              <div style={{ height: "28vh" }} />
+            )}
+            {!selectedProduct && (
+              <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>
+                {activeTab}
+              </div>
+            )}
+
             {/* Log table */}
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               {/* Column headers */}
@@ -324,7 +334,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
                   ))}
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "60px 160px 50px 65px 130px", gap: "6px", minWidth: "489px", marginBottom: "6px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "50px 160px 50px 65px 130px", gap: "6px", minWidth: "479px", marginBottom: "6px" }}>
                   {["Date", "Product", "Qty", "End Bal", "Type"].map(h => (
                     <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
                   ))}
@@ -352,7 +362,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
                     <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                   </div>
                 ) : (
-                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "60px 160px 50px 65px 130px", gap: "6px", minWidth: "489px", padding: "8px 0" }}>
+                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "50px 160px 50px 65px 130px", gap: "6px", minWidth: "479px", padding: "8px 0" }}>
                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
                       {showDate ? dateStr : ""}
                     </div>
