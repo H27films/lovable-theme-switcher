@@ -131,7 +131,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
         p["PRODUCT NAME"].toLowerCase().includes(usageSearch.toLowerCase()) &&
         (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
       )
-    : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1).slice(0, 40);
+    : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
 
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);
@@ -145,7 +145,7 @@ const BranchChicSimple = ({ onBack, onBackToMain, products }: BranchChicSimplePr
     }
     setUsageSearch("");
     setShowUsageDropdown(false);
-    setTimeout(() => usageInputRef.current?.focus(), 50);
+    usageInputRef.current?.blur();
   };
 
   const cycleType = (id: number) => {
