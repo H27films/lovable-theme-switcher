@@ -449,7 +449,44 @@ const IndexPhoneSimple = () => {
         {activeSection !== null && (
           <div style={sectionTransitionStyle}>
             {activeSection === "search" && <SearchPage onBack={navigateBack} />}
-            {activeSection === "branches" && <BranchesPage onBack={navigateBack} />}
+            {activeSection === "branches" && (
+              <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative" }}>
+                {/* Theme toggle */}
+                <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60 }}>
+                  <span onClick={toggleTheme} style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+                      <circle cx="12" cy="12" r="4" />
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                    </svg>
+                  </span>
+                </div>
+                {/* Branch list */}
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "12px", minHeight: "100dvh" }}>
+                  {(["OFFICE", "BOUDOIR", "CHIC", "NUR YADI"] as const).map((branch) => (
+                    <button
+                      key={branch}
+                      onClick={() => navigateBack()}
+                      style={{
+                        display: "block", textAlign: "left", padding: "2px 0",
+                        background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                        fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
+                        color: "hsl(var(--foreground))", lineHeight: 1,
+                        transition: "opacity 0.2s ease", overflow: "hidden", width: "100%",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                    >
+                      <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
+                        <span style={{ flexShrink: 0 }}>{branch}</span>
+                        <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, marginLeft: "0.25em" }}>{branch}</span>
+                        <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.05, marginLeft: "0.25em" }}>{branch}</span>
+                        <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, marginLeft: "0.25em" }}>{branch}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {activeSection === "order" && <OrderPage onBack={navigateBack} />}
           </div>
         )}
