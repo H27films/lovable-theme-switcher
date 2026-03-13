@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SearchPage from "./SearchPage";
 import BranchesPage from "./BranchesPage";
 import OrderPage from "./OrderPage";
-import { X, Search } from "lucide-react";
+import { X, Search, Building2 } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -284,9 +284,9 @@ const IndexPhoneSimple = () => {
                           onClick={() => { setSimpleSelectedSupplier(supplier); setSimpleSearch(supplier); setSimpleShowDropdown(false); setSimpleSearchMode("supplier"); }}
                           style={{ padding: "12px 0", borderBottom: "0.5px solid hsl(var(--border))", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span style={{ fontSize: "14px", lineHeight: 1 }}>🏬</span>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
                             <span style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{supplier}</span>
+                            <Building2 size={13} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                           </div>
                         </div>
                       ))}
