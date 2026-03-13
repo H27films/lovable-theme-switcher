@@ -506,33 +506,17 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
         ))}
       </div>
 
-      {/* ── SLIDE-IN PANELS ── */}
-      {/* Backdrop */}
-      {activePanel && (
-        <div
-          onClick={closePanel}
-          style={{
-            position: "fixed", inset: 0, zIndex: 50,
-            background: "rgba(0,0,0,0.15)",
-            backdropFilter: "blur(2px)",
-            WebkitBackdropFilter: "blur(2px)",
-            transition: "opacity 0.3s ease",
-          }}
-        />
-      )}
-
-      {/* Slide-in panel animation */}
-      <style>{`@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
+      {/* ── PANELS ── */}
 
       {/* USAGE Panel */}
       {activePanel === "USAGE" && (
       <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        width: "100vw",
+        position: "fixed", top: 0, left: 0,
+        width: "100vw", height: "100dvh",
         background: "hsl(var(--background))",
-        zIndex: 60,
+        zIndex: 100,
         display: "flex", flexDirection: "column",
-        animation: "slideInRight 0.3s ease-in-out",
+        overflow: "hidden",
       }}>
         {/* USAGE top bar */}
         <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
@@ -596,14 +580,13 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
         </div>
 
         {/* Usage dropdown */}
-        {showUsageDropdown && activePanel === "USAGE" && (
+        {showUsageDropdown && (
           <div style={{
-            position: "absolute", top: "116px", left: "20px", right: "20px",
+            flexShrink: 0,
             background: "hsl(var(--background))",
-            border: "0.5px solid hsl(var(--border))",
-            maxHeight: "240px", overflowY: "auto",
-            zIndex: 70,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+            borderBottom: "0.5px solid hsl(var(--border))",
+            maxHeight: "220px", overflowY: "auto",
+            paddingLeft: "20px", paddingRight: "20px",
           }}>
             {usageFiltered.slice(0, 50).map((p, i) => (
               <div
@@ -717,12 +700,12 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
       {/* ORDER Panel (placeholder) */}
       {activePanel === "ORDER" && (
       <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        width: "100vw",
+        position: "fixed", top: 0, left: 0,
+        width: "100vw", height: "100dvh",
         background: "hsl(var(--background))",
-        zIndex: 60,
+        zIndex: 100,
         display: "flex", flexDirection: "column",
-        animation: "slideInRight 0.3s ease-in-out",
+        overflow: "hidden",
       }}>
         <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -742,12 +725,12 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
       {/* CASH Panel (placeholder) */}
       {activePanel === "CASH" && (
       <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        width: "100vw",
+        position: "fixed", top: 0, left: 0,
+        width: "100vw", height: "100dvh",
         background: "hsl(var(--background))",
-        zIndex: 60,
+        zIndex: 100,
         display: "flex", flexDirection: "column",
-        animation: "slideInRight 0.3s ease-in-out",
+        overflow: "hidden",
       }}>
         <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
