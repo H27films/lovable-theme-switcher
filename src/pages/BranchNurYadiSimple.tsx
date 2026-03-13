@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Search, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -200,6 +200,8 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
 
   const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
     setActivePanel(panel);
+    setShowDropdown(false);
+    setShowUsageDropdown(false);
     if (panel === "USAGE") {
       setTimeout(() => usageInputRef.current?.focus(), 100);
     }
@@ -510,7 +512,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
         <div
           onClick={closePanel}
           style={{
-            position: "absolute", inset: 0, zIndex: 50,
+            position: "fixed", inset: 0, zIndex: 50,
             background: "rgba(0,0,0,0.15)",
             backdropFilter: "blur(2px)",
             WebkitBackdropFilter: "blur(2px)",
@@ -521,45 +523,72 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
 
       {/* USAGE Panel */}
       <div style={{
-        position: "absolute", top: 0, right: 0, bottom: 0,
-        width: "92vw", maxWidth: "420px",
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        width: "100%",
         background: "hsl(var(--background))",
         zIndex: 60,
         display: "flex", flexDirection: "column",
         transform: activePanel === "USAGE" ? "translateX(0)" : "translateX(100%)",
         transition: "transform 0.3s ease-in-out",
-        boxShadow: "-4px 0 20px rgba(0,0,0,0.08)",
       }}>
-        {/* Panel header */}
-        <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0, borderBottom: "0.5px solid hsl(var(--border))" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+        {/* USAGE top bar */}
+        <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>USAGE</span>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
               <X size={18} />
             </button>
           </div>
-          {/* Product search */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
-            <Search size={14} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-            <input
-              ref={usageInputRef}
-              type="text"
-              inputMode="search"
-              value={usageSearch}
-              onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
-              onFocus={() => setShowUsageDropdown(true)}
-              placeholder="Select product..."
-              style={{
-                flex: 1, background: "none", border: "none", outline: "none",
-                fontSize: "14px", fontFamily: "Raleway, inherit",
-                color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
-              }}
-            />
-            {usageSearch.length > 0 && (
-              <button onClick={() => { setUsageSearch(""); setShowUsageDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}>
-                <X size={13} />
-              </button>
-            )}
+
+          {/* ENTER TODAY'S STOCK MOVEMENTS header row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "uppercase" }}>
+              Enter Today's Stock Movements
+            </span>
+            <span style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
+              {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
+            </span>
+          </div>
+
+          {/* Select product line */}
+          <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "12px", marginBottom: "0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                ref={usageInputRef}
+                type="text"
+                inputMode="search"
+                value={usageSearch}
+                onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
+                onFocus={() => setShowUsageDropdown(true)}
+                placeholder="Select product..."
+                style={{
+                  flex: 1, background: "none", border: "none", outline: "none",
+                  fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300,
+                  color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
+                }}
+              />
+              <ChevronDown size={14} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+              {usageSearch.length > 0 && (
+                <button onClick={() => { setUsageSearch(""); setShowUsageDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}>
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Type + Qty selector row — only when a product is being selected (search has text) */}
+          <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingTop: "12px", paddingBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Salon Use</span>
+                <ChevronDown size={13} style={{ color: "hsl(var(--muted-foreground))" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <ChevronLeft size={14} style={{ color: "hsl(var(--muted-foreground))" }} />
+                <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", minWidth: "28px", textAlign: "center", color: "hsl(var(--foreground))" }}>1</span>
+                <ChevronRight size={14} style={{ color: "hsl(var(--muted-foreground))" }} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -682,8 +711,8 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
 
       {/* ORDER Panel (placeholder) */}
       <div style={{
-        position: "absolute", top: 0, right: 0, bottom: 0,
-        width: "92vw", maxWidth: "420px",
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        width: "100%",
         background: "hsl(var(--background))",
         zIndex: 60,
         display: "flex", flexDirection: "column",
@@ -706,8 +735,8 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
 
       {/* CASH Panel (placeholder) */}
       <div style={{
-        position: "absolute", top: 0, right: 0, bottom: 0,
-        width: "92vw", maxWidth: "420px",
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        width: "100%",
         background: "hsl(var(--background))",
         zIndex: 60,
         display: "flex", flexDirection: "column",
