@@ -1512,7 +1512,7 @@ const IndexPhone = () => {
                                 <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                                 <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
                                 <th className="label-uppercase font-normal text-center pb-3 pt-2">Bal</th>
-                                <th className="label-uppercase font-normal text-left pb-3 pt-2">Supplier</th>
+                                <th className="label-uppercase font-normal text-left pb-3 pt-2">From/To</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1531,7 +1531,7 @@ const IndexPhone = () => {
                                       {row.QTY < 0 ? "+" : ""}{-row.QTY}
                                     </td>
                                     <td className="text-[11px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
-                                    <td className="text-[11px] font-light py-3" style={dim}>{row["SUPPLIER"] ?? "—"}</td>
+                                    <td className="text-[11px] font-light py-3" style={dim}>{row["SUPPLIER"] ? row["SUPPLIER"] : (row["BRANCH"] ?? "—")}</td>
                                   </tr>
                                 );
                               })}
