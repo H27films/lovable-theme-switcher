@@ -458,10 +458,10 @@ const IndexPhoneSimple = () => {
                   <div
                     onClick={navigateBack}
                     style={{
-                      position: "absolute", left: "-15%", top: 0, bottom: 0, width: "35%",
+                      position: "absolute", left: "-20%", top: 0, bottom: 0, width: "30%",
                       display: "flex", flexDirection: "column", justifyContent: "center",
                       paddingLeft: "12px", cursor: "pointer",
-                      opacity: 0.3,
+                      opacity: 0.45,
                       userSelect: "none", zIndex: 1,
                     }}
                   >
@@ -470,13 +470,13 @@ const IndexPhoneSimple = () => {
                         fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
                         color: "hsl(var(--foreground))", lineHeight: 1, padding: "2px 0",
                         overflow: "hidden", whiteSpace: "nowrap",
-                        filter: item === "BRANCHES" ? "blur(2px)" : "blur(4px)",
+                        filter: item === "BRANCHES" ? "blur(1px)" : "blur(2px)",
                       }}>{item}</div>
                     ))}
                   </div>
 
                   {/* Branch names */}
-                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "35%", width: "100%" }}>
+                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "18%", width: "100%" }}>
                     {(["OFFICE", "BOUDOIR", "CHIC", "NUR YADI"] as const).map((branch) => (
                       <button
                         key={branch}
