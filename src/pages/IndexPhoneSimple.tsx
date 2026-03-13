@@ -266,7 +266,12 @@ const IndexPhoneSimple = () => {
                       onClick={() => { setSimpleSelectedProduct(p); setSimpleSearch(p["PRODUCT NAME"]); setSimpleShowDropdown(false); setSimpleSearchMode("result"); }}
                       style={{ padding: "12px 0", borderBottom: last ? "none" : "0.5px solid hsl(var(--border))", cursor: "pointer" }}
                     >
-                      <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</div>
+                        {p["OFFICE BALANCE"] != null && (
+                          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>{p["OFFICE BALANCE"]}</div>
+                        )}
+                      </div>
                       <div style={{ fontSize: "12px", marginTop: "2px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{p["SUPPLIER"]}</div>
                     </div>
                   );
@@ -279,8 +284,10 @@ const IndexPhoneSimple = () => {
                           onClick={() => { setSimpleSelectedSupplier(supplier); setSimpleSearch(supplier); setSimpleShowDropdown(false); setSimpleSearchMode("supplier"); }}
                           style={{ padding: "12px 0", borderBottom: "0.5px solid hsl(var(--border))", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
                         >
-                          <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{supplier}</div>
-                          <div style={{ fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Supplier</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "14px", lineHeight: 1 }}>🏬</span>
+                            <span style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{supplier}</span>
+                          </div>
                         </div>
                       ))}
                       {favourites.length > 0 && (
