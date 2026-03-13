@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Search } from "lucide-react";
+import { X, Search, Star } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -42,6 +42,16 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
+  const [savedFavourites, setSavedFavourites] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("boudoir_favourites") || "[]"); } catch { return []; }
+  });
+  const toggleFavourite = (name: string) => {
+    setSavedFavourites(prev => {
+      const next = prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name];
+      localStorage.setItem("boudoir_favourites", JSON.stringify(next));
+      return next;
+    });
+  };
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -151,9 +161,9 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
             (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
           );
           const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-          const favourites = allMatched.filter(p => isTrue(p["OfficeFavourites"])).slice(0, 6);
-          const colours = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && isTrue(p["Colour"])).slice(0, 6);
-          const regular = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && !isTrue(p["Colour"])).slice(0, 6);
+          const favourites = allMatched.filter(p => isTrue(p["OfficeFavourites"]));
+          const colours = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && isTrue(p["Colour"]));
+          const regular = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && !isTrue(p["Colour"]));
           const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
@@ -209,9 +219,26 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
         {/* Product result card */}
         {searchMode === "result" && selectedProduct && !showDropdown && (
           <div style={{ paddingTop: "20px" }}>
-            {/* Product name */}
-            <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", marginBottom: "28px" }}>
-              {selectedProduct["PRODUCT NAME"]}
+            {/* Product name + balance + star */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px", gap: "12px" }}>
+              <div style={{ fontSize: "clamp(18px, 5vw, 26px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
+                {selectedProduct["PRODUCT NAME"]}
+              </div>
+              {(selectedProduct as any)[BALANCE_KEY] != null && (
+                <div style={{ fontSize: "clamp(18px, 5vw, 26px)", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
+                  {(selectedProduct as any)[BALANCE_KEY]}
+                </div>
+              )}
+              <button
+                onClick={() => toggleFavourite(selectedProduct["PRODUCT NAME"])}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}
+              >
+                <Star
+                  size={18}
+                  fill={savedFavourites.includes(selectedProduct["PRODUCT NAME"]) ? "hsl(var(--foreground))" : "none"}
+                  color="hsl(var(--foreground))"
+                />
+              </button>
             </div>
 
             {/* Staff Price + Customer Price */}
