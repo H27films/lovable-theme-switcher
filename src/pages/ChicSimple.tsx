@@ -19,7 +19,7 @@ interface OfficeProduct {
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
   "OfficeFavourites": string | null;
-  "Nur Yadi Favourites": string | null;
+  "Chic Nailspa Favourites": string | null;
 }
 
 interface LogRow {
@@ -40,7 +40,7 @@ interface EntryLine {
   qty: number;
 }
 
-interface BranchNurYadiSimpleProps {
+interface ChicSimpleProps {
   onBack: () => void;
   onBackToMain: () => void;
   products: OfficeProduct[];
@@ -48,18 +48,18 @@ interface BranchNurYadiSimpleProps {
 
 const USAGE_TYPES: Array<"Salon Use" | "Customer" | "Staff"> = ["Salon Use", "Customer", "Staff"];
 
-const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSimpleProps) => {
+const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
   const [savedFavourites, setSavedFavourites] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("nuryadi_favourites") || "[]"); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem("chic_favourites") || "[]"); } catch { return []; }
   });
   const toggleFavourite = (name: string) => {
     setSavedFavourites(prev => {
       const next = prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name];
-      localStorage.setItem("nuryadi_favourites", JSON.stringify(next));
+      localStorage.setItem("chic_favourites", JSON.stringify(next));
       return next;
     });
   };
@@ -78,9 +78,9 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const BRANCH_NAME = "NUR YADI";
-  const BALANCE_KEY = "NUR YADI BALANCE" as keyof OfficeProduct;
-  const BRANCH_LOG_NAME = "Nur Yadi";
+  const BRANCH_NAME = "CHIC";
+  const BALANCE_KEY = "CHIC NAILSPA BALANCE" as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = "Chic Nailspa";
 
   // Branch-wide log (loaded on mount)
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
@@ -319,9 +319,9 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
             (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
           );
           const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-          const favourites = allMatched.filter(p => isTrue(p["Nur Yadi Favourites"]));
-          const colours = allMatched.filter(p => !isTrue(p["Nur Yadi Favourites"]) && isTrue(p["Colour"]));
-          const regular = allMatched.filter(p => !isTrue(p["Nur Yadi Favourites"]) && !isTrue(p["Colour"]));
+          const favourites = allMatched.filter(p => isTrue(p["Chic Nailspa Favourites"]));
+          const colours = allMatched.filter(p => !isTrue(p["Chic Nailspa Favourites"]) && isTrue(p["Colour"]));
+          const regular = allMatched.filter(p => !isTrue(p["Chic Nailspa Favourites"]) && !isTrue(p["Colour"]));
           const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
@@ -349,7 +349,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
             <div style={{ flex: 1, overflowY: "auto" }}>
               {favourites.length > 0 && (
                 <>
-                  <SectionHeader label="Nur Yadi Favourites" />
+                  <SectionHeader label="Chic Favourites" />
                   {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}
                 </>
               )}
@@ -588,11 +588,11 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
             paddingLeft: "20px", paddingRight: "20px",
           }}>
             {(() => {
-              const isNurYadiFav = (p: any) => p["Nur Yadi Favourites"] === true || p["Nur Yadi Favourites"] === "TRUE" || p["Nur Yadi Favourites"] === "true";
-              const favs = usageFiltered.filter(p => isNurYadiFav(p));
+              const isChicFav = (p: any) => p["Chic Nailspa Favourites"] === true || p["Chic Nailspa Favourites"] === "TRUE" || p["Chic Nailspa Favourites"] === "true";
+              const favs = usageFiltered.filter(p => isChicFav(p));
               const isColour = (p: any) => p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true";
-              const colours = usageFiltered.filter(p => isColour(p) && !isNurYadiFav(p));
-              const regular = usageFiltered.filter(p => !isNurYadiFav(p) && !isColour(p));
+              const colours = usageFiltered.filter(p => isColour(p) && !isChicFav(p));
+              const regular = usageFiltered.filter(p => !isChicFav(p) && !isColour(p));
               const renderRow = (p: any, showStar?: boolean) => (
                 <div
                   key={p.id}
@@ -618,7 +618,7 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
                 <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
               );
               const sections: React.ReactNode[] = [];
-              if (favs.length > 0) { sections.push(sectionLabel("Nur Yadi Favourites")); favs.forEach(p => sections.push(renderRow(p, true))); }
+              if (favs.length > 0) { sections.push(sectionLabel("Chic Nailspa Favourites")); favs.forEach(p => sections.push(renderRow(p, true))); }
               if (regular.length > 0) { sections.push(sectionLabel("Products")); regular.forEach(p => sections.push(renderRow(p))); }
               if (colours.length > 0) { sections.push(sectionLabel("Colours")); colours.forEach(p => sections.push(renderRow(p))); }
               if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
@@ -761,4 +761,4 @@ const BranchNurYadiSimple = ({ onBack, onBackToMain, products }: BranchNurYadiSi
   );
 };
 
-export default BranchNurYadiSimple;
+export default ChicSimple;

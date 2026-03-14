@@ -28,7 +28,7 @@ interface OfficeProduct {
   "OfficeFavourites": string | null;
 }
 
-const IndexPhoneSimple = () => {
+const SubLandingSimple = () => {
   const { theme, setTheme } = useTheme();
   const isSandTheme = theme === "sand";
   const toggleTheme = () => setTheme(isSandTheme ? "light" : "sand");
@@ -585,4 +585,4 @@ const IndexPhoneSimple = () => {
   );
 };
 
-export default IndexPhoneSimple;
+export default SubLandingSimple;

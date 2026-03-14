@@ -11,7 +11,7 @@ interface Product {
   PAR?: number | null;
 }
 
-interface SearchPageProps {
+interface SearchSimpleProps {
   onBack: () => void;
 }
 
@@ -20,7 +20,7 @@ function belowPar(balance: number | null | undefined, par: number | null | undef
   return Number(balance) < Number(par);
 }
 
-export default function SearchPage({ onBack }: SearchPageProps) {
+export default function SearchSimple({ onBack }: SearchSimpleProps) {
   const { theme, setTheme } = useTheme();
   const isSand = theme === "sand";
   const handleToggle = () => setTheme(isSand ? "light" : "sand");

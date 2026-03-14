@@ -19,13 +19,13 @@ interface OfficeProduct {
   "OfficeFavourites": string | null;
 }
 
-interface BranchOfficeSimpleProps {
+interface OfficeSimpleProps {
   onBack: () => void;
   onBackToMain: () => void;
   products: OfficeProduct[];
 }
 
-const BranchOfficeSimple = ({ onBack, onBackToMain, products }: BranchOfficeSimpleProps) => {
+const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => {
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -301,4 +301,4 @@ const BranchOfficeSimple = ({ onBack, onBackToMain, products }: BranchOfficeSimp
   );
 };
 
-export default BranchOfficeSimple;
+export default OfficeSimple;

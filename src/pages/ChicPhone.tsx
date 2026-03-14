@@ -15,7 +15,7 @@ interface AllFileProduct {
   "BRANCH PRICE": number | null;
   "STAFF PRICE": number | null;
   "CUSTOMER PRICE": number | null;
-  "NUR YADI BALANCE": number;
+  "CHIC NAILSPA BALANCE": number;
   "NUR YADI BALANCE": number;
   "CHIC NAILSPA BALANCE": number;
   "OFFICE BALANCE": number;
@@ -23,7 +23,7 @@ interface AllFileProduct {
   "UNITS/ORDER": number | null;
   "COLOUR": boolean | null;
   "OFFICE SECTION": string | null;
-  "NUR YADI FAVOURITE": boolean | null;
+  "CHIC NAILSPA FAVOURITE": boolean | null;
 }
 
 interface LogRow {
@@ -91,8 +91,8 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
     ? sortedProducts.filter(p => p["PRODUCT NAME"].toLowerCase().includes(entry.productSearch.toLowerCase()))
     : sortedProducts
   ).slice().sort((a, b) => {
-    const af = (a as any)["NUR YADI FAVOURITE"] ? 0 : 1;
-    const bf = (b as any)["NUR YADI FAVOURITE"] ? 0 : 1;
+    const af = (a as any)["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
+    const bf = (b as any)["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
     if (af !== bf) return af - bf;
     const isColourA = (a as any)["COLOUR"] === true || (a as any)["COLOUR"] === "YES" || (a as any)["COLOUR"] === "yes" ? 1 : 0;
     const isColourB = (b as any)["COLOUR"] === true || (b as any)["COLOUR"] === "YES" || (b as any)["COLOUR"] === "yes" ? 1 : 0;
@@ -182,10 +182,10 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
                 onMouseEnter={() => setActiveIndex(i)}
               >
                 <div className="flex items-center gap-1.5">
-                  {(p as any)["NUR YADI FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                  {(p as any)["CHIC NAILSPA FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                   <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
                 </div>
-                {showBalance && <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>{p["NUR YADI BALANCE"]}</span>}
+                {showBalance && <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>{p["CHIC NAILSPA BALANCE"]}</span>}
               </div>
             ))}
           </div>
@@ -342,7 +342,7 @@ function DatePicker({ value, onChange }: {
   );
 }
 
-function StockNurYadiPhoneInner() {
+function StockChicNailspaPhoneInner() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
 
@@ -470,7 +470,7 @@ function StockNurYadiPhoneInner() {
       const { data, error } = await (supabase as any)
         .from("AllFileLog")
         .select("*")
-        .eq("BRANCH", "Nur Yadi")
+        .eq("BRANCH", "Chic Nailspa")
         .gte("DATE", cutoff.toISOString().split("T")[0])
         .order("DATE", { ascending: false });
       if (error) console.error("Fetch log error:", error);
@@ -518,8 +518,8 @@ function StockNurYadiPhoneInner() {
   };
 
   const sortedProducts = [...products].sort((a, b) => {
-    const af = a["NUR YADI FAVOURITE"] ? 0 : 1;
-    const bf = b["NUR YADI FAVOURITE"] ? 0 : 1;
+    const af = a["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
+    const bf = b["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
     if (af !== bf) return af - bf;
     const isColourA = a["COLOUR"] === true || (a["COLOUR"] as any) === "YES" || (a["COLOUR"] as any) === "yes" ? 1 : 0;
     const isColourB = b["COLOUR"] === true || (b["COLOUR"] as any) === "YES" || (b["COLOUR"] as any) === "yes" ? 1 : 0;
@@ -532,17 +532,17 @@ function StockNurYadiPhoneInner() {
     : sortedProducts;
 
   const toggleFavourite = async (product: AllFileProduct) => {
-    const newVal = !(product["NUR YADI FAVOURITE"]);
+    const newVal = !(product["CHIC NAILSPA FAVOURITE"]);
     await (supabase as any)
       .from("AllFileProducts")
-      .update({ "NUR YADI FAVOURITE": newVal })
+      .update({ "CHIC NAILSPA FAVOURITE": newVal })
       .eq("PRODUCT NAME", product["PRODUCT NAME"]);
     setProducts(prev => prev.map(p =>
       p["PRODUCT NAME"] === product["PRODUCT NAME"]
-        ? { ...p, "NUR YADI FAVOURITE": newVal }
+        ? { ...p, "CHIC NAILSPA FAVOURITE": newVal }
         : p
     ));
-    setSelectedProduct(prev => prev ? { ...prev, "NUR YADI FAVOURITE": newVal } : null);
+    setSelectedProduct(prev => prev ? { ...prev, "CHIC NAILSPA FAVOURITE": newVal } : null);
   };
 
   const handleSelectProduct = (row: AllFileProduct) => {
@@ -611,14 +611,14 @@ function StockNurYadiPhoneInner() {
     try {
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBalance = Number(product?.["NUR YADI BALANCE"] ?? 0);
+        const currentBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
         const endingBalance = currentBalance - Number(entry.qty);
 
         // Log to AllFileLog
         const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": getDateStr(usageDate),
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Nur Yadi",
+          "BRANCH": "Chic Nailspa",
           "SUPPLIER": null,
           "TYPE": entry.type,
           "STARTING BALANCE": currentBalance,
@@ -631,7 +631,7 @@ function StockNurYadiPhoneInner() {
 
         // Update ALL AllFileProducts rows for this product
         await (supabase as any).from("AllFileProducts")
-          .update({ "NUR YADI BALANCE": endingBalance })
+          .update({ "CHIC NAILSPA BALANCE": endingBalance })
           .eq("PRODUCT NAME", entry.productName);
       }
       await fetchProducts();
@@ -675,7 +675,7 @@ function StockNurYadiPhoneInner() {
     try {
       // Restore branch balance (back to starting balance before this entry)
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": row["STARTING BALANCE"] })
+        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
       // Delete from AllFileLog
       await (supabase as any).from("AllFileLog").delete().eq("id", row.id);
@@ -690,7 +690,7 @@ function StockNurYadiPhoneInner() {
     try {
       // Restore branch balance
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": row["STARTING BALANCE"] })
+        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
 
       // Restore office balance: the log stores office balance AFTER deduction
@@ -719,7 +719,7 @@ function StockNurYadiPhoneInner() {
         .update({ "QTY": newQty, "ENDING BALANCE": newEndingBalance })
         .eq("id", row.id);
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": newEndingBalance })
+        .update({ "CHIC NAILSPA BALANCE": newEndingBalance })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
       await fetchProducts();
       await fetchLog();
@@ -733,7 +733,7 @@ function StockNurYadiPhoneInner() {
     try {
       // Restore branch balance
       await (supabase as any).from("AllFileProducts")
-        .update({ "NUR YADI BALANCE": row["STARTING BALANCE"] })
+        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
 
       // Restore office balance
@@ -784,7 +784,7 @@ function StockNurYadiPhoneInner() {
     .filter(e => e.productName)
     .map(e => {
       const product = products.find(p => p["PRODUCT NAME"] === e.productName);
-      const current = Number(product?.["NUR YADI BALANCE"] ?? 0);
+      const current = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
       const orderQty = Number(e.qty);
       return { productName: e.productName, current, orderQty, ending: current + orderQty };
     });
@@ -798,13 +798,13 @@ function StockNurYadiPhoneInner() {
     const dd = String(orderDateObj.getDate()).padStart(2, "0");
     const mm = String(orderDateObj.getMonth() + 1).padStart(2, "0");
     const yy = String(orderDateObj.getFullYear()).slice(-2);
-    const grn = `NUR ${dd}${mm}${yy}`;
+    const grn = `CHIC ${dd}${mm}${yy}`;
 
     if (orderConfirmMode) {
       // V2: build pending order, wait for confirmation
       const entries = valid.map(entry => {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const starting = Number(product?.["NUR YADI BALANCE"] ?? 0);
+        const starting = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
         const qty = Number(entry.qty);
         const ending = starting + qty;
         return { productName: entry.productName, starting, qty, ending };
@@ -817,14 +817,14 @@ function StockNurYadiPhoneInner() {
       try {
         for (const entry of valid) {
           const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-          const currentBranchBalance = Number(product?.["NUR YADI BALANCE"] ?? 0);
+          const currentBranchBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
           const endingBranchBalance = currentBranchBalance + Number(entry.qty);
           const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
           const endingOfficeBalance = currentOfficeBalance - Number(entry.qty);
           await (supabase as any).from("AllFileLog").insert({
             "DATE": getDateStr(orderDate),
             "PRODUCT NAME": entry.productName,
-            "BRANCH": "Nur Yadi",
+            "BRANCH": "Chic Nailspa",
             "SUPPLIER": "Office",
             "TYPE": "Order",
             "STARTING BALANCE": currentBranchBalance,
@@ -834,7 +834,7 @@ function StockNurYadiPhoneInner() {
             "OFFICE BALANCE": endingOfficeBalance,
           });
           await (supabase as any).from("AllFileProducts")
-            .update({ "NUR YADI BALANCE": endingBranchBalance })
+            .update({ "CHIC NAILSPA BALANCE": endingBranchBalance })
             .eq("PRODUCT NAME", entry.productName);
           await (supabase as any).from("AllFileProducts")
             .update({ "OFFICE BALANCE": endingOfficeBalance })
@@ -851,7 +851,7 @@ function StockNurYadiPhoneInner() {
   };
 
   const handleResetOrder = async () => {
-    await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Nur Yadi").eq("TYPE", "Order Request");
+    await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Chic Nailspa").eq("TYPE", "Order Request");
     setPendingOrder(null);
     setOrderEntries(makeOrderEntries());
     setOrderSubmitted(false);
@@ -868,12 +868,12 @@ function StockNurYadiPhoneInner() {
     const dd = String(orderDateObj.getDate()).padStart(2, "0");
     const mm = String(orderDateObj.getMonth() + 1).padStart(2, "0");
     const yy = String(orderDateObj.getFullYear()).slice(-2);
-    const grn = `NUR ${dd}${mm}${yy}`;
+    const grn = `CHIC ${dd}${mm}${yy}`;
 
     try {
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const starting = Number(product?.["NUR YADI BALANCE"] ?? 0);
+        const starting = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
         const qty = Number(entry.qty);
         const ending = starting + qty;
         const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
@@ -882,7 +882,7 @@ function StockNurYadiPhoneInner() {
         const { error: orderLogErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": getDateStr(orderDate),
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Nur Yadi",
+          "BRANCH": "Chic Nailspa",
           "SUPPLIER": "Office",
           "TYPE": "Order",
           "STARTING BALANCE": starting,
@@ -894,7 +894,7 @@ function StockNurYadiPhoneInner() {
         if (orderLogErr) { console.error("AllFileLog order insert error:", orderLogErr); setOrderError(orderLogErr.message || "Log write failed"); }
 
         await (supabase as any).from("AllFileProducts")
-          .update({ "NUR YADI BALANCE": ending })
+          .update({ "CHIC NAILSPA BALANCE": ending })
           .eq("PRODUCT NAME", entry.productName);
 
         await (supabase as any).from("AllFileProducts")
@@ -916,7 +916,7 @@ function StockNurYadiPhoneInner() {
     setOrderError(null);
     try {
       // Delete any Order Request entries written via ENTRY tab (no balance changes yet)
-      await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Nur Yadi").eq("TYPE", "Order Request").eq("GRN", pendingOrder.grn);
+      await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Chic Nailspa").eq("TYPE", "Order Request").eq("GRN", pendingOrder.grn);
       for (const entry of pendingOrder.entries) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
         const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
@@ -926,7 +926,7 @@ function StockNurYadiPhoneInner() {
         const { error: orderLogErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": pendingOrder.date,
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Nur Yadi",
+          "BRANCH": "Chic Nailspa",
           "SUPPLIER": "Office",
           "TYPE": "Order",
           "STARTING BALANCE": entry.starting,
@@ -939,7 +939,7 @@ function StockNurYadiPhoneInner() {
 
         // Update branch balance in AllFileProducts (ALL rows for this product)
         await (supabase as any).from("AllFileProducts")
-          .update({ "NUR YADI BALANCE": entry.ending })
+          .update({ "CHIC NAILSPA BALANCE": entry.ending })
           .eq("PRODUCT NAME", entry.productName);
 
         // Update office balance in AllFileProducts (ALL rows for this product)
@@ -1015,7 +1015,7 @@ function StockNurYadiPhoneInner() {
       const dd = String(d.getDate()).padStart(2, "0");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yy = String(d.getFullYear()).slice(-2);
-      return `NUR ${dd}${mm}${yy}`;
+      return `CHIC ${dd}${mm}${yy}`;
     })();
 
     const dateStr = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
@@ -1024,7 +1024,7 @@ function StockNurYadiPhoneInner() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(26, 26, 26);
-    doc.text("NUR YADI", margin, 58);
+    doc.text("CHIC NAILSPA", margin, 58);
     doc.text("GOODS RECEIVED NOTE", W - margin, 58, { align: "right" });
 
     // Divider
@@ -1205,7 +1205,7 @@ function StockNurYadiPhoneInner() {
             className="text-[16px] font-light tracking-[0.25em] uppercase"
             style={{ color: "hsl(var(--foreground))" }}
           >
-            NUR YADI
+            CHIC NAILSPA
           </span>
           <div className="flex items-center gap-4">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
@@ -1235,7 +1235,7 @@ function StockNurYadiPhoneInner() {
 
         <div className="py-6">
 
-          {/* ── SECTION 1: Nur Yadi Stock ── */}
+          {/* ── SECTION 1: Chic Nailspa Stock ── */}
           <div className="mb-4">
 
             {/* Stock search bar with hover underline */}
@@ -1298,10 +1298,10 @@ function StockNurYadiPhoneInner() {
                       onMouseEnter={() => setStockActiveIndex(i)}
                     >
                       <div className="flex items-center gap-1.5">
-                        {row["NUR YADI FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                        {row["CHIC NAILSPA FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                         <span className="text-[13px] font-light">{row["PRODUCT NAME"]}</span>
                       </div>
-                      <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{row["NUR YADI BALANCE"]}</span>
+                      <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{row["CHIC NAILSPA BALANCE"]}</span>
                     </div>
                   ))}
                 </div>
@@ -1324,13 +1324,13 @@ function StockNurYadiPhoneInner() {
                         <p className="text-[15px] font-light">{selectedProduct["PRODUCT NAME"]}</p>
                         <button
                           onClick={() => toggleFavourite(selectedProduct)}
-                          title={selectedProduct["NUR YADI FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
+                          title={selectedProduct["CHIC NAILSPA FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
                         >
                           <Star
                             size={20}
                             style={{
-                              fill: selectedProduct["NUR YADI FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
-                              color: selectedProduct["NUR YADI FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                              fill: selectedProduct["CHIC NAILSPA FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
+                              color: selectedProduct["CHIC NAILSPA FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                               transition: "all 0.15s"
                             }}
                           />
@@ -1339,8 +1339,8 @@ function StockNurYadiPhoneInner() {
                     </div>
                     <div className="text-right">
                       <p className="text-[22px] font-light leading-none" style={{
-                        color: selectedProduct["NUR YADI BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                      }}>{selectedProduct["NUR YADI BALANCE"]}</p>
+                        color: selectedProduct["CHIC NAILSPA BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                      }}>{selectedProduct["CHIC NAILSPA BALANCE"]}</p>
                       <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
                     </div>
                   </div>
@@ -1530,7 +1530,7 @@ function StockNurYadiPhoneInner() {
                 <div className="mb-5">
                   {orderEntries.map((entry, idx) => {
                     const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-                    const currentBal = product?.["NUR YADI BALANCE"] ?? null;
+                    const currentBal = product?.["CHIC NAILSPA BALANCE"] ?? null;
                     return (
                       <div key={entry.id} className="mb-3">
                         {/* Line 1: Product + Remove */}
@@ -2092,13 +2092,13 @@ function StockNurYadiPhoneInner() {
                           {info && (
                             <button
                               onClick={() => toggleFavourite(info)}
-                              title={info["NUR YADI FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
+                              title={info["CHIC NAILSPA FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
                             >
                               <Star
                                 size={20}
                                 style={{
-                                  fill: info["NUR YADI FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
-                                  color: info["NUR YADI FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                                  fill: info["CHIC NAILSPA FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
+                                  color: info["CHIC NAILSPA FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                                   transition: "all 0.15s"
                                 }}
                               />
@@ -2117,9 +2117,9 @@ function StockNurYadiPhoneInner() {
                       {info && (
                         <div className="text-right">
                           <p className="text-[22px] font-light leading-none" style={{
-                            color: (info["NUR YADI BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                            color: (info["CHIC NAILSPA BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
                           }}>
-                            {info["NUR YADI BALANCE"] ?? 0}
+                            {info["CHIC NAILSPA BALANCE"] ?? 0}
                           </p>
                           <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
                         </div>
@@ -2331,10 +2331,10 @@ function StockNurYadiPhoneInner() {
   );
 }
 
-export default function StockNurYadiPhone() {
+export default function ChicPhone() {
   return (
     <ErrorBoundary>
-      <StockNurYadiPhoneInner />
+      <StockChicNailspaPhoneInner />
     </ErrorBoundary>
   );
 }

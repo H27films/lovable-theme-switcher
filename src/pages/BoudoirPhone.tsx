@@ -60,12 +60,12 @@ interface OrderLine {
 
 const TYPES = ["Salon Use", "Customer", "Staff"];
 
-const makeEntries = (): EntryLine[] => [1,2,3,4,5].map(id => ({
+const makeEntries = (): EntryLine[] => [1].map(id => ({
   id, productName: "", type: "Salon Use", qty: 1,
   showProductDropdown: false, showTypeDropdown: false, productSearch: "",
 }));
 
-const makeOrderEntries = (): OrderLine[] => [1,2,3,4,5].map(id => ({
+const makeOrderEntries = (): OrderLine[] => [1].map(id => ({
   id, productName: "", qty: 1, showProductDropdown: false, productSearch: "",
 }));
 
@@ -152,8 +152,8 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
 
       {entry.showProductDropdown && (
         <div
-          className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+          className="absolute top-full left-0 right-0 z-[200] border"
+          style={{ background: "hsl(var(--card))", borderColor: borderActive, marginTop: "2px" }}
         >
           <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor: border }}>
             <Search size={11} style={dim} />
@@ -176,7 +176,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
                 className="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors"
                 style={{
                   borderBottom: `1px solid ${border}`,
-                  background: i === activeIndex ? cardBg : "transparent",
+                  background: i === activeIndex ? "hsl(var(--muted))" : "hsl(var(--card))",
                 }}
                 onMouseDown={() => { onSelect(p["PRODUCT NAME"]); setActiveIndex(-1); }}
                 onMouseEnter={() => setActiveIndex(i)}
@@ -251,7 +251,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
       onKeyDown={handleKeyDown}
     >
       <div
-        className={lineStyle ? "flex items-center justify-between px-0 cursor-pointer h-[40px] w-full" : "flex items-center justify-between px-2 py-2 cursor-pointer h-[34px]"}
+        className={lineStyle ? "flex items-center justify-between px-0 cursor-pointer h-[28px] w-full" : "flex items-center justify-between px-2 py-2 cursor-pointer h-[34px]"}
         style={lineStyle ? {} : { background: cardBg, border: `1px solid ${borderActive}` }}
         onClick={onToggle}
       >
@@ -260,8 +260,8 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
       </div>
       {entry.showTypeDropdown && (
         <div
-          className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
+          className="absolute top-full left-0 right-0 z-[200] border"
+          style={{ background: "hsl(var(--card))", borderColor: borderActive, marginTop: "2px" }}
         >
           {TYPES.map((t, i) => (
             <div
@@ -269,7 +269,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
               className="px-3 py-2 text-[11px] font-light cursor-pointer transition-colors"
               style={{
                 borderBottom: `1px solid ${border}`,
-                background: i === activeIndex ? cardBg : "transparent",
+                background: i === activeIndex ? "hsl(var(--muted))" : "hsl(var(--card))",
               }}
               onMouseDown={() => { onSelect(t); setActiveIndex(-1); }}
               onMouseEnter={() => setActiveIndex(i)}
@@ -318,7 +318,7 @@ function DatePicker({ value, onChange }: {
       {open && (
         <div
           className="absolute top-full right-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "110px", borderRadius: "5px" }}
+          style={{ background: "hsl(var(--card))", borderColor: borderActive, minWidth: "110px", borderRadius: "5px", zIndex: 200 }}
         >
           {OPTIONS.map(opt => (
             <div
@@ -342,11 +342,11 @@ function DatePicker({ value, onChange }: {
   );
 }
 
-function StockInner() {
+function BoudoirPhoneInner() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
 
-  const [mode, setMode] = useState<"usage" | "order">("usage");
+  const [mode, setMode] = useState<"usage" | "order" | "summary">("usage");
 
   const [products, setProducts] = useState<AllFileProduct[]>([]);
   const [log, setLog] = useState<LogRow[]>([]);
@@ -415,9 +415,18 @@ function StockInner() {
   const [stockSearchFocused, setStockSearchFocused] = useState(false);
   const stockListRef = useRef<HTMLDivElement>(null);
   const stockInputRef = useRef<HTMLInputElement>(null);
+  const activityDetailRef = useRef<HTMLDivElement>(null);
   const stockSearchExpanded = stockSearchHovered || stockSearchFocused || stockSearch.length > 0;
 
   const today = new Date().toISOString().split("T")[0];
+
+  useEffect(() => {
+    if (selectedActivityProduct && activityDetailRef.current) {
+      setTimeout(() => {
+        activityDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [selectedActivityProduct]);
   const [usageDate, setUsageDate] = useState<"today" | "yesterday" | "tomorrow">("today");
   const [orderDate, setOrderDate] = useState<"today" | "yesterday" | "tomorrow">("today");
 
@@ -1176,9 +1185,28 @@ function StockInner() {
 
   return (
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
-      <div className="max-w-[900px] mx-auto px-5">
+      <div className="max-w-full mx-auto px-3">
+        {/* ── Search blur overlay ── */}
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backdropFilter: stockSearchFocused ? "blur(4px)" : "blur(0px)",
+            WebkitBackdropFilter: stockSearchFocused ? "blur(4px)" : "blur(0px)",
+            opacity: stockSearchFocused ? 1 : 0,
+            transition: "opacity 300ms ease, backdrop-filter 300ms ease, -webkit-backdrop-filter 300ms ease",
+            zIndex: 30,
+            pointerEvents: "none",
+          }}
+        />
+
         {/* Top bar */}
-        <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border, ...fade(0) }}>
+        <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, position: "relative", zIndex: 35, ...fade(0) }}>
+          <span
+            className="text-[16px] font-light tracking-[0.25em] uppercase"
+            style={{ color: "hsl(var(--foreground))" }}
+          >
+            BOUDOIR
+          </span>
           <div className="flex items-center gap-4">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
             <button
@@ -1197,63 +1225,25 @@ function StockInner() {
             >
               <Home size={14} />
             </button>
-            <span
-              className="text-[11px] tracking-[0.2em] uppercase"
-              style={{ color: "hsl(var(--foreground))" }}
-            >
-              Boudoir
-            </span>
           </div>
-          <button
-            onClick={() => navigate("/prices")}
-            className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase text-foreground transition-colors"
-          >
-            <span>OFFICE</span>
-            <ArrowRight size={15} />
-          </button>
+        </div>
+
+        {/* ── Date just below header ── */}
+        <div className="pt-2 pb-0" style={fade(90)}>
+          <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim pl-0">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
         </div>
 
         <div className="py-6">
 
           {/* ── SECTION 1: Boudoir Stock ── */}
-          <div className="mb-12">
-            <div className="mb-6" style={fade(90)}>
-              <div className="flex items-end justify-between">
-                <div>
-                <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1" style={{ fontVariantNumeric: "lining-nums" }}>{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
-                  <p className="text-[28px] font-light tracking-tight uppercase">Boudoir</p>
-                </div>
-                <span
-                  className="nav-link mb-1"
-                  style={{ color: saveFlash ? "hsl(var(--green))" : "hsl(var(--foreground))" }}
-                  onClick={handleSave}
-                >
-                  {saveFlash ? "✓ Saved" : "Save"} &nbsp;<Lock size={13} className="inline -mt-0.5" />
-                </span>
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-[11px] tracking-wider uppercase" style={dim}>{products.length} products</p>
-                {mode === "order" && (
-                  <span
-                    className="nav-link relative"
-                    style={{ color: "hsl(var(--foreground))" }}
-                    onClick={() => setShowOrderSummaryPanel(true)}
-                  >
-                    Order Summary &nbsp;<FileText size={13} className="inline -mt-0.5" />
-                    {hasOrderNotification && (
-                      <span className="absolute -top-1 -right-0 w-2 h-2 rounded-full" style={{ background: "hsl(var(--green))" }} />
-                    )}
-                  </span>
-                )}
-              </div>
-            </div>
+          <div className="mb-4">
 
             {/* Stock search bar with hover underline */}
             <div
               style={{...fade(170), position: "relative", zIndex: 40}}
             >
               <div
-                className="relative mb-6"
+                className="relative mb-12"
                 onMouseEnter={() => setStockSearchHovered(true)}
               onMouseLeave={() => setStockSearchHovered(false)}
             >
@@ -1330,7 +1320,6 @@ function StockInner() {
                   {/* Balance row */}
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
                       <div className="flex items-center gap-2">
                         <p className="text-[15px] font-light">{selectedProduct["PRODUCT NAME"]}</p>
                         <button
@@ -1349,7 +1338,7 @@ function StockInner() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[32px] font-light leading-none" style={{
+                      <p className="text-[22px] font-light leading-none" style={{
                         color: selectedProduct["BOUDOIR BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
                       }}>{selectedProduct["BOUDOIR BALANCE"]}</p>
                       <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
@@ -1360,11 +1349,11 @@ function StockInner() {
                   <div className="flex items-center gap-6 mb-6 pt-4 border-t" style={{ borderColor: border }}>
                     <div>
                       <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
-                      <p className="text-[15px] font-light">{fmtPrice(selectedProduct["STAFF PRICE"])}</p>
+                      <p className="text-[13px] font-light">{fmtPrice(selectedProduct["STAFF PRICE"])}</p>
                     </div>
                     <div>
                       <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
-                      <p className="text-[15px] font-light">{fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
+                      <p className="text-[13px] font-light">{fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
                     </div>
                   </div>
 
@@ -1374,28 +1363,22 @@ function StockInner() {
                       <thead>
                         <tr className="border-b" style={{ borderColor: border }}>
                           <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
-                          <th className="label-uppercase font-normal text-left pb-2 pt-1">Product</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">Branch</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">Supplier</th>
+                          <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
                           <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">Office Bal</th>
-                          <th className="label-uppercase font-normal text-center pb-2 pt-1">GRN</th>
+                          <th className="label-uppercase font-normal text-center pb-2 pt-1">End Bal</th>
                         </tr>
                       </thead>
                       <tbody>
                         {productLog.map(row => (
                           <tr key={row.id} className="border-b" style={{ borderColor: border }}>
-                            <td className="text-[12px] font-light py-2" style={dim}>
+                            <td className="text-[10px] font-light py-2" style={dim}>
                               {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </td>
-                            <td className="text-[12px] font-light py-2">{row["PRODUCT NAME"]}</td>
-                            <td className="text-[11px] font-light py-2 text-center tracking-wider uppercase" style={dim}>{row.BRANCH}</td>
-                            <td className="text-[11px] font-light py-2 text-center" style={dim}>{row.SUPPLIER || "—"}</td>
+                            <td className="text-[10px] font-light py-2" style={dim}>{row.TYPE || "—"}</td>
                             <td className="text-[12px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                               {row.QTY > 0 ? "+" : ""}{row.QTY}
                             </td>
-                            <td className="text-[12px] font-light py-2 text-center">{row["OFFICE BALANCE"] ?? "—"}</td>
-                            <td className="text-[11px] font-light py-2 text-center" style={dim}>{row.GRN || "—"}</td>
+                            <td className="text-[12px] font-light py-2 text-center">{row["ENDING BALANCE"] ?? "—"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1410,10 +1393,10 @@ function StockInner() {
           </div>
 
           {/* ── SECTION 2: Mode Toggle ── */}
-          <div className="mb-12" style={fade(260)}>
+          <div className="mb-12" style={{ ...fade(260), position: "relative", zIndex: 10 }}>
 
             {/* Tab buttons */}
-            <div className="flex items-center border-b mb-8" style={{ borderColor: border }}>
+            <div className="flex items-center border-b mb-4" style={{ borderColor: border }}>
               <button
                 onClick={() => setMode("usage")}
                 className="pb-3 pr-6 text-[13px] tracking-wider uppercase transition-colors"
@@ -1436,6 +1419,17 @@ function StockInner() {
               >
                 Order
               </button>
+              <button
+                onClick={() => setMode("summary")}
+                className="pb-3 px-6 text-[13px] tracking-wider uppercase transition-colors"
+                style={{
+                  color: mode === "summary" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                  borderBottom: mode === "summary" ? "1px solid hsl(var(--foreground))" : "1px solid transparent",
+                  marginBottom: "-1px",
+                }}
+              >
+                Summary
+              </button>
             </div>
 
             {/* ── Daily Usage panel ── */}
@@ -1445,87 +1439,66 @@ function StockInner() {
                   <p className="text-[11px] tracking-wider uppercase" style={dim}>Enter today's stock movements</p>
                   <DatePicker value={usageDate} onChange={setUsageDate} />
                 </div>
-                {/* Excel-style grid — no column-gap, border-bottom on cells 2–4 only */}
-                <div
-                  className="mb-5"
-                  style={{ display: "grid", gridTemplateColumns: "20px 1fr 150px 140px 28px", columnGap: 0, marginLeft: "-4px" }}
-                >
-                  {/* Header row — border-bottom only on Product, Type, Qty */}
-                  <div />
-                  <div className="pb-2 pr-4" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Type</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Qty</span>
-                  </div>
-                  <div />
-
-                  {/* Data rows */}
+                {/* Stacked rows — mobile friendly */}
+                <div className="mb-5">
                   {entries.map((entry, idx) => (
-                    <React.Fragment key={entry.id}>
-                      {/* Row number — no border */}
-                      <div className="flex items-center justify-start">
-                        <span className="text-[13px]" style={dim}>{idx + 1}</span>
-                      </div>
-                      {/* Product cell — border-bottom */}
-                      <div className="pr-4" style={{ borderBottom: `1px solid ${border}` }}>
-                        <ProductDropdown
-                          entry={entry}
-                          sortedProducts={sortedProducts}
-                          onSelect={name => updateEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
-                          onSearch={val => updateEntry(entry.id, { productSearch: val })}
-                          onToggle={() => {
-                            closeAllDropdowns(entry.id, "product");
-                            updateEntry(entry.id, { showProductDropdown: !entry.showProductDropdown, showTypeDropdown: false });
-                          }}
-                          onClose={() => updateEntry(entry.id, { showProductDropdown: false })}
-                          showBalance
-                          lineStyle
-                        />
-                      </div>
-                      {/* Type cell — border-bottom */}
-                      <div className="px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                        <TypeDropdown
-                          entry={entry}
-                          onSelect={type => updateEntry(entry.id, { type, showTypeDropdown: false })}
-                          onToggle={() => {
-                            closeAllDropdowns(entry.id, "type");
-                            updateEntry(entry.id, { showTypeDropdown: !entry.showTypeDropdown, showProductDropdown: false });
-                          }}
-                          onClose={() => updateEntry(entry.id, { showTypeDropdown: false })}
-                          lineStyle
-                        />
-                      </div>
-                      {/* Qty stepper cell — border-bottom */}
-                      <div className="flex items-center justify-between py-1 px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                        <button
-                          onClick={() => updateEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
-                          className="px-1.5 py-1 transition-colors" style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                          <ChevronLeft size={13} />
-                        </button>
-                        <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
-                        <button
-                          onClick={() => updateEntry(entry.id, { qty: entry.qty + 1 })}
-                          className="px-1.5 py-1 transition-colors" style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                          <ChevronRight size={13} />
-                        </button>
-                      </div>
-                      {/* Remove button — no border */}
-                      <div className="flex items-center justify-center pl-2">
-                        <button onClick={() => removeEntry(entry.id)} className="transition-colors" style={dim}
+                    <div key={entry.id} className="mb-3">
+                      {/* Line 1: Product + Remove */}
+                      <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
+                        <div className="flex-1">
+                          <ProductDropdown
+                            entry={entry}
+                            sortedProducts={sortedProducts}
+                            onSelect={name => updateEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
+                            onSearch={val => updateEntry(entry.id, { productSearch: val })}
+                            onToggle={() => {
+                              closeAllDropdowns(entry.id, "product");
+                              updateEntry(entry.id, { showProductDropdown: !entry.showProductDropdown, showTypeDropdown: false });
+                            }}
+                            onClose={() => updateEntry(entry.id, { showProductDropdown: false })}
+                            showBalance
+                            lineStyle
+                          />
+                        </div>
+                        <button onClick={() => removeEntry(entry.id)} className="transition-colors flex-shrink-0" style={dim}
                           onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                           onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                           <X size={13} />
                         </button>
                       </div>
-                    </React.Fragment>
+                      {/* Line 2: Type + Qty */}
+                      <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                        <div className="flex-1">
+                          <TypeDropdown
+                            entry={entry}
+                            onSelect={type => updateEntry(entry.id, { type, showTypeDropdown: false })}
+                            onToggle={() => {
+                              closeAllDropdowns(entry.id, "type");
+                              updateEntry(entry.id, { showTypeDropdown: !entry.showTypeDropdown, showProductDropdown: false });
+                            }}
+                            onClose={() => updateEntry(entry.id, { showTypeDropdown: false })}
+                            lineStyle
+                          />
+                        </div>
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => updateEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
+                            className="px-1.5 py-1 transition-colors" style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                            <ChevronLeft size={13} />
+                          </button>
+                          <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
+                          <button
+                            onClick={() => updateEntry(entry.id, { qty: entry.qty + 1 })}
+                            className="px-1.5 py-1 transition-colors" style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                            <ChevronRight size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
                 <button onClick={addEntry}
@@ -1553,89 +1526,69 @@ function StockInner() {
                   <p className="text-[11px] tracking-wider uppercase" style={dim}>Add stock from a new order</p>
                   <DatePicker value={orderDate} onChange={setOrderDate} />
                 </div>
-                {/* Excel-style grid — no column-gap, border-bottom on cells 2–4 only for seamless line */}
-                <div
-                  className="mb-5"
-                  style={{ display: "grid", gridTemplateColumns: "20px 1fr 70px 140px 28px", columnGap: 0, marginLeft: "-4px" }}
-                >
-                  {/* Header row — border-bottom only on Product, Balance, Order Qty */}
-                  <div />
-                  <div className="pb-2 pr-4" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Product</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
-                  </div>
-                  <div className="pb-2 px-2 text-center" style={{ borderBottom: `1px solid ${borderActive}` }}>
-                    <span className="text-[10px] tracking-wider uppercase" style={dim}>Order Qty</span>
-                  </div>
-                  <div />
-
-                  {/* Data rows */}
+                {/* Stacked rows — mobile friendly */}
+                <div className="mb-5">
                   {orderEntries.map((entry, idx) => {
                     const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
                     const currentBal = product?.["BOUDOIR BALANCE"] ?? null;
                     return (
-                      <React.Fragment key={entry.id}>
-                        {/* Row number — no border */}
-                        <div className="flex items-center justify-start">
-                          <span className="text-[13px]" style={dim}>{idx + 1}</span>
-                        </div>
-                        {/* Product cell — border-bottom */}
-                        <div className="pr-4" style={{ borderBottom: `1px solid ${border}` }}>
-                          <ProductDropdown
-                            entry={entry}
-                            sortedProducts={sortedProducts}
-                            onSelect={name => updateOrderEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
-                            onSearch={val => updateOrderEntry(entry.id, { productSearch: val })}
-                            onToggle={() => {
-                              closeAllOrderDropdowns(entry.id);
-                              updateOrderEntry(entry.id, { showProductDropdown: !entry.showProductDropdown });
-                            }}
-                            onClose={() => updateOrderEntry(entry.id, { showProductDropdown: false })}
-                            showBalance
-                            lineStyle
-                          />
-                        </div>
-                        {/* Balance cell — border-bottom */}
-                        <div className="flex items-center justify-center px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                          <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
-                            {currentBal === null ? "—" : currentBal}
-                          </span>
-                        </div>
-                        {/* Qty stepper cell — border-bottom */}
-                        <div className="flex items-center justify-between py-1 px-2" style={{ borderBottom: `1px solid ${border}` }}>
-                          <button
-                            onClick={() => updateOrderEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
-                            className="px-1.5 py-1 transition-colors" style={dim}
-                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                            <ChevronLeft size={13} />
-                          </button>
-                          <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
-                          <button
-                            onClick={() => updateOrderEntry(entry.id, { qty: entry.qty + 1 })}
-                            className="px-1.5 py-1 transition-colors" style={dim}
-                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                            <ChevronRight size={13} />
-                          </button>
-                        </div>
-                        {/* Remove button — no border */}
-                        <div className="flex items-center justify-center pl-2">
+                      <div key={entry.id} className="mb-3">
+                        {/* Line 1: Product + Remove */}
+                        <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
+                          <div className="flex-1">
+                            <ProductDropdown
+                              entry={entry}
+                              sortedProducts={sortedProducts}
+                              onSelect={name => updateOrderEntry(entry.id, { productName: name, showProductDropdown: false, productSearch: "" })}
+                              onSearch={val => updateOrderEntry(entry.id, { productSearch: val })}
+                              onToggle={() => {
+                                closeAllOrderDropdowns(entry.id);
+                                updateOrderEntry(entry.id, { showProductDropdown: !entry.showProductDropdown });
+                              }}
+                              onClose={() => updateOrderEntry(entry.id, { showProductDropdown: false })}
+                              showBalance
+                              lineStyle
+                            />
+                          </div>
                           <button onClick={() => {
-                            if (orderEntries.length > 5) {
+                            if (orderEntries.length > 1) {
                               removeOrderEntry(entry.id);
                             } else {
                               updateOrderEntry(entry.id, { productName: "", qty: 1, productSearch: "", showProductDropdown: false });
                             }
-                          }} className="transition-colors" style={dim}
+                          }} className="transition-colors flex-shrink-0" style={dim}
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
                             <X size={13} />
                           </button>
                         </div>
-                      </React.Fragment>
+                        {/* Line 2: Balance + Qty */}
+                        <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
+                            <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
+                              {currentBal === null ? "—" : currentBal}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <button
+                              onClick={() => updateOrderEntry(entry.id, { qty: Math.max(1, entry.qty - 1) })}
+                              className="px-1.5 py-1 transition-colors" style={dim}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                              <ChevronLeft size={13} />
+                            </button>
+                            <span className="text-[13px] font-light min-w-[32px] text-center">{entry.qty}</span>
+                            <button
+                              onClick={() => updateOrderEntry(entry.id, { qty: entry.qty + 1 })}
+                              className="px-1.5 py-1 transition-colors" style={dim}
+                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                              <ChevronRight size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -1773,9 +1726,9 @@ function StockInner() {
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                             >Date</th>
                             <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
-                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Starting Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Start Bal</th>
                             <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">End Bal</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1785,10 +1738,10 @@ function StockInner() {
                             const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && olderDates.length > 0);
                             return (
                               <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
-                                <td className="text-[12px] font-light py-3">
+                                <td className="text-[10px] font-light py-3">
                                   {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                 </td>
-                                <td className="text-[13px] font-light py-3">{row["PRODUCT NAME"]}</td>
+                                <td className="text-[11px] font-light py-3">{row["PRODUCT NAME"]}</td>
                                 <td className="text-[13px] font-light py-3 text-center" style={dim}>{row["STARTING BALANCE"]}</td>
                                 <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</td>
                                 <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
@@ -1810,10 +1763,10 @@ function StockInner() {
                                   onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
                                   onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                                 >
-                                  <td className="text-[12px] font-light py-3" style={dim}>
+                                  <td className="text-[10px] font-light py-3" style={dim}>
                                     {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                   </td>
-                                  <td className="text-[12px] font-light py-3" style={dim}>
+                                  <td className="text-[11px] font-light py-3" style={dim}>
                                     {rows.length} {rows.length === 1 ? "item" : "items"}
                                   </td>
                                   <td colSpan={2} />
@@ -1823,8 +1776,8 @@ function StockInner() {
                                 </tr>
                                 {isExpanded && rows.map((row, ri) => (
                                   <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
-                                    <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                                    <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
+                                    <td className="text-[10px] font-light py-2.5 pl-2" style={dim}>—</td>
+                                    <td className="text-[11px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center" style={dim}>{row["STARTING BALANCE"]}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</td>
                                     <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
@@ -1841,6 +1794,246 @@ function StockInner() {
               </div>
             )}
           </div>
+
+            {/* ── Order Summary Panel ── */}
+            {mode === "summary" && (
+              <div>
+                  {/* Panel header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <div className="text-[18px] font-light tracking-tight" style={{ lineHeight: 1.2 }}>Order Summary</div>
+                      <p className="text-[11px] tracking-wider uppercase mt-0.5" style={dim}>
+                        {pendingOrder
+                          ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+                          : latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        {pendingOrder
+                          ? ` · ${pendingOrder.entries.length} ${pendingOrder.entries.length === 1 ? "item" : "items"} · Pending`
+                          : allTodayOrders.length > 0 ? ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}` : ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ── Most recent order (editable) ── */}
+                  {pendingOrder !== null ? (
+                    <>
+                      <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>PREVIEW · CLICK × TO REMOVE</p>
+                      <table className="w-full border-collapse mb-8">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
+                            <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Prev Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">New Bal</th>
+                            <th className="w-6" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pendingOrder.entries.map((entry, idx) => {
+                            const isEditing = editingPendingIdx === idx;
+                            const parsedEdit = parseInt(editingPendingQty);
+                            const previewBal = isEditing && !isNaN(parsedEdit) ? entry.starting + parsedEdit : entry.ending;
+                            return (
+                              <tr key={idx} className="border-b" style={{ borderColor: "hsl(var(--border))" }}>
+                                <td className="text-[13px] font-light py-3">{entry.productName}</td>
+                                <td className="text-[13px] font-light py-3 text-center" style={dim}>{entry.starting}</td>
+                                <td className="text-[13px] font-light py-3 text-center">
+                                  {isEditing ? (
+                                    <input
+                                      autoFocus
+                                      type="number"
+                                      min={1}
+                                      className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                      style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
+                                      value={editingPendingQty}
+                                      onChange={e => setEditingPendingQty(e.target.value)}
+                                      onClick={e => (e.target as HTMLInputElement).select()}
+                                      onBlur={() => {
+                                        if (!isNaN(parsedEdit) && parsedEdit > 0) {
+                                          setPendingOrder(prev => {
+                                            if (!prev) return prev;
+                                            const entries = [...prev.entries];
+                                            entries[idx] = { ...entries[idx], qty: parsedEdit, ending: entries[idx].starting + parsedEdit };
+                                            return { ...prev, entries };
+                                          });
+                                        }
+                                        setEditingPendingIdx(null);
+                                      }}
+                                      onKeyDown={e => {
+                                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                        if (e.key === "Escape") setEditingPendingIdx(null);
+                                      }}
+                                    />
+                                  ) : (
+                                    <span
+                                      className="cursor-pointer"
+                                      style={{ color: "hsl(var(--green))" }}
+                                      title="Click to edit"
+                                      onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }}
+                                      onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+                                      onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+                                    >+{entry.qty}</span>
+                                  )}
+                                </td>
+                                <td className="text-[13px] font-light py-3 text-center" style={isEditing ? dim : {}}>{previewBal}</td>
+                                <td className="py-3 text-center">
+                                  <button
+                                    onClick={() => {
+                                      const productName = entry.productName;
+                                      setPendingOrder(prev => {
+                                        if (!prev) return prev;
+                                        const entries = prev.entries.filter((_, i) => i !== idx);
+                                        if (!entries.length) { setOrderSubmitted(false); return null; }
+                                        return { ...prev, entries };
+                                      });
+                                      setOrderEntries(prev => prev.map(e => e.productName === productName ? { ...e, productName: "", qty: 1, productSearch: "", showProductDropdown: false } : e));
+                                    }}
+                                    style={dim}
+                                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                                    onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                                  ><X size={13} /></button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+
+                      {/* Notes */}
+                      <div className="mb-6 mt-2">
+                        <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Add Notes</p>
+                        <textarea
+                          rows={3}
+                          className="w-full bg-transparent outline-none text-[13px] font-light resize-none"
+                          style={{ borderBottom: "1px solid hsl(var(--border-active))", padding: "6px 0", color: "hsl(var(--foreground))" }}
+                          placeholder="Example: No Argan Stock..."
+                          value={grnNotes}
+                          onChange={e => setGrnNotes(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-3 mb-12">
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={handleConfirmOrder}
+                            disabled={orderConfirming}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase"
+                            style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", padding: "6px 12px", borderRadius: "5px", opacity: orderConfirming ? 0.5 : 1 }}
+                          >
+                            {orderConfirming ? "Confirming..." : "Confirm Order"}
+                          </button>
+                          <button
+                            onClick={handleResetOrder}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            Reset
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <button
+                            onClick={generateGRNPdf}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <FileText size={12} />
+                            GRN
+                          </button>
+                          <button
+                            onClick={exportToExcel}
+                            className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <Download size={12} />
+                            Export to Excel
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : allTodayOrders.length === 0 ? (
+                    <p className="text-[13px]" style={dim}>No orders submitted yet.</p>
+                  ) : (
+                    <div className="flex items-center gap-6 mb-12">
+                      <button
+                        onClick={generateGRNPdf}
+                        className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                        style={{ color: "hsl(var(--muted-foreground))" }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                      >
+                        <FileText size={12} />
+                        GRN
+                      </button>
+                      <button
+                        onClick={exportToExcel}
+                        className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
+                        style={{ color: "hsl(var(--muted-foreground))" }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                      >
+                        <Download size={12} />
+                        Export to Excel
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ── All Orders ── */}
+                  {allOrderGroups.length > 0 && (
+                    <div>
+                      <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))" }}>
+                        <h3 className="text-[13px] font-light tracking-tight mb-1">All Orders</h3>
+                        <p className="text-[10px] tracking-wider uppercase" style={dim}>Last 60 days</p>
+                      </div>
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
+                            <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">GRN</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Items</th>
+                            <th className="w-8 label-uppercase font-normal text-center pb-3 pt-2">{expandedGRNs.size > 0 ? "BAL" : ""}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allOrderGroups.map(group => (
+                            <>
+                              <tr
+                                key={group.key}
+                                className="border-b cursor-pointer"
+                                style={{ borderColor: "hsl(var(--border))" }}
+                                onClick={() => toggleGRN(group.key)}
+                                onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                              >
+                                <td className="text-[12px] font-light py-3" style={{ color: "hsl(var(--foreground))" }}>
+                                  {new Date(group.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                </td>
+                                <td className="text-[12px] font-light py-3 text-center" style={{ color: "hsl(var(--foreground))" }}>{group.grn}</td>
+                                <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.rows.length}</td>
+                                <td className="py-3 text-center">
+                                  <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+                                </td>
+                              </tr>
+                              {expandedGRNs.has(group.key) && group.rows.map((row, ri) => (
+                                <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))" }}>
+                                  <td className="text-[10px] font-light py-2.5 pl-2" style={dim}>—</td>
+                                  <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
+                                  <td className="text-[12px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>+{row.QTY}</td>
+                                  <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["ENDING BALANCE"]}</td>
+                                </tr>
+                              ))}
+                            </>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+              </div>
+            )}
+
 
           {/* ── SECTION 3: Recent Activity (Daily Usage mode only) ── */}
           {mode === "usage" && (
@@ -1885,56 +2078,73 @@ function StockInner() {
               {selectedActivityProduct && (() => {
                 const info = products.find(p => p["PRODUCT NAME"] === selectedActivityProduct) ?? null;
                 const activityForProduct = log.filter(r => r["PRODUCT NAME"] === selectedActivityProduct);
+                const fmtPrice = (val: number | null | undefined) => {
+                  if (!val || val < 0.01) return "—";
+                  return `RM ${val.toFixed(2)}`;
+                };
                 return (
-                  <div className="surface-box p-5 mb-6">
-                    <div className="flex items-center justify-between mb-4">
+                  <div ref={activityDetailRef} className="surface-box p-6 mb-6" style={{ borderRadius: "5px" }}>
+                    {/* Name + star + close | Balance + units */}
+                    <div className="flex items-center justify-between mb-6">
                       <div>
-                        <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Boudoir · Product Detail</p>
-                        <p className="text-[15px] font-light">{selectedActivityProduct}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[15px] font-light">{selectedActivityProduct}</p>
+                          {info && (
+                            <button
+                              onClick={() => toggleFavourite(info)}
+                              title={info["BOUDOIR FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
+                            >
+                              <Star
+                                size={20}
+                                style={{
+                                  fill: info["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
+                                  color: info["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                                  transition: "all 0.15s"
+                                }}
+                              />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setSelectedActivityProduct(null)}
+                            style={dim}
+                            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        {info && (
-                          <div className="text-right">
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
-                            <p className="text-[28px] font-light leading-none" style={{
-                              color: (info["BOUDOIR BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                            }}>
-                              {info["BOUDOIR BALANCE"] ?? 0}
-                            </p>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => setSelectedActivityProduct(null)}
-                          style={dim}
-                          onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
+                      {info && (
+                        <div className="text-right">
+                          <p className="text-[22px] font-light leading-none" style={{
+                            color: (info["BOUDOIR BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                          }}>
+                            {info["BOUDOIR BALANCE"] ?? 0}
+                          </p>
+                          <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
+                        </div>
+                      )}
                     </div>
-                    {info && (info["STAFF PRICE"] || info["CUSTOMER PRICE"] || info["BRANCH PRICE"]) && (
-                      <div className="flex items-center gap-6 mb-4 pt-3 border-t" style={{ borderColor: border }}>
+
+                    {/* Prices */}
+                    {info && (info["STAFF PRICE"] || info["CUSTOMER PRICE"]) && (
+                      <div className="flex items-center gap-6 mb-6 pt-4 border-t" style={{ borderColor: border }}>
                         {info["STAFF PRICE"] && (info["STAFF PRICE"] as number) > 0 && (
                           <div>
                             <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
-                            <p className="text-[14px] font-light">RM {(info["STAFF PRICE"] as number).toFixed(2)}</p>
+                            <p className="text-[13px] font-light">{fmtPrice(info["STAFF PRICE"] as number)}</p>
                           </div>
                         )}
                         {info["CUSTOMER PRICE"] && (info["CUSTOMER PRICE"] as number) > 0 && (
                           <div>
                             <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
-                            <p className="text-[14px] font-light">RM {(info["CUSTOMER PRICE"] as number).toFixed(2)}</p>
-                          </div>
-                        )}
-                        {info["BRANCH PRICE"] && (info["BRANCH PRICE"] as number) > 0 && (
-                          <div>
-                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
-                            <p className="text-[14px] font-light">RM {(info["BRANCH PRICE"] as number).toFixed(2)}</p>
+                            <p className="text-[13px] font-light">{fmtPrice(info["CUSTOMER PRICE"] as number)}</p>
                           </div>
                         )}
                       </div>
                     )}
+
+                    {/* Table */}
                     {activityForProduct.length === 0 ? (
                       <p className="text-[12px]" style={dim}>No activity found for this product</p>
                     ) : (
@@ -1944,20 +2154,22 @@ function StockInner() {
                             <th className="label-uppercase font-normal text-left pb-2 pt-1">Date</th>
                             <th className="label-uppercase font-normal text-left pb-2 pt-1">Type</th>
                             <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
-                            <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">End Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-2 pt-1">GRN</th>
                           </tr>
                         </thead>
                         <tbody>
                           {activityForProduct.map(row => (
                             <tr key={row.id} className="border-b" style={{ borderColor: border }}>
-                              <td className="text-[12px] font-light py-2">
+                              <td className="text-[10px] font-light py-2" style={dim}>
                                 {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                               </td>
-                              <td className="text-[11px] font-light py-2 tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                              <td className="text-[13px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                              <td className="text-[10px] font-light py-2" style={dim}>{row.TYPE || "—"}</td>
+                              <td className="text-[12px] font-light py-2 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                 {row.QTY > 0 ? "+" : ""}{row.QTY}
                               </td>
-                              <td className="text-[13px] font-light py-2 text-center">{row["ENDING BALANCE"]}</td>
+                              <td className="text-[12px] font-light py-2 text-center">{row["ENDING BALANCE"] ?? "—"}</td>
+                              <td className="text-[11px] font-light py-2 text-center" style={dim}>{row.GRN || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1989,7 +2201,7 @@ function StockInner() {
                       <tr className="border-b" style={{ borderColor: borderActive }}>
                         <th
                           className="label-uppercase font-normal text-left pb-3 pt-2 cursor-pointer select-none transition-colors"
-                          style={{ color: "hsl(var(--muted-foreground))" }}
+                          style={{ color: "hsl(var(--muted-foreground))", width: "65px" }}
                           onClick={() => setDateSortAsc(prev => !prev)}
                           onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                           onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
@@ -1997,7 +2209,7 @@ function StockInner() {
                         <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                         <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
                         <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                        <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
+                        <th className="label-uppercase font-normal text-center pb-3 pt-2" style={{ minWidth: "52px" }}>Bal</th>
                         <th className="w-6" />
                       </tr>
                     </thead>
@@ -2010,16 +2222,16 @@ function StockInner() {
                         const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && olderDates.length > 0);
                         return (
                           <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
-                            <td className="text-[12px] font-light py-3">
+                            <td className="text-[10px] font-light py-3">
                               {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </td>
                             <td
-                              className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
+                              className="text-[11px] font-light py-3 text-dim cursor-pointer hover:underline"
                               onClick={() => setSelectedActivityProduct(row["PRODUCT NAME"])}
                             >{row["PRODUCT NAME"]}</td>
-                            <td className="text-[11px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                            <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
-                            <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
+                            <td className="text-[9px] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                            <td className="text-[11px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
+                            <td className="text-[11px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
                             <td className="py-3 text-center">
                               {canReverse && (
                                 <button
@@ -2052,7 +2264,7 @@ function StockInner() {
                               onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
                               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                             >
-                              <td className="text-[12px] font-light py-3" style={dim}>
+                              <td className="text-[10px] font-light py-3" style={dim}>
                                 {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                               </td>
                               <td className="text-[12px] font-light py-3" style={dim}>
@@ -2065,14 +2277,14 @@ function StockInner() {
                             </tr>
                             {isExpanded && rows.map((row, ri) => (
                               <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${ri === rows.length - 1 ? (isLast ? border : "hsl(var(--foreground))") : border}`, background: "hsl(var(--card))" }}>
-                                <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
+                                <td className="text-[10px] font-light py-2.5 pl-2" style={dim}>—</td>
                                 <td
-                                  className="text-[13px] font-light py-2.5 text-dim cursor-pointer hover:underline"
+                                  className="text-[11px] font-light py-2.5 text-dim cursor-pointer hover:underline"
                                   onClick={() => setSelectedActivityProduct(row["PRODUCT NAME"])}
                                 >{row["PRODUCT NAME"]}</td>
-                                <td className="text-[11px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                                <td className="text-[13px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
-                                <td className="text-[13px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
+                                <td className="text-[9px] font-light py-2.5 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                <td className="text-[11px] font-light py-2.5 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>{row.QTY}</td>
+                                <td className="text-[11px] font-light py-2.5 text-center">{row["ENDING BALANCE"]}</td>
                                 <td />
                               </tr>
                             ))}
@@ -2089,255 +2301,6 @@ function StockInner() {
         </div>
       </div>
 
-      {/* ── Order Summary Panel ── */}
-      {showOrderSummaryPanel && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderSummaryPanel(false)}>
-          <div
-            className="h-full w-full max-w-[480px] overflow-y-auto p-8"
-            style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Panel header */}
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
-                <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
-                  {pendingOrder
-                    ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
-                    : latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  {pendingOrder
-                    ? ` · ${pendingOrder.entries.length} ${pendingOrder.entries.length === 1 ? "item" : "items"} · Pending`
-                    : allTodayOrders.length > 0 ? ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}` : ""}
-                </p>
-              </div>
-              <button onClick={() => setShowOrderSummaryPanel(false)} style={dim}
-                onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* ── Most recent order (editable) ── */}
-            {pendingOrder !== null ? (
-              <>
-                <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Pending confirmation · Click qty to edit · × to remove</p>
-                <table className="w-full border-collapse mb-8">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
-                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Prev Bal</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">New Bal</th>
-                      <th className="w-6" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingOrder.entries.map((entry, idx) => {
-                      const isEditing = editingPendingIdx === idx;
-                      const parsedEdit = parseInt(editingPendingQty);
-                      const previewBal = isEditing && !isNaN(parsedEdit) ? entry.starting + parsedEdit : entry.ending;
-                      return (
-                        <tr key={idx} className="border-b" style={{ borderColor: "hsl(var(--border))" }}>
-                          <td className="text-[13px] font-light py-3">{entry.productName}</td>
-                          <td className="text-[13px] font-light py-3 text-center" style={dim}>{entry.starting}</td>
-                          <td className="text-[13px] font-light py-3 text-center">
-                            {isEditing ? (
-                              <input
-                                autoFocus
-                                type="number"
-                                min={1}
-                                className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
-                                value={editingPendingQty}
-                                onChange={e => setEditingPendingQty(e.target.value)}
-                                onClick={e => (e.target as HTMLInputElement).select()}
-                                onBlur={() => {
-                                  if (!isNaN(parsedEdit) && parsedEdit > 0) {
-                                    setPendingOrder(prev => {
-                                      if (!prev) return prev;
-                                      const entries = [...prev.entries];
-                                      entries[idx] = { ...entries[idx], qty: parsedEdit, ending: entries[idx].starting + parsedEdit };
-                                      return { ...prev, entries };
-                                    });
-                                  }
-                                  setEditingPendingIdx(null);
-                                }}
-                                onKeyDown={e => {
-                                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                                  if (e.key === "Escape") setEditingPendingIdx(null);
-                                }}
-                              />
-                            ) : (
-                              <span
-                                className="cursor-pointer"
-                                style={{ color: "hsl(var(--green))" }}
-                                title="Click to edit"
-                                onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }}
-                                onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-                                onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-                              >+{entry.qty}</span>
-                            )}
-                          </td>
-                          <td className="text-[13px] font-light py-3 text-center" style={isEditing ? dim : {}}>{previewBal}</td>
-                          <td className="py-3 text-center">
-                            <button
-                              onClick={() => {
-                                const productName = entry.productName;
-                                setPendingOrder(prev => {
-                                  if (!prev) return prev;
-                                  const entries = prev.entries.filter((_, i) => i !== idx);
-                                  if (!entries.length) { setOrderSubmitted(false); return null; }
-                                  return { ...prev, entries };
-                                });
-                                setOrderEntries(prev => prev.map(e => e.productName === productName ? { ...e, productName: "", qty: 1, productSearch: "", showProductDropdown: false } : e));
-                              }}
-                              style={dim}
-                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                            ><X size={13} /></button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {/* Notes */}
-                <div className="mb-6 mt-2">
-                  <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Add Notes</p>
-                  <textarea
-                    rows={3}
-                    className="w-full bg-transparent outline-none text-[13px] font-light resize-none"
-                    style={{ borderBottom: "1px solid hsl(var(--border-active))", padding: "6px 0", color: "hsl(var(--foreground))" }}
-                    placeholder="Example: No Argan Stock..."
-                    value={grnNotes}
-                    onChange={e => setGrnNotes(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-3 mb-12">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={handleConfirmOrder}
-                      disabled={orderConfirming}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase"
-                      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", padding: "6px 12px", borderRadius: "5px", opacity: orderConfirming ? 0.5 : 1 }}
-                    >
-                      {orderConfirming ? "Confirming..." : "Confirm Order"}
-                    </button>
-                    <button
-                      onClick={handleResetOrder}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                      style={{ color: "hsl(var(--muted-foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                    >
-                      Reset
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <button
-                      onClick={generateGRNPdf}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                      style={{ color: "hsl(var(--muted-foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                    >
-                      <FileText size={12} />
-                      GRN
-                    </button>
-                    <button
-                      onClick={exportToExcel}
-                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                      style={{ color: "hsl(var(--muted-foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                    >
-                      <Download size={12} />
-                      Export to Excel
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : allTodayOrders.length === 0 ? (
-              <p className="text-[13px]" style={dim}>No orders submitted yet.</p>
-            ) : (
-              <div className="flex items-center gap-6 mb-12">
-                <button
-                  onClick={generateGRNPdf}
-                  className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                  style={{ color: "hsl(var(--muted-foreground))" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                >
-                  <FileText size={12} />
-                  GRN
-                </button>
-                <button
-                  onClick={exportToExcel}
-                  className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
-                  style={{ color: "hsl(var(--muted-foreground))" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                >
-                  <Download size={12} />
-                  Export to Excel
-                </button>
-              </div>
-            )}
-
-            {/* ── All Orders ── */}
-            {allOrderGroups.length > 0 && (
-              <div>
-                <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))" }}>
-                  <h3 className="text-[13px] font-light tracking-tight mb-1">All Orders</h3>
-                  <p className="text-[10px] tracking-wider uppercase" style={dim}>Last 60 days</p>
-                </div>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
-                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">GRN</th>
-                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Items</th>
-                      <th className="w-8 label-uppercase font-normal text-center pb-3 pt-2">{expandedGRNs.size > 0 ? "BAL" : ""}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allOrderGroups.map(group => (
-                      <>
-                        <tr
-                          key={group.key}
-                          className="border-b cursor-pointer"
-                          style={{ borderColor: "hsl(var(--border))" }}
-                          onClick={() => toggleGRN(group.key)}
-                          onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                        >
-                          <td className="text-[12px] font-light py-3" style={dim}>
-                            {new Date(group.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                          </td>
-                          <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.grn}</td>
-                          <td className="text-[12px] font-light py-3 text-center" style={dim}>{group.rows.length}</td>
-                          <td className="py-3 text-center">
-                            <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
-                          </td>
-                        </tr>
-                        {expandedGRNs.has(group.key) && group.rows.map((row, ri) => (
-                          <tr key={row.id} className="border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))" }}>
-                            <td className="text-[12px] font-light py-2.5 pl-2" style={dim}>—</td>
-                            <td className="text-[13px] font-light py-2.5 text-center">{row["PRODUCT NAME"]}</td>
-                            <td className="text-[12px] font-light py-2.5 text-center" style={{ color: "hsl(var(--green))" }}>+{row.QTY}</td>
-                            <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{row["ENDING BALANCE"]}</td>
-                          </tr>
-                        ))}
-                      </>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Scroll direction blur overlays ── */}
       <div style={{
@@ -2368,10 +2331,10 @@ function StockInner() {
   );
 }
 
-export default function Stock() {
+export default function BoudoirPhone() {
   return (
     <ErrorBoundary>
-      <StockInner />
+      <BoudoirPhoneInner />
     </ErrorBoundary>
   );
 }

@@ -40,7 +40,7 @@ interface EntryLine {
   qty: number;
 }
 
-interface BranchBoudoirSimpleProps {
+interface BoudoirSimpleProps {
   onBack: () => void;
   onBackToMain: () => void;
   products: OfficeProduct[];
@@ -48,7 +48,7 @@ interface BranchBoudoirSimpleProps {
 
 const USAGE_TYPES: Array<"Salon Use" | "Customer" | "Staff"> = ["Salon Use", "Customer", "Staff"];
 
-const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSimpleProps) => {
+const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) => {
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -761,4 +761,4 @@ const BranchBoudoirSimple = ({ onBack, onBackToMain, products }: BranchBoudoirSi
   );
 };
 
-export default BranchBoudoirSimple;
+export default BoudoirSimple;

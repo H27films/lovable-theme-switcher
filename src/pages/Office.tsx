@@ -97,7 +97,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
   const ref = React.useRef<HTMLDivElement>(null);
   const border = "hsl(var(--border))";
   const borderActive = "hsl(var(--border-active))";
-  const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
+  const cardBg = "hsl(var(--card))";
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -109,17 +109,18 @@ function EntryTypeDropdown({ value, options, onChange }: {
 
   return (
     <div ref={ref} className="relative">
-      <div
-        className="flex items-center gap-1 cursor-pointer"
+      <button
         onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 h-[28px] px-3 text-[11px] tracking-wider uppercase transition-colors"
+        style={{ border: `1px solid ${borderActive}`, background: cardBg, color: "hsl(var(--foreground))", borderRadius: "5px" }}
       >
-        <span className="text-[11px] font-light" style={{ color: "hsl(var(--foreground))" }}>{value}</span>
-        <ChevronDown size={10} style={dim} />
-      </div>
+        {value}
+        <ChevronDown size={10} />
+      </button>
       {open && (
         <div
           className="absolute top-full left-0 z-50 border mt-0.5"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "120px" }}
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, minWidth: "130px", borderRadius: "5px" }}
         >
           {options.map((opt, i) => (
             <div
@@ -128,7 +129,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
               style={{
                 borderBottom: i < options.length - 1 ? `1px solid ${border}` : "none",
                 color: value === opt ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                background: value === opt ? "hsl(var(--card))" : "transparent",
+                background: value === opt ? cardBg : "transparent",
               }}
               onMouseDown={() => { onChange(opt); setOpen(false); }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
@@ -143,7 +144,7 @@ function EntryTypeDropdown({ value, options, onChange }: {
   );
 }
 
-const IndexPhone = () => {
+const Office = () => {
   const { theme, toggle, font, cycleFont } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -151,9 +152,9 @@ const IndexPhone = () => {
   const [showBranchDropdown, setShowBranchDropdown] = useState(false);
 
   const branchRoutes: Record<string, string> = {
-    "Boudoir": "/stock/mobile",
-    "Chic Nailspa": "/stockchicnailspa/mobile",
-    "Nur Yadi": "/stocknuryadi/mobile",
+    "Boudoir": "/stock",
+    "Chic Nailspa": "/stockchicnailspa",
+    "Nur Yadi": "/stocknuryadi",
   };
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
@@ -169,7 +170,7 @@ const IndexPhone = () => {
   const searchExpanded = searchHovered || searchFocused || search.length > 0 || !!filterSupplier;
   const [page, setPage] = useState(0);
   const [filterLowStock, setFilterLowStock] = useState(false);
-  const [filterColour, setFilterColour] = useState<"all" | "yes" | "no">("no");
+  const [filterColour, setFilterColour] = useState<"all" | "yes" | "no">("all");
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
@@ -241,10 +242,6 @@ const IndexPhone = () => {
 
   // Order panel state
   const [showOrderPanel, setShowOrderPanel] = useState(false);
-  const [summaryProgress, setSummaryProgress] = useState(0);
-  const [panelScrollDir, setPanelScrollDir] = useState<"up" | "down">("down");
-  const panelPrevScrollTop = React.useRef(0);
-  const [summarySpacerHeight, setSummarySpacerHeight] = useState(0);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -253,7 +250,6 @@ const IndexPhone = () => {
   const [orderLines, setOrderLines] = useState<{ product: OfficeProduct; supplierChoice: string | null; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
-  const [forceOrderDropdown, setForceOrderDropdown] = useState(false);
   const [orderActiveIndex, setOrderActiveIndex] = useState(-1);
   const [showNewProductModal, setShowNewProductModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -269,7 +265,7 @@ const IndexPhone = () => {
     "CHIC NAILSPA BALANCE": "0",
     "PAR": "",
     "UNITS/ORDER": "1",
-    "COLOUR": true as boolean,
+    "COLOUR": false as boolean,
     "OFFICE SECTION": "",
   });
   const [savingNewProduct, setSavingNewProduct] = useState(false);
@@ -283,8 +279,6 @@ const IndexPhone = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
-  const panelScrollRef = useRef<HTMLDivElement>(null);
-  const summaryInlineRef = useRef<HTMLDivElement>(null);
   const [showNewProductSupplierDropdown, setShowNewProductSupplierDropdown] = useState(false);
   const newProductSupplierRef = useRef<HTMLDivElement>(null);
 
@@ -315,26 +309,37 @@ const IndexPhone = () => {
     return "OFFICE FAVOURITE";
   };
 
-  const entryDropdownResults = (() => {
+  const entryDropdownResults = entrySearch.length > 0 ? (() => {
     const lower = entrySearch.toLowerCase();
     const favKey = entryFavCol(entryBranch);
-    const matchFn = (p: EntryProduct) =>
-      entrySearch.length === 0 || p["PRODUCT NAME"]?.toLowerCase().includes(lower);
-    const sortFn = (a: EntryProduct, b: EntryProduct) => {
-      const aFav = a[favKey] ? 0 : 1;
-      const bFav = b[favKey] ? 0 : 1;
-      if (aFav !== bFav) return aFav - bFav;
-      const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
-      const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
-      if (aCol !== bCol) return aCol - bCol;
-      return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
-    };
     if (entryBranch === "Office" && entryType === "Order") {
-      return entryProductsRaw.filter(matchFn).sort(sortFn).slice(0, 15);
+      return entryProductsRaw
+        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(lower))
+        .sort((a, b) => {
+          const aFav = a[favKey] ? 0 : 1;
+          const bFav = b[favKey] ? 0 : 1;
+          if (aFav !== bFav) return aFav - bFav;
+          const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
+          const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
+          if (aCol !== bCol) return aCol - bCol;
+          return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
+        })
+        .slice(0, 15);
     } else {
       const seen = new Set<string>();
       const results: EntryProduct[] = [];
-      for (const p of entryProductsRaw.filter(matchFn).sort(sortFn)) {
+      const matched = entryProductsRaw
+        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(lower))
+        .sort((a, b) => {
+          const aFav = a[favKey] ? 0 : 1;
+          const bFav = b[favKey] ? 0 : 1;
+          if (aFav !== bFav) return aFav - bFav;
+          const aCol = a["COLOUR"] === true || a["COLOUR"] === "YES" || a["COLOUR"] === "yes" ? 1 : 0;
+          const bCol = b["COLOUR"] === true || b["COLOUR"] === "YES" || b["COLOUR"] === "yes" ? 1 : 0;
+          if (aCol !== bCol) return aCol - bCol;
+          return (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "");
+        });
+      for (const p of matched) {
         if (!seen.has(p["PRODUCT NAME"])) {
           seen.add(p["PRODUCT NAME"]);
           results.push(p);
@@ -343,7 +348,7 @@ const IndexPhone = () => {
       }
       return results;
     }
-  })();
+  })() : [];
 
   const addEntryItem = (p: EntryProduct) => {
     const defaultType = entryUsageTypes(entryBranch)[0];
@@ -376,9 +381,6 @@ const IndexPhone = () => {
     const grn = entryType === "Order" ? `${entryGRNPrefix(entryBranch)} ${dd}${mm}${yy}` : null;
     const balCol = entryBalanceCol(entryBranch);
     try {
-      // Get next AllFileLog id to avoid sequence conflicts
-      const { data: _maxLogRow } = await (supabase as any).from("AllFileLog").select("id").order("id", { ascending: false }).limit(1).single();
-      let nextLogId = ((_maxLogRow?.id as number) ?? 0) + 1;
       for (const item of entryItems) {
         if (!item.productName || item.qty <= 0) continue;
         const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
@@ -388,7 +390,6 @@ const IndexPhone = () => {
           const endingBalance = currentBalance - Number(item.qty);
           const currentOfficeBalance = Number(product["OFFICE BALANCE"] ?? 0);
           const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
-            "id": nextLogId++,
             "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": entryBranch,
             "SUPPLIER": null, "TYPE": item.type,
             "STARTING BALANCE": currentBalance, "QTY": -Number(item.qty), "ENDING BALANCE": endingBalance,
@@ -402,7 +403,6 @@ const IndexPhone = () => {
             const currentBalance = Number(product["OFFICE BALANCE"] ?? 0);
             const endingBalance = currentBalance + Number(item.qty);
             const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
-              "id": nextLogId++,
               "DATE": today, "PRODUCT NAME": item.productName, "BRANCH": "Office",
               "SUPPLIER": product["SUPPLIER"] ?? null, "TYPE": "Order",
               "STARTING BALANCE": currentBalance, "QTY": Number(item.qty), "ENDING BALANCE": endingBalance,
@@ -429,7 +429,6 @@ const IndexPhone = () => {
           if (!product) continue;
           const currentBranchBalance = Number((product as any)[balCol] ?? 0);
           const { error: reqErr } = await (supabase as any).from("AllFileLog").insert({
-            "id": nextLogId++,
             "DATE": today, "PRODUCT NAME": item.productName,
             "BRANCH": entryBranch, "SUPPLIER": "Office",
             "TYPE": "Order Request",
@@ -490,14 +489,11 @@ const IndexPhone = () => {
         .eq("TYPE", "Order Request")
         .eq("GRN", entryPendingGRN);
       // Write proper Order entries + update balances
-      const { data: _maxLogRow2 } = await (supabase as any).from("AllFileLog").select("id").order("id", { ascending: false }).limit(1).single();
-      let nextLogId2 = ((_maxLogRow2?.id as number) ?? 0) + 1;
       for (const row of reqRows) {
         const product = entryProductsRaw.find(p => p["PRODUCT NAME"] === row["PRODUCT NAME"]);
         const currentOfficeBalance = Number((product as any)?.["OFFICE BALANCE"] ?? 0);
         const endingOfficeBalance = currentOfficeBalance - Number(row["QTY"] ?? 0);
         await (supabase as any).from("AllFileLog").insert({
-          "id": nextLogId2++,
           "DATE": row["DATE"],
           "PRODUCT NAME": row["PRODUCT NAME"],
           "BRANCH": entryBranch,
@@ -693,9 +689,6 @@ const IndexPhone = () => {
       const supplierKeys = Object.keys(supplierGroups);
       const multiSupplier = supplierKeys.length > 1;
 
-      const { data: _maxLogRow3 } = await (supabase as any).from("AllFileLog").select("id").order("id", { ascending: false }).limit(1).single();
-      let nextLogId3 = ((_maxLogRow3?.id as number) ?? 0) + 1;
-
       for (let gi = 0; gi < supplierKeys.length; gi++) {
         const supplierKey = supplierKeys[gi];
         const grn = multiSupplier ? `${baseGRN} (${gi + 1})` : baseGRN;
@@ -713,7 +706,6 @@ const IndexPhone = () => {
 
           // Log to AllFileLog
           const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
-            "id": nextLogId3++,
             "DATE": today,
             "PRODUCT NAME": chosenProduct["PRODUCT NAME"],
             "BRANCH": "Office",
@@ -845,10 +837,10 @@ const IndexPhone = () => {
     : products.filter(p => orderSupplierFilter.includes(p["SUPPLIER"] ?? ""));
 
   // Unique product names in order panel (after supplier filter)
-  const orderDropdownResults = (orderSearch.length > 0 || forceOrderDropdown)
+  const orderDropdownResults = orderSearch.length > 0
     ? (() => {
         const matched = orderPanelProducts.filter(p =>
-          (orderSearch.length === 0 || p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase())) &&
+          p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase()) &&
           !orderLines.some(l => l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"])
         );
         // Deduplicate: for same PRODUCT NAME + SUPPLIER, keep only the row with smallest UNITS/ORDER (prefer 1)
@@ -870,7 +862,7 @@ const IndexPhone = () => {
           if (isColourA !== isColourB) return isColourA - isColourB;
           return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
         })
-          .slice(0, forceOrderDropdown && orderSearch.length === 0 ? 15 : 30);
+          .slice(0, 30);
       })()
     : [];
 
@@ -885,7 +877,6 @@ const IndexPhone = () => {
     }]);
     setOrderSearch("");
     setShowOrderDropdown(false);
-    setForceOrderDropdown(false);
     setOrderActiveIndex(-1);
   };
 
@@ -960,44 +951,6 @@ const IndexPhone = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-  // Scroll-driven fade+scale for inline ORDER SUMMARY
-  useEffect(() => {
-    if (!showOrderPanel) { setSummaryProgress(0); return; }
-    const panel = panelScrollRef.current;
-    const summary = summaryInlineRef.current;
-    if (!panel || !summary) return;
-    const handleScroll = () => {
-      const scrollTop = panel.scrollTop;
-      // track panel scroll direction
-      if (scrollTop > panelPrevScrollTop.current) setPanelScrollDir("down");
-      else if (scrollTop < panelPrevScrollTop.current) setPanelScrollDir("up");
-      panelPrevScrollTop.current = scrollTop;
-      if (scrollTop === 0) { setSummaryProgress(0); return; }
-      // progress: 0 when not scrolled, 1 when summary.offsetTop reached (summary at panel top)
-      const summaryTop = summary.offsetTop;
-      const progress = summaryTop > 0 ? scrollTop / summaryTop : 0;
-      setSummaryProgress(Math.min(1, Math.max(0, progress)));
-    };
-    panel.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => panel.removeEventListener('scroll', handleScroll);
-  }, [showOrderPanel, orderLines]);
-
-  // Dynamic spacer: allows ORDER SUMMARY to reach top but no over-scroll
-  useEffect(() => {
-    if (!showOrderPanel || !panelScrollRef.current || !summaryInlineRef.current) return;
-    const calc = () => {
-      const panelH = panelScrollRef.current!.clientHeight;
-      const sumH = summaryInlineRef.current!.clientHeight;
-      setSummarySpacerHeight(Math.max(0, panelH - sumH));
-    };
-    calc();
-    const obs = new ResizeObserver(calc);
-    obs.observe(panelScrollRef.current!);
-    obs.observe(summaryInlineRef.current!);
-    return () => obs.disconnect();
-  }, [showOrderPanel, orderLines]);
-
 
   useEffect(() => {
     if (orderActiveIndex >= 0 && orderListRef.current) {
@@ -1229,16 +1182,11 @@ const IndexPhone = () => {
         zIndex: 50,
       }} />
 
-      <div className="max-w-full mx-auto px-3">
+      <div className="max-w-[900px] mx-auto px-5">
 
         {/* ── Top bar ── */}
-        <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: border, position: "relative", zIndex: 35, ...fadeTop(0) }}>
-          {/* Left: OFFICE title */}
-          <span className="text-[16px] font-light tracking-[0.25em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
-            OFFICE
-          </span>
-          {/* Right: icons + branch arrow dropdown */}
-          <div className="flex items-center gap-3">
+        <div className="flex justify-between items-center py-6 border-b" style={{ borderColor: border, position: "relative", zIndex: 10, ...fadeTop(0) }}>
+          <div className="flex items-center gap-4">
             <ThemeToggle theme={theme} toggle={toggle} font={font} cycleFont={cycleFont} />
             <button
               onClick={() => navigate("/")}
@@ -1250,57 +1198,77 @@ const IndexPhone = () => {
             >
               <Home size={14} />
             </button>
-            <div className="relative">
-              <button
-                onClick={() => setShowBranchDropdown(prev => !prev)}
-                className="flex items-center justify-center transition-colors"
-                style={{ color: "hsl(var(--foreground))" }}
-                aria-label="Switch branch"
+            <span className="text-[11px] [font-variant-numeric:lining-nums] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--foreground))" }}>
+              OFFICE
+            </span>
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (fromBranch && branchRoutes[fromBranch]) {
+                  navigate(branchRoutes[fromBranch]);
+                } else {
+                  setShowBranchDropdown(prev => !prev);
+                }
+              }}
+              className="flex items-center gap-2 text-[13px] tracking-[0.15em] uppercase transition-colors"
+              style={{ color: "hsl(var(--foreground))" }}
+            >
+              <span>STOCK</span>
+              <ArrowRight size={15} />
+            </button>
+            {showBranchDropdown && (
+              <div
+                className="absolute right-0 top-8 z-50 flex flex-col gap-1 p-2 rounded-xl"
+                style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", minWidth: "160px" }}
               >
-                <ArrowRight size={15} />
-              </button>
-              {showBranchDropdown && (
-                <div
-                  className="absolute right-0 top-7 z-50 flex flex-col p-1 rounded-lg"
-                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", minWidth: "120px" }}
-                >
-                  {Object.entries(branchRoutes).map(([branch, route]) => (
-                    <button
-                      key={branch}
-                      onClick={() => { setShowBranchDropdown(false); navigate(route); }}
-                      className="text-left px-3 py-1.5 rounded-md text-[10px] tracking-[0.08em] uppercase transition-colors"
-                      style={{ color: "hsl(var(--foreground))" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                    >
-                      {branch}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                {Object.entries(branchRoutes).map(([branch, route]) => (
+                  <button
+                    key={branch}
+                    onClick={() => { setShowBranchDropdown(false); navigate(route); }}
+                    className="text-left px-4 py-2 rounded-lg text-[12px] tracking-[0.1em] uppercase transition-colors"
+                    style={{ color: "hsl(var(--foreground))" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    {branch}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ── Date just below header ── */}
-        <div className="pt-2 pb-0" style={fade(90)}>
-          <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim pl-0">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
-        </div>
-
-        {/* ── Search blur overlay ── */}
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            backdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
-            WebkitBackdropFilter: searchFocused ? "blur(4px)" : "blur(0px)",
-            opacity: searchFocused ? 1 : 0,
-            transition: "opacity 300ms ease, backdrop-filter 300ms ease, -webkit-backdrop-filter 300ms ease",
-            zIndex: 30,
-            pointerEvents: "none",
-          }}
-        />
-
         <div className="py-6">
+
+          {/* ── Page header ── */}
+          <div className="mb-6" style={fade(90)}>
+            <div>
+              <h1 className="text-[11px] [font-variant-numeric:lining-nums] font-normal tracking-[0.2em] uppercase text-dim mb-1">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
+              <div className="flex items-end justify-between">
+                <p className="text-[28px] font-light tracking-tight uppercase">Office Database</p>
+                <span
+                  className="nav-link flex items-center gap-0.5 mb-1"
+                  style={{ color: "hsl(var(--foreground))" }}
+                  onClick={() => setShowNewProductModal(true)}
+                >
+                  New Product <Plus size={13} className="inline -mt-0.5" />
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase" style={dim}>
+                {products.length} products
+              </p>
+              <span
+                className="nav-link flex items-center gap-0.5"
+                style={{ color: "hsl(var(--foreground))" }}
+                onClick={() => { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }}
+              >
+                Order <ClipboardList size={13} className="inline -mt-0.5" />
+              </span>
+            </div>
+          </div>
 
           {/* ── Search bar ── */}
           <div style={{...fade(170), position: "relative", zIndex: 40}}>
@@ -1389,7 +1357,7 @@ const IndexPhone = () => {
                       onMouseEnter={() => setActiveIndex(idx)}
                     >
                       <div className="flex items-center gap-3">
-                        {p[entryFavCol(entryBranch)] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                        {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                         <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
                         {p["SUPPLIER"] && <span className="text-[11px] [font-variant-numeric:lining-nums]" style={dim}>{p["SUPPLIER"]}</span>}
                         {(p["COLOUR"] === true || (p["COLOUR"] as unknown as string) === "YES" || (p["COLOUR"] as unknown as string) === "yes") && (
@@ -1402,7 +1370,7 @@ const IndexPhone = () => {
                         )}
                         <span className="text-[12px] font-light" style={{
                           color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
-                            ? "hsl(var(--red))" : (p["OFFICE BALANCE"] != null && p["PAR"] != null && Number(p["OFFICE BALANCE"]) >= Number(p["PAR"]) ? "#4ade80" : "hsl(var(--foreground))")
+                            ? "hsl(var(--red))" : "hsl(var(--foreground))"
                         }}>
                           {p["OFFICE BALANCE"] ?? "—"}
                         </span>
@@ -1416,29 +1384,19 @@ const IndexPhone = () => {
           </div>
 
           {/* ── Tab switcher ── */}
-          <div className="flex items-center gap-7 mb-3 border-b overflow-x-auto" style={{ borderColor: border, ...fade(260) }}>
-            {([
-              { id: "branches", label: "Branches" },
-              { id: "entry", label: "Entry" },
-              { id: "order", label: "Order" },
-              { id: "table", label: "Table" },
-              { id: "product", label: "Product +" },
-            ] as const).map(({ id, label }) => (
+          <div className="flex items-center gap-8 mb-8 border-b" style={{ borderColor: border, ...fade(260) }}>
+            {(["branches", "table", "entry"] as const).map(tab => (
               <button
-                key={id}
-                onClick={() => {
-                  if (id === "order") { setShowOrderPanel(true); setOrderSearch(""); setShowSupplierDropdown(false); }
-                  else if (id === "product") { setShowNewProductModal(true); }
-                  else setActiveTab(id as "branches" | "table" | "entry");
-                }}
+                key={tab}
+                onClick={() => setActiveTab(tab)}
                 onMouseDown={e => e.preventDefault()}
-                className="text-[13px] tracking-[0.15em] uppercase pb-3 transition-colors relative shrink-0"
-                style={{ color: (id !== "order" && id !== "product" && activeTab === id) ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                className="text-[13px] tracking-[0.15em] uppercase pb-3 transition-colors relative"
+                style={{ color: activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = (id !== "order" && id !== "product" && activeTab === id) ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.color = activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
               >
-                {label}
-                {(id !== "order" && id !== "product" && activeTab === id) && (
+                {tab === "branches" ? "Branches" : tab === "table" ? "Table" : "Entry"}
+                {activeTab === tab && (
                   <span className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "hsl(var(--foreground))" }} />
                 )}
               </button>
@@ -1470,7 +1428,7 @@ const IndexPhone = () => {
             return (
               <div className="mb-8" style={fade(380)}>
                 {/* Branch selector — now includes Office */}
-                <div className="flex items-center gap-4 mb-3 flex-wrap">
+                <div className="flex items-center gap-6 mb-6">
                   {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
                     <button
                       key={branch}
@@ -1478,14 +1436,11 @@ const IndexPhone = () => {
                       onMouseDown={e => e.preventDefault()}
                       className="transition-all duration-200"
                       style={{
-                        fontSize: selectedBranch === branch ? "13px" : hoveredBranch === branch ? "12px" : "11px",
+                        fontSize: selectedBranch === branch ? "15px" : hoveredBranch === branch ? "13px" : "12px",
                         fontWeight: 300,
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
                         color: selectedBranch === branch || hoveredBranch === branch ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                        background: "none",
-                        border: "none",
-                        padding: 0,
                       }}
                       onMouseEnter={() => setHoveredBranch(branch)}
                       onMouseLeave={() => setHoveredBranch(null)}
@@ -1511,21 +1466,22 @@ const IndexPhone = () => {
                   });
                   return (
                     <div className="mb-8">
-                      <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Last 60 Days</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Office · Last 60 Days</p>
                       {allActivityLoading ? (
                         <p className="text-[12px]" style={dim}>Loading…</p>
                       ) : allActivity.length === 0 ? (
-                        <p className="text-[12px]" style={dim}>No entries...</p>
+                        <p className="text-[12px]" style={dim}>No order activity in the last 60 days</p>
                       ) : (
                         <div className="border-t" style={{ borderColor: border }}>
                           <table className="w-full border-collapse">
                             <thead>
                               <tr className="border-b" style={{ borderColor: border }}>
                                 <th className="label-uppercase font-normal text-left pb-3 pt-2">Date</th>
+                                <th className="label-uppercase font-normal text-left pb-3 pt-2">GRN</th>
                                 <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
+                                <th className="label-uppercase font-normal text-left pb-3 pt-2">Supplier / Branch</th>
                                 <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                                <th className="label-uppercase font-normal text-center pb-3 pt-2">Bal</th>
-                                <th className="label-uppercase font-normal text-left pb-3 pt-2">From/To</th>
+                                <th className="label-uppercase font-normal text-center pb-3 pt-2">Office Bal</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1536,15 +1492,16 @@ const IndexPhone = () => {
                                 const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && offOlderGRNs.length > 0);
                                 return (
                                   <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
-                                    <td className="text-[11px] font-light py-3">
+                                    <td className="text-[12px] font-light py-3">
                                       {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                     </td>
-                                    <td className="text-[12px] font-light py-3">{row["PRODUCT NAME"] ?? "—"}</td>
-                                    <td className="text-[12px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--green))" : "hsl(var(--red))" }}>
-                                      {row.QTY < 0 ? "+" : ""}{-row.QTY}
+                                    <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 tracking-wide uppercase" style={dim}>{row.GRN ?? "—"}</td>
+                                    <td className="text-[13px] font-light py-3">{row["PRODUCT NAME"] ?? "—"}</td>
+                                    <td className="text-[12px] font-light py-3" style={dim}>{counterparty}</td>
+                                    <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY > 0 ? "hsl(var(--green))" : "hsl(var(--red))" }}>
+                                      {row.QTY > 0 ? "+" : ""}{row.QTY}
                                     </td>
-                                    <td className="text-[11px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
-                                    <td className="text-[11px] font-light py-3" style={dim}>{row["SUPPLIER"] === "Office" ? (row["BRANCH"] ?? "—") : (row["SUPPLIER"] ?? "—")}</td>
+                                    <td className="text-[12px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
                                   </tr>
                                 );
                               })}
@@ -1573,8 +1530,8 @@ const IndexPhone = () => {
                                       <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 tracking-wide uppercase" style={dim}>{grn}</td>
                                       <td className="text-[12px] font-light py-3" style={dim}>{uniqueProducts} {uniqueProducts === 1 ? "product" : "products"}</td>
                                       <td className="text-[12px] font-light py-3" style={dim}>{counterparty}</td>
-                                      <td className="text-[12px] font-light py-3 text-center" style={{ color: isSupplier ? "#f87171" : "#4ade80" }}>
-                                        {isSupplier ? "−" : "+"}{totalUnits} units
+                                      <td className="text-[12px] font-light py-3 text-center" style={{ color: isSupplier ? "#4ade80" : "#f87171" }}>
+                                        {isSupplier ? "+" : "−"}{totalUnits} units
                                       </td>
                                       <td className="py-3 text-center">
                                         <span style={{ ...dim, fontSize: "11px", display: "inline-block", transition: "transform 0.15s", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
@@ -1586,8 +1543,8 @@ const IndexPhone = () => {
                                         <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-2.5 tracking-wide uppercase" style={dim}>{r.GRN ?? "—"}</td>
                                         <td className="text-[13px] font-light py-2.5">{r["PRODUCT NAME"] ?? "—"}</td>
                                         <td className="text-[12px] font-light py-2.5" style={dim}>{isSupplier ? (r.SUPPLIER ?? "—") : (r.BRANCH ?? "—")}</td>
-                                        <td className="text-[13px] font-light py-2.5 text-center" style={{ color: r.QTY < 0 ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
-                                          {r.QTY < 0 ? "+" : ""}{-r.QTY}
+                                        <td className="text-[13px] font-light py-2.5 text-center" style={{ color: isSupplier ? "hsl(142 71% 45%)" : "hsl(var(--red))" }}>
+                                          {r.QTY > 0 ? "+" : ""}{r.QTY}
                                         </td>
                                         <td className="text-[12px] font-light py-2.5 text-center" style={dim}>{r["OFFICE BALANCE"] ?? "—"}</td>
                                       </tr>
@@ -1693,11 +1650,11 @@ const IndexPhone = () => {
                       )}
                     </div>
                   )}
-                  <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>Last 60 Days</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase mb-3" style={dim}>{selectedBranch} · Last 60 Days</p>
                   {branchActivityLoading ? (
                     <p className="text-[12px]" style={dim}>Loading…</p>
                   ) : branchActivity.length === 0 ? (
-                    <p className="text-[12px]" style={dim}>No entries...</p>
+                    <p className="text-[12px]" style={dim}>No activity in the last 60 days</p>
                   ) : (
                     <div className="border-t" style={{ borderColor: border }}>
                       <table className="w-full border-collapse">
@@ -1707,7 +1664,8 @@ const IndexPhone = () => {
                             <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
                             <th className="label-uppercase font-normal text-center pb-3 pt-2">Type</th>
                             <th className="label-uppercase font-normal text-center pb-3 pt-2">Qty</th>
-                            <th className="label-uppercase font-normal text-center pb-3 pt-2">End Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Ending Bal</th>
+                            <th className="label-uppercase font-normal text-center pb-3 pt-2">Office Bal</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1716,18 +1674,19 @@ const IndexPhone = () => {
                             const isDateBreak = (nextRow && nextRow.DATE !== row.DATE) || (!nextRow && olderDates.length > 0);
                             return (
                               <tr key={row.id} className="table-row-hover" style={{ borderBottom: `1px solid ${isDateBreak ? "hsl(var(--foreground))" : border}` }}>
-                                <td className="text-[11px] font-light py-3">
+                                <td className="text-[12px] font-light py-3">
                                   {new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                                 </td>
                                 <td
-                                  className="text-[12px] font-light py-3 text-dim cursor-pointer hover:underline"
+                                  className="text-[13px] font-light py-3 text-dim cursor-pointer hover:underline"
                                   onClick={() => setSelectedBranchProduct(row["PRODUCT NAME"] ?? null)}
                                 >{row["PRODUCT NAME"] ?? "—"}</td>
-                                <td className="text-[10px] [font-variant-numeric:lining-nums] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
-                                <td className="text-[12px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
+                                <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 text-center tracking-wider uppercase" style={dim}>{row.TYPE}</td>
+                                <td className="text-[13px] font-light py-3 text-center" style={{ color: row.QTY < 0 ? "hsl(var(--red))" : "hsl(var(--green))" }}>
                                   {row.QTY > 0 ? "+" : ""}{row.QTY}
                                 </td>
-                                <td className="text-[12px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
+                                <td className="text-[13px] font-light py-3 text-center">{row["ENDING BALANCE"]}</td>
+                                <td className="text-[12px] font-light py-3 text-center" style={dim}>{row["OFFICE BALANCE"] ?? "—"}</td>
                               </tr>
                             );
                           })}
@@ -1793,18 +1752,16 @@ const IndexPhone = () => {
 
           {/* ── Selected product card ── */}
           {selectedProduct && (
-            <div className="surface-box p-4 mb-8" style={{ borderRadius: "5px" }}>
-              <div className="flex items-start justify-between mb-3">
+            <div className="surface-box p-6 mb-8" style={{ borderRadius: "5px" }}>
+              <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-[10px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1">
-                    {selectedProduct["OFFICE SECTION"]
-                      ? <span style={{ color: "hsl(var(--foreground))" }}>Section {selectedProduct["OFFICE SECTION"]}</span>
-                      : <span style={dim}>{selectedProduct["COLOUR"] === true ? "Colour Product" : "Product"}</span>
-                    }
+                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={dim}>
+                    {selectedProduct["COLOUR"] === true ? "Colour Product" : "Product"}
+                    {selectedProduct["OFFICE SECTION"] && ` · Section ${selectedProduct["OFFICE SECTION"]}`}
                   </p>
-                  <p className="text-[16px] font-light tracking-tight">{selectedProduct["PRODUCT NAME"]}</p>
+                  <p className="text-[20px] font-light tracking-tight">{selectedProduct["PRODUCT NAME"]}</p>
                   {selectedProduct["SUPPLIER"] && (
-                    <p className="text-[11px] mt-0.5" style={dim}>{selectedProduct["SUPPLIER"]}</p>
+                    <p className="text-[12px] mt-0.5" style={dim}>{selectedProduct["SUPPLIER"]}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
@@ -1833,60 +1790,61 @@ const IndexPhone = () => {
               </div>
 
               {/* Balance */}
-              <div className="mb-4 pb-4 border-b" style={{ borderColor: border }}>
-                {/* Office — full row */}
-                <div className="mb-3">
-                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Office</p>
-                  <p className="text-[15px] font-light" style={{
+              <div className="flex items-center gap-8 mb-5 pb-5 border-b" style={{ borderColor: border }}>
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Office</p>
+                  <p className="text-[22px] font-light" style={{
                     color: checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR"])
                       ? "hsl(var(--red))" : "hsl(var(--foreground))"
                   }}>
                     {selectedProduct["OFFICE BALANCE"] ?? "—"}
                     {checkBelowPar(selectedProduct["OFFICE BALANCE"], selectedProduct["PAR"]) && (
-                      <AlertTriangle size={11} className="inline ml-1 mb-0.5" style={{ color: "hsl(var(--red))" }} />
+                      <AlertTriangle size={14} className="inline ml-2 mb-1" style={{ color: "hsl(var(--red))" }} />
                     )}
                   </p>
                 </div>
-                {/* Branches — 3 columns */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Boudoir</p>
-                    <p className="text-[14px] font-light">{selectedProduct["BOUDOIR BALANCE"] ?? "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Chic</p>
-                    <p className="text-[14px] font-light">{selectedProduct["CHIC NAILSPA BALANCE"] ?? "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Nur Yadi</p>
-                    <p className="text-[14px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
-                  </div>
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Boudoir</p>
+                  <p className="text-[22px] font-light">{selectedProduct["BOUDOIR BALANCE"] ?? "—"}</p>
                 </div>
-
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Chic Nailspa</p>
+                  <p className="text-[22px] font-light">{selectedProduct["CHIC NAILSPA BALANCE"] ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Nur Yadi</p>
+                  <p className="text-[22px] font-light">{selectedProduct["NUR YADI BALANCE"] ?? "—"}</p>
+                </div>
+                {selectedProduct["OFFICE SECTION"] && (
+                  <div>
+                    <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Section</p>
+                    <p className="text-[22px] font-light">{selectedProduct["OFFICE SECTION"]}</p>
+                  </div>
+                )}
               </div>
 
               {/* Prices */}
-              <div className="grid grid-cols-2 gap-2 mb-4 mt-8" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: "1.5rem" }}>
+              <div className="grid grid-cols-4 gap-6 mb-5">
                 <div>
-                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Supplier Price</p>
-                  <p className="text-[13px] font-light">RM {fmtPrice(selectedProduct["SUPPLIER PRICE"])}</p>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Supplier Price</p>
+                  <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["SUPPLIER PRICE"])}</p>
                   {(selectedProduct["UNITS/ORDER"] ?? 1) > 1 && (
-                    <p className="text-[10px] [font-variant-numeric:lining-nums] mt-0.5" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
+                    <p className="text-[11px] [font-variant-numeric:lining-nums] mt-1" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
                       × {selectedProduct["UNITS/ORDER"]} units/order
                     </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Branch Price</p>
-                  <p className="text-[13px] font-light">RM {fmtPrice(getBranchPrice(selectedProduct["SUPPLIER PRICE"]))}</p>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Branch Price</p>
+                  <p className="text-[15px] font-light">RM {fmtPrice(getBranchPrice(selectedProduct["SUPPLIER PRICE"]))}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Staff Price</p>
-                  <p className="text-[13px] font-light">RM {fmtPrice(selectedProduct["STAFF PRICE"])}</p>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Staff Price</p>
+                  <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["STAFF PRICE"])}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>Customer Price</p>
-                  <p className="text-[13px] font-light">RM {fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
+                  <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Customer Price</p>
+                  <p className="text-[15px] font-light">RM {fmtPrice(selectedProduct["CUSTOMER PRICE"])}</p>
                 </div>
               </div>
 
@@ -1901,10 +1859,13 @@ const IndexPhone = () => {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b" style={{ borderColor: border }}>
-                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-3 font-normal" style={dim}>Date</th>
-                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-3 font-normal" style={dim}>From/To</th>
-                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 pr-3 font-normal" style={dim}>Qty</th>
-                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 font-normal" style={dim}>Bal</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Date</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Product</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Branch</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Supplier</th>
+                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>QTY</th>
+                        <th className="text-center text-[10px] tracking-wider uppercase pb-2 pr-5 font-normal" style={dim}>Office Balance</th>
+                        <th className="text-left text-[10px] tracking-wider uppercase pb-2 font-normal" style={dim}>GRN</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1915,10 +1876,13 @@ const IndexPhone = () => {
                         const qtyColor = isSupplierOrder ? "hsl(var(--green, 142 71% 45%))" : "hsl(var(--red))";
                         return (
                           <tr key={i} className="border-b last:border-0" style={{ borderColor: border }}>
-                            <td className="text-[11px] font-light py-2 pr-3">{fmtActivityDate(a.DATE)}</td>
-                            <td className="text-[11px] font-light py-2 pr-3" style={dim}>{label}</td>
-                            <td className="text-[12px] font-light py-2 pr-3 text-center" style={{ color: qtyColor }}>{qtySign}</td>
-                            <td className="text-[11px] font-light py-2 text-center" style={dim}>{a["OFFICE BALANCE"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{fmtActivityDate(a.DATE)}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{a["PRODUCT NAME"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{a["BRANCH"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2 pr-5">{a["SUPPLIER"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2 pr-5 text-center" style={{ color: qtyColor }}>{qtySign}</td>
+                            <td className="text-[12px] font-light py-2 pr-5 text-center">{a["OFFICE BALANCE"] ?? "—"}</td>
+                            <td className="text-[12px] font-light py-2">{a["GRN"] ?? "—"}</td>
                           </tr>
                         );
                       })}
@@ -1943,13 +1907,13 @@ const IndexPhone = () => {
                       {allSupplierRows.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
                           <div
-                            className="px-2 py-1.5"
+                            className="px-3 py-2"
                             style={{ border: `1px solid ${s.id === selectedProduct.id ? borderActive : border}` }}
                           >
-                            <p className="text-[9px] tracking-wider uppercase mb-0.5" style={dim}>{s["SUPPLIER"] || "Unknown"}</p>
-                            <p className="text-[12px] font-light">RM {fmtPrice(s["SUPPLIER PRICE"])}</p>
+                            <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>{s["SUPPLIER"] || "Unknown"}</p>
+                            <p className="text-[15px] font-light">RM {fmtPrice(s["SUPPLIER PRICE"])}</p>
                             {(s["UNITS/ORDER"] ?? 1) > 1 && (
-                              <p className="text-[9px] mt-0.5 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {s["UNITS/ORDER"]} units/order</p>
+                              <p className="text-[10px] mt-0.5 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {s["UNITS/ORDER"]} units/order</p>
                             )}
                           </div>
                         </div>
@@ -1962,34 +1926,33 @@ const IndexPhone = () => {
           )}
 
           {/* ── Filters ── */}
-          <div className="flex flex-col gap-1.5 mb-5">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                {(["no", "yes"] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFilterColour(f)}
-                    className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase transition-colors"
-                    style={{ color: filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                    onMouseLeave={e => (e.currentTarget.style.color = filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
-                  >
-                    {f === "yes" ? "Colours" : "Products"}
-                  </button>
-                ))}
-              </div>
-              <div style={{ width: "1px", height: "14px", background: border }} />
-              <button
-                onClick={() => setFilterLowStock(v => !v)}
-                className="text-[11px] tracking-wider uppercase transition-colors whitespace-nowrap"
-                style={{ color: filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))" }}
-                onMouseEnter={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--foreground))")}
-                onMouseLeave={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))")}
-              >
-                Below Par{lowStockCount > 0 ? ` (${lowStockCount})` : ""}
-              </button>
+          <div className="flex items-center gap-6 mb-5">
+            <div className="flex items-center gap-3">
+              {(["all", "no", "yes"] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilterColour(f)}
+                  className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase transition-colors"
+                  style={{ color: filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                  onMouseLeave={e => (e.currentTarget.style.color = filterColour === f ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))")}
+                >
+                  {f === "all" ? "All" : f === "yes" ? "Colours" : "Products"}
+                </button>
+              ))}
             </div>
-            <div className="text-[10px] tracking-wider uppercase" style={dim}>
+            <div style={{ width: "1px", height: "14px", background: border }} />
+            <button
+              onClick={() => setFilterLowStock(v => !v)}
+              className="flex items-center gap-1.5 text-[11px] tracking-wider uppercase transition-colors"
+              style={{ color: filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))" }}
+              onMouseEnter={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--foreground))")}
+              onMouseLeave={e => (e.currentTarget.style.color = filterLowStock ? "hsl(var(--red))" : "hsl(var(--muted-foreground))")}
+            >
+              <AlertTriangle size={11} />
+              Below Par {lowStockCount > 0 && `(${lowStockCount})`}
+            </button>
+            <div className="ml-auto text-[11px] tracking-wider uppercase" style={dim}>
               {filteredProducts.length} results
             </div>
           </div>
@@ -2002,7 +1965,7 @@ const IndexPhone = () => {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse" style={{ minWidth: "520px" }}>
+                <table className="w-full border-collapse" style={{ minWidth: "1050px" }}>
                   <thead>
                     <tr className="border-b" style={{ borderColor: borderActive }}>
 
@@ -2049,6 +2012,47 @@ const IndexPhone = () => {
                         Branch<br /><span>RM</span>
                       </th>
 
+                      {/* Staff RM */}
+                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                        Staff<br /><span>RM</span>
+                      </th>
+
+                      {/* Customer RM */}
+                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                        Customer<br /><span>RM</span>
+                      </th>
+
+                      {/* Section */}
+                      <th className={`${thBase} text-left pr-4 align-top`} style={dim}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                        Section
+                      </th>
+
+                      {/* Type */}
+                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                        Type
+                      </th>
+
+                      {/* Par */}
+                      <th className={`${thBase} text-center pr-4 align-top`} style={dim}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                        Par
+                      </th>
+
+                      {/* Units/Order */}
+                      <th className={`${thBase} text-center align-top`} style={dim}
+                        onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
+                        Units/<br /><span>Order</span>
+                      </th>
 
                     </tr>
                   </thead>
@@ -2065,15 +2069,24 @@ const IndexPhone = () => {
                           onMouseEnter={e => (e.currentTarget.style.background = cardBg)}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
-                          <td className="text-[11px] font-light py-2 pr-3" style={{ maxWidth: "180px", wordBreak: "break-word" }}>{p["PRODUCT NAME"]}</td>
-                          <td className="text-[10px] font-light py-2 pr-3" style={dim}>{p["SUPPLIER"] || "—"}</td>
-                          <td className="text-[11px] font-light py-2 pr-3 text-center" style={{ color: belowPar ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
+                          <td className="text-[13px] font-light py-3 pr-4">{p["PRODUCT NAME"]}</td>
+                          <td className="text-[12px] font-light py-3 pr-4" style={dim}>{p["SUPPLIER"] || "—"}</td>
+                          <td className="text-[13px] font-light py-3 pr-4 text-center" style={{ color: belowPar ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
                             {p["OFFICE BALANCE"] ?? "—"}
-                            {belowPar && <AlertTriangle size={9} className="inline ml-0.5 mb-0.5" />}
+                            {belowPar && <AlertTriangle size={10} className="inline ml-1 mb-0.5" />}
                           </td>
-                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={{ color: "hsl(var(--foreground))" }}>{fmtPrice(p["SUPPLIER PRICE"])}</td>
-                          <td className="text-[10px] font-light py-2 pr-3 text-center" style={dim}>{fmtPrice(branchPrice)}</td>
-
+                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{fmtPrice(p["SUPPLIER PRICE"])}</td>
+                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(branchPrice)}</td>
+                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["STAFF PRICE"])}</td>
+                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{fmtPrice(p["CUSTOMER PRICE"])}</td>
+                          <td className="text-[12px] font-light py-3 pr-4" style={dim}>{p["OFFICE SECTION"] || "—"}</td>
+                          <td className="text-[11px] [font-variant-numeric:lining-nums] font-light py-3 pr-4 text-center tracking-wider uppercase" style={dim}>
+                            {p["COLOUR"] === true ? "Colour" : "Product"}
+                          </td>
+                          <td className="text-[12px] font-light py-3 pr-4 text-center" style={dim}>{p["PAR"] ?? "—"}</td>
+                          <td className="text-[12px] font-light py-3 text-center" style={(p["UNITS/ORDER"] ?? 1) > 1 ? { color: "hsl(var(--foreground))", fontWeight: 500 } : dim}>
+                            {(p["UNITS/ORDER"] ?? 1) > 1 ? `${p["UNITS/ORDER"]} units` : "—"}
+                          </td>
                         </tr>
                       );
                     })}
@@ -2120,7 +2133,7 @@ const IndexPhone = () => {
             <div style={{ paddingBottom: entryShowDropdown ? "260px" : "40px", transition: "padding-bottom 0.2s" }}>
               {/* ── Branch + Type selectors ── */}
               <div className="flex flex-col gap-2 mb-8">
-                <div className="flex items-center gap-4 mb-3 flex-wrap">
+                <div className="flex items-center gap-6 mb-1">
                   {(["Office", "Boudoir", "Chic Nailspa", "Nur Yadi"] as const).map(branch => (
                     <button
                       key={branch}
@@ -2130,7 +2143,7 @@ const IndexPhone = () => {
                       onMouseLeave={() => setEntryHoveredBranch(null)}
                       className="transition-all duration-200"
                       style={{
-                        fontSize: entryBranch === branch ? "13px" : entryHoveredBranch === branch ? "12px" : "11px",
+                        fontSize: entryBranch === branch ? "15px" : entryHoveredBranch === branch ? "13px" : "12px",
                         fontWeight: 300,
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
@@ -2168,18 +2181,18 @@ const IndexPhone = () => {
 
               {/* ── Search bar ── */}
               <div ref={entrySearchRef} className="relative mb-6">
-                <p className="text-[12px] tracking-wider uppercase mb-2" style={dim}>
+                <p className="text-[14.5px] tracking-wider uppercase mb-2" style={dim}>
                   {entryType === "Usage" ? `${entryBranch} Usage` : `${entryBranch} Order`}
                 </p>
                 <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
                   <input
                     ref={entryInputRef}
                     type="text"
-                    className="flex-1 bg-transparent outline-none text-[13px] font-light"
+                    className="flex-1 bg-transparent outline-none text-[14.5px] font-light"
                     placeholder="Search to add..."
                     value={entrySearch}
                     onChange={e => { setEntrySearch(e.target.value); setEntryShowDropdown(true); setEntryActiveIndex(-1); }}
-                    onFocus={() => setEntryShowDropdown(true)}
+                    onFocus={() => entrySearch && setEntryShowDropdown(true)}
                     onKeyDown={handleEntryKeyDown}
                     style={{ color: "hsl(var(--foreground))" }}
                   />
@@ -2210,14 +2223,14 @@ const IndexPhone = () => {
                         >
                           <div>
                             <div className="flex items-center gap-1.5">
-                              {p[entryFavCol(entryBranch)] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
-                              <span className="text-[12px] font-light" style={{ color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</span>
+                              {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                              <span className="text-[14.5px] font-light" style={{ color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</span>
                             </div>
                             {entryBranch === "Office" && entryType === "Order" && p["SUPPLIER"] && (
-                              <span className="text-[11px]" style={dim}>{p["SUPPLIER"]}</span>
+                              <span className="text-[13px]" style={dim}>{p["SUPPLIER"]}</span>
                             )}
                           </div>
-                          <span className="text-[12px] font-light" style={dim}>{balance ?? "—"}</span>
+                          <span className="text-[14.5px] font-light" style={dim}>{balance ?? "—"}</span>
                         </div>
                       );
                     })}
@@ -2229,7 +2242,7 @@ const IndexPhone = () => {
               {entryItems.length > 0 ? (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[11px] tracking-wider uppercase" style={dim}>
+                    <p className="text-[14.5px] tracking-wider uppercase" style={dim}>
                       {entryItems.length} item{entryItems.length !== 1 ? "s" : ""}
                     </p>
                     <button
@@ -2240,68 +2253,62 @@ const IndexPhone = () => {
                       Clear
                     </button>
                   </div>
-                  <div className="mb-6">
-                      {entryItems.map((item, idx) => {
-                        const entryProduct = entryProductsRaw.find(p => p["PRODUCT NAME"] === item.productName);
-                        const balKey = entryBalanceCol(entryBranch) as keyof EntryProduct;
-                        const currentBal = entryProduct ? (entryProduct[balKey] as number | null) : null;
-                        return (
-                        <div key={item.id} className="mb-3">
-                          {/* Line 1: Product + Remove */}
-                          <div className="flex items-center gap-2" style={{ borderBottom: `1px solid ${border}` }}>
-                            <span className="flex-1 py-2.5 text-[13px] font-light" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</span>
-                            <button
-                              onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}
-                              className="flex-shrink-0 transition-colors py-2.5" style={dim}
-                              onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
-                              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
-                          {/* Line 2: Type (usage only) / Balance (order, non-office) + Qty */}
-                          <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
-                            <div className="flex-1">
-                              {entryType === "Usage" && (
-                                <EntryTypeDropdown
-                                  value={item.type}
-                                  options={entryUsageTypes(entryBranch)}
-                                  onChange={type => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, type } : i))}
-                                />
-                              )}
-                              {entryType === "Order" && entryBranch !== "Office" && (
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] tracking-wider uppercase" style={dim}>Balance</span>
-                                  <span className="text-[13px] font-light" style={currentBal === null ? dim : { color: "hsl(var(--foreground))" }}>
-                                    {currentBal === null ? "—" : currentBal}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center">
+                  <table className="w-full border-collapse mb-6">
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${border}` }}>
+                        <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "32px" }}>#</th>
+                        <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={dim}>Product</th>
+                        {entryType === "Usage" && (
+                          <th className="text-left pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "160px" }}>Type</th>
+                        )}
+                        <th className="text-center pb-3 text-[11px] tracking-[0.12em] uppercase font-normal" style={{ ...dim, width: "80px" }}>Qty</th>
+                        <th style={{ width: "32px" }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entryItems.map((item, idx) => (
+                        <tr key={item.id} style={{ borderBottom: `1px solid ${border}` }}>
+                          <td className="py-3 text-[12px] font-light" style={dim}>{idx + 1}</td>
+                          <td className="py-3 text-[13px] font-light pr-4" style={{ color: "hsl(var(--foreground))" }}>{item.productName}</td>
+                          {entryType === "Usage" && (
+                            <td className="py-3 pr-4">
+                              <EntryTypeDropdown
+                                value={item.type}
+                                options={entryUsageTypes(entryBranch)}
+                                onChange={type => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, type } : i))}
+                              />
+                            </td>
+                          )}
+                          <td className="py-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))}
-                                className="px-1.5 py-1 transition-colors" style={dim}
+                                className="px-1 py-0.5 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
                                 <ChevronLeft size={13} />
                               </button>
-                              <span className="text-[13px] font-light min-w-[32px] text-center">{item.qty}</span>
+                              <span className="text-[13px] font-light min-w-[28px] text-center">{item.qty}</span>
                               <button
                                 onClick={() => setEntryItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))}
-                                className="px-1.5 py-1 transition-colors" style={dim}
+                                className="px-1 py-0.5 transition-colors" style={dim}
                                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                               >
                                 <ChevronRight size={13} />
                               </button>
                             </div>
-                          </div>
-                        </div>
-                        );
-                      })}
-                    </div>
+                          </td>
+                          <td className="py-3 text-right">
+                            <button onClick={() => setEntryItems(prev => prev.filter(i => i.id !== item.id))}>
+                              <X size={13} style={dim} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
                   {/* Submit row */}
                   <div className="flex items-center justify-between pt-2">
@@ -2329,7 +2336,7 @@ const IndexPhone = () => {
                         <button
                           onClick={handleEntryConfirmOrder}
                           disabled={entrySubmitting}
-                          className="text-[10px] tracking-[0.12em] uppercase px-4 py-1 transition-opacity"
+                          className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
                           style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
                         >
                           {entrySubmitting ? "Confirming..." : "Confirm Order"}
@@ -2339,7 +2346,7 @@ const IndexPhone = () => {
                       <button
                         onClick={handleEntrySubmit}
                         disabled={entrySubmitting}
-                        className="text-[10px] tracking-[0.12em] uppercase px-4 py-1 transition-opacity"
+                        className="text-[12px] tracking-[0.12em] uppercase px-6 py-2 transition-opacity"
                         style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", borderRadius: "5px", opacity: entrySubmitting ? 0.6 : 1 }}
                       >
                         {entrySubmitting ? "Submitting..." : "Submit"}
@@ -2360,12 +2367,15 @@ const IndexPhone = () => {
       {showNewProductModal && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowNewProductModal(false)}>
           <div
-            className="h-full w-full max-w-[500px] overflow-y-auto p-5"
+            className="h-full w-full max-w-[500px] overflow-y-auto p-10"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[16px] font-light tracking-widest uppercase">New Product</h2>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-[24px] font-light tracking-tight">New Product</h2>
+                <p className="text-[14.5px] tracking-wider uppercase mt-1" style={dim}>Add to product database</p>
+              </div>
               <button onClick={() => setShowNewProductModal(false)} style={dim}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
@@ -2373,91 +2383,75 @@ const IndexPhone = () => {
               </button>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-3">
               {/* Product Name */}
-              <input
-                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
-                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
-                value={newProduct["PRODUCT NAME"]}
-                onChange={e => setNewProduct(p => ({ ...p, "PRODUCT NAME": e.target.value }))}
-                placeholder="Product name *"
-              />
-
-              {/* Supplier */}
-              <div className="relative" ref={newProductSupplierRef}>
+              <div>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Product Name *</p>
                 <input
-                  className="w-full bg-transparent outline-none text-[13px] font-light py-3"
-                  style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
-                  value={newProduct["SUPPLIER"]}
-                  onChange={e => { setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value })); setShowNewProductSupplierDropdown(true); }}
-                  onFocus={() => setShowNewProductSupplierDropdown(true)}
-                  onKeyDown={e => { if (e.key === "Escape") setShowNewProductSupplierDropdown(false); }}
-                  placeholder="Supplier"
+                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
+                  style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                  value={newProduct["PRODUCT NAME"]}
+                  onChange={e => setNewProduct(p => ({ ...p, "PRODUCT NAME": e.target.value }))}
+                  placeholder="Product name"
                 />
-                {showNewProductSupplierDropdown && (
-                  <div
-                    className="absolute top-full left-0 z-50 w-full border rounded mt-0.5 max-h-[180px] overflow-y-auto scrollbar-thin"
-                    style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "5px" }}
-                  >
-                    {supplierOptions
-                      .filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase()))
-                      .map(s => (
-                        <button
-                          key={s}
-                          type="button"
-                          className="w-full text-left px-3 py-2 text-[13px] font-light transition-colors"
-                          style={{ color: "hsl(var(--foreground))" }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                          onClick={() => { setNewProduct(p => ({ ...p, "SUPPLIER": s })); setShowNewProductSupplierDropdown(false); }}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    {supplierOptions.filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase())).length === 0 && (
-                      <p className="px-3 py-2 text-[12px]" style={{ color: "hsl(var(--muted-foreground))" }}>No match — will create new</p>
-                    )}
-                  </div>
-                )}
               </div>
 
-              {/* Office Section */}
-              <input
-                className="w-full bg-transparent outline-none text-[13px] font-light py-3"
-                style={{ borderBottom: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }}
-                value={newProduct["OFFICE SECTION"]}
-                onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
-                placeholder="Office section (e.g. 12B)"
-              />
+              {/* Supplier */}
+              <div>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Supplier</p>
+                <div className="relative" ref={newProductSupplierRef}>
+                  <input
+                    className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
+                    style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }}
+                    value={newProduct["SUPPLIER"]}
+                    onChange={e => { setNewProduct(p => ({ ...p, "SUPPLIER": e.target.value })); setShowNewProductSupplierDropdown(true); }}
+                    onFocus={() => setShowNewProductSupplierDropdown(true)}
+                    onKeyDown={e => { if (e.key === "Escape") setShowNewProductSupplierDropdown(false); }}
+                    placeholder="Select or type supplier"
+                  />
+                  {showNewProductSupplierDropdown && (
+                    <div
+                      className="absolute top-full left-0 z-50 w-full border rounded mt-0.5 max-h-[180px] overflow-y-auto scrollbar-thin"
+                      style={{ background: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                    >
+                      {supplierOptions
+                        .filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase()))
+                        .map(s => (
+                          <button
+                            key={s}
+                            type="button"
+                            className="w-full text-left px-3 py-2 text-[13px] font-light transition-colors"
+                            style={{ color: "hsl(var(--foreground))" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                            onClick={() => { setNewProduct(p => ({ ...p, "SUPPLIER": s })); setShowNewProductSupplierDropdown(false); }}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      {supplierOptions.filter(s => s.toLowerCase().includes(newProduct["SUPPLIER"].toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-[12px]" style={{ color: "hsl(var(--muted-foreground))" }}>No match — will create new</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-              {/* Prices */}
-              <div className="py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
-                <p className="text-[11px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--foreground))" }}>Prices (RM)</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              {/* Prices row */}
+              <div>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Prices (RM)</p>
+                <div className="grid grid-cols-2 gap-2">
                   {(["SUPPLIER PRICE", "BRANCH PRICE", "STAFF PRICE", "CUSTOMER PRICE"] as const).map(field => (
                     <div key={field}>
-                      <p className="text-[9px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" PRICE", "")}</p>
+                      <p className="text-[10px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{field.replace(" PRICE", "")}</p>
                       <input
-                        className="w-full bg-transparent outline-none text-[13px] font-light py-1"
-                        style={{ borderBottom: "1px solid hsl(var(--border))" }}
+                        className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
+                        style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
                         type="number"
                         step="0.01"
                         min="0"
                         value={newProduct[field]}
-                        onChange={e => {
-                          const val = e.target.value;
-                          if (field === "SUPPLIER PRICE") {
-                            const parsed = parseFloat(val);
-                            const auto = !isNaN(parsed) ? getBranchPrice(parsed) : null;
-                            setNewProduct(p => ({
-                              ...p,
-                              "SUPPLIER PRICE": val,
-                              "BRANCH PRICE": auto !== null ? auto.toFixed(2) : ""
-                            }));
-                          } else {
-                            setNewProduct(p => ({ ...p, [field]: val }));
-                          }
-                        }}
+                        onChange={e => setNewProduct(p => ({ ...p, [field]: e.target.value }))}
                         placeholder="0.00"
                       />
                     </div>
@@ -2465,50 +2459,57 @@ const IndexPhone = () => {
                 </div>
               </div>
 
+
+
               {/* PAR and Units/Order */}
-              <div className="py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
-                <div className="grid grid-cols-2 gap-x-4">
-                  <div>
-                    <p className="text-[9px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>Par Level</p>
-                    <input
-                      className="w-full bg-transparent outline-none text-[13px] font-light py-1"
-                      style={{ borderBottom: "1px solid hsl(var(--border))" }}
-                      type="number"
-                      min="0"
-                      value={newProduct["PAR"]}
-                      onChange={e => setNewProduct(p => ({ ...p, "PAR": e.target.value }))}
-                      placeholder="—"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase mb-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
-                    <input
-                      className="w-full bg-transparent outline-none text-[13px] font-light py-1"
-                      style={{ borderBottom: "1px solid hsl(var(--border))" }}
-                      type="number"
-                      min="1"
-                      value={newProduct["UNITS/ORDER"]}
-                      onChange={e => setNewProduct(p => ({ ...p, "UNITS/ORDER": e.target.value }))}
-                      placeholder="1"
-                    />
-                  </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>PAR Level</p>
+                  <input
+                    className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
+                    style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                    type="number"
+                    min="0"
+                    value={newProduct["PAR"]}
+                    onChange={e => setNewProduct(p => ({ ...p, "PAR": e.target.value }))}
+                    placeholder="—"
+                  />
+                </div>
+                <div>
+                  <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Units / Order</p>
+                  <input
+                    className="w-full bg-transparent border rounded px-3 py-1.5 text-[13px] font-light outline-none"
+                    style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                    type="number"
+                    min="1"
+                    value={newProduct["UNITS/ORDER"]}
+                    onChange={e => setNewProduct(p => ({ ...p, "UNITS/ORDER": e.target.value }))}
+                    placeholder="1"
+                  />
                 </div>
               </div>
 
+              {/* Office Section */}
+              <div>
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Office Section</p>
+                <input
+                  className="w-full bg-transparent border rounded px-3 py-2 text-[13px] font-light outline-none"
+                  style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                  value={newProduct["OFFICE SECTION"]}
+                  onChange={e => setNewProduct(p => ({ ...p, "OFFICE SECTION": e.target.value }))}
+                  placeholder="e.g. 12B"
+                />
+              </div>
+
               {/* Colour toggle */}
-              <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
-                <div className="flex items-center gap-2">
-                  <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))", textDecoration: newProduct["COLOUR"] ? "none" : "line-through" }}>Product</p>
-                  {!newProduct["COLOUR"] && (
-                    <p className="text-[13px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>Colour</p>
-                  )}
-                </div>
+              <div className="flex items-center gap-3">
+                <p className="text-[11px] [font-variant-numeric:lining-nums] tracking-wider uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>Colour Product</p>
                 <button
                   onClick={() => setNewProduct(p => ({ ...p, "COLOUR": !p["COLOUR"] }))}
                   className="rounded px-3 py-1 text-[12px] font-light transition-colors"
                   style={{
-                    background: newProduct["COLOUR"] ? "transparent" : "hsl(var(--foreground))",
-                    color: newProduct["COLOUR"] ? "hsl(var(--muted-foreground))" : "hsl(var(--background))",
+                    background: newProduct["COLOUR"] ? "hsl(var(--foreground))" : "transparent",
+                    color: newProduct["COLOUR"] ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
                     border: "1px solid hsl(var(--border))"
                   }}
                 >
@@ -2525,14 +2526,14 @@ const IndexPhone = () => {
               <button
                 onClick={handleSaveNewProduct}
                 disabled={savingNewProduct}
-                className="rounded px-4 py-1.5 text-[11px] font-light tracking-wider uppercase transition-opacity"
+                className="flex-1 rounded py-2 text-[13px] font-light transition-opacity"
                 style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", opacity: savingNewProduct ? 0.5 : 1 }}
               >
                 {savingNewProduct ? "Saving..." : "Save Product"}
               </button>
               <button
                 onClick={() => setShowNewProductModal(false)}
-                className="rounded px-4 py-1.5 text-[11px] font-light tracking-wider uppercase"
+                className="rounded px-4 py-2 text-[13px] font-light"
                 style={{ border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}
               >
                 Cancel
@@ -2541,7 +2542,7 @@ const IndexPhone = () => {
 
             <div className="mt-4" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: "16px" }}>
               <label
-                className="flex items-center gap-2 cursor-pointer text-[10px] font-light tracking-wider uppercase transition-colors w-fit"
+                className="flex items-center gap-2 cursor-pointer text-[13px] font-light tracking-wider uppercase transition-colors w-fit"
                 style={{ color: importingCSV ? "hsl(var(--muted-foreground))" : "hsl(var(--muted-foreground))" }}
                 onMouseEnter={e => { if (!importingCSV) e.currentTarget.style.color = "hsl(var(--foreground))"; }}
                 onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
@@ -2553,7 +2554,7 @@ const IndexPhone = () => {
                   disabled={importingCSV}
                   onChange={handleImportCSV}
                 />
-                <Upload size={10} />{importingCSV ? "Importing..." : "Import CSV"}
+                <Upload size={13} />{importingCSV ? "Importing..." : "Import CSV"}
               </label>
               {csvImportResult && (
                 <p className="mt-2 text-[12px]" style={{ color: csvImportResult.startsWith("✓") ? "hsl(var(--foreground))" : "hsl(var(--destructive))" }}>
@@ -2569,33 +2570,16 @@ const IndexPhone = () => {
       {showOrderPanel && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowOrderPanel(false)}>
           <div
-            ref={panelScrollRef}
-            className="h-full w-full max-w-[500px] overflow-y-auto p-5"
+            className="h-full w-full max-w-[500px] overflow-y-auto p-10"
             style={{ background: "hsl(var(--background))", borderLeft: `1px solid hsl(var(--border))` }}
             onClick={e => e.stopPropagation()}
           >
-            {/* NEW ORDER content — blurs + shrinks as ORDER SUMMARY scrolls in */}
-            <div
-              style={{
-                transform: `scale(${1 - summaryProgress * 0.20})`,
-                transformOrigin: "top center",
-                transition: "filter 0.1s ease, transform 0.1s ease, mask-image 0.1s ease, WebkitMaskImage 0.1s ease",
-                filter: summaryProgress > 0 ? `blur(${summaryProgress * 4}px)` : "none",
-                WebkitMaskImage: summaryProgress > 0
-                  ? panelScrollDir === "down"
-                    ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
-                    : `linear-gradient(to top, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
-                  : "none",
-                maskImage: summaryProgress > 0
-                  ? panelScrollDir === "down"
-                    ? `linear-gradient(to bottom, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
-                    : `linear-gradient(to top, black 0%, black ${Math.max(0, 85 - summaryProgress * 90)}%, transparent 100%)`
-                  : "none",
-              }}
-            >
             {/* Panel header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[16px] font-light tracking-[0.15em] uppercase">New Order</h2>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-[24px] font-light tracking-tight">New Order</h2>
+                <p className="text-[14.5px] tracking-wider uppercase mt-1" style={dim}>Office stock order</p>
+              </div>
               <button onClick={() => setShowOrderPanel(false)} style={dim}
                 onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                 onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}>
@@ -2608,17 +2592,22 @@ const IndexPhone = () => {
               <button
                 onClick={() => setShowSupplierDropdown(v => !v)}
                 onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setShowSupplierDropdown(false); }}
-                className="flex items-center gap-1.5 text-[12px] tracking-wider uppercase transition-colors"
-                style={{ color: "hsl(var(--foreground))", background: "transparent" }}
+                className="flex items-center gap-2 text-[14.5px] tracking-wider uppercase transition-colors px-3 py-1.5"
+                style={{
+                  border: `1px solid ${borderActive}`,
+                  color: "hsl(var(--foreground))",
+                  minWidth: "180px",
+                  background: "transparent",
+                }}
               >
-                <span>
+                <span className="flex-1 text-left">
                   {orderSupplierFilter.length === 0
                     ? "All Suppliers"
                     : orderSupplierFilter.length === 1
                       ? orderSupplierFilter[0]
                       : `${orderSupplierFilter.length} suppliers`}
                 </span>
-                <ChevronRight size={10} style={{ transform: showSupplierDropdown ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s", flexShrink: 0 }} />
+                <ChevronRight size={10} style={{ transform: showSupplierDropdown ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }} />
               </button>
               {showSupplierDropdown && (
                 <div
@@ -2627,11 +2616,11 @@ const IndexPhone = () => {
                 >
                   {/* Clear all */}
                   <button
-                    className="w-full text-left px-3 py-2 text-[11px] tracking-wider uppercase transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-[14.5px] tracking-wider uppercase transition-colors flex items-center gap-2"
                     style={{ color: "hsl(var(--foreground))", background: orderSupplierFilter.length === 0 ? cardBg : "transparent", borderBottom: `1px solid ${border}` }}
                     onClick={() => setOrderSupplierFilter([])}
                   >
-                    <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: orderSupplierFilter.length === 0 ? "hsl(var(--foreground))" : "transparent", flexShrink: 0, borderRadius: "50%" }} />
+                    <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: orderSupplierFilter.length === 0 ? "hsl(var(--foreground))" : "transparent", flexShrink: 0 }} />
                     All Suppliers
                   </button>
                   {allSuppliers.map(s => {
@@ -2640,13 +2629,13 @@ const IndexPhone = () => {
                     return (
                       <button
                         key={s}
-                        className="w-full text-left px-3 py-2 text-[11px] tracking-wider uppercase transition-colors flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 text-[14.5px] tracking-wider uppercase transition-colors flex items-center gap-2"
                         style={{ color: "hsl(var(--foreground))", background: selected ? cardBg : "transparent" }}
                         onClick={() => setOrderSupplierFilter(prev =>
                           prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
                         )}
                       >
-                        <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: selected ? "hsl(var(--foreground))" : "transparent", flexShrink: 0, borderRadius: "50%" }} />
+                        <span style={{ width: 10, height: 10, border: `1px solid ${borderActive}`, display: "inline-block", background: selected ? "hsl(var(--foreground))" : "transparent", flexShrink: 0 }} />
                         {s}
                       </button>
                     );
@@ -2657,11 +2646,11 @@ const IndexPhone = () => {
 
             {/* Add product search */}
             <div ref={orderSearchRef} className="relative mb-6">
-              <p className="text-[12px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
+              <p className="text-[14.5px] tracking-wider uppercase mb-2" style={dim}>Add Product</p>
               <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: borderActive }}>
                 <input
                   type="text"
-                  className="flex-1 bg-transparent outline-none text-[12px] font-light"
+                  className="flex-1 bg-transparent outline-none text-[14.5px] font-light"
                   placeholder="Search to add..."
                   value={orderSearch}
                   onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); setOrderActiveIndex(-1); }}
@@ -2670,18 +2659,11 @@ const IndexPhone = () => {
                   style={{ color: "hsl(var(--foreground))" }}
                 />
                 {orderSearch && (
-                  <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); setForceOrderDropdown(false); }} style={dim}>
+                  <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); }} style={dim}>
                     <X size={12} />
                   </button>
                 )}
-                <button
-                  onMouseDown={(e) => { e.preventDefault(); setForceOrderDropdown(true); setShowOrderDropdown(true); setOrderActiveIndex(-1); }}
-                  style={dim}
-                  onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                >
-                  <Plus size={12} />
-                </button>
+                <Plus size={12} style={dim} />
               </div>
               {showOrderDropdown && orderDropdownResults.length > 0 && (
                 <div
@@ -2701,16 +2683,16 @@ const IndexPhone = () => {
                       <div>
                         <div className="flex items-center gap-1.5">
                           {p["OFFICE FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
-                          <span className="text-[12px] font-light">{p["PRODUCT NAME"]}</span>
+                          <span className="text-[14.5px] font-light">{p["PRODUCT NAME"]}</span>
                         </div>
                         {orderSupplierFilter.length === 0 && p["SUPPLIER"] && (
-                          <span className="text-[11px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
+                          <span className="text-[14.5px] ml-2" style={dim}>{p["SUPPLIER"]}</span>
                         )}
                         {(p["UNITS/ORDER"] ?? 1) > 1 && (
-                          <span className="text-[11px] ml-2 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {p["UNITS/ORDER"]} units/order</span>
+                          <span className="text-[14.5px] ml-2 font-medium" style={{ color: "hsl(var(--foreground))" }}>× {p["UNITS/ORDER"]} units/order</span>
                         )}
                       </div>
-                      <span className="text-[12px] font-light" style={{
+                      <span className="text-[14.5px] font-light" style={{
                         color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"])
                           ? "hsl(var(--red))" : "hsl(var(--muted-foreground))"
                       }}>
@@ -2726,7 +2708,7 @@ const IndexPhone = () => {
             {orderLines.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[12px] tracking-wider uppercase" style={dim}>Order Items</p>
+                  <p className="text-[14.5px] tracking-wider uppercase" style={dim}>Order Items</p>
                   {orderLines.length > 0 && (
                     <button
                       onClick={() => setOrderLines([])}
@@ -2737,7 +2719,7 @@ const IndexPhone = () => {
                     </button>
                   )}
                 </div>
-                <div>
+                <div className="space-y-3">
                   {orderLines.map((line, idx) => {
                     const siblings = products.filter(
                       s => s["PRODUCT NAME"] === line.product["PRODUCT NAME"] && s.id !== line.product.id
@@ -2749,14 +2731,45 @@ const IndexPhone = () => {
                       ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice)
                       : line.product;
                     return (
-                      <div key={idx} className="mb-3">
-                        {/* Line 1: Product name + balance + × remove */}
-                        <div className="flex items-center justify-between py-2.5" style={{ borderBottom: `1px solid ${border}` }}>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <p className="text-[13px] font-light truncate">{line.product["PRODUCT NAME"]}</p>
-                            <span className="text-[12px] shrink-0" style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : (line.product["OFFICE BALANCE"] != null && line.product["PAR"] != null && Number(line.product["OFFICE BALANCE"]) >= Number(line.product["PAR"]) ? "#4ade80" : "hsl(var(--muted-foreground))") }}>
-                              {line.product["OFFICE BALANCE"] ?? "—"}
-                            </span>
+                      <div key={idx} className="p-3" style={{ border: `1px solid ${needsChoice ? borderActive : border}` }}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="text-[14.5px] font-light">{line.product["PRODUCT NAME"]}</p>
+                            {/* Supplier choice prompt */}
+                            {siblings.length > 0 && (
+                              <div className="flex items-center gap-2 mt-1.5">
+                                {[line.product, ...siblings].map(s => (
+                                  <button
+                                    key={s.id}
+                                    onClick={() => setOrderLines(prev => prev.map((l, i) =>
+                                      i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
+                                    ))}
+                                    className="text-[11.5px] tracking-wider uppercase px-2 py-1 transition-colors"
+                                    style={{
+                                      border: `1px solid ${line.supplierChoice === s["SUPPLIER"] ? borderActive : border}`,
+                                      color: line.supplierChoice === s["SUPPLIER"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                                      background: line.supplierChoice === s["SUPPLIER"] ? cardBg : "transparent",
+                                    }}
+                                  >
+                                    {s["SUPPLIER"] || "Unknown"}
+                                    {s["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(s["SUPPLIER PRICE"])}`}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {/* Single supplier — show supplier name + price */}
+                            {siblings.length === 0 && (
+                              <p className="text-[14.5px] mt-0.5" style={dim}>
+                                {line.product["SUPPLIER"]}
+                                {line.product["SUPPLIER PRICE"] !== null && ` · RM ${fmtPrice(line.product["SUPPLIER PRICE"])}`}
+                              </p>
+                            )}
+                            {/* Units/Order badge */}
+                            {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
+                              <p className="text-[14.5px] mt-0.5" style={{ color: "hsl(var(--foreground))", fontWeight: 500 }}>
+                                × {line.product["UNITS/ORDER"]} units/order
+                              </p>
+                            )}
                           </div>
                           <button
                             onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))}
@@ -2764,76 +2777,43 @@ const IndexPhone = () => {
                             onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                             onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                           >
-                            <X size={11} />
+                            <X size={12} />
                           </button>
                         </div>
-                        {/* Supplier choice — stacked rows with circle indicator */}
-                        {siblings.length > 0 && (
-                          <div className="py-1" style={{ borderBottom: `1px solid ${border}` }}>
-                            {[line.product, ...siblings].map(s => {
-                              const isSelected = line.supplierChoice === s["SUPPLIER"];
-                              const hasChoice = line.supplierChoice !== null;
-                              return (
-                                <button
-                                  key={s.id}
-                                  onClick={() => setOrderLines(prev => prev.map((l, i) =>
-                                    i === idx ? { ...l, supplierChoice: s["SUPPLIER"] } : l
-                                  ))}
-                                  className="flex items-center gap-2 w-full py-1 text-left transition-opacity"
-                                  style={{
-                                    opacity: hasChoice && !isSelected ? 0.3 : 1,
-                                    transition: "opacity 0.2s",
-                                  }}
-                                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
-                                  onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.opacity = hasChoice ? "0.3" : "1"; }}
-                                >
-                                  <span className="text-[10px] shrink-0" style={{ color: isSelected ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}>
-                                    {isSelected ? "●" : "○"}
-                                  </span>
-                                  <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>
-                                    {s["SUPPLIER"] || "Unknown"}
-                                  </span>
-                                  {s["SUPPLIER PRICE"] !== null && s["SUPPLIER PRICE"] !== undefined && (
-                                    <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-                                      · RM {fmtPrice(s["SUPPLIER PRICE"])}
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {/* Line 2: Supplier · Price · Balance + qty arrows (no box) */}
-                        <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
-                          <span className="text-[11px]" style={dim}>
-                            {chosenSupplier?.["SUPPLIER"] ?? ""}
-                            {chosenSupplier?.["SUPPLIER PRICE"] !== null && chosenSupplier?.["SUPPLIER PRICE"] !== undefined ? ` · RM ${fmtPrice(chosenSupplier["SUPPLIER PRICE"])}` : ""}
-                            {(line.product["UNITS/ORDER"] ?? 1) > 1 && ` · ×${line.product["UNITS/ORDER"]} units`}
+                        {/* Balance + Qty */}
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-[14.5px]" style={dim}>
+                            Balance: <span style={{ color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--red))" : "hsl(var(--foreground))" }}>
+                              {chosenSupplier?.["OFFICE BALANCE"] ?? line.product["OFFICE BALANCE"] ?? "—"}
+                            </span>
                           </span>
-                          <div className="flex items-center gap-2">
+                          {/* Qty stepper */}
+                          <div className="flex items-center" style={{ border: `1px solid ${borderActive}` }}>
                             <button
+                              className="px-2 py-1.5 transition-colors text-[14.5px]"
+                              style={dim}
                               onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: Math.max(1, l.qty - 1) } : l))}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                              style={dim}
                             >
-                              <ChevronLeft size={11} />
+                              <ChevronLeft size={12} />
                             </button>
-                            <span className="text-[13px] font-light min-w-[20px] text-center">
-                              {line.qty}
-                              {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
-                                <span className="text-[11px] ml-1" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
-                                  ({line.qty * (line.product["UNITS/ORDER"] ?? 1)})
-                                </span>
-                              )}
-                            </span>
+                            <span className="text-[14.5px] font-light px-3 min-w-[32px] text-center">
+              {line.qty}
+              {(line.product["UNITS/ORDER"] ?? 1) > 1 && (
+                <span className="text-[14.5px] ml-1" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
+                  ({line.qty * (line.product["UNITS/ORDER"] ?? 1)} units)
+                </span>
+              )}
+            </span>
                             <button
+                              className="px-2 py-1.5 transition-colors text-[14.5px]"
+                              style={dim}
                               onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--foreground))")}
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
-                              style={dim}
                             >
-                              <ChevronRight size={11} />
+                              <ChevronRight size={12} />
                             </button>
                           </div>
                         </div>
@@ -2845,17 +2825,17 @@ const IndexPhone = () => {
                 {/* Summary + Confirm */}
                 <div className="mt-6 pt-4 border-t" style={{ borderColor: border }}>
                   {orderLines.some(l => l.supplierChoice === null && products.filter(s => s["PRODUCT NAME"] === l.product["PRODUCT NAME"] && s.id !== l.product.id).length > 0) && (
-                    <p className="text-[11px] mb-2" style={{ color: "hsl(var(--red))" }}>
+                    <p className="text-[14.5px] mb-2" style={{ color: "hsl(var(--red))" }}>
                       Please select a supplier for all items before submitting
                     </p>
                   )}
                   {orderSuccess ? (
-                    <p className="text-[12px]" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
+                    <p className="text-[14.5px]" style={{ color: "hsl(var(--green, 142 71% 45%))" }}>
                       ✓ Order confirmed — office balances updated
                     </p>
                   ) : (
                     <button
-                      className="minimal-btn text-[10px] px-3 py-1"
+                      className="minimal-btn"
                       style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", opacity: (orderLines.length === 0 || orderSubmitting) ? 0.4 : 1, borderRadius: "5px" }}
                       disabled={orderLines.length === 0 || orderSubmitting}
                       onClick={handleOrderConfirm}
@@ -2864,12 +2844,125 @@ const IndexPhone = () => {
                     </button>
                   )}
                   {confirmError && (
-                    <p className="text-[11px] mt-2" style={{ color: "hsl(var(--red))" }}>✗ {confirmError}</p>
+                    <p className="text-[14.5px] mt-2" style={{ color: "hsl(var(--red))" }}>✗ {confirmError}</p>
                   )}
 
-                  {/* Scroll hint — rendered as fixed overlay below */}
-                  {orderLines.length > 0 && <div style={{ height: "48px" }} />}
+                  {/* Order Summary grouped by supplier / GRN */}
+                  {orderLines.length > 0 && (() => {
+                    const today = new Date();
+                    const dd = String(today.getDate()).padStart(2, "0");
+                    const mm = String(today.getMonth() + 1).padStart(2, "0");
+                    const yy = String(today.getFullYear()).slice(-2);
+                    const dateStr = `${dd}${mm}${yy}`;
 
+                    // Group lines by resolved supplier
+                    const groups: Record<string, typeof orderLines> = {};
+                    orderLines.forEach(line => {
+                      const sup = line.supplierChoice ?? line.product["SUPPLIER"] ?? "Unknown";
+                      if (!groups[sup]) groups[sup] = [];
+                      groups[sup].push(line);
+                    });
+                    const supplierNames = Object.keys(groups);
+                    const multi = supplierNames.length > 1;
+
+                    const grandTotal = orderLines.reduce((sum, line) => {
+                      const rp = line.supplierChoice
+                        ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
+                        : line.product;
+                      return sum + (rp["SUPPLIER PRICE"] ?? 0) * line.qty;
+                    }, 0);
+                    const grandUnits = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1), 0);
+
+                    return (
+                      <div className="mt-5">
+                        <p className="text-[14.5px] tracking-widest uppercase mb-3" style={dim}>Order Summary</p>
+
+                        {supplierNames.map((supplier, sIdx) => {
+                          const grpLines = groups[supplier];
+                          const grn = multi ? `OFFICE ${dateStr} (${sIdx + 1})` : `OFFICE ${dateStr}`;
+                          const subtotal = grpLines.reduce((s, l) => {
+                            const rp = l.supplierChoice
+                              ? products.find(p => p["PRODUCT NAME"] === l.product["PRODUCT NAME"] && p["SUPPLIER"] === l.supplierChoice) ?? l.product
+                              : l.product;
+                            return s + (rp["SUPPLIER PRICE"] ?? 0) * l.qty;
+                          }, 0);
+
+                          return (
+                            <div key={supplier} className={sIdx > 0 ? "mb-5 mt-8 pt-6 border-t" : "mb-5"} style={sIdx > 0 ? { borderColor: border } : {}}>
+                              {/* Supplier header */}
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[14.5px] font-semibold tracking-wide" style={{ color: "hsl(var(--foreground))" }}>{supplier}</span>
+                                <span className="text-[14.5px] tracking-wider font-mono" style={dim}>{grn}</span>
+                              </div>
+
+                              {/* Product lines */}
+                              {grpLines.map((line, lIdx) => {
+                                const rp = line.supplierChoice
+                                  ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
+                                  : line.product;
+                                const unitPrice = rp["SUPPLIER PRICE"] ?? 0;
+                                const unitsPerOrder = line.product["UNITS/ORDER"] ?? 1;
+                                const lineTotal = unitPrice * line.qty;
+                                const globalIdx = orderLines.indexOf(line);
+
+                                return (
+                                  <div key={lIdx} className="flex items-center gap-2 py-1.5 border-b" style={{ borderColor: border }}>
+                                    {/* Name */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-[14.5px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
+                                      {unitsPerOrder > 1 && (
+                                        <p className="text-[14.5px]" style={dim}>{line.qty * unitsPerOrder} units received</p>
+                                      )}
+                                    </div>
+                                    {/* Qty editor */}
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <button
+                                        className="w-5 h-5 flex items-center justify-center rounded text-[14.5px]"
+                                        style={dim}
+                                        onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx && ol.qty > 1 ? { ...ol, qty: ol.qty - 1 } : ol))}
+                                      >−</button>
+                                      <span className="text-[14.5px] w-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{line.qty}</span>
+                                      <button
+                                        className="w-5 h-5 flex items-center justify-center rounded text-[14.5px]"
+                                        style={dim}
+                                        onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx ? { ...ol, qty: ol.qty + 1 } : ol))}
+                                      >+</button>
+                                    </div>
+                                    {/* Line total */}
+                                    <span className="text-[14.5px] w-16 text-right shrink-0" style={dim}>RM {lineTotal.toFixed(2)}</span>
+                                    {/* Remove */}
+                                    <button
+                                      className="shrink-0 text-[14.5px] leading-none ml-1"
+                                      style={{ color: "hsl(var(--red))" }}
+                                      onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== globalIdx))}
+                                    >×</button>
+                                  </div>
+                                );
+                              })}
+
+                              {/* Subtotal */}
+                              <div className="flex justify-between mt-1.5">
+                                <span className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                                  {grpLines.reduce((s, l) => s + l.qty, 0)} orders
+                                </span>
+                                <span className="text-[14.5px] font-medium" style={{ color: "hsl(var(--foreground))" }}>RM {subtotal.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Grand total */}
+                        <div className="pt-3 mt-2 border-t" style={{ borderColor: border }}>
+                          <div className="flex justify-between">
+                            <span className="text-[14.5px] tracking-wider uppercase" style={dim}>
+                              {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {grandUnits} units{multi ? ` · ${supplierNames.length} suppliers` : ""}
+                            </span>
+                            <span className="text-[14.5px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>RM {grandTotal.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -2877,137 +2970,12 @@ const IndexPhone = () => {
             {orderLines.length === 0 && (
               <p className="text-[14.5px]" style={dim}>No items added yet</p>
             )}
-
-            </div>{/* end NEW ORDER blur wrapper */}
-
-            {/* ── Inline ORDER SUMMARY (scroll-driven fade+scale) ── */}
-            {orderLines.length > 0 && (
-              <div
-                ref={summaryInlineRef}
-                style={{
-                  marginTop: "18px",
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 10,
-                  background: "hsl(var(--background))",
-                }}
-              >
-                <div
-                  style={{
-                    opacity: summaryProgress,
-                    transform: `scale(${0.8 + 0.2 * summaryProgress})`,
-                    transformOrigin: "top center",
-                    filter: `blur(${(1 - summaryProgress) * 6}px)`,
-                    transition: "opacity 0.1s ease, transform 0.1s ease, filter 0.1s ease",
-                    pointerEvents: summaryProgress > 0.05 ? "auto" : "none",
-                  }}
-                >
-                {/* divider */}
-                <div style={{ borderTop: `1px solid hsl(var(--border))`, marginBottom: "24px" }} />
-                <h2 className="text-[16px] font-light tracking-[0.15em] uppercase mb-6">Order Summary</h2>
-                {/* ORDER SUMMARY CONTENT */}
-                {(() => {
-                  const today = new Date();
-                  const dd = String(today.getDate()).padStart(2, "0");
-                  const mm = String(today.getMonth() + 1).padStart(2, "0");
-                  const yy = String(today.getFullYear()).slice(-2);
-                  const dateStr = `${dd}${mm}${yy}`;
-
-                  const groups: Record<string, typeof orderLines> = {};
-                  orderLines.forEach(line => {
-                    const sup = line.supplierChoice ?? line.product["SUPPLIER"] ?? "Unknown";
-                    if (!groups[sup]) groups[sup] = [];
-                    groups[sup].push(line);
-                  });
-                  const supplierNames = Object.keys(groups);
-                  const multi = supplierNames.length > 1;
-
-                  const grandTotal = orderLines.reduce((sum, line) => {
-                    const rp = line.supplierChoice
-                      ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
-                      : line.product;
-                    return sum + (rp["SUPPLIER PRICE"] ?? 0) * line.qty;
-                  }, 0);
-                  const grandUnits = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1), 0);
-
-                  return (
-                    <div>
-                      {supplierNames.map((supplier, sIdx) => {
-                        const grpLines = groups[supplier];
-                        const grn = multi ? `OFFICE ${dateStr} (${sIdx + 1})` : `OFFICE ${dateStr}`;
-                        const subtotal = grpLines.reduce((s, l) => {
-                          const rp = l.supplierChoice
-                            ? products.find(p => p["PRODUCT NAME"] === l.product["PRODUCT NAME"] && p["SUPPLIER"] === l.supplierChoice) ?? l.product
-                            : l.product;
-                          return s + (rp["SUPPLIER PRICE"] ?? 0) * l.qty;
-                        }, 0);
-                        return (
-                          <div key={supplier} className={sIdx > 0 ? "mb-5 mt-8 pt-6 border-t" : "mb-5"} style={sIdx > 0 ? { borderColor: border } : {}}>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-[12px] font-semibold tracking-wide" style={{ color: "hsl(var(--foreground))" }}>{supplier}</span>
-                              <span className="text-[11px] tracking-wider font-mono" style={dim}>{grn}</span>
-                            </div>
-                            {grpLines.map((line, lIdx) => {
-                              const rp = line.supplierChoice
-                                ? products.find(p => p["PRODUCT NAME"] === line.product["PRODUCT NAME"] && p["SUPPLIER"] === line.supplierChoice) ?? line.product
-                                : line.product;
-                              const unitPrice = rp["SUPPLIER PRICE"] ?? 0;
-                              const unitsPerOrder = line.product["UNITS/ORDER"] ?? 1;
-                              const lineTotal = unitPrice * line.qty;
-                              const globalIdx = orderLines.indexOf(line);
-                              return (
-                                <div key={lIdx} className="flex items-center gap-2 py-1.5 border-b" style={{ borderColor: border }}>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] leading-tight truncate" style={{ color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</p>
-                                    {unitsPerOrder > 1 && (
-                                      <p className="text-[11px]" style={dim}>{line.qty * unitsPerOrder} units received</p>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    <button className="w-5 h-5 flex items-center justify-center rounded text-[11px]" style={dim}
-                                      onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx && ol.qty > 1 ? { ...ol, qty: ol.qty - 1 } : ol))}>−</button>
-                                    <span className="text-[11px] w-4 text-center" style={{ color: "hsl(var(--foreground))" }}>{line.qty}</span>
-                                    <button className="w-5 h-5 flex items-center justify-center rounded text-[11px]" style={dim}
-                                      onClick={() => setOrderLines(prev => prev.map((ol, i) => i === globalIdx ? { ...ol, qty: ol.qty + 1 } : ol))}>+</button>
-                                  </div>
-                                  <span className="text-[11px] w-16 text-right shrink-0" style={dim}>RM {lineTotal.toFixed(2)}</span>
-                                  <button className="shrink-0 text-[11px] leading-none ml-1" style={{ color: "hsl(var(--red))" }}
-                                    onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== globalIdx))}>×</button>
-                                </div>
-                              );
-                            })}
-                            <div className="flex justify-between mt-1.5">
-                              <span className="text-[11px] tracking-wider uppercase" style={dim}>
-                                {grpLines.reduce((s, l) => s + l.qty, 0)} orders
-                              </span>
-                              <span className="text-[11px] font-medium" style={{ color: "hsl(var(--foreground))" }}>RM {subtotal.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <div className="pt-3 mt-2 border-t" style={{ borderColor: border }}>
-                        <div className="flex justify-between">
-                          <span className="text-[11px] tracking-wider uppercase" style={dim}>
-                            {orderLines.length} {orderLines.length === 1 ? "item" : "items"} · {grandUnits} units{multi ? ` · ${supplierNames.length} suppliers` : ""}
-                          </span>
-                          <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>RM {grandTotal.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-                </div>
-              </div>
-            )}
-            {/* Spacer: exact height so ORDER SUMMARY can reach top, no over-scroll */}
-            <div style={{ height: summarySpacerHeight }} />
           </div>
         </div>
       )}
-
     </div>
   );
 };
 
-export default IndexPhone;
+export default Office;
 

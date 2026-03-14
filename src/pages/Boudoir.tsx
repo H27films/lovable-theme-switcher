@@ -15,14 +15,15 @@ interface AllFileProduct {
   "BRANCH PRICE": number | null;
   "STAFF PRICE": number | null;
   "CUSTOMER PRICE": number | null;
-  "CHIC NAILSPA BALANCE": number;
+  "BOUDOIR BALANCE": number;
   "NUR YADI BALANCE": number;
+  "CHIC NAILSPA BALANCE": number;
   "OFFICE BALANCE": number;
   "PAR": number | null;
   "UNITS/ORDER": number | null;
   "COLOUR": boolean | null;
   "OFFICE SECTION": string | null;
-  "CHIC NAILSPA FAVOURITE": boolean | null;
+  "BOUDOIR FAVOURITE": boolean | null;
 }
 
 interface LogRow {
@@ -90,8 +91,8 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
     ? sortedProducts.filter(p => p["PRODUCT NAME"].toLowerCase().includes(entry.productSearch.toLowerCase()))
     : sortedProducts
   ).slice().sort((a, b) => {
-    const af = (a as any)["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
-    const bf = (b as any)["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
+    const af = (a as any)["BOUDOIR FAVOURITE"] ? 0 : 1;
+    const bf = (b as any)["BOUDOIR FAVOURITE"] ? 0 : 1;
     if (af !== bf) return af - bf;
     const isColourA = (a as any)["COLOUR"] === true || (a as any)["COLOUR"] === "YES" || (a as any)["COLOUR"] === "yes" ? 1 : 0;
     const isColourB = (b as any)["COLOUR"] === true || (b as any)["COLOUR"] === "YES" || (b as any)["COLOUR"] === "yes" ? 1 : 0;
@@ -152,7 +153,7 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
       {entry.showProductDropdown && (
         <div
           className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
         >
           <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor: border }}>
             <Search size={11} style={dim} />
@@ -181,10 +182,10 @@ function ProductDropdown({ entry, sortedProducts, onSelect, onSearch, onToggle, 
                 onMouseEnter={() => setActiveIndex(i)}
               >
                 <div className="flex items-center gap-1.5">
-                  {(p as any)["CHIC NAILSPA FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                  {(p as any)["BOUDOIR FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                   <span className="text-[13px] font-light">{p["PRODUCT NAME"]}</span>
                 </div>
-                {showBalance && <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>{p["CHIC NAILSPA BALANCE"]}</span>}
+                {showBalance && <span className="text-[11px]" style={{ color: "hsl(var(--foreground))" }}>{p["BOUDOIR BALANCE"]}</span>}
               </div>
             ))}
           </div>
@@ -260,7 +261,7 @@ function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
       {entry.showTypeDropdown && (
         <div
           className="absolute top-full left-0 right-0 z-50 border"
-          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px", borderRadius: "5px" }}
+          style={{ background: "hsl(var(--popover))", borderColor: borderActive, marginTop: "2px" }}
         >
           {TYPES.map((t, i) => (
             <div
@@ -341,7 +342,7 @@ function DatePicker({ value, onChange }: {
   );
 }
 
-function StockChicNailspaInner() {
+function StockInner() {
   const navigate = useNavigate();
   const { theme, toggle, font, cycleFont } = useTheme();
 
@@ -357,9 +358,6 @@ function StockChicNailspaInner() {
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderSubmitted, setOrderSubmitted] = useState(false);
-  const [pendingOrder, setPendingOrder] = useState<{ grn: string; date: string; entries: { productName: string; starting: number; qty: number; ending: number }[] } | null>(null);
-  const [orderConfirming, setOrderConfirming] = useState(false);
-  const [orderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
   const [reversing, setReversing] = useState<number | null>(null);
   const [showOrderSummaryPanel, setShowOrderSummaryPanel] = useState(false);
   const [grnNotes, setGrnNotes] = useState("");
@@ -374,6 +372,11 @@ function StockChicNailspaInner() {
   const [saveFlash, setSaveFlash] = useState(false);
   const [usageError, setUsageError] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<{ grn: string; date: string; entries: { productName: string; starting: number; qty: number; ending: number }[] } | null>(null);
+  const [orderConfirming, setOrderConfirming] = useState(false);
+  const [orderConfirmMode] = useState(() => localStorage.getItem("orderConfirmation") !== "false");
+  const [editingPendingIdx, setEditingPendingIdx] = useState<number | null>(null);
+  const [editingPendingQty, setEditingPendingQty] = useState("");
 
   const [stockSearch, setStockSearch] = useState("");
 
@@ -458,7 +461,7 @@ function StockChicNailspaInner() {
       const { data, error } = await (supabase as any)
         .from("AllFileLog")
         .select("*")
-        .eq("BRANCH", "Chic Nailspa")
+        .eq("BRANCH", "Boudoir")
         .gte("DATE", cutoff.toISOString().split("T")[0])
         .order("DATE", { ascending: false });
       if (error) console.error("Fetch log error:", error);
@@ -506,8 +509,8 @@ function StockChicNailspaInner() {
   };
 
   const sortedProducts = [...products].sort((a, b) => {
-    const af = a["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
-    const bf = b["CHIC NAILSPA FAVOURITE"] ? 0 : 1;
+    const af = a["BOUDOIR FAVOURITE"] ? 0 : 1;
+    const bf = b["BOUDOIR FAVOURITE"] ? 0 : 1;
     if (af !== bf) return af - bf;
     const isColourA = a["COLOUR"] === true || (a["COLOUR"] as any) === "YES" || (a["COLOUR"] as any) === "yes" ? 1 : 0;
     const isColourB = b["COLOUR"] === true || (b["COLOUR"] as any) === "YES" || (b["COLOUR"] as any) === "yes" ? 1 : 0;
@@ -520,17 +523,17 @@ function StockChicNailspaInner() {
     : sortedProducts;
 
   const toggleFavourite = async (product: AllFileProduct) => {
-    const newVal = !(product["CHIC NAILSPA FAVOURITE"]);
+    const newVal = !(product["BOUDOIR FAVOURITE"]);
     await (supabase as any)
       .from("AllFileProducts")
-      .update({ "CHIC NAILSPA FAVOURITE": newVal })
+      .update({ "BOUDOIR FAVOURITE": newVal })
       .eq("PRODUCT NAME", product["PRODUCT NAME"]);
     setProducts(prev => prev.map(p =>
       p["PRODUCT NAME"] === product["PRODUCT NAME"]
-        ? { ...p, "CHIC NAILSPA FAVOURITE": newVal }
+        ? { ...p, "BOUDOIR FAVOURITE": newVal }
         : p
     ));
-    setSelectedProduct(prev => prev ? { ...prev, "CHIC NAILSPA FAVOURITE": newVal } : null);
+    setSelectedProduct(prev => prev ? { ...prev, "BOUDOIR FAVOURITE": newVal } : null);
   };
 
   const handleSelectProduct = (row: AllFileProduct) => {
@@ -594,18 +597,19 @@ function StockChicNailspaInner() {
   const handleSubmit = async () => {
     const valid = entries.filter(e => e.productName && e.qty > 0);
     if (!valid.length) return;
+    setUsageError(null);
     setSubmitting(true);
     try {
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
+        const currentBalance = Number(product?.["BOUDOIR BALANCE"] ?? 0);
         const endingBalance = currentBalance - Number(entry.qty);
 
         // Log to AllFileLog
-        await (supabase as any).from("AllFileLog").insert({
+        const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": getDateStr(usageDate),
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Chic Nailspa",
+          "BRANCH": "Boudoir",
           "SUPPLIER": null,
           "TYPE": entry.type,
           "STARTING BALANCE": currentBalance,
@@ -614,10 +618,11 @@ function StockChicNailspaInner() {
           "GRN": null,
           "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
         });
+        if (logErr) { console.error("AllFileLog insert error:", logErr); setUsageError(logErr.message || "Log write failed — check console"); }
 
         // Update ALL AllFileProducts rows for this product
         await (supabase as any).from("AllFileProducts")
-          .update({ "CHIC NAILSPA BALANCE": endingBalance })
+          .update({ "BOUDOIR BALANCE": endingBalance })
           .eq("PRODUCT NAME", entry.productName);
       }
       await fetchProducts();
@@ -661,7 +666,7 @@ function StockChicNailspaInner() {
     try {
       // Restore branch balance (back to starting balance before this entry)
       await (supabase as any).from("AllFileProducts")
-        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
+        .update({ "BOUDOIR BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
       // Delete from AllFileLog
       await (supabase as any).from("AllFileLog").delete().eq("id", row.id);
@@ -676,7 +681,7 @@ function StockChicNailspaInner() {
     try {
       // Restore branch balance
       await (supabase as any).from("AllFileProducts")
-        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
+        .update({ "BOUDOIR BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
 
       // Restore office balance: the log stores office balance AFTER deduction
@@ -705,7 +710,7 @@ function StockChicNailspaInner() {
         .update({ "QTY": newQty, "ENDING BALANCE": newEndingBalance })
         .eq("id", row.id);
       await (supabase as any).from("AllFileProducts")
-        .update({ "CHIC NAILSPA BALANCE": newEndingBalance })
+        .update({ "BOUDOIR BALANCE": newEndingBalance })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
       await fetchProducts();
       await fetchLog();
@@ -719,7 +724,7 @@ function StockChicNailspaInner() {
     try {
       // Restore branch balance
       await (supabase as any).from("AllFileProducts")
-        .update({ "CHIC NAILSPA BALANCE": row["STARTING BALANCE"] })
+        .update({ "BOUDOIR BALANCE": row["STARTING BALANCE"] })
         .eq("PRODUCT NAME", row["PRODUCT NAME"]);
 
       // Restore office balance
@@ -770,7 +775,7 @@ function StockChicNailspaInner() {
     .filter(e => e.productName)
     .map(e => {
       const product = products.find(p => p["PRODUCT NAME"] === e.productName);
-      const current = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
+      const current = Number(product?.["BOUDOIR BALANCE"] ?? 0);
       const orderQty = Number(e.qty);
       return { productName: e.productName, current, orderQty, ending: current + orderQty };
     });
@@ -778,58 +783,111 @@ function StockChicNailspaInner() {
   const handleOrderSubmit = async () => {
     const valid = orderEntries.filter(e => e.productName && e.qty > 0);
     if (!valid.length) return;
+    setOrderError(null);
 
-    // Generate GRN: CHIC DDMMYY based on selected date
     const orderDateObj = new Date(getDateStr(orderDate));
     const dd = String(orderDateObj.getDate()).padStart(2, "0");
     const mm = String(orderDateObj.getMonth() + 1).padStart(2, "0");
     const yy = String(orderDateObj.getFullYear()).slice(-2);
-    const grn = `CHIC ${dd}${mm}${yy}`;
+    const grn = `BOU ${dd}${mm}${yy}`;
 
     if (orderConfirmMode) {
-      // V2: build pending order
+      // V2: build pending order, wait for confirmation
       const entries = valid.map(entry => {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const starting = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
+        const starting = Number(product?.["BOUDOIR BALANCE"] ?? 0);
         const qty = Number(entry.qty);
         const ending = starting + qty;
         return { productName: entry.productName, starting, qty, ending };
       });
       setPendingOrder({ grn, date: getDateStr(orderDate), entries });
       setOrderSubmitted(true);
-      return;
+    } else {
+      // V1: write directly to Supabase
+      setOrderSubmitting(true);
+      try {
+        for (const entry of valid) {
+          const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+          const currentBranchBalance = Number(product?.["BOUDOIR BALANCE"] ?? 0);
+          const endingBranchBalance = currentBranchBalance + Number(entry.qty);
+          const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
+          const endingOfficeBalance = currentOfficeBalance - Number(entry.qty);
+          await (supabase as any).from("AllFileLog").insert({
+            "DATE": getDateStr(orderDate),
+            "PRODUCT NAME": entry.productName,
+            "BRANCH": "Boudoir",
+            "SUPPLIER": "Office",
+            "TYPE": "Order",
+            "STARTING BALANCE": currentBranchBalance,
+            "QTY": Number(entry.qty),
+            "ENDING BALANCE": endingBranchBalance,
+            "GRN": grn,
+            "OFFICE BALANCE": endingOfficeBalance,
+          });
+          await (supabase as any).from("AllFileProducts")
+            .update({ "BOUDOIR BALANCE": endingBranchBalance })
+            .eq("PRODUCT NAME", entry.productName);
+          await (supabase as any).from("AllFileProducts")
+            .update({ "OFFICE BALANCE": endingOfficeBalance })
+            .eq("PRODUCT NAME", entry.productName);
+        }
+        await fetchProducts();
+        await fetchLog();
+        setOrderEntries(makeOrderEntries());
+        setOrderSuccess(true);
+        setTimeout(() => setOrderSuccess(false), 3000);
+      } catch (err) { console.error("Order submit error:", err); }
+      setOrderSubmitting(false);
     }
+  };
 
-    // V1: existing direct write
-    setOrderSubmitting(true);
+  const handleResetOrder = async () => {
+    await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Boudoir").eq("TYPE", "Order Request");
+    setPendingOrder(null);
+    setOrderEntries(makeOrderEntries());
+    setOrderSubmitted(false);
+    setOrderError(null);
+  };
+
+  const handleInlineConfirmOrder = async () => {
+    const valid = orderEntries.filter(e => e.productName && e.qty > 0);
+    if (!valid.length) return;
+    setOrderConfirming(true);
+    setOrderError(null);
+
+    const orderDateObj = new Date(getDateStr(orderDate));
+    const dd = String(orderDateObj.getDate()).padStart(2, "0");
+    const mm = String(orderDateObj.getMonth() + 1).padStart(2, "0");
+    const yy = String(orderDateObj.getFullYear()).slice(-2);
+    const grn = `BOU ${dd}${mm}${yy}`;
+
     try {
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBranchBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
-        const endingBranchBalance = currentBranchBalance + Number(entry.qty);
+        const starting = Number(product?.["BOUDOIR BALANCE"] ?? 0);
+        const qty = Number(entry.qty);
+        const ending = starting + qty;
         const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
-        const endingOfficeBalance = currentOfficeBalance - Number(entry.qty);
+        const endingOfficeBalance = currentOfficeBalance - qty;
 
-        // Log to AllFileLog
-        await (supabase as any).from("AllFileLog").insert({
+        const { error: orderLogErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": getDateStr(orderDate),
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Chic Nailspa",
+          "BRANCH": "Boudoir",
           "SUPPLIER": "Office",
           "TYPE": "Order",
-          "STARTING BALANCE": currentBranchBalance,
-          "QTY": Number(entry.qty),
-          "ENDING BALANCE": endingBranchBalance,
+          "STARTING BALANCE": starting,
+          "QTY": qty,
+          "ENDING BALANCE": ending,
           "GRN": grn,
           "OFFICE BALANCE": endingOfficeBalance,
         });
+        if (orderLogErr) { console.error("AllFileLog order insert error:", orderLogErr); setOrderError(orderLogErr.message || "Log write failed"); }
 
-        // Update branch balance in AllFileProducts (ALL rows for this product)
         await (supabase as any).from("AllFileProducts")
-          .update({ "CHIC NAILSPA BALANCE": endingBranchBalance })
+          .update({ "BOUDOIR BALANCE": ending })
           .eq("PRODUCT NAME", entry.productName);
 
-        // Update office balance in AllFileProducts (ALL rows for this product)
         await (supabase as any).from("AllFileProducts")
           .update({ "OFFICE BALANCE": endingOfficeBalance })
           .eq("PRODUCT NAME", entry.productName);
@@ -839,16 +897,8 @@ function StockChicNailspaInner() {
       setOrderEntries(makeOrderEntries());
       setOrderSuccess(true);
       setTimeout(() => setOrderSuccess(false), 3000);
-    } catch (err) { console.error("Order submit error:", err); }
-    setOrderSubmitting(false);
-  };
-
-  const handleResetOrder = async () => {
-    await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Chic Nailspa").eq("TYPE", "Order Request");
-    setPendingOrder(null);
-    setOrderEntries(makeOrderEntries());
-    setOrderSubmitted(false);
-    setOrderError(null);
+    } catch (err) { console.error("Confirm order error:", err); }
+    setOrderConfirming(false);
   };
 
   const handleConfirmOrder = async () => {
@@ -857,17 +907,17 @@ function StockChicNailspaInner() {
     setOrderError(null);
     try {
       // Delete any Order Request entries written via ENTRY tab (no balance changes yet)
-      await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Chic Nailspa").eq("TYPE", "Order Request").eq("GRN", pendingOrder.grn);
+      await (supabase as any).from("AllFileLog").delete().eq("BRANCH", "Boudoir").eq("TYPE", "Order Request").eq("GRN", pendingOrder.grn);
       for (const entry of pendingOrder.entries) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBranchBalance = Number(product?.["CHIC NAILSPA BALANCE"] ?? 0);
-        const endingBranchBalance = currentBranchBalance + Number(entry.qty);
         const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
-        const endingOfficeBalance = currentOfficeBalance - Number(entry.qty);
-        await (supabase as any).from("AllFileLog").insert({
+        const endingOfficeBalance = currentOfficeBalance - entry.qty;
+
+        // Log to AllFileLog
+        const { error: orderLogErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": pendingOrder.date,
           "PRODUCT NAME": entry.productName,
-          "BRANCH": "Chic Nailspa",
+          "BRANCH": "Boudoir",
           "SUPPLIER": "Office",
           "TYPE": "Order",
           "STARTING BALANCE": entry.starting,
@@ -876,9 +926,14 @@ function StockChicNailspaInner() {
           "GRN": pendingOrder.grn,
           "OFFICE BALANCE": endingOfficeBalance,
         });
+        if (orderLogErr) { console.error("AllFileLog order insert error:", orderLogErr); setOrderError(orderLogErr.message || "Log write failed — check console"); }
+
+        // Update branch balance in AllFileProducts (ALL rows for this product)
         await (supabase as any).from("AllFileProducts")
-          .update({ "CHIC NAILSPA BALANCE": endingBranchBalance })
+          .update({ "BOUDOIR BALANCE": entry.ending })
           .eq("PRODUCT NAME", entry.productName);
+
+        // Update office balance in AllFileProducts (ALL rows for this product)
         await (supabase as any).from("AllFileProducts")
           .update({ "OFFICE BALANCE": endingOfficeBalance })
           .eq("PRODUCT NAME", entry.productName);
@@ -890,10 +945,7 @@ function StockChicNailspaInner() {
       setOrderSubmitted(false);
       setOrderSuccess(true);
       setTimeout(() => setOrderSuccess(false), 3000);
-    } catch (err) {
-      console.error("Confirm order error:", err);
-      setOrderError("Failed to confirm order. Please try again.");
-    }
+    } catch (err) { console.error("Confirm order error:", err); }
     setOrderConfirming(false);
   };
 
@@ -954,7 +1006,7 @@ function StockChicNailspaInner() {
       const dd = String(d.getDate()).padStart(2, "0");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yy = String(d.getFullYear()).slice(-2);
-      return `CHC ${dd}${mm}${yy}`;
+      return `BOU ${dd}${mm}${yy}`;
     })();
 
     const dateStr = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
@@ -963,7 +1015,7 @@ function StockChicNailspaInner() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(26, 26, 26);
-    doc.text("CHIC NAILSPA", margin, 58);
+    doc.text("BOUDOIR", margin, 58);
     doc.text("GOODS RECEIVED NOTE", W - margin, 58, { align: "right" });
 
     // Divider
@@ -1132,7 +1184,7 @@ function StockChicNailspaInner() {
             <button
               onClick={() => navigate("/")}
               className="flex items-center justify-center w-7 h-7 rounded-full border transition-colors"
-              style={{ ...dim, borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+              style={{ ...dim, borderColor: "hsl(var(--border))" }}
               aria-label="Go to home"
               onMouseEnter={e => {
                 e.currentTarget.style.color = "hsl(var(--foreground))";
@@ -1149,7 +1201,7 @@ function StockChicNailspaInner() {
               className="text-[11px] tracking-[0.2em] uppercase"
               style={{ color: "hsl(var(--foreground))" }}
             >
-              Chic Nailspa
+              Boudoir
             </span>
           </div>
           <button
@@ -1163,13 +1215,13 @@ function StockChicNailspaInner() {
 
         <div className="py-6">
 
-          {/* ── SECTION 1: Chic Nailspa Stock ── */}
+          {/* ── SECTION 1: Boudoir Stock ── */}
           <div className="mb-12">
             <div className="mb-6" style={fade(90)}>
               <div className="flex items-end justify-between">
                 <div>
                 <h1 className="text-[11px] font-normal tracking-[0.2em] uppercase text-dim mb-1" style={{ fontVariantNumeric: "lining-nums" }}>{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" })}</h1>
-                  <p className="text-[28px] font-light tracking-tight uppercase">Chic Nailspa</p>
+                  <p className="text-[28px] font-light tracking-tight uppercase">Boudoir</p>
                 </div>
                 <span
                   className="nav-link mb-1"
@@ -1229,6 +1281,7 @@ function StockChicNailspaInner() {
                 {stockSearch && (
                   <button onClick={(e) => { e.stopPropagation(); setStockSearch(""); setSelectedProduct(null); }} style={dim}><X size={13} /></button>
                 )}
+                {/* Animated underline */}
                 <span
                   className="absolute bottom-0 left-0 h-px transition-all duration-[600ms] ease-out"
                   style={{
@@ -1255,10 +1308,10 @@ function StockChicNailspaInner() {
                       onMouseEnter={() => setStockActiveIndex(i)}
                     >
                       <div className="flex items-center gap-1.5">
-                        {row["CHIC NAILSPA FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
+                        {row["BOUDOIR FAVOURITE"] && <Star size={10} style={{ fill: "hsl(var(--foreground))", color: "hsl(var(--foreground))" }} />}
                         <span className="text-[13px] font-light">{row["PRODUCT NAME"]}</span>
                       </div>
-                      <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{row["CHIC NAILSPA BALANCE"]}</span>
+                      <span className="text-[12px]" style={{ color: "hsl(var(--foreground))" }}>{row["BOUDOIR BALANCE"]}</span>
                     </div>
                   ))}
                 </div>
@@ -1282,13 +1335,13 @@ function StockChicNailspaInner() {
                         <p className="text-[15px] font-light">{selectedProduct["PRODUCT NAME"]}</p>
                         <button
                           onClick={() => toggleFavourite(selectedProduct)}
-                          title={selectedProduct["CHIC NAILSPA FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
+                          title={selectedProduct["BOUDOIR FAVOURITE"] ? "Remove from favourites" : "Add to favourites"}
                         >
                           <Star
                             size={20}
                             style={{
-                              fill: selectedProduct["CHIC NAILSPA FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
-                              color: selectedProduct["CHIC NAILSPA FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                              fill: selectedProduct["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "transparent",
+                              color: selectedProduct["BOUDOIR FAVOURITE"] ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                               transition: "all 0.15s"
                             }}
                           />
@@ -1297,8 +1350,8 @@ function StockChicNailspaInner() {
                     </div>
                     <div className="text-right">
                       <p className="text-[32px] font-light leading-none" style={{
-                        color: selectedProduct["CHIC NAILSPA BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
-                      }}>{selectedProduct["CHIC NAILSPA BALANCE"]}</p>
+                        color: selectedProduct["BOUDOIR BALANCE"] <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                      }}>{selectedProduct["BOUDOIR BALANCE"]}</p>
                       <p className="text-[10px] tracking-wider uppercase mt-1" style={dim}>units</p>
                     </div>
                   </div>
@@ -1521,7 +1574,7 @@ function StockChicNailspaInner() {
                   {/* Data rows */}
                   {orderEntries.map((entry, idx) => {
                     const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-                    const currentBal = product?.["CHIC NAILSPA BALANCE"] ?? null;
+                    const currentBal = product?.["BOUDOIR BALANCE"] ?? null;
                     return (
                       <React.Fragment key={entry.id}>
                         {/* Row number — no border */}
@@ -1599,13 +1652,13 @@ function StockChicNailspaInner() {
                   <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Order submitted</p>
                 )}
                 {orderSuccess && (
-                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Order applied successfully</p>
+                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Order confirmed</p>
                 )}
                 {orderError && (
                   <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--red))" }}>✗ {orderError}</p>
                 )}
 
-                {/* Order Summary — preview before submit */}
+                {/* Order Summary — preview before confirm */}
                 {orderSummary.length > 0 && (
                   <div className="mt-10">
                     <div className="mb-5">
@@ -1627,7 +1680,7 @@ function StockChicNailspaInner() {
                           <tr key={i} className="border-b table-row-hover" style={{ borderColor: border }}>
                             <td className="text-[13px] font-light py-3">{row.productName}</td>
                             <td className="text-[13px] font-light py-3 text-center" style={dim}>{row.current}</td>
-                            <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>{row.orderQty}</td>
+                            <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>+{row.orderQty}</td>
                             <td className="text-[13px] font-light py-3 text-center">{row.ending}</td>
                             <td className="py-3 text-center">
                               <button
@@ -1649,10 +1702,11 @@ function StockChicNailspaInner() {
                         ))}
                       </tbody>
                     </table>
+
                   </div>
                 )}
 
-
+                {/* Submitted Orders — today only, with reverse button */}
                 {/* Recent Orders */}
                 <div className="mt-10">
                   <div className="mb-5">
@@ -1832,10 +1886,10 @@ function StockChicNailspaInner() {
                 const info = products.find(p => p["PRODUCT NAME"] === selectedActivityProduct) ?? null;
                 const activityForProduct = log.filter(r => r["PRODUCT NAME"] === selectedActivityProduct);
                 return (
-                  <div className="surface-box p-5 mb-6" style={{ borderRadius: "5px" }}>
+                  <div className="surface-box p-5 mb-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Chic Nailspa · Product Detail</p>
+                        <p className="text-[11px] tracking-wider uppercase mb-1" style={dim}>Boudoir · Product Detail</p>
                         <p className="text-[15px] font-light">{selectedActivityProduct}</p>
                       </div>
                       <div className="flex items-center gap-4">
@@ -1843,9 +1897,9 @@ function StockChicNailspaInner() {
                           <div className="text-right">
                             <p className="text-[10px] tracking-wider uppercase mb-1" style={dim}>Current Balance</p>
                             <p className="text-[28px] font-light leading-none" style={{
-                              color: ((info as any)["CHIC NAILSPA BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
+                              color: (info["BOUDOIR BALANCE"] ?? 0) <= 1 ? "hsl(var(--red))" : "hsl(var(--foreground))"
                             }}>
-                              {(info as any)["CHIC NAILSPA BALANCE"] ?? 0}
+                              {info["BOUDOIR BALANCE"] ?? 0}
                             </p>
                           </div>
                         )}
@@ -2048,8 +2102,12 @@ function StockChicNailspaInner() {
               <div>
                 <h2 className="text-[22px] font-light tracking-tight">Order Summary</h2>
                 <p className="text-[11px] tracking-wider uppercase mt-1" style={dim}>
-                  {latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  {allTodayOrders.length > 0 && ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}`}
+                  {pendingOrder
+                    ? new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+                    : latestOrderDate === tomorrow ? "Tomorrow" : latestOrderDate === today ? "Today" : new Date(latestOrderDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  {pendingOrder
+                    ? ` · ${pendingOrder.entries.length} ${pendingOrder.entries.length === 1 ? "item" : "items"} · Pending`
+                    : allTodayOrders.length > 0 ? ` · ${allTodayOrders.length} ${allTodayOrders.length === 1 ? "item" : "items"}` : ""}
                 </p>
               </div>
               <button onClick={() => setShowOrderSummaryPanel(false)} style={dim}
@@ -2059,37 +2117,68 @@ function StockChicNailspaInner() {
               </button>
             </div>
 
-            {/* V2: Pending order confirmation */}
-            {pendingOrder !== null && (
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-[15px] font-light tracking-tight">
-                    {new Date(pendingOrder.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  </h3>
-                  <span className="text-[10px] tracking-[0.15em] uppercase px-2 py-0.5" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "4px", color: "hsl(var(--muted-foreground))" }}>
-                    Pending
-                  </span>
-                  <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-                    · {pendingOrder.entries.length} {pendingOrder.entries.length === 1 ? "item" : "items"}
-                  </span>
-                </div>
-                <p className="text-[10px] tracking-[0.15em] uppercase mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>{pendingOrder.grn}</p>
-                <table className="w-full border-collapse mb-5">
+            {/* ── Most recent order (editable) ── */}
+            {pendingOrder !== null ? (
+              <>
+                <p className="text-[10px] tracking-wider uppercase mb-4" style={dim}>Pending confirmation · Click qty to edit · × to remove</p>
+                <table className="w-full border-collapse mb-8">
                   <thead>
                     <tr className="border-b" style={{ borderColor: "hsl(var(--border-active))" }}>
-                      <th className="label-uppercase font-normal text-left pb-2 pt-1">Product</th>
-                      <th className="label-uppercase font-normal text-center pb-2 pt-1">Qty</th>
-                      <th className="label-uppercase font-normal text-center pb-2 pt-1">Ending</th>
+                      <th className="label-uppercase font-normal text-left pb-3 pt-2">Product</th>
+                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Prev Bal</th>
+                      <th className="label-uppercase font-normal text-center pb-3 pt-2">Order Qty</th>
+                      <th className="label-uppercase font-normal text-center pb-3 pt-2">New Bal</th>
                       <th className="w-6" />
                     </tr>
                   </thead>
                   <tbody>
                     {pendingOrder.entries.map((entry, idx) => {
+                      const isEditing = editingPendingIdx === idx;
+                      const parsedEdit = parseInt(editingPendingQty);
+                      const previewBal = isEditing && !isNaN(parsedEdit) ? entry.starting + parsedEdit : entry.ending;
                       return (
                         <tr key={idx} className="border-b" style={{ borderColor: "hsl(var(--border))" }}>
                           <td className="text-[13px] font-light py-3">{entry.productName}</td>
-                          <td className="text-[13px] font-light py-3 text-center" style={{ color: "hsl(var(--green))" }}>+{entry.qty}</td>
-                          <td className="text-[13px] font-light py-3 text-center">{entry.ending}</td>
+                          <td className="text-[13px] font-light py-3 text-center" style={dim}>{entry.starting}</td>
+                          <td className="text-[13px] font-light py-3 text-center">
+                            {isEditing ? (
+                              <input
+                                autoFocus
+                                type="number"
+                                min={1}
+                                className="text-[13px] font-light text-center bg-transparent outline-none border-b w-[40px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                style={{ borderColor: "hsl(var(--border-active))", color: "hsl(var(--green))" }}
+                                value={editingPendingQty}
+                                onChange={e => setEditingPendingQty(e.target.value)}
+                                onClick={e => (e.target as HTMLInputElement).select()}
+                                onBlur={() => {
+                                  if (!isNaN(parsedEdit) && parsedEdit > 0) {
+                                    setPendingOrder(prev => {
+                                      if (!prev) return prev;
+                                      const entries = [...prev.entries];
+                                      entries[idx] = { ...entries[idx], qty: parsedEdit, ending: entries[idx].starting + parsedEdit };
+                                      return { ...prev, entries };
+                                    });
+                                  }
+                                  setEditingPendingIdx(null);
+                                }}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                  if (e.key === "Escape") setEditingPendingIdx(null);
+                                }}
+                              />
+                            ) : (
+                              <span
+                                className="cursor-pointer"
+                                style={{ color: "hsl(var(--green))" }}
+                                title="Click to edit"
+                                onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+                              >+{entry.qty}</span>
+                            )}
+                          </td>
+                          <td className="text-[13px] font-light py-3 text-center" style={isEditing ? dim : {}}>{previewBal}</td>
                           <td className="py-3 text-center">
                             <button
                               onClick={() => {
@@ -2102,7 +2191,7 @@ function StockChicNailspaInner() {
                                 });
                                 setOrderEntries(prev => prev.map(e => e.productName === productName ? { ...e, productName: "", qty: 1, productSearch: "", showProductDropdown: false } : e));
                               }}
-                              style={{ color: "hsl(var(--muted-foreground))" }}
+                              style={dim}
                               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                               onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
                             ><X size={13} /></button>
@@ -2112,6 +2201,7 @@ function StockChicNailspaInner() {
                     })}
                   </tbody>
                 </table>
+
                 {/* Notes */}
                 <div className="mb-6 mt-2">
                   <p className="text-[10px] tracking-wider uppercase mb-2" style={{ color: "hsl(var(--muted-foreground))" }}>Add Notes</p>
@@ -2124,20 +2214,19 @@ function StockChicNailspaInner() {
                     onChange={e => setGrnNotes(e.target.value)}
                   />
                 </div>
-                {/* Confirm + Reset + GRN + Export buttons */}
                 <div className="flex flex-col gap-3 mb-12">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={handleConfirmOrder}
                       disabled={orderConfirming}
-                      className="text-[11px] tracking-wider uppercase transition-colors"
+                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase"
                       style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", padding: "6px 12px", borderRadius: "5px", opacity: orderConfirming ? 0.5 : 1 }}
                     >
                       {orderConfirming ? "Confirming..." : "Confirm Order"}
                     </button>
                     <button
                       onClick={handleResetOrder}
-                      className="text-[11px] tracking-wider uppercase transition-colors"
+                      className="flex items-center gap-2 text-[11px] tracking-wider uppercase transition-colors"
                       style={{ color: "hsl(var(--muted-foreground))" }}
                       onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--red))")}
                       onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
@@ -2168,18 +2257,10 @@ function StockChicNailspaInner() {
                     </button>
                   </div>
                 </div>
-                {orderError && (
-                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--red))" }}>✗ {orderError}</p>
-                )}
-                {orderSuccess && (
-                  <p className="text-[11px] mt-3 tracking-wider" style={{ color: "hsl(var(--green))" }}>✓ Order confirmed</p>
-                )}
-                <div className="mt-6 mb-2 border-t" style={{ borderColor: "hsl(var(--border))" }} />
-              </div>
-            )}
-
-            {/* ── Most recent order (editable) ── */}
-            {allTodayOrders.length > 0 && (
+              </>
+            ) : allTodayOrders.length === 0 ? (
+              <p className="text-[13px]" style={dim}>No orders submitted yet.</p>
+            ) : (
               <div className="flex items-center gap-6 mb-12">
                 <button
                   onClick={generateGRNPdf}
@@ -2207,7 +2288,7 @@ function StockChicNailspaInner() {
             {/* ── All Orders ── */}
             {allOrderGroups.length > 0 && (
               <div>
-                <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}>
+                <div className="border-t pt-8 mb-6" style={{ borderColor: "hsl(var(--border))" }}>
                   <h3 className="text-[13px] font-light tracking-tight mb-1">All Orders</h3>
                   <p className="text-[10px] tracking-wider uppercase" style={dim}>Last 60 days</p>
                 </div>
@@ -2226,7 +2307,7 @@ function StockChicNailspaInner() {
                         <tr
                           key={group.key}
                           className="border-b cursor-pointer"
-                          style={{ borderColor: "hsl(var(--border))", borderRadius: "5px" }}
+                          style={{ borderColor: "hsl(var(--border))" }}
                           onClick={() => toggleGRN(group.key)}
                           onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--card))")}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
@@ -2287,10 +2368,10 @@ function StockChicNailspaInner() {
   );
 }
 
-export default function StockChicNailspa() {
+export default function Boudoir() {
   return (
     <ErrorBoundary>
-      <StockChicNailspaInner />
+      <StockInner />
     </ErrorBoundary>
   );
 }

@@ -2,11 +2,11 @@ import React from "react";
 import { ChevronLeft, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
-interface OrderPageProps {
+interface OrderSimpleProps {
   onBack: () => void;
 }
 
-export default function OrderPage({ onBack }: OrderPageProps) {
+export default function OrderSimple({ onBack }: OrderSimpleProps) {
   const { theme, setTheme } = useTheme();
   const isSand = theme === "sand";
   const handleToggle = () => setTheme(isSand ? "light" : "sand");
