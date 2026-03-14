@@ -120,6 +120,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [loadingBranchLog, setLoadingBranchLog] = useState(true);
   const [productLog, setProductLog] = useState<LogRow[]>([]);
   const [loadingProductLog, setLoadingProductLog] = useState(false);
+  const [reversing, setReversing] = useState<number | null>(null);
 
   useEffect(() => {
     setLoadingBranchLog(true);
@@ -150,6 +151,40 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         setLoadingProductLog(false);
       });
   }, [selectedProduct]);
+
+  const reverseRow = async (row: LogRow) => {
+    setReversing(row.id);
+    try {
+      await (supabase as any).from("AllFileProducts")
+        .update({ [BALANCE_KEY]: row["STARTING BALANCE"] })
+        .eq("PRODUCT NAME", row["PRODUCT NAME"]);
+      await (supabase as any).from("AllFileLog").delete().eq("id", row.id);
+      // Update product balance in local state
+      setProducts(prev => prev.map(p =>
+        p["PRODUCT NAME"] === row["PRODUCT NAME"]
+          ? { ...p, [BALANCE_KEY]: row["STARTING BALANCE"] }
+          : p
+      ));
+      if (selectedProduct && selectedProduct["PRODUCT NAME"] === row["PRODUCT NAME"]) {
+        setSelectedProduct(prev => prev ? { ...prev, [BALANCE_KEY]: row["STARTING BALANCE"] } : prev);
+        // Refresh product log
+        const { data: freshPLog } = await (supabase as any)
+          .from("AllFileLog").select("*")
+          .eq("PRODUCT NAME", row["PRODUCT NAME"])
+          .eq("BRANCH", BRANCH_LOG_NAME)
+          .order("DATE", { ascending: false }).limit(50);
+        setProductLog(freshPLog || []);
+      }
+      // Refresh branch log
+      const { data: freshBLog } = await (supabase as any)
+        .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
+        .order("DATE", { ascending: false }).limit(50);
+      setBranchLog(freshBLog || []);
+    } catch (err) {
+      console.error("Reverse row error:", err);
+    }
+    setReversing(null);
+  };
 
   const activeLog = selectedProduct ? productLog : branchLog;
   const loadingLog = selectedProduct ? loadingProductLog : loadingBranchLog;
@@ -248,6 +283,10 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     setUsageSearch("");
     setShowUsageDropdown(false);
   };
+
+  // Shared header cell style helpers
+  const hdrLeft   = { fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" } as React.CSSProperties;
+  const hdrCenter = { ...hdrLeft, textAlign: "center" as const };
 
   return (
     <div style={{
@@ -473,20 +512,25 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
 
             {/* Log table */}
             <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0, WebkitOverflowScrolling: "touch" }}>
-              <div style={{ minWidth: selectedProduct ? "345px" : "479px", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <div style={{ minWidth: selectedProduct ? "340px" : "460px", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
 
                 {/* Header row */}
                 {selectedProduct ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-                    {["Date", "Qty", "End Bal", "Type"].map(h => (
-                      <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
-                    ))}
+                  <div style={{ display: "grid", gridTemplateColumns: "65px 50px 60px 100px 26px", gap: "6px", minWidth: "340px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                    <div style={hdrLeft}>Date</div>
+                    <div style={hdrCenter}>Qty</div>
+                    <div style={hdrCenter}>Bal</div>
+                    <div style={hdrCenter}>Type</div>
+                    <div />
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "50px 160px 50px 65px 130px", gap: "6px", minWidth: "479px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-                    {["Date", "Product", "Qty", "End Bal", "Type"].map(h => (
-                      <div key={h} style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{h}</div>
-                    ))}
+                  <div style={{ display: "grid", gridTemplateColumns: "50px 140px 42px 55px 100px 26px", gap: "6px", minWidth: "460px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                    <div style={hdrLeft}>Date</div>
+                    <div style={hdrLeft}>Product</div>
+                    <div style={hdrCenter}>Qty</div>
+                    <div style={hdrCenter}>Bal</div>
+                    <div style={hdrCenter}>Type</div>
+                    <div />
                   </div>
                 )}
 
@@ -502,30 +546,51 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                     const prevDateStr = idx > 0 ? new Date(activeLog[idx - 1].DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : null;
                     const showDate = dateStr !== prevDateStr;
                     const dateSeparator = showDate && idx > 0;
+                    const isReversing = reversing === row.id;
                     return selectedProduct ? (
                       <div key={row.id} style={{
-                        display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px",
+                        display: "grid", gridTemplateColumns: "65px 50px 60px 100px 26px", gap: "6px", minWidth: "340px",
                         padding: "8px 0",
                         borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
+                        alignItems: "center",
                       }}>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                        <button
+                          onClick={() => reverseRow(row)}
+                          disabled={isReversing}
+                          style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
+                          onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                        >
+                          <X size={11} />
+                        </button>
                       </div>
                     ) : (
                       <div key={row.id} style={{
-                        display: "grid", gridTemplateColumns: "50px 160px 50px 65px 130px", gap: "6px", minWidth: "479px",
+                        display: "grid", gridTemplateColumns: "50px 140px 42px 55px 100px 26px", gap: "6px", minWidth: "460px",
                         padding: "8px 0",
                         borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
+                        alignItems: "center",
                       }}>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>{row["PRODUCT NAME"] || "—"}</div>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                        <button
+                          onClick={() => reverseRow(row)}
+                          disabled={isReversing}
+                          style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
+                          onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                        >
+                          <X size={11} />
+                        </button>
                       </div>
                     );
                   })}
