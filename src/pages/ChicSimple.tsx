@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -18,8 +18,7 @@ interface OfficeProduct {
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
-  "OfficeFavourites": string | null;
-  "Chic Nailspa Favourites": string | null;
+  "CHIC NAILSPA FAVOURITE": string | null;
 }
 
 interface LogRow {
@@ -41,14 +40,49 @@ interface EntryLine {
 }
 
 interface ChicSimpleProps {
-  onBack: () => void;
-  onBackToMain: () => void;
-  products: OfficeProduct[];
+  onBack?: () => void;
+  onBackToMain?: () => void;
+  products?: OfficeProduct[];
 }
 
 const USAGE_TYPES: Array<"Salon Use" | "Customer" | "Staff"> = ["Salon Use", "Customer", "Staff"];
 
-const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
+// Helper: check if a Supabase YES/NO or true/false column is truthy
+const isYes = (v: any): boolean =>
+  v === true || v === 1 ||
+  (typeof v === "string" && (v.toUpperCase() === "YES" || v.toUpperCase() === "TRUE"));
+
+// Check Chic Nailspa Favourite column (exact Supabase column name: "CHIC NAILSPA FAVOURITE")
+const isChicFav = (p: any): boolean => isYes(p["CHIC NAILSPA FAVOURITE"]);
+
+const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleProps) => {
+  const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
+
+  // If no products passed via props, fetch them directly
+  useEffect(() => {
+    if (propProducts && propProducts.length > 0) {
+      setProducts(propProducts);
+      return;
+    }
+    const fetchProducts = async () => {
+      let allData: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await (supabase as any)
+          .from("AllFileProducts")
+          .select("*")
+          .range(from, from + batchSize - 1);
+        if (error || !data?.length) break;
+        allData = allData.concat(data);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      setProducts(allData);
+    };
+    fetchProducts();
+  }, [propProducts]);
+
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -125,13 +159,18 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
   const activeLog = selectedProduct ? productLog : branchLog;
   const loadingLog = selectedProduct ? loadingProductLog : loadingBranchLog;
 
-  // Usage: filtered product list
+  // Usage: filtered product list (exclude bulk/order items)
   const usageFiltered = usageSearch.length > 0
     ? products.filter(p =>
         p["PRODUCT NAME"].toLowerCase().includes(usageSearch.toLowerCase()) &&
         (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
       )
     : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
+
+  // Categorise usage filtered list: Favourites → Products → Colours
+  const usageFavs    = usageFiltered.filter(p =>  isChicFav(p));
+  const usageColours = usageFiltered.filter(p => !isChicFav(p) &&  isYes(p["Colour"]));
+  const usageRegular = usageFiltered.filter(p => !isChicFav(p) && !isYes(p["Colour"]));
 
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);
@@ -145,6 +184,12 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
     }
     setUsageSearch("");
     setShowUsageDropdown(false);
+    usageInputRef.current?.blur();
+  };
+
+  const dismissUsageDropdown = () => {
+    setShowUsageDropdown(false);
+    setUsageSearch("");
     usageInputRef.current?.blur();
   };
 
@@ -204,7 +249,6 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
     setActivePanel(panel);
     setShowDropdown(false);
     setShowUsageDropdown(false);
-
   };
 
   const closePanel = () => {
@@ -212,8 +256,6 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
     setUsageSearch("");
     setShowUsageDropdown(false);
   };
-
-  const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
   return (
     <div style={{
@@ -238,7 +280,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
               setSelectedProduct(null);
               setShowDropdown(false);
             } else {
-              onBack();
+              onBack?.();
             }
           }}
           style={{
@@ -283,7 +325,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
           )}
         </div>
 
-        {/* USAGE / ORDER / CASH buttons — only on landing, no dropdown */}
+        {/* USAGE / ORDER / CASH buttons */}
         {!showDropdown && !selectedProduct && (
           <div style={{ display: "flex", gap: "28px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px" }}>
             {(["USAGE", "ORDER", "CASH"] as const).map(btn => (
@@ -318,10 +360,9 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
             p["PRODUCT NAME"].toLowerCase().includes(q) &&
             (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
           );
-          const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-          const favourites = allMatched.filter(p => isTrue(p["Chic Nailspa Favourites"]));
-          const colours = allMatched.filter(p => !isTrue(p["Chic Nailspa Favourites"]) && isTrue(p["Colour"]));
-          const regular = allMatched.filter(p => !isTrue(p["Chic Nailspa Favourites"]) && !isTrue(p["Colour"]));
+          const favourites = allMatched.filter(p =>  isChicFav(p));
+          const colours    = allMatched.filter(p => !isChicFav(p) &&  isYes(p["Colour"]));
+          const regular    = allMatched.filter(p => !isChicFav(p) && !isYes(p["Colour"]));
           const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
@@ -349,7 +390,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
             <div style={{ flex: 1, overflowY: "auto" }}>
               {favourites.length > 0 && (
                 <>
-                  <SectionHeader label="Chic Favourites" />
+                  <SectionHeader label="Chic Nailspa Favourites" />
                   {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}
                 </>
               )}
@@ -416,7 +457,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
               </div>
             )}
 
-            {/* Spacer + Recent label (landing only) */}
+            {/* Spacer + Recent label */}
             {!selectedProduct && <div style={{ flexShrink: 0, height: "16vh" }} />}
             {!selectedProduct && (
               <div style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>
@@ -453,24 +494,16 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
                     const showDate = dateStr !== prevDateStr;
                     return selectedProduct ? (
                       <div key={row.id} style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", padding: "8px 0" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                          {showDate ? dateStr : ""}
-                        </div>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
-                          {row.QTY > 0 ? "+" : ""}{row.QTY}
-                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                       </div>
                     ) : (
                       <div key={row.id} style={{ display: "grid", gridTemplateColumns: "50px 160px 50px 65px 130px", gap: "6px", minWidth: "479px", padding: "8px 0" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                          {showDate ? dateStr : ""}
-                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row["PRODUCT NAME"] || "—"}</div>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
-                          {row.QTY > 0 ? "+" : ""}{row.QTY}
-                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                       </div>
@@ -493,7 +526,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
         {(["SEARCH", "ORDER"] as const).map(item => (
           <button
             key={item}
-            onClick={item === "SEARCH" ? onBackToMain : undefined}
+            onClick={item === "SEARCH" ? () => onBackToMain?.() : undefined}
             style={{
               display: "block", fontSize: "clamp(10px, 2.8vw, 15px)", fontWeight: 300,
               letterSpacing: "0.06em", color: "hsl(var(--foreground))",
@@ -527,8 +560,11 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
             </button>
           </div>
 
-          {/* ENTER TODAY'S STOCK MOVEMENTS header row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          {/* ENTER TODAY'S STOCK MOVEMENTS header row — clicking here dismisses the dropdown */}
+          <div
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", cursor: showUsageDropdown ? "pointer" : "default" }}
+            onClick={() => { if (showUsageDropdown) dismissUsageDropdown(); }}
+          >
             <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "uppercase" }}>
               Enter Today's Stock Movements
             </span>
@@ -554,7 +590,21 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
                   color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
                 }}
               />
-              <ChevronDown size={14} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+              {/* Chevron toggles dropdown open/closed */}
+              <button
+                onMouseDown={e => {
+                  e.preventDefault();
+                  if (showUsageDropdown) {
+                    dismissUsageDropdown();
+                  } else {
+                    setShowUsageDropdown(true);
+                    usageInputRef.current?.focus();
+                  }
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", flexShrink: 0, display: "flex", alignItems: "center" }}
+              >
+                {showUsageDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
               {usageSearch.length > 0 && (
                 <button onClick={() => { setUsageSearch(""); setShowUsageDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}>
                   <X size={13} />
@@ -563,7 +613,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
             </div>
           </div>
 
-          {/* Type + Qty selector row — only when a product is being selected (search has text) */}
+          {/* Type + Qty selector row */}
           <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingTop: "12px", paddingBottom: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -579,7 +629,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
           </div>
         </div>
 
-        {/* Usage dropdown */}
+        {/* Usage dropdown — sectioned: Favourites → Products → Colours */}
         {showUsageDropdown && (
           <div style={{
             flexShrink: 0,
@@ -588,12 +638,10 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
             paddingLeft: "20px", paddingRight: "20px",
           }}>
             {(() => {
-              const isChicFav = (p: any) => p["Chic Nailspa Favourites"] === true || p["Chic Nailspa Favourites"] === "TRUE" || p["Chic Nailspa Favourites"] === "true";
-              const favs = usageFiltered.filter(p => isChicFav(p));
-              const isColour = (p: any) => p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true";
-              const colours = usageFiltered.filter(p => isColour(p) && !isChicFav(p));
-              const regular = usageFiltered.filter(p => !isChicFav(p) && !isColour(p));
-              const renderRow = (p: any, showStar?: boolean) => (
+              const sectionLabel = (label: string) => (
+                <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
+              );
+              const renderRow = (p: OfficeProduct, showStar?: boolean) => (
                 <div
                   key={p.id}
                   onMouseDown={() => handleAddUsageProduct(p)}
@@ -614,13 +662,10 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
                   )}
                 </div>
               );
-              const sectionLabel = (label: string) => (
-                <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
-              );
               const sections: React.ReactNode[] = [];
-              if (favs.length > 0) { sections.push(sectionLabel("Chic Nailspa Favourites")); favs.forEach(p => sections.push(renderRow(p, true))); }
-              if (regular.length > 0) { sections.push(sectionLabel("Products")); regular.forEach(p => sections.push(renderRow(p))); }
-              if (colours.length > 0) { sections.push(sectionLabel("Colours")); colours.forEach(p => sections.push(renderRow(p))); }
+              if (usageFavs.length > 0)    { sections.push(sectionLabel("Chic Nailspa Favourites")); usageFavs.forEach(p => sections.push(renderRow(p, true))); }
+              if (usageRegular.length > 0) { sections.push(sectionLabel("Products"));                usageRegular.forEach(p => sections.push(renderRow(p))); }
+              if (usageColours.length > 0) { sections.push(sectionLabel("Colours"));                 usageColours.forEach(p => sections.push(renderRow(p))); }
               if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
               return sections;
             })()}
@@ -637,7 +682,6 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
           )}
           {usageEntries.map(entry => (
             <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-              {/* Product name row */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1 }}>{entry.productName}</span>
                 <button
@@ -647,9 +691,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
                   <X size={13} />
                 </button>
               </div>
-              {/* Type + Qty row */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                {/* Type - tap to cycle */}
                 <button
                   onClick={() => cycleType(entry.id)}
                   style={{
@@ -660,7 +702,6 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
                 >
                   {entry.type}
                 </button>
-                {/* Qty */}
                 <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
                   <button
                     onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))}
@@ -709,7 +750,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
       </div>, document.body
       )}
 
-      {/* ORDER Panel (placeholder) */}
+      {/* ORDER Panel */}
       {activePanel === "ORDER" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
@@ -733,7 +774,7 @@ const ChicSimple = ({ onBack, onBackToMain, products }: ChicSimpleProps) => {
       </div>, document.body
       )}
 
-      {/* CASH Panel (placeholder) */}
+      {/* CASH Panel */}
       {activePanel === "CASH" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
