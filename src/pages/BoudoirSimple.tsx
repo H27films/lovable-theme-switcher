@@ -48,6 +48,11 @@ interface BoudoirSimpleProps {
 
 const USAGE_TYPES: Array<"Salon Use" | "Customer" | "Staff"> = ["Salon Use", "Customer", "Staff"];
 
+// Helper: check if a Supabase YES/NO or true/false column is truthy
+const isYes = (v: any): boolean =>
+  v === true || v === 1 ||
+  (typeof v === "string" && (v.toUpperCase() === "YES" || v.toUpperCase() === "TRUE"));
+
 const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) => {
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
@@ -125,13 +130,18 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
   const activeLog = selectedProduct ? productLog : branchLog;
   const loadingLog = selectedProduct ? loadingProductLog : loadingBranchLog;
 
-  // Usage: filtered product list
+  // Usage: filtered product list (exclude bulk/order items)
   const usageFiltered = usageSearch.length > 0
     ? products.filter(p =>
         p["PRODUCT NAME"].toLowerCase().includes(usageSearch.toLowerCase()) &&
         (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
       )
     : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
+
+  // Categorise usage filtered list: Favourites → Products → Colours
+  const usageFavs    = usageFiltered.filter(p =>  isYes(p["Boudoir Favourites"]));
+  const usageColours = usageFiltered.filter(p => !isYes(p["Boudoir Favourites"]) &&  isYes(p["Colour"]));
+  const usageRegular = usageFiltered.filter(p => !isYes(p["Boudoir Favourites"]) && !isYes(p["Colour"]));
 
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);
@@ -318,10 +328,9 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
             p["PRODUCT NAME"].toLowerCase().includes(q) &&
             (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
           );
-          const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-          const favourites = allMatched.filter(p => isTrue(p["Boudoir Favourites"]));
-          const colours = allMatched.filter(p => !isTrue(p["Boudoir Favourites"]) && isTrue(p["Colour"]));
-          const regular = allMatched.filter(p => !isTrue(p["Boudoir Favourites"]) && !isTrue(p["Colour"]));
+          const favourites = allMatched.filter(p =>  isYes(p["Boudoir Favourites"]));
+          const colours    = allMatched.filter(p => !isYes(p["Boudoir Favourites"]) &&  isYes(p["Colour"]));
+          const regular    = allMatched.filter(p => !isYes(p["Boudoir Favourites"]) && !isYes(p["Colour"]));
           const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
@@ -563,7 +572,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
             </div>
           </div>
 
-          {/* Type + Qty selector row — only when a product is being selected (search has text) */}
+          {/* Type + Qty selector row */}
           <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingTop: "12px", paddingBottom: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -579,7 +588,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
           </div>
         </div>
 
-        {/* Usage dropdown */}
+        {/* Usage dropdown — sectioned: Favourites → Products → Colours */}
         {showUsageDropdown && (
           <div style={{
             flexShrink: 0,
@@ -588,12 +597,10 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
             paddingLeft: "20px", paddingRight: "20px",
           }}>
             {(() => {
-              const isBoFav = (p: any) => p["Boudoir Favourites"] === true || p["Boudoir Favourites"] === "TRUE" || p["Boudoir Favourites"] === "true";
-              const favs = usageFiltered.filter(p => isBoFav(p));
-              const isColour = (p: any) => p["Colour"] === true || p["Colour"] === "TRUE" || p["Colour"] === "true";
-              const colours = usageFiltered.filter(p => isColour(p) && !isBoFav(p));
-              const regular = usageFiltered.filter(p => !isBoFav(p) && !isColour(p));
-              const renderRow = (p: any, showStar?: boolean) => (
+              const sectionLabel = (label: string) => (
+                <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
+              );
+              const renderRow = (p: OfficeProduct, showStar?: boolean) => (
                 <div
                   key={p.id}
                   onMouseDown={() => handleAddUsageProduct(p)}
@@ -614,13 +621,10 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
                   )}
                 </div>
               );
-              const sectionLabel = (label: string) => (
-                <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
-              );
               const sections: React.ReactNode[] = [];
-              if (favs.length > 0) { sections.push(sectionLabel("Boudoir Favourites")); favs.forEach(p => sections.push(renderRow(p, true))); }
-              if (regular.length > 0) { sections.push(sectionLabel("Products")); regular.forEach(p => sections.push(renderRow(p))); }
-              if (colours.length > 0) { sections.push(sectionLabel("Colours")); colours.forEach(p => sections.push(renderRow(p))); }
+              if (usageFavs.length > 0)    { sections.push(sectionLabel("Boudoir Favourites")); usageFavs.forEach(p => sections.push(renderRow(p, true))); }
+              if (usageRegular.length > 0) { sections.push(sectionLabel("Products"));           usageRegular.forEach(p => sections.push(renderRow(p))); }
+              if (usageColours.length > 0) { sections.push(sectionLabel("Colours"));            usageColours.forEach(p => sections.push(renderRow(p))); }
               if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
               return sections;
             })()}
