@@ -14,6 +14,12 @@ import StockChicNailspaPhone from "./pages/StockChicNailspaPhone";
 import StockNurYadiPhone from "./pages/StockNurYadiPhone";
 import IndexPhone from "./pages/IndexPhone";
 import IndexPhoneSimple from "./pages/IndexPhoneSimple";
+import BranchBoudoirSimple from "./pages/BranchBoudoirSimple";
+import BranchChicSimple from "./pages/BranchChicSimple";
+import BranchNurYadiSimple from "./pages/BranchNurYadiSimple";
+import BranchOfficeSimple from "./pages/BranchOfficeSimple";
+import OrderPage from "./pages/OrderPage";
+import SearchPage from "./pages/SearchPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +37,12 @@ const App = () => (
           {/* ── Simple / Boss routes ── */}
           <Route path="/simple" element={<LandingSimple />} />
           <Route path="/simple/office" element={<IndexPhoneSimple />} />
+          <Route path="/simple/boudoir" element={<BranchBoudoirSimple />} />
+          <Route path="/simple/chic" element={<BranchChicSimple />} />
+          <Route path="/simple/nuryadi" element={<BranchNurYadiSimple />} />
+          <Route path="/simple/branch-office" element={<BranchOfficeSimple />} />
+          <Route path="/order" element={<OrderPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/stock/mobile" element={<StockPhone />} />
           <Route path="/stocknuryadi" element={<StockNurYadi />} />
