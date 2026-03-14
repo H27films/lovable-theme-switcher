@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 
 interface OfficeProduct {
   id: number;
@@ -155,6 +155,12 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
     }
     setUsageSearch("");
     setShowUsageDropdown(false);
+    usageInputRef.current?.blur();
+  };
+
+  const dismissUsageDropdown = () => {
+    setShowUsageDropdown(false);
+    setUsageSearch("");
     usageInputRef.current?.blur();
   };
 
@@ -536,8 +542,11 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
             </button>
           </div>
 
-          {/* ENTER TODAY'S STOCK MOVEMENTS header row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          {/* ENTER TODAY'S STOCK MOVEMENTS header row — clicking here dismisses the dropdown */}
+          <div
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", cursor: showUsageDropdown ? "pointer" : "default" }}
+            onClick={() => { if (showUsageDropdown) dismissUsageDropdown(); }}
+          >
             <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "uppercase" }}>
               Enter Today's Stock Movements
             </span>
@@ -563,7 +572,21 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
                   color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
                 }}
               />
-              <ChevronDown size={14} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+              {/* Chevron toggles dropdown open/closed */}
+              <button
+                onMouseDown={e => {
+                  e.preventDefault();
+                  if (showUsageDropdown) {
+                    dismissUsageDropdown();
+                  } else {
+                    setShowUsageDropdown(true);
+                    usageInputRef.current?.focus();
+                  }
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", flexShrink: 0, display: "flex", alignItems: "center" }}
+              >
+                {showUsageDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
               {usageSearch.length > 0 && (
                 <button onClick={() => { setUsageSearch(""); setShowUsageDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}>
                   <X size={13} />
