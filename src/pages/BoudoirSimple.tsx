@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { USAGE_TYPES, makeIsFavourite, UsageType, isYes } from "@/lib/branchSimpleUtils";
 
 interface OfficeProduct {
   id: number;
@@ -35,7 +36,7 @@ interface LogRow {
 interface EntryLine {
   id: number;
   productName: string;
-  type: "Salon Use" | "Customer" | "Staff";
+  type: UsageType;
   qty: number;
 }
 
@@ -44,14 +45,7 @@ interface BoudoirSimpleProps {
   onBackToMain?: () => void;
   products?: OfficeProduct[];
 }
-
-const USAGE_TYPES: Array<"Salon Use" | "Customer" | "Staff"> = ["Salon Use", "Customer", "Staff"];
-
-const isYes = (v: any): boolean =>
-  v === true || v === 1 ||
-  (typeof v === "string" && (v.toUpperCase() === "YES" || v.toUpperCase() === "TRUE"));
-
-const isBoudoirFav = (p: any): boolean => isYes(p["BOUDOIR FAVOURITE"]);
+const isBoudoirFav = makeIsFavourite("BOUDOIR FAVOURITE");
 
 const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: BoudoirSimpleProps) => {
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);

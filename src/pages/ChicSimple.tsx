@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { USAGE_TYPES, makeIsFavourite, UsageType, isYes } from "@/lib/branchSimpleUtils";
 
 interface OfficeProduct {
   id: number;
@@ -35,7 +36,7 @@ interface LogRow {
 interface EntryLine {
   id: number;
   productName: string;
-  type: "Salon Use" | "Customer" | "Staff";
+  type: UsageType;
   qty: number;
 }
 
@@ -44,14 +45,7 @@ interface ChicSimpleProps {
   onBackToMain?: () => void;
   products?: OfficeProduct[];
 }
-
-const USAGE_TYPES: Array<"Salon Use" | "Customer" | "Staff"> = ["Salon Use", "Customer", "Staff"];
-
-const isYes = (v: any): boolean =>
-  v === true || v === 1 ||
-  (typeof v === "string" && (v.toUpperCase() === "YES" || v.toUpperCase() === "TRUE"));
-
-const isChicFav = (p: any): boolean => isYes(p["CHIC NAILSPA FAVOURITE"]);
+const isChicFav = makeIsFavourite("CHIC NAILSPA FAVOURITE");
 
 const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleProps) => {
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
@@ -112,7 +106,7 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const BRANCH_NAME = "CHIC";
+  const BRANCH_NAME = "CHIC NAILSPA";
   const BALANCE_KEY = "CHIC NAILSPA BALANCE" as keyof OfficeProduct;
   const BRANCH_LOG_NAME = "Chic Nailspa";
 
