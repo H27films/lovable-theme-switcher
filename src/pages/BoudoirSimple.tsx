@@ -19,6 +19,7 @@ interface OfficeProduct {
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
   "OfficeFavourites": string | null;
+  "BoudoirFavourites": string | null;
   "Boudoir Favourites": string | null;
 }
 
@@ -41,9 +42,9 @@ interface EntryLine {
 }
 
 interface BoudoirSimpleProps {
-  onBack: () => void;
-  onBackToMain: () => void;
-  products: OfficeProduct[];
+  onBack?: () => void;
+  onBackToMain?: () => void;
+  products?: OfficeProduct[];
 }
 
 const USAGE_TYPES: Array<"Salon Use" | "Customer" | "Staff"> = ["Salon Use", "Customer", "Staff"];
@@ -53,7 +54,38 @@ const isYes = (v: any): boolean =>
   v === true || v === 1 ||
   (typeof v === "string" && (v.toUpperCase() === "YES" || v.toUpperCase() === "TRUE"));
 
-const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) => {
+// Check Boudoir Favourites — covers both possible column name formats
+const isBoudoirFav = (p: any): boolean =>
+  isYes(p["BoudoirFavourites"]) || isYes(p["Boudoir Favourites"]);
+
+const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: BoudoirSimpleProps) => {
+  const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
+
+  // If no products passed via props, fetch them directly
+  useEffect(() => {
+    if (propProducts && propProducts.length > 0) {
+      setProducts(propProducts);
+      return;
+    }
+    const fetchProducts = async () => {
+      let allData: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await (supabase as any)
+          .from("AllFileProducts")
+          .select("*")
+          .range(from, from + batchSize - 1);
+        if (error || !data?.length) break;
+        allData = allData.concat(data);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      setProducts(allData);
+    };
+    fetchProducts();
+  }, [propProducts]);
+
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -139,9 +171,9 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
     : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
 
   // Categorise usage filtered list: Favourites → Products → Colours
-  const usageFavs    = usageFiltered.filter(p =>  isYes(p["Boudoir Favourites"]));
-  const usageColours = usageFiltered.filter(p => !isYes(p["Boudoir Favourites"]) &&  isYes(p["Colour"]));
-  const usageRegular = usageFiltered.filter(p => !isYes(p["Boudoir Favourites"]) && !isYes(p["Colour"]));
+  const usageFavs    = usageFiltered.filter(p =>  isBoudoirFav(p));
+  const usageColours = usageFiltered.filter(p => !isBoudoirFav(p) &&  isYes(p["Colour"]));
+  const usageRegular = usageFiltered.filter(p => !isBoudoirFav(p) && !isYes(p["Colour"]));
 
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);
@@ -220,7 +252,6 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
     setActivePanel(panel);
     setShowDropdown(false);
     setShowUsageDropdown(false);
-
   };
 
   const closePanel = () => {
@@ -228,8 +259,6 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
     setUsageSearch("");
     setShowUsageDropdown(false);
   };
-
-  const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
   return (
     <div style={{
@@ -254,7 +283,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
               setSelectedProduct(null);
               setShowDropdown(false);
             } else {
-              onBack();
+              onBack?.();
             }
           }}
           style={{
@@ -299,7 +328,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
           )}
         </div>
 
-        {/* USAGE / ORDER / CASH buttons — only on landing, no dropdown */}
+        {/* USAGE / ORDER / CASH buttons */}
         {!showDropdown && !selectedProduct && (
           <div style={{ display: "flex", gap: "28px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px" }}>
             {(["USAGE", "ORDER", "CASH"] as const).map(btn => (
@@ -334,9 +363,9 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
             p["PRODUCT NAME"].toLowerCase().includes(q) &&
             (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
           );
-          const favourites = allMatched.filter(p =>  isYes(p["Boudoir Favourites"]));
-          const colours    = allMatched.filter(p => !isYes(p["Boudoir Favourites"]) &&  isYes(p["Colour"]));
-          const regular    = allMatched.filter(p => !isYes(p["Boudoir Favourites"]) && !isYes(p["Colour"]));
+          const favourites = allMatched.filter(p =>  isBoudoirFav(p));
+          const colours    = allMatched.filter(p => !isBoudoirFav(p) &&  isYes(p["Colour"]));
+          const regular    = allMatched.filter(p => !isBoudoirFav(p) && !isYes(p["Colour"]));
           const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
@@ -431,7 +460,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
               </div>
             )}
 
-            {/* Spacer + Recent label (landing only) */}
+            {/* Spacer + Recent label */}
             {!selectedProduct && <div style={{ flexShrink: 0, height: "16vh" }} />}
             {!selectedProduct && (
               <div style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>
@@ -468,24 +497,16 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
                     const showDate = dateStr !== prevDateStr;
                     return selectedProduct ? (
                       <div key={row.id} style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", padding: "8px 0" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                          {showDate ? dateStr : ""}
-                        </div>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
-                          {row.QTY > 0 ? "+" : ""}{row.QTY}
-                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                       </div>
                     ) : (
                       <div key={row.id} style={{ display: "grid", gridTemplateColumns: "50px 160px 50px 65px 130px", gap: "6px", minWidth: "479px", padding: "8px 0" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                          {showDate ? dateStr : ""}
-                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row["PRODUCT NAME"] || "—"}</div>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
-                          {row.QTY > 0 ? "+" : ""}{row.QTY}
-                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{row.TYPE || "—"}</div>
                       </div>
@@ -508,7 +529,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
         {(["SEARCH", "ORDER"] as const).map(item => (
           <button
             key={item}
-            onClick={item === "SEARCH" ? onBackToMain : undefined}
+            onClick={item === "SEARCH" ? () => onBackToMain?.() : undefined}
             style={{
               display: "block", fontSize: "clamp(10px, 2.8vw, 15px)", fontWeight: 300,
               letterSpacing: "0.06em", color: "hsl(var(--foreground))",
@@ -664,7 +685,6 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
           )}
           {usageEntries.map(entry => (
             <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-              {/* Product name row */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1 }}>{entry.productName}</span>
                 <button
@@ -674,9 +694,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
                   <X size={13} />
                 </button>
               </div>
-              {/* Type + Qty row */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                {/* Type - tap to cycle */}
                 <button
                   onClick={() => cycleType(entry.id)}
                   style={{
@@ -687,7 +705,6 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
                 >
                   {entry.type}
                 </button>
-                {/* Qty */}
                 <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
                   <button
                     onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))}
@@ -736,7 +753,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
       </div>, document.body
       )}
 
-      {/* ORDER Panel (placeholder) */}
+      {/* ORDER Panel */}
       {activePanel === "ORDER" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
@@ -760,7 +777,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products }: BoudoirSimpleProps) =
       </div>, document.body
       )}
 
-      {/* CASH Panel (placeholder) */}
+      {/* CASH Panel */}
       {activePanel === "CASH" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
