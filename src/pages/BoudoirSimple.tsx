@@ -18,7 +18,7 @@ interface OfficeProduct {
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
-  "BOUDOIR FAVOURITE": string | null;
+  "BOUDOIR FAVOURITE": string | boolean | null;
 }
 
 interface LogRow {
@@ -84,15 +84,23 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
-  const [savedFavourites, setSavedFavourites] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("boudoir_favourites") || "[]"); } catch { return []; }
-  });
-  const toggleFavourite = (name: string) => {
-    setSavedFavourites(prev => {
-      const next = prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name];
-      localStorage.setItem("boudoir_favourites", JSON.stringify(next));
-      return next;
-    });
+
+  const toggleFavourite = async (product: OfficeProduct) => {
+    const currentlyFav = isBoudoirFav(product);
+    const newVal = !currentlyFav;
+    // Write to Supabase
+    await (supabase as any)
+      .from("AllFileProducts")
+      .update({ "BOUDOIR FAVOURITE": newVal })
+      .eq("id", product.id);
+    // Update local products list
+    setProducts(prev =>
+      prev.map(p => p.id === product.id ? { ...p, "BOUDOIR FAVOURITE": newVal } : p)
+    );
+    // Update selected product so star re-renders immediately
+    setSelectedProduct(prev =>
+      prev && prev.id === product.id ? { ...prev, "BOUDOIR FAVOURITE": newVal } : prev
+    );
   };
 
   const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | "CASH" | null>(null);
@@ -431,12 +439,12 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                     </div>
                   )}
                   <button
-                    onClick={() => toggleFavourite(selectedProduct["PRODUCT NAME"])}
+                    onClick={() => toggleFavourite(selectedProduct)}
                     style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}
                   >
                     <Star
                       size={16}
-                      fill={savedFavourites.includes(selectedProduct["PRODUCT NAME"]) ? "hsl(var(--foreground))" : "none"}
+                      fill={isBoudoirFav(selectedProduct) ? "hsl(var(--foreground))" : "none"}
                       color="hsl(var(--foreground))"
                     />
                   </button>
@@ -470,7 +478,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
             <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0, WebkitOverflowScrolling: "touch" }}>
               <div style={{ minWidth: selectedProduct ? "345px" : "479px", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
 
-                {/* Header row — slightly taller */}
+                {/* Header row */}
                 {selectedProduct ? (
                   <div style={{ display: "grid", gridTemplateColumns: "65px 55px 75px 140px", gap: "6px", minWidth: "345px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                     {["Date", "Qty", "End Bal", "Type"].map(h => (
