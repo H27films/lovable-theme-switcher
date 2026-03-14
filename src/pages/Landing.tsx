@@ -42,6 +42,13 @@ const PhoneIcon = () => (
   </svg>
 );
 
+// Chevron right icon
+const ChevronRightIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
 // Letter-lift hover component — each character lifts individually with staggered delay
 // intro=true adds the l3-intro class which plays the lift animation once on load
 const HoverText = ({ text, staggerMs = 28 }: { text: string; staggerMs?: number }) => (
@@ -511,7 +518,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Bottom right: "Select to continue" + mode toggle */}
+          {/* Bottom right: "Select to continue" + mode toggle + simple chevron */}
           <div
             style={{
               display: "flex",
@@ -542,6 +549,15 @@ export default function Landing() {
               title={phoneMode ? "Switch to desktop mode" : "Switch to phone mode"}
             >
               {phoneMode ? <PhoneIcon /> : <LaptopIcon />}
+            </button>
+
+            {/* Simple mode — navigate to /simple */}
+            <button
+              className="l3-mode-toggle"
+              onClick={(e) => { e.stopPropagation(); navigate("/simple"); }}
+              title="Simple mode"
+            >
+              <ChevronRightIcon />
             </button>
           </div>
         </div>
