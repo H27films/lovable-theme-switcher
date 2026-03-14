@@ -121,6 +121,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [productLog, setProductLog] = useState<LogRow[]>([]);
   const [loadingProductLog, setLoadingProductLog] = useState(false);
   const [reversing, setReversing] = useState<number | null>(null);
+  const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
 
   useEffect(() => {
     setLoadingBranchLog(true);
@@ -516,21 +517,21 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
 
                 {/* Header row */}
                 {selectedProduct ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "55px 28px 32px 18px 1fr", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "55px 28px 32px 1fr 18px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                     <div style={hdrLeft}>Date</div>
                     <div style={hdrCenter}>Qty</div>
                     <div style={hdrCenter}>Bal</div>
-                    <div />
                     <div style={hdrCenter}>Type</div>
+                    <div />
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 18px 70px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 70px 18px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                     <div style={hdrLeft}>Date</div>
                     <div style={hdrLeft}>Product</div>
                     <div style={hdrCenter}>Qty</div>
                     <div style={hdrCenter}>Bal</div>
-                    <div />
                     <div style={hdrCenter}>Type</div>
+                    <div />
                   </div>
                 )}
 
@@ -541,7 +542,10 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                   {!loadingLog && activeLog.length === 0 && (
                     <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
                   )}
-                  {!loadingLog && activeLog.map((row, idx) => {
+                  {!loadingLog && (() => {
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
+                    return activeLog.map((row, idx) => {
                     const dateStr = new Date(row.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
                     const prevDateStr = idx > 0 ? new Date(activeLog[idx - 1].DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : null;
                     const showDate = dateStr !== prevDateStr;
@@ -549,7 +553,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                     const isReversing = reversing === row.id;
                     return selectedProduct ? (
                       <div key={row.id} style={{
-                        display: "grid", gridTemplateColumns: "55px 28px 32px 18px 1fr", gap: "4px",
+                        display: "grid", gridTemplateColumns: "55px 28px 32px 1fr 18px", gap: "4px",
                         padding: "8px 0",
                         borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
@@ -558,20 +562,22 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                        <button
-                          onClick={() => reverseRow(row)}
-                          disabled={isReversing}
-                          style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
-                          onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-                        >
-                          <X size={11} />
-                        </button>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                        {(() => { const rd = new Date(row.DATE); rd.setHours(0,0,0,0); return rd >= cutoff; })() ? (
+                          <button
+                            onClick={() => setConfirmRow(row)}
+                            disabled={isReversing}
+                            style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
+                            onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                          >
+                            <X size={11} />
+                          </button>
+                        ) : <div />}
                       </div>
                     ) : (
                       <div key={row.id} style={{
-                        display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 18px 70px", gap: "4px",
+                        display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 70px 18px", gap: "4px",
                         padding: "8px 0",
                         borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
@@ -581,19 +587,22 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>{row["PRODUCT NAME"] || "—"}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                        <button
-                          onClick={() => reverseRow(row)}
-                          disabled={isReversing}
-                          style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
-                          onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-                        >
-                          <X size={11} />
-                        </button>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                        {(() => { const rd = new Date(row.DATE); rd.setHours(0,0,0,0); return rd >= cutoff; })() ? (
+                          <button
+                            onClick={() => setConfirmRow(row)}
+                            disabled={isReversing}
+                            style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
+                            onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                          >
+                            <X size={11} />
+                          </button>
+                        ) : <div />}
                       </div>
                     );
-                  })}
+                    });
+                  })()}
                 </div>
               </div>
             </div>
@@ -623,6 +632,49 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
           </button>
         ))}
       </div>
+
+
+      {/* Confirmation Modal */}
+      {confirmRow && createPortal(
+        <div
+          onClick={() => setConfirmRow(null)}
+          style={{
+            position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh",
+            background: "rgba(0,0,0,0.4)", zIndex: 500,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "hsl(var(--background))", padding: "28px 24px",
+              maxWidth: "320px", width: "90%",
+            }}
+          >
+            <div style={{ fontSize: "16px", fontWeight: 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "8px" }}>
+              Remove transaction
+            </div>
+            <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "24px", lineHeight: 1.5 }}>
+              {confirmRow["PRODUCT NAME"]} · {new Date(confirmRow.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · Qty {confirmRow.QTY}
+            </div>
+            <div style={{ display: "flex", gap: "16px" }}>
+              <button
+                onClick={() => setConfirmRow(null)}
+                style={{ flex: 1, background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "10px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => { const r = confirmRow; setConfirmRow(null); await reverseRow(r); }}
+                style={{ flex: 1, background: "hsl(0 70% 50%)", border: "none", cursor: "pointer", padding: "10px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "#fff" }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* USAGE Panel */}
       {activePanel === "USAGE" && createPortal(
