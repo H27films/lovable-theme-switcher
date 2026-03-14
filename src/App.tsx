@@ -41,8 +41,8 @@ const App = () => (
           <Route path="/simple/chic" element={<BranchChicSimple />} />
           <Route path="/simple/nuryadi" element={<BranchNurYadiSimple />} />
           <Route path="/simple/branch-office" element={<BranchOfficeSimple />} />
-          <Route path="/order" element={<OrderPage />} />
-          <Route path="/search" element={<SearchPage />} />
+          <Route path="/simple/order" element={<OrderPage />} />
+          <Route path="/simple/search" element={<SearchPage />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/stock/mobile" element={<StockPhone />} />
           <Route path="/stocknuryadi" element={<StockNurYadi />} />
