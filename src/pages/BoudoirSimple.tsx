@@ -18,9 +18,7 @@ interface OfficeProduct {
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
-  "OfficeFavourites": string | null;
-  "BoudoirFavourites": string | null;
-  "Boudoir Favourites": string | null;
+  "BOUDOIR FAVOURITE": string | null;
 }
 
 interface LogRow {
@@ -54,9 +52,8 @@ const isYes = (v: any): boolean =>
   v === true || v === 1 ||
   (typeof v === "string" && (v.toUpperCase() === "YES" || v.toUpperCase() === "TRUE"));
 
-// Check Boudoir Favourites — covers both possible column name formats
-const isBoudoirFav = (p: any): boolean =>
-  isYes(p["BoudoirFavourites"]) || isYes(p["Boudoir Favourites"]);
+// Check Boudoir Favourite column (exact Supabase column name: "BOUDOIR FAVOURITE")
+const isBoudoirFav = (p: any): boolean => isYes(p["BOUDOIR FAVOURITE"]);
 
 const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: BoudoirSimpleProps) => {
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
