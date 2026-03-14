@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
-import SearchPage from "./SearchPage";
+import SearchSimple from "./SearchSimple";
 import BranchesPage from "./BranchesPage";
-import OrderPage from "./OrderPage";
-import BranchOfficeSimple from "./BranchOfficeSimple";
-import BranchBoudoirSimple from "./BranchBoudoirSimple";
-import BranchChicSimple from "./BranchChicSimple";
-import BranchNurYadiSimple from "./BranchNurYadiSimple";
+import OrderSimple from "./OrderSimple";
+import OfficeSimple from "./OfficeSimple";
+import BoudoirSimple from "./BoudoirSimple";
+import ChicSimple from "./ChicSimple";
+import NurYadiSimple from "./NurYadiSimple";
 import { X, Search, Building2 } from "lucide-react";
 
 interface OfficeProduct {
@@ -109,7 +109,6 @@ const SubLandingSimple = () => {
   };
 
   const navigateBackToMain = () => {
-    // Animate back to main menu from branch page (full reset)
     setBranchTransitionPhase("page-leaving");
     setTransitionPhase("section-leaving");
     setTimeout(() => {
@@ -260,7 +259,6 @@ const SubLandingSimple = () => {
                     }}
                     onFocus={() => {
                       // Do nothing on focus — keep result/supplier view intact.
-                      // Typing will trigger onChange which clears and shows dropdown.
                     }}
                     placeholder="Enter Product / Supplier"
                     style={{
@@ -283,7 +281,7 @@ const SubLandingSimple = () => {
               {/* MIDDLE SCROLLABLE AREA */}
               <div style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
 
-                {/* Dropdown — Office Favourites / Products / Colours / Suppliers */}
+                {/* Dropdown */}
                 {simpleShowDropdown && simpleSearch.length > 0 && (() => {
                   const q = simpleSearch.toLowerCase();
                   const allMatched = products.filter(p =>
@@ -365,23 +363,16 @@ const SubLandingSimple = () => {
                 {/* Product result card */}
                 {simpleSearchMode === "result" && simpleSelectedProduct && !simpleShowDropdown && (
                   <div style={{ paddingTop: "20px" }}>
-
-                    {/* Product name */}
                     <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", marginBottom: "0" }}>
                       {simpleSelectedProduct["PRODUCT NAME"]}
                     </div>
-
                     <div style={{ borderBottom: "0.5px solid hsl(var(--border))", margin: "16px 0" }} />
-
-                    {/* Supplier section */}
                     <div style={{ marginBottom: "20px" }}>
                       <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Supplier</div>
                       <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
                         {simpleSelectedProduct["SUPPLIER"] || "—"}
                       </div>
                     </div>
-
-                    {/* Prices — bold label, light value, gap between each pair */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", columnGap: "12px", marginBottom: "20px" }}>
                       {([
                         { label: "Supplier Price", val: simpleSelectedProduct["SUPPLIER PRICE"] },
@@ -397,8 +388,6 @@ const SubLandingSimple = () => {
                         </div>
                       ))}
                     </div>
-
-                    {/* Office Balance + Store Room */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
                       <div style={{ gridColumn: "1 / 3" }}>
                         <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Office Balance</div>
@@ -409,8 +398,6 @@ const SubLandingSimple = () => {
                         <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{simpleSelectedProduct["OFFICE SECTION"] || "—"}</div>
                       </div>
                     </div>
-
-                    {/* Branch balances */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "24px" }}>
                       {([
                         { label: "Boudoir", key: "BOUDOIR BALANCE" },
@@ -426,7 +413,7 @@ const SubLandingSimple = () => {
                   </div>
                 )}
 
-                {/* Supplier result — list all products for that supplier */}
+                {/* Supplier result */}
                 {simpleSearchMode === "supplier" && simpleSelectedSupplier && !simpleShowDropdown && (
                   <div style={{ paddingTop: "20px" }}>
                     <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "20px" }}>
@@ -495,7 +482,7 @@ const SubLandingSimple = () => {
         {/* Section pages */}
         {activeSection !== null && (
           <div style={sectionTransitionStyle}>
-            {activeSection === "search" && <SearchPage onBack={navigateBack} />}
+            {activeSection === "search" && <SearchSimple onBack={navigateBack} />}
             {activeSection === "branches" && (
               <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative", overflow: "hidden" }}>
 
@@ -568,15 +555,15 @@ const SubLandingSimple = () => {
                   opacity: branchTransitionPhase === "at-page" ? 1 : 0,
                   pointerEvents: branchTransitionPhase === "at-page" ? "auto" : "none",
                 }}>
-                  {activeBranch === "office"   && <BranchOfficeSimple  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "boudoir"  && <BranchBoudoirSimple onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "chic"     && <BranchChicSimple    onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "nuryadi"  && <BranchNurYadiSimple onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "office"   && <OfficeSimple   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "boudoir"  && <BoudoirSimple  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "chic"     && <ChicSimple     onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "nuryadi"  && <NurYadiSimple  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                 </div>
 
               </div>
             )}
-            {activeSection === "order" && <OrderPage onBack={navigateBack} />}
+            {activeSection === "order" && <OrderSimple onBack={navigateBack} />}
           </div>
         )}
 
