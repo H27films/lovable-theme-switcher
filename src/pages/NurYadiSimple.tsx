@@ -300,7 +300,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     }}>
 
       {/* TOP AREA */}
-      <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", flexShrink: 0 }}>
+      <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", flexShrink: 0 }}>
 
         {/* Branch name header */}
         <button
@@ -396,7 +396,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
       </div>
 
       {/* MIDDLE SCROLLABLE */}
-      <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
+      <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
 
         {/* Dropdown */}
         {showDropdown && search.length > 0 && (() => {
@@ -511,26 +511,26 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             )}
 
             {/* Log table */}
-            <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0, WebkitOverflowScrolling: "touch" }}>
-              <div style={{ minWidth: selectedProduct ? "340px" : "460px", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div style={{ flex: 1, overflowX: "hidden", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
 
                 {/* Header row */}
                 {selectedProduct ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "65px 50px 60px 100px 26px", gap: "6px", minWidth: "340px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "55px 28px 32px 18px 1fr", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                     <div style={hdrLeft}>Date</div>
                     <div style={hdrCenter}>Qty</div>
                     <div style={hdrCenter}>Bal</div>
-                    <div style={hdrCenter}>Type</div>
                     <div />
+                    <div style={hdrCenter}>Type</div>
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "50px 140px 42px 55px 100px 26px", gap: "6px", minWidth: "460px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 18px 70px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                     <div style={hdrLeft}>Date</div>
                     <div style={hdrLeft}>Product</div>
                     <div style={hdrCenter}>Qty</div>
                     <div style={hdrCenter}>Bal</div>
-                    <div style={hdrCenter}>Type</div>
                     <div />
+                    <div style={hdrCenter}>Type</div>
                   </div>
                 )}
 
@@ -549,7 +549,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                     const isReversing = reversing === row.id;
                     return selectedProduct ? (
                       <div key={row.id} style={{
-                        display: "grid", gridTemplateColumns: "65px 50px 60px 100px 26px", gap: "6px", minWidth: "340px",
+                        display: "grid", gridTemplateColumns: "55px 28px 32px 18px 1fr", gap: "4px",
                         padding: "8px 0",
                         borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
@@ -558,7 +558,6 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{showDate ? dateStr : ""}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                         <button
                           onClick={() => reverseRow(row)}
                           disabled={isReversing}
@@ -568,10 +567,11 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                         >
                           <X size={11} />
                         </button>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                       </div>
                     ) : (
                       <div key={row.id} style={{
-                        display: "grid", gridTemplateColumns: "50px 140px 42px 55px 100px 26px", gap: "6px", minWidth: "460px",
+                        display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 18px 70px", gap: "4px",
                         padding: "8px 0",
                         borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
@@ -581,7 +581,6 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>{row["PRODUCT NAME"] || "—"}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                         <button
                           onClick={() => reverseRow(row)}
                           disabled={isReversing}
@@ -591,6 +590,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                         >
                           <X size={11} />
                         </button>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                       </div>
                     );
                   })}
@@ -604,7 +604,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
 
       {/* BOTTOM BLUR BAR */}
       <div style={{
-        flexShrink: 0, paddingLeft: "20px", paddingRight: "20px",
+        flexShrink: 0, paddingLeft: "12px", paddingRight: "12px",
         paddingTop: "4px", paddingBottom: "max(env(safe-area-inset-bottom, 12px), 12px)",
         filter: "blur(1px)", opacity: 0.25,
       }}>
@@ -634,7 +634,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
-        <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>USAGE</span>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
@@ -712,7 +712,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             flexShrink: 0,
             background: "hsl(var(--background))",
             maxHeight: "55vh", overflowY: "auto",
-            paddingLeft: "20px", paddingRight: "20px",
+            paddingLeft: "12px", paddingRight: "12px",
           }}>
             {(() => {
               const sectionLabel = (label: string) => (
@@ -749,7 +749,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
           </div>
         )}
 
-        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px" }}
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }}
           onClick={() => setShowUsageDropdown(false)}>
           {usageEntries.length === 0 && (
             <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
@@ -799,7 +799,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         </div>
 
         {usageEntries.length > 0 && (
-          <div style={{ flexShrink: 0, paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))" }}>
+          <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))" }}>
             <button
               onClick={handleUsageSubmit}
               disabled={usageSubmitting}
@@ -835,7 +835,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
-        <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>ORDER</span>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
@@ -843,7 +843,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             </button>
           </div>
         </div>
-        <div style={{ flex: 1, paddingLeft: "20px", paddingRight: "20px", display: "flex", alignItems: "center" }}>
+        <div style={{ flex: 1, paddingLeft: "12px", paddingRight: "12px", display: "flex", alignItems: "center" }}>
           <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Order entry — coming soon</span>
         </div>
       </div>, document.body
@@ -859,7 +859,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
-        <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>CASH</span>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
@@ -867,7 +867,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             </button>
           </div>
         </div>
-        <div style={{ flex: 1, paddingLeft: "20px", paddingRight: "20px", display: "flex", alignItems: "center" }}>
+        <div style={{ flex: 1, paddingLeft: "12px", paddingRight: "12px", display: "flex", alignItems: "center" }}>
           <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Cash entry — coming soon</span>
         </div>
       </div>, document.body

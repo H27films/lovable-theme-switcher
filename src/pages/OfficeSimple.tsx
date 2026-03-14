@@ -47,7 +47,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     }}>
 
       {/* TOP AREA */}
-      <div style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "28px", flexShrink: 0 }}>
+      <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", flexShrink: 0 }}>
 
         {/* Branch name header — tappable to go back */}
         <button
@@ -110,7 +110,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       </div>
 
       {/* MIDDLE SCROLLABLE */}
-      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "8px" }}>
+      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
 
         {/* Dropdown */}
         {showDropdown && search.length > 0 && (() => {
@@ -277,7 +277,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
       {/* BOTTOM BLUR BAR */}
       <div style={{
-        flexShrink: 0, paddingLeft: "20px", paddingRight: "20px",
+        flexShrink: 0, paddingLeft: "12px", paddingRight: "12px",
         paddingTop: "8px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)",
         filter: "blur(1px)", opacity: 0.25,
       }}>
