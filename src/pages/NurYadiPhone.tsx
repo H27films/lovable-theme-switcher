@@ -6,6 +6,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ArrowRight, Plus, X, ChevronLeft, ChevronRight, Search, ChevronDown, FileText, Download, Home, Lock, Star } from "lucide-react";
 import { BranchProductDropdown } from "@/components/BranchProductDropdown";
+import { EntryTypeDropdown } from "@/components/EntryTypeDropdown";
 import jsPDF from "jspdf";
 
 interface AllFileProduct {
@@ -16,7 +17,7 @@ interface AllFileProduct {
   "BRANCH PRICE": number | null;
   "STAFF PRICE": number | null;
   "CUSTOMER PRICE": number | null;
-  "NUR YADI BALANCE": number;
+  "BOUDOIR BALANCE": number;
   "NUR YADI BALANCE": number;
   "CHIC NAILSPA BALANCE": number;
   "OFFICE BALANCE": number;
@@ -59,8 +60,6 @@ interface OrderLine {
   productSearch: string;
 }
 
-const TYPES = ["Salon Use", "Customer", "Staff"];
-
 const makeEntries = (): EntryLine[] => [1].map(id => ({
   id, productName: "", type: "Salon Use", qty: 1,
   showProductDropdown: false, showTypeDropdown: false, productSearch: "",
@@ -69,93 +68,6 @@ const makeEntries = (): EntryLine[] => [1].map(id => ({
 const makeOrderEntries = (): OrderLine[] => [1].map(id => ({
   id, productName: "", qty: 1, showProductDropdown: false, productSearch: "",
 }));
-
-function TypeDropdown({ entry, onSelect, onToggle, onClose, lineStyle }: {
-  entry: EntryLine;
-  onSelect: (type: string) => void;
-  onToggle: () => void;
-  onClose: () => void;
-  lineStyle?: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const borderActive = "hsl(var(--border-active))";
-  const border = "hsl(var(--border))";
-  const cardBg = "hsl(var(--card))";
-  const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    if (entry.showTypeDropdown) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [entry.showTypeDropdown, onClose]);
-
-  // Reset when closed
-  useEffect(() => { if (!entry.showTypeDropdown) setActiveIndex(-1); }, [entry.showTypeDropdown]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!entry.showTypeDropdown) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); }
-      return;
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex(i => (i + 1) % TYPES.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex(i => (i <= 0 ? TYPES.length - 1 : i - 1));
-    } else if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      const target = activeIndex >= 0 ? TYPES[activeIndex] : TYPES[0];
-      onSelect(target);
-      setActiveIndex(-1);
-    } else if (e.key === "Escape") {
-      onClose();
-      setActiveIndex(-1);
-    }
-  };
-
-  return (
-    <div
-      ref={ref}
-      className={lineStyle ? "relative w-full" : "relative flex-shrink-0"}
-      style={lineStyle ? {} : { width: "150px" }}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-    >
-      <div
-        className={lineStyle ? "flex items-center justify-between px-0 cursor-pointer h-[28px] w-full" : "flex items-center justify-between px-2 py-2 cursor-pointer h-[34px]"}
-        style={lineStyle ? {} : { background: cardBg, border: `1px solid ${borderActive}` }}
-        onClick={onToggle}
-      >
-        <span className="text-[11px] font-light">{entry.type}</span>
-        <ChevronDown size={11} style={dim} />
-      </div>
-      {entry.showTypeDropdown && (
-        <div
-          className="absolute top-full left-0 right-0 z-[200] border"
-          style={{ background: "hsl(var(--card))", borderColor: borderActive, marginTop: "2px" }}
-        >
-          {TYPES.map((t, i) => (
-            <div
-              key={t}
-              className="px-3 py-2 text-[11px] font-light cursor-pointer transition-colors"
-              style={{
-                borderBottom: `1px solid ${border}`,
-                background: i === activeIndex ? "hsl(var(--muted))" : "hsl(var(--card))",
-              }}
-              onMouseDown={() => { onSelect(t); setActiveIndex(-1); }}
-              onMouseEnter={() => setActiveIndex(i)}
-            >{t}</div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function DatePicker({ value, onChange }: {
   value: "today" | "yesterday" | "tomorrow";
   onChange: (v: "today" | "yesterday" | "tomorrow") => void;
@@ -1346,7 +1258,7 @@ function StockNurYadiPhoneInner() {
                       {/* Line 2: Type + Qty */}
                       <div className="flex items-center justify-between py-1" style={{ borderBottom: `1px solid ${border}` }}>
                         <div className="flex-1">
-                          <TypeDropdown
+                          <EntryTypeDropdown
                             entry={entry}
                             onSelect={type => updateEntry(entry.id, { type, showTypeDropdown: false })}
                             onToggle={() => {
