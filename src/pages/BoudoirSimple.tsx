@@ -88,16 +88,13 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const toggleFavourite = async (product: OfficeProduct) => {
     const currentlyFav = isBoudoirFav(product);
     const newVal = !currentlyFav;
-    // Write to Supabase
     await (supabase as any)
       .from("AllFileProducts")
       .update({ "BOUDOIR FAVOURITE": newVal })
       .eq("id", product.id);
-    // Update local products list
     setProducts(prev =>
       prev.map(p => p.id === product.id ? { ...p, "BOUDOIR FAVOURITE": newVal } : p)
     );
-    // Update selected product so star re-renders immediately
     setSelectedProduct(prev =>
       prev && prev.id === product.id ? { ...prev, "BOUDOIR FAVOURITE": newVal } : prev
     );
@@ -467,7 +464,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
             )}
 
             {/* Spacer + Recent label */}
-            {!selectedProduct && <div style={{ flexShrink: 0, height: "16vh" }} />}
+            {!selectedProduct && <div style={{ flexShrink: 0, height: "4vh" }} />}
             {!selectedProduct && (
               <div style={{ flexShrink: 0, fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
                 Recent
@@ -561,8 +558,6 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
           </button>
         ))}
       </div>
-
-      {/* ── PANELS ── */}
 
       {/* USAGE Panel */}
       {activePanel === "USAGE" && createPortal(
