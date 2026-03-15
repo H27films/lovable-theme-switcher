@@ -1,8 +1,9 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { USAGE_TYPES, makeIsFavourite, UsageType, isYes } from "@/lib/branchSimpleUtils";
+import jsPDF from "jspdf";
 
 interface OfficeProduct {
   id: number;
@@ -120,6 +121,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [editingPendingIdx, setEditingPendingIdx] = useState<number | null>(null);
   const [editingPendingQty, setEditingPendingQty] = useState("");
   const [grnNotes, setGrnNotes] = useState("");
+  const [lastConfirmedEntries, setLastConfirmedEntries] = useState<Array<{productName: string; starting: number; qty: number; ending: number}> | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -324,6 +326,147 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       setOrderError(err?.message || "Unknown error");
     }
     setOrderConfirming(false);
+  };
+
+
+  const generateGRNPdf = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const W = 595;
+    const margin = 50;
+    const dateStr = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(26, 26, 26);
+    doc.text("BOUDOIR", margin, 58);
+    doc.text("GOODS RECEIVED NOTE", W - margin, 58, { align: "right" });
+    doc.setDrawColor(26, 26, 26);
+    doc.setLineWidth(0.8);
+    doc.line(margin, 64, W - margin, 64);
+    // Address
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("ADDRESS", margin, 78);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(128, 128, 128);
+    doc.text("+60123333128  /  soongailing@gmail.com", margin, 90);
+    doc.text("2F-11, Bangsar Village 2, No 2, Jalan Telawi 1, Bangsar Baru, Kuala Lumpur, 59100, Malaysia", margin, 101);
+    // Meta
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(26, 26, 26);
+    doc.text("DATE", margin, 130);
+    doc.text("GRN NUMBER", margin + 120, 130);
+    doc.setFontSize(9);
+    doc.text(dateStr, margin, 143);
+    doc.text(grn, margin + 120, 143);
+    // Notes box
+    const notesY = 160;
+    const notesH = 56;
+    doc.setFillColor(247, 247, 247);
+    doc.rect(margin, notesY, W - 2 * margin, notesH, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(26, 26, 26);
+    doc.text("NOTES", margin, notesY + 12);
+    if (grnNotes.trim()) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(90, 90, 90);
+      doc.text(grnNotes, margin + 6, notesY + 26, { maxWidth: W - 2 * margin - 12 });
+    }
+    // Column positions
+    const numX  = margin;
+    const nameX = margin + 30;
+    const oldCX = margin + 285;
+    const qtyCX = margin + 355;
+    const endCX = margin + 427;
+    const tableTop = 250;
+    const headerH = 28;
+    doc.setFillColor(242, 242, 242);
+    doc.rect(margin, tableTop - headerH + 12, W - 2 * margin, headerH, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(26, 26, 26);
+    doc.text("NO", numX + 10, tableTop - 2, { align: "center" });
+    doc.text("PRODUCT NAME", nameX, tableTop - 2);
+    doc.text("OLD", oldCX, tableTop + 5, { align: "center" });
+    doc.text("BALANCE", oldCX, tableTop - 5, { align: "center" });
+    doc.text("ORDER", qtyCX, tableTop + 5, { align: "center" });
+    doc.text("QTY", qtyCX, tableTop - 5, { align: "center" });
+    doc.text("ENDING", endCX, tableTop + 5, { align: "center" });
+    doc.text("BALANCE", endCX, tableTop - 5, { align: "center" });
+    // Rows
+    const sorted = [...entries].sort((a, b) => a.productName.localeCompare(b.productName));
+    const rowH = 26;
+    let y = tableTop + 16;
+    let totalQty = 0;
+    sorted.forEach((row, idx) => {
+      totalQty += row.qty;
+      if (idx % 2 === 0) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(margin, y - 2, W - 2 * margin, rowH, "F");
+      }
+      doc.setDrawColor(224, 224, 224);
+      doc.setLineWidth(0.4);
+      doc.line(margin, y + rowH - 2, W - margin, y + rowH - 2);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(140, 140, 140);
+      doc.text(String(idx + 1), numX + 10, y + 14, { align: "center" });
+      doc.setFontSize(9.5);
+      doc.setTextColor(38, 38, 38);
+      doc.text(row.productName, nameX, y + 14);
+      doc.text(String(row.starting), oldCX, y + 14, { align: "center" });
+      doc.text(String(row.qty), qtyCX, y + 14, { align: "center" });
+      doc.text(String(row.ending), endCX, y + 14, { align: "center" });
+      y += rowH;
+    });
+    // Total row
+    doc.setDrawColor(77, 77, 77);
+    doc.setLineWidth(0.6);
+    doc.line(margin, y - 2, W - margin, y - 2);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(26, 26, 26);
+    doc.text("TOTAL ORDER QTY", nameX, y + 14);
+    doc.text(String(totalQty), qtyCX, y + 14, { align: "center" });
+    y += rowH;
+    // Signatures
+    const pageH = 842;
+    const sigY = Math.max(y + 70, pageH - 110);
+    const sigW = 180;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(128, 128, 128);
+    doc.text("RECEIVED BY", margin, sigY - 14);
+    doc.setDrawColor(77, 77, 77);
+    doc.setLineWidth(0.5);
+    doc.line(margin, sigY, margin + sigW, sigY);
+    const rightSigX = W - margin - sigW;
+    doc.text("ORDER PROCESSED BY", rightSigX, sigY - 14);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(38, 38, 38);
+    doc.text("Hamza Riazuddin", rightSigX, sigY - 4);
+    doc.line(rightSigX, sigY, rightSigX + sigW, sigY);
+    doc.save(`${grn} - GRN.pdf`);
+  };
+
+  const exportToExcel = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
+    const rows = [
+      ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
+      ...entries.map(e => [e.productName, e.starting, e.qty, e.ending])
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${grn}-order.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleResetOrder = () => {
@@ -1131,11 +1274,32 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
               Select a product above to add it
             </div>
           )}
-          {confirmSuccess && (
-            <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(120 60% 40%)", fontFamily: "Raleway, inherit" }}>
-              ✓ Order confirmed
-            </div>
-          )}
+          {confirmSuccess && lastConfirmedEntries && (() => {
+            const d = new Date();
+            const dd = String(d.getDate()).padStart(2,"0");
+            const mm = String(d.getMonth()+1).padStart(2,"0");
+            const yy = String(d.getFullYear()).slice(-2);
+            const confirmedGrn = `BOU ${dd}${mm}${yy}`;
+            return (
+              <div style={{ paddingTop: "24px" }}>
+                <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(120 60% 40%)", fontFamily: "Raleway, inherit", marginBottom: "12px" }}>✓ Order confirmed</div>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => generateGRNPdf(lastConfirmedEntries!, confirmedGrn)}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
+                  ><FileText size={12} />GRN PDF</button>
+                  <button
+                    onClick={() => exportToExcel(lastConfirmedEntries!, confirmedGrn)}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
+                  ><Download size={12} />Export</button>
+                  <button
+                    onClick={handleResetOrder}
+                    style={{ background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
+                  >Reset</button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Order entries */}
           {orderEntries.map(entry => {
@@ -1209,7 +1373,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
               <div style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Product</div>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Cur Bal</div>
-                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Order Qty</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Qty</div>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>End Bal</div>
                 <div />
               </div>
@@ -1314,6 +1478,32 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                 >
                   Reset
                 </button>
+                <button
+                  onClick={() => generateGRNPdf(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "6px",
+                    background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer",
+                    padding: "10px 16px", fontSize: "11px", fontWeight: 700,
+                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))",
+                  }}
+                >
+                  <FileText size={12} />
+                  GRN PDF
+                </button>
+                <button
+                  onClick={() => exportToExcel(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "6px",
+                    background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer",
+                    padding: "10px 16px", fontSize: "11px", fontWeight: 700,
+                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))",
+                  }}
+                >
+                  <Download size={12} />
+                  Export
+                </button>
               </div>
               {orderError && (
                 <div style={{ fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", marginBottom: "8px" }}>✗ {orderError}</div>
@@ -1329,17 +1519,19 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                 <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>By date · Tap to expand</div>
               </div>
               {/* Header */}
-              <div style={{ display: "grid", gridTemplateColumns: "72px 1fr 40px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Date</div>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>GRN</div>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Items</div>
-                <div />
+                {expandedGRNs.size > 0 ? (
+                  <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Bal</div>
+                ) : <div />}
               </div>
               {allOrderGroups.map(group => (
                 <React.Fragment key={group.key}>
                   <div
                     onClick={() => toggleGRN(group.key)}
-                    style={{ display: "grid", gridTemplateColumns: "72px 1fr 40px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0", alignItems: "center", cursor: "pointer" }}
+                    style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0", alignItems: "center", cursor: "pointer" }}
                   >
                     <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
                       {new Date(group.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
@@ -1349,7 +1541,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                     <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textAlign: "center", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)", display: "flex", alignItems: "center", justifyContent: "center" }}>▾</div>
                   </div>
                   {expandedGRNs.has(group.key) && group.rows.map(row => (
-                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "72px 1fr 40px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card))" }}>
+                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card))" }}>
                       <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", paddingLeft: "8px" }}>—</div>
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["PRODUCT NAME"]}</div>
                       <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", textAlign: "center" }}>+{row.QTY}</div>
