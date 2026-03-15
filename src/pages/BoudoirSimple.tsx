@@ -31,6 +31,8 @@ interface LogRow {
   QTY: number;
   "STARTING BALANCE": number;
   "ENDING BALANCE": number;
+  GRN?: string;
+  "OFFICE BALANCE"?: number;
 }
 
 interface EntryLine {
@@ -106,10 +108,18 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [orderEntries, setOrderEntries] = useState<{ id: number; productName: string; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
-  const [orderSubmitting, setOrderSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const orderInputRef = useRef<HTMLInputElement>(null);
+  const [pendingOrder, setPendingOrder] = useState<{
+    grn: string; date: string;
+    entries: { id: number; productName: string; starting: number; qty: number; ending: number }[];
+  } | null>(null);
+  const [orderConfirming, setOrderConfirming] = useState(false);
+  const [confirmSuccess, setConfirmSuccess] = useState(false);
+  const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
+  const [editingPendingIdx, setEditingPendingIdx] = useState<number | null>(null);
+  const [editingPendingQty, setEditingPendingQty] = useState("");
+  const [grnNotes, setGrnNotes] = useState("");
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -131,7 +141,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       .select("*")
       .eq("BRANCH", BRANCH_LOG_NAME)
       .order("DATE", { ascending: false })
-      .limit(50)
+      .limit(200)
       .then(({ data }: { data: LogRow[] | null }) => {
         setBranchLog(data || []);
         setLoadingBranchLog(false);
@@ -147,7 +157,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
       .eq("BRANCH", BRANCH_LOG_NAME)
       .order("DATE", { ascending: false })
-      .limit(50)
+      .limit(200)
       .then(({ data }: { data: LogRow[] | null }) => {
         setProductLog(data || []);
         setLoadingProductLog(false);
@@ -246,64 +256,106 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     orderInputRef.current?.blur();
   };
 
-  const handleOrderSubmit = async () => {
+  const handleOrderSubmit = () => {
     const valid = orderEntries.filter(e => e.productName && e.qty > 0);
     if (!valid.length) return;
-    setOrderError(null);
-    setOrderSubmitting(true);
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, "0");
     const mm = String(today.getMonth() + 1).padStart(2, "0");
     const yy = String(today.getFullYear()).slice(-2);
     const grn = `BOU ${dd}${mm}${yy}`;
     const dateStr = today.toISOString().split("T")[0];
+    const entries = valid.map(entry => {
+      const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+      const starting = Number((product as any)?.[BALANCE_KEY] ?? 0);
+      return { id: entry.id, productName: entry.productName, starting, qty: entry.qty, ending: starting + entry.qty };
+    });
+    setPendingOrder({ grn, date: dateStr, entries });
+    setOrderError(null);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!pendingOrder) return;
+    setOrderConfirming(true);
+    setOrderError(null);
     let hasError = false;
     try {
-      for (const entry of valid) {
+      for (const entry of pendingOrder.entries) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBranchBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
-        const endingBranchBalance = currentBranchBalance + entry.qty;
         const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
         const endingOfficeBalance = currentOfficeBalance - entry.qty;
         const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
-          "DATE": dateStr,
+          "DATE": pendingOrder.date,
           "PRODUCT NAME": entry.productName,
           "BRANCH": BRANCH_LOG_NAME,
           "SUPPLIER": "Office",
           "TYPE": "Order",
-          "STARTING BALANCE": currentBranchBalance,
+          "STARTING BALANCE": entry.starting,
           "QTY": entry.qty,
-          "ENDING BALANCE": endingBranchBalance,
-          "GRN": grn,
+          "ENDING BALANCE": entry.ending,
+          "GRN": pendingOrder.grn,
           "OFFICE BALANCE": endingOfficeBalance,
         });
         if (logErr) { setOrderError(logErr.message || "Write failed"); hasError = true; break; }
         await (supabase as any).from("AllFileProducts")
-          .update({ [BALANCE_KEY]: endingBranchBalance })
+          .update({ [BALANCE_KEY]: entry.ending })
           .eq("PRODUCT NAME", entry.productName);
         await (supabase as any).from("AllFileProducts")
           .update({ "OFFICE BALANCE": endingOfficeBalance })
           .eq("PRODUCT NAME", entry.productName);
         setProducts(prev => prev.map(p =>
           p["PRODUCT NAME"] === entry.productName
-            ? { ...p, [BALANCE_KEY]: endingBranchBalance, "OFFICE BALANCE": endingOfficeBalance }
+            ? { ...p, [BALANCE_KEY]: entry.ending, "OFFICE BALANCE": endingOfficeBalance }
             : p
         ));
       }
       if (!hasError) {
         setOrderEntries([]);
-        setOrderSuccess(true);
-        setTimeout(() => setOrderSuccess(false), 3000);
+        setPendingOrder(null);
+        setGrnNotes("");
+        setConfirmSuccess(true);
+        setTimeout(() => setConfirmSuccess(false), 3000);
         const { data: freshBLog } = await (supabase as any)
           .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
-          .order("DATE", { ascending: false }).limit(50);
+          .order("DATE", { ascending: false }).limit(200);
         setBranchLog(freshBLog || []);
       }
     } catch (err: any) {
       setOrderError(err?.message || "Unknown error");
     }
-    setOrderSubmitting(false);
+    setOrderConfirming(false);
   };
+
+  const handleResetOrder = () => {
+    setPendingOrder(null);
+    setOrderError(null);
+    setGrnNotes("");
+  };
+
+  const toggleGRN = (key: string) => {
+    setExpandedGRNs(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const allOrderGroups = (() => {
+    const orders = branchLog.filter(r => r.TYPE === "Order");
+    const seen = new Map<string, LogRow[]>();
+    orders.forEach(r => {
+      const grn = r.GRN || r.DATE;
+      const key = `${r.DATE}__${grn}`;
+      if (!seen.has(key)) seen.set(key, []);
+      seen.get(key)!.push(r);
+    });
+    const groups: { key: string; date: string; grn: string; rows: LogRow[] }[] = [];
+    seen.forEach((rows, key) => {
+      const [date, grn] = key.split("__");
+      groups.push({ key, date, grn, rows });
+    });
+    return groups.sort((a, b) => b.date.localeCompare(a.date));
+  })();
 
   const cycleType = (id: number) => {
     setUsageEntries(prev => prev.map(e => {
@@ -974,14 +1026,12 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       }}>
         {/* Fixed header */}
         <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
-          {/* Title + X */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>ORDER</span>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
               <X size={18} />
             </button>
           </div>
-          {/* Label + date */}
           <div
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", cursor: showOrderDropdown ? "pointer" : "default" }}
             onClick={() => { if (showOrderDropdown) dismissOrderDropdown(); }}
@@ -993,7 +1043,6 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
               {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
             </span>
           </div>
-          {/* Product dropdown input */}
           <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "12px", marginBottom: "0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <input
@@ -1072,14 +1121,19 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
           </div>
         )}
 
-        {/* Scrollable area: entries + summary */}
+        {/* Scrollable area */}
         <div
           style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }}
           onClick={() => setShowOrderDropdown(false)}
         >
-          {orderEntries.length === 0 && !orderSuccess && (
+          {orderEntries.length === 0 && !pendingOrder && !confirmSuccess && (
             <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
               Select a product above to add it
+            </div>
+          )}
+          {confirmSuccess && (
+            <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(120 60% 40%)", fontFamily: "Raleway, inherit" }}>
+              ✓ Order confirmed
             </div>
           )}
 
@@ -1123,14 +1177,35 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
             );
           })}
 
-          {/* Order Summary */}
+          {/* Submit Order button */}
           {orderEntries.length > 0 && (
-            <div style={{ marginTop: "32px", paddingBottom: "24px" }}>
-              <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em", marginBottom: "4px" }}>Order Summary</div>
-              <div style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", marginBottom: "16px" }}>
-                Preview · Click × to remove · Submit Order to confirm
+            <div style={{ marginTop: "20px", marginBottom: "8px" }}>
+              <button
+                onClick={handleOrderSubmit}
+                style={{
+                  background: "hsl(var(--foreground))", color: "hsl(var(--background))",
+                  border: "none", cursor: "pointer",
+                  padding: "10px 24px", fontSize: "11px", fontWeight: 700,
+                  letterSpacing: "0.1em", textTransform: "uppercase",
+                  fontFamily: "Raleway, inherit",
+                }}
+              >
+                Submit Order
+              </button>
+            </div>
+          )}
+
+          {/* Order Summary Preview */}
+          {pendingOrder && (
+            <div style={{ marginTop: "32px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "20px", paddingBottom: "8px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px" }}>
+                <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em" }}>{pendingOrder.grn}</div>
               </div>
-              {/* Header row */}
+              <div style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", marginBottom: "16px" }}>
+                Pending · Tap qty to edit · Click × to remove
+              </div>
+              {/* Header */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Product</div>
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Cur Bal</div>
@@ -1138,19 +1213,57 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                 <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>End Bal</div>
                 <div />
               </div>
-              {/* Data rows */}
-              {orderEntries.filter(e => e.productName).map(entry => {
-                const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-                const current = product ? Number((product as any)[BALANCE_KEY] ?? 0) : 0;
-                const ending = current + entry.qty;
+              {/* Pending rows */}
+              {pendingOrder.entries.map((entry, idx) => {
+                const isEditing = editingPendingIdx === idx;
+                const parsedEdit = parseInt(editingPendingQty);
+                const displayQty = isEditing && !isNaN(parsedEdit) && parsedEdit > 0 ? parsedEdit : entry.qty;
                 return (
                   <div key={entry.id} style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center" }}>
                     <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", wordBreak: "break-word" }}>{entry.productName}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{current}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--green, 120 60% 40%))", textAlign: "center" }}>+{entry.qty}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{ending}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{entry.starting}</div>
+                    <div style={{ textAlign: "center" }}>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editingPendingQty}
+                          onChange={e => setEditingPendingQty(e.target.value)}
+                          onBlur={() => {
+                            if (!isNaN(parsedEdit) && parsedEdit > 0) {
+                              setPendingOrder(prev => {
+                                if (!prev) return prev;
+                                const entries = prev.entries.map((e, i) =>
+                                  i === idx ? { ...e, qty: parsedEdit, ending: e.starting + parsedEdit } : e
+                                );
+                                return { ...prev, entries };
+                              });
+                            }
+                            setEditingPendingIdx(null);
+                            setEditingPendingQty("");
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                            if (e.key === "Escape") { setEditingPendingIdx(null); setEditingPendingQty(""); }
+                          }}
+                          autoFocus
+                          style={{ width: "44px", textAlign: "center", fontSize: "13px", fontFamily: "Raleway, inherit", fontWeight: 300, background: "none", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "2px", outline: "none" }}
+                        />
+                      ) : (
+                        <span
+                          onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }}
+                          style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", cursor: "pointer", display: "inline-block", minWidth: "32px" }}
+                        >+{entry.qty}</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{entry.starting + displayQty}</div>
                     <button
-                      onClick={() => setOrderEntries(prev => prev.filter(e => e.id !== entry.id))}
+                      onClick={() => {
+                        setPendingOrder(prev => {
+                          if (!prev) return prev;
+                          const entries = prev.entries.filter((_, i) => i !== idx);
+                          return entries.length === 0 ? null : { ...prev, entries };
+                        });
+                      }}
                       style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
                       onMouseEnter={e => (e.currentTarget.style.color = "hsl(0 70% 50%)")}
                       onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
@@ -1160,35 +1273,94 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                   </div>
                 );
               })}
+              {/* Notes */}
+              <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+                <textarea
+                  value={grnNotes}
+                  onChange={e => setGrnNotes(e.target.value)}
+                  placeholder="Add notes (optional)"
+                  rows={2}
+                  style={{
+                    width: "100%", background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))",
+                    color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit", fontWeight: 300,
+                    padding: "8px", resize: "none", outline: "none", boxSizing: "border-box",
+                  }}
+                />
+              </div>
+              {/* Action buttons */}
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", marginBottom: "8px" }}>
+                <button
+                  onClick={handleConfirmOrder}
+                  disabled={orderConfirming}
+                  style={{
+                    background: "hsl(var(--foreground))", color: "hsl(var(--background))",
+                    border: "none", cursor: orderConfirming ? "default" : "pointer",
+                    padding: "10px 24px", fontSize: "11px", fontWeight: 700,
+                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    fontFamily: "Raleway, inherit",
+                    opacity: orderConfirming ? 0.5 : 1,
+                  }}
+                >
+                  {orderConfirming ? "Saving..." : "Confirm Order"}
+                </button>
+                <button
+                  onClick={handleResetOrder}
+                  style={{
+                    background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer",
+                    padding: "10px 20px", fontSize: "11px", fontWeight: 700,
+                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))",
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+              {orderError && (
+                <div style={{ fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", marginBottom: "8px" }}>✗ {orderError}</div>
+              )}
+            </div>
+          )}
+
+          {/* All Orders */}
+          {allOrderGroups.length > 0 && (
+            <div style={{ marginTop: "40px", paddingBottom: "max(env(safe-area-inset-bottom, 24px), 24px)" }}>
+              <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "24px", marginBottom: "16px" }}>
+                <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em", marginBottom: "4px" }}>All Orders</div>
+                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>By date · Tap to expand</div>
+              </div>
+              {/* Header */}
+              <div style={{ display: "grid", gridTemplateColumns: "72px 1fr 40px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Date</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>GRN</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Items</div>
+                <div />
+              </div>
+              {allOrderGroups.map(group => (
+                <React.Fragment key={group.key}>
+                  <div
+                    onClick={() => toggleGRN(group.key)}
+                    style={{ display: "grid", gridTemplateColumns: "72px 1fr 40px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0", alignItems: "center", cursor: "pointer" }}
+                  >
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                      {new Date(group.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </div>
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{group.grn}</div>
+                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
+                    <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textAlign: "center", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)", display: "flex", alignItems: "center", justifyContent: "center" }}>▾</div>
+                  </div>
+                  {expandedGRNs.has(group.key) && group.rows.map(row => (
+                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "72px 1fr 40px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card))" }}>
+                      <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", paddingLeft: "8px" }}>—</div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["PRODUCT NAME"]}</div>
+                      <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", textAlign: "center" }}>+{row.QTY}</div>
+                      <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["ENDING BALANCE"]}</div>
+                    </div>
+                  ))}
+                </React.Fragment>
+              ))}
             </div>
           )}
         </div>
-
-        {/* Bottom: Submit Order */}
-        {orderEntries.length > 0 && (
-          <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))" }}>
-            <button
-              onClick={handleOrderSubmit}
-              disabled={orderSubmitting}
-              style={{
-                background: "hsl(var(--foreground))", color: "hsl(var(--background))",
-                border: "none", cursor: orderSubmitting ? "default" : "pointer",
-                padding: "10px 24px", fontSize: "11px", fontWeight: 700,
-                letterSpacing: "0.1em", textTransform: "uppercase",
-                fontFamily: "Raleway, inherit",
-                opacity: orderSubmitting ? 0.5 : 1,
-              }}
-            >
-              {orderSubmitting ? "Saving..." : "Submit Order"}
-            </button>
-            {orderSuccess && (
-              <span style={{ marginLeft: "16px", fontSize: "11px", color: "hsl(var(--green, 120 60% 40%))", letterSpacing: "0.06em" }}>✓ Order confirmed</span>
-            )}
-            {orderError && (
-              <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {orderError}</div>
-            )}
-          </div>
-        )}
       </div>, document.body
       )}
 
