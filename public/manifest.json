@@ -1,6 +1,6 @@
 {
-  "name": "Nail Boudoir Stock",
-  "short_name": "NB Stock",
+  "name": "Boudoir Database",
+  "short_name": "Boudoir Database",
   "description": "Stock inventory management for Nail Boudoir branches",
   "start_url": "/simple",
   "scope": "/",
