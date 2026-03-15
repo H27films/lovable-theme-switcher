@@ -103,6 +103,13 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [usageSuccess, setUsageSuccess] = useState(false);
   const [usageError, setUsageError] = useState<string | null>(null);
   const usageInputRef = useRef<HTMLInputElement>(null);
+  const [orderEntries, setOrderEntries] = useState<{ id: number; productName: string; qty: number }[]>([]);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [showOrderDropdown, setShowOrderDropdown] = useState(false);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const orderInputRef = useRef<HTMLInputElement>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -195,6 +202,13 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const usageColours = usageFiltered.filter(p => !isBoudoirFav(p) &&  isYes(p["Colour"]));
   const usageRegular = usageFiltered.filter(p => !isBoudoirFav(p) && !isYes(p["Colour"]));
 
+  const orderFiltered = orderSearch.length > 0
+    ? products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(orderSearch.toLowerCase()))
+    : products;
+  const orderFavs    = orderFiltered.filter(p =>  isBoudoirFav(p));
+  const orderColours = orderFiltered.filter(p => !isBoudoirFav(p) &&  isYes(p["Colour"]));
+  const orderRegular = orderFiltered.filter(p => !isBoudoirFav(p) && !isYes(p["Colour"]));
+
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);
     if (!existing) {
@@ -214,6 +228,81 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     setShowUsageDropdown(false);
     setUsageSearch("");
     usageInputRef.current?.blur();
+  };
+
+  const handleAddOrderProduct = (p: OfficeProduct) => {
+    const existing = orderEntries.find(e => e.productName === p["PRODUCT NAME"]);
+    if (!existing) {
+      setOrderEntries(prev => [...prev, { id: Date.now(), productName: p["PRODUCT NAME"], qty: 1 }]);
+    }
+    setOrderSearch("");
+    setShowOrderDropdown(false);
+    orderInputRef.current?.blur();
+  };
+
+  const dismissOrderDropdown = () => {
+    setShowOrderDropdown(false);
+    setOrderSearch("");
+    orderInputRef.current?.blur();
+  };
+
+  const handleOrderSubmit = async () => {
+    const valid = orderEntries.filter(e => e.productName && e.qty > 0);
+    if (!valid.length) return;
+    setOrderError(null);
+    setOrderSubmitting(true);
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yy = String(today.getFullYear()).slice(-2);
+    const grn = `BOU ${dd}${mm}${yy}`;
+    const dateStr = today.toISOString().split("T")[0];
+    let hasError = false;
+    try {
+      for (const entry of valid) {
+        const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+        const currentBranchBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
+        const endingBranchBalance = currentBranchBalance + entry.qty;
+        const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
+        const endingOfficeBalance = currentOfficeBalance - entry.qty;
+        const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+          "DATE": dateStr,
+          "PRODUCT NAME": entry.productName,
+          "BRANCH": BRANCH_LOG_NAME,
+          "SUPPLIER": "Office",
+          "TYPE": "Order",
+          "STARTING BALANCE": currentBranchBalance,
+          "QTY": entry.qty,
+          "ENDING BALANCE": endingBranchBalance,
+          "GRN": grn,
+          "OFFICE BALANCE": endingOfficeBalance,
+        });
+        if (logErr) { setOrderError(logErr.message || "Write failed"); hasError = true; break; }
+        await (supabase as any).from("AllFileProducts")
+          .update({ [BALANCE_KEY]: endingBranchBalance })
+          .eq("PRODUCT NAME", entry.productName);
+        await (supabase as any).from("AllFileProducts")
+          .update({ "OFFICE BALANCE": endingOfficeBalance })
+          .eq("PRODUCT NAME", entry.productName);
+        setProducts(prev => prev.map(p =>
+          p["PRODUCT NAME"] === entry.productName
+            ? { ...p, [BALANCE_KEY]: endingBranchBalance, "OFFICE BALANCE": endingOfficeBalance }
+            : p
+        ));
+      }
+      if (!hasError) {
+        setOrderEntries([]);
+        setOrderSuccess(true);
+        setTimeout(() => setOrderSuccess(false), 3000);
+        const { data: freshBLog } = await (supabase as any)
+          .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
+          .order("DATE", { ascending: false }).limit(50);
+        setBranchLog(freshBLog || []);
+      }
+    } catch (err: any) {
+      setOrderError(err?.message || "Unknown error");
+    }
+    setOrderSubmitting(false);
   };
 
   const cycleType = (id: number) => {
@@ -277,6 +366,8 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     setActivePanel(null);
     setUsageSearch("");
     setShowUsageDropdown(false);
+    setOrderSearch("");
+    setShowOrderDropdown(false);
   };
 
   // Shared header cell style helpers
@@ -881,17 +972,223 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
-        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* Fixed header */}
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
+          {/* Title + X */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>ORDER</span>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
               <X size={18} />
             </button>
           </div>
+          {/* Label + date */}
+          <div
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", cursor: showOrderDropdown ? "pointer" : "default" }}
+            onClick={() => { if (showOrderDropdown) dismissOrderDropdown(); }}
+          >
+            <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "uppercase" }}>
+              Enter Today's Order
+            </span>
+            <span style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
+              {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
+            </span>
+          </div>
+          {/* Product dropdown input */}
+          <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "12px", marginBottom: "0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                ref={orderInputRef}
+                type="text"
+                inputMode="search"
+                value={orderSearch}
+                onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); }}
+                onFocus={() => setShowOrderDropdown(true)}
+                placeholder="Select product..."
+                style={{
+                  flex: 1, background: "none", border: "none", outline: "none",
+                  fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300,
+                  color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
+                }}
+              />
+              <button
+                onMouseDown={e => {
+                  e.preventDefault();
+                  if (showOrderDropdown) dismissOrderDropdown();
+                  else { setShowOrderDropdown(true); orderInputRef.current?.focus(); }
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", flexShrink: 0, display: "flex", alignItems: "center" }}
+              >
+                {showOrderDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+              {orderSearch.length > 0 && (
+                <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}>
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-        <div style={{ flex: 1, paddingLeft: "12px", paddingRight: "12px", display: "flex", alignItems: "center" }}>
-          <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Order entry — coming soon</span>
+
+        {/* Dropdown list */}
+        {showOrderDropdown && (
+          <div style={{
+            flexShrink: 0,
+            background: "hsl(var(--background))",
+            maxHeight: "55vh", overflowY: "auto",
+            paddingLeft: "12px", paddingRight: "12px",
+          }}>
+            {(() => {
+              const sectionLabel = (label: string) => (
+                <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
+              );
+              const renderRow = (p: OfficeProduct, showStar?: boolean) => (
+                <div
+                  key={p.id}
+                  onMouseDown={() => handleAddOrderProduct(p)}
+                  style={{
+                    padding: "11px 0",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    color: orderEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))",
+                  }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {showStar && <Star size={11} style={{ color: "hsl(var(--muted-foreground))", opacity: 0.6, flexShrink: 0 }} />}
+                    {p["PRODUCT NAME"]}
+                  </span>
+                  {(p as any)[BALANCE_KEY] != null && (
+                    <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
+                  )}
+                </div>
+              );
+              const sections: React.ReactNode[] = [];
+              if (orderFavs.length > 0)    { sections.push(sectionLabel("Boudoir Favourites")); orderFavs.forEach(p => sections.push(renderRow(p, true))); }
+              if (orderRegular.length > 0) { sections.push(sectionLabel("Products"));            orderRegular.forEach(p => sections.push(renderRow(p))); }
+              if (orderColours.length > 0) { sections.push(sectionLabel("Colours"));             orderColours.forEach(p => sections.push(renderRow(p))); }
+              if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
+              return sections;
+            })()}
+          </div>
+        )}
+
+        {/* Scrollable area: entries + summary */}
+        <div
+          style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }}
+          onClick={() => setShowOrderDropdown(false)}
+        >
+          {orderEntries.length === 0 && !orderSuccess && (
+            <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
+              Select a product above to add it
+            </div>
+          )}
+
+          {/* Order entries */}
+          {orderEntries.map(entry => {
+            const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+            const balance = product ? (product as any)[BALANCE_KEY] : null;
+            return (
+              <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1 }}>{entry.productName}</span>
+                  <button
+                    onClick={() => setOrderEntries(prev => prev.filter(e => e.id !== entry.id))}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>Balance</span>
+                    <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{balance ?? "—"}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                    <button
+                      onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", minWidth: "28px", textAlign: "center" }}>{entry.qty}</span>
+                    <button
+                      onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Order Summary */}
+          {orderEntries.length > 0 && (
+            <div style={{ marginTop: "32px", paddingBottom: "24px" }}>
+              <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em", marginBottom: "4px" }}>Order Summary</div>
+              <div style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", marginBottom: "16px" }}>
+                Preview · Click × to remove · Submit Order to confirm
+              </div>
+              {/* Header row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Product</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Cur Bal</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Order Qty</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>End Bal</div>
+                <div />
+              </div>
+              {/* Data rows */}
+              {orderEntries.filter(e => e.productName).map(entry => {
+                const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+                const current = product ? Number((product as any)[BALANCE_KEY] ?? 0) : 0;
+                const ending = current + entry.qty;
+                return (
+                  <div key={entry.id} style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", wordBreak: "break-word" }}>{entry.productName}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{current}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--green, 120 60% 40%))", textAlign: "center" }}>+{entry.qty}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{ending}</div>
+                    <button
+                      onClick={() => setOrderEntries(prev => prev.filter(e => e.id !== entry.id))}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "hsl(0 70% 50%)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+
+        {/* Bottom: Submit Order */}
+        {orderEntries.length > 0 && (
+          <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))" }}>
+            <button
+              onClick={handleOrderSubmit}
+              disabled={orderSubmitting}
+              style={{
+                background: "hsl(var(--foreground))", color: "hsl(var(--background))",
+                border: "none", cursor: orderSubmitting ? "default" : "pointer",
+                padding: "10px 24px", fontSize: "11px", fontWeight: 700,
+                letterSpacing: "0.1em", textTransform: "uppercase",
+                fontFamily: "Raleway, inherit",
+                opacity: orderSubmitting ? 0.5 : 1,
+              }}
+            >
+              {orderSubmitting ? "Saving..." : "Submit Order"}
+            </button>
+            {orderSuccess && (
+              <span style={{ marginLeft: "16px", fontSize: "11px", color: "hsl(var(--green, 120 60% 40%))", letterSpacing: "0.06em" }}>✓ Order confirmed</span>
+            )}
+            {orderError && (
+              <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {orderError}</div>
+            )}
+          </div>
+        )}
       </div>, document.body
       )}
 
