@@ -3,25 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
     <title>Price Lookup — Boudoir Product Database</title>
-    <meta name="description" content="Lovable Generated Project">
+    <meta name="description" content="Stock inventory management for Nail Boudoir branches">
     <meta name="author" content="Lovable" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    
-    
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/282af48d-ae7e-4948-ae1a-cf9c8397ef28/id-preview-6ee6186b--c0a356b1-45af-469d-ae78-4c0fd41ca9d5.lovable.app-1771892841843.png">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
 
+    <!-- Theme colour (Android Chrome toolbar) -->
+    <meta name="theme-color" content="#b46482" />
+
+    <!-- iOS / iPadOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NB Stock" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Price Lookup — Boudoir Product Database">
+    <meta property="og:description" content="Stock inventory management for Nail Boudoir branches">
+    <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/282af48d-ae7e-4948-ae1a-cf9c8397ef28/id-preview-6ee6186b--c0a356b1-45af-469d-ae78-4c0fd41ca9d5.lovable.app-1771892841843.png">
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
+    <meta name="twitter:title" content="Price Lookup — Boudoir Product Database">
+    <meta name="twitter:description" content="Stock inventory management for Nail Boudoir branches">
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/282af48d-ae7e-4948-ae1a-cf9c8397ef28/id-preview-6ee6186b--c0a356b1-45af-469d-ae78-4c0fd41ca9d5.lovable.app-1771892841843.png">
-    <meta property="og:title" content="Price Lookup — Boudoir Product Database">
-  <meta name="twitter:title" content="Price Lookup — Boudoir Product Database">
-  <meta property="og:description" content="Lovable Generated Project">
-  <meta name="twitter:description" content="Lovable Generated Project">
-</head>
+
+    <!-- Service Worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js');
+        });
+      }
+    </script>
+  </head>
 
   <body>
     <div id="root"></div>

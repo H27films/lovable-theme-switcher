@@ -1,0 +1,25 @@
+{
+  "name": "Nail Boudoir Stock",
+  "short_name": "NB Stock",
+  "description": "Stock inventory management for Nail Boudoir branches",
+  "start_url": "/simple",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#b46482",
+  "background_color": "#b46482",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
