@@ -1285,17 +1285,19 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                 <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(120 60% 40%)", fontFamily: "Raleway, inherit", marginBottom: "12px" }}>✓ Order confirmed</div>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                   <button
-                    onClick={() => generateGRNPdf(lastConfirmedEntries!, confirmedGrn)}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
-                  ><FileText size={12} />GRN PDF</button>
-                  <button
-                    onClick={() => exportToExcel(lastConfirmedEntries!, confirmedGrn)}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
-                  ><Download size={12} />Export</button>
-                  <button
                     onClick={handleResetOrder}
                     style={{ background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
                   >Reset</button>
+                </div>
+                <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
+                  <button
+                    onClick={() => generateGRNPdf(lastConfirmedEntries!, confirmedGrn)}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
+                  ><FileText size={10} />GRN PDF</button>
+                  <button
+                    onClick={() => exportToExcel(lastConfirmedEntries!, confirmedGrn)}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
+                  ><Download size={10} />Export</button>
                 </div>
               </div>
             );
@@ -1478,30 +1480,32 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                 >
                   Reset
                 </button>
+              </div>
+              <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
                 <button
                   onClick={() => generateGRNPdf(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn)}
                   style={{
-                    display: "flex", alignItems: "center", gap: "6px",
-                    background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer",
-                    padding: "10px 16px", fontSize: "11px", fontWeight: 700,
-                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    display: "flex", alignItems: "center", gap: "5px",
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: 0, fontSize: "10px", fontWeight: 300,
+                    letterSpacing: "0.08em", textTransform: "uppercase",
                     fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))",
                   }}
                 >
-                  <FileText size={12} />
+                  <FileText size={10} />
                   GRN PDF
                 </button>
                 <button
                   onClick={() => exportToExcel(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn)}
                   style={{
-                    display: "flex", alignItems: "center", gap: "6px",
-                    background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer",
-                    padding: "10px 16px", fontSize: "11px", fontWeight: 700,
-                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    display: "flex", alignItems: "center", gap: "5px",
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: 0, fontSize: "10px", fontWeight: 300,
+                    letterSpacing: "0.08em", textTransform: "uppercase",
                     fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))",
                   }}
                 >
-                  <Download size={12} />
+                  <Download size={10} />
                   Export
                 </button>
               </div>
