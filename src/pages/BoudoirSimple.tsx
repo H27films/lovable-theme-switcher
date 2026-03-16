@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
+import { X, Check, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { USAGE_TYPES, makeIsFavourite, UsageType, isYes } from "@/lib/branchSimpleUtils";
 import jsPDF from "jspdf";
 
@@ -135,6 +135,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [loadingProductLog, setLoadingProductLog] = useState(false);
   const [reversing, setReversing] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
+  const [confirmPos, setConfirmPos] = useState<{ top: number; right: number } | null>(null);
 
   useEffect(() => {
     setLoadingBranchLog(true);
@@ -845,7 +846,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                         <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                         {(() => { const rd = new Date(row.DATE); rd.setHours(0,0,0,0); return rd >= cutoff; })() ? (
                           <button
-                            onClick={() => setConfirmRow(row)}
+                            onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); setConfirmPos({ top: rect.top + rect.height / 2, right: window.innerWidth - rect.left + 6 }); setConfirmRow(row); }}
                             disabled={isReversing}
                             style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
                             onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
@@ -870,7 +871,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                         <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                         {(() => { const rd = new Date(row.DATE); rd.setHours(0,0,0,0); return rd >= cutoff; })() ? (
                           <button
-                            onClick={() => setConfirmRow(row)}
+                            onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); setConfirmPos({ top: rect.top + rect.height / 2, right: window.innerWidth - rect.left + 6 }); setConfirmRow(row); }}
                             disabled={isReversing}
                             style={{ background: "none", border: "none", cursor: isReversing ? "default" : "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", opacity: isReversing ? 0.3 : 1 }}
                             onMouseEnter={e => { if (!isReversing) e.currentTarget.style.color = "hsl(0 70% 50%)"; }}
@@ -914,45 +915,51 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       </div>
 
 
-      {/* Confirmation Modal */}
-      {confirmRow && createPortal(
-        <div
-          onClick={() => setConfirmRow(null)}
-          style={{
-            position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh",
-            background: "rgba(0,0,0,0.4)", zIndex: 500,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
+      {/* Confirmation Popover */}
+      {confirmRow && confirmPos && createPortal(
+        <>
+          <div
+            onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
+            style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", zIndex: 499 }}
+          />
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: "hsl(var(--background))", padding: "28px 24px",
-              maxWidth: "320px", width: "90%",
+              position: "fixed",
+              top: confirmPos.top,
+              right: confirmPos.right,
+              transform: "translateY(-50%)",
+              zIndex: 500,
+              background: "hsl(var(--background))",
+              border: "0.5px solid hsl(var(--border))",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
+              padding: "8px 10px",
+              minWidth: "150px",
+              maxWidth: "210px",
             }}
           >
-            <div style={{ fontSize: "16px", fontWeight: 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "8px" }}>
-              Remove transaction
+            <div style={{ fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>
+              Remove Transaction
             </div>
-            <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "24px", lineHeight: 1.5 }}>
-              {confirmRow["PRODUCT NAME"]} · {new Date(confirmRow.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · Qty {confirmRow.QTY}
+            <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", lineHeight: 1.4, marginBottom: "8px" }}>
+              {new Date(confirmRow.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {confirmRow["PRODUCT NAME"]}
             </div>
-            <div style={{ display: "flex", gap: "16px" }}>
+            <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
               <button
-                onClick={() => setConfirmRow(null)}
-                style={{ flex: 1, background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "10px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}
+                onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
+                style={{ background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "4px 7px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                Cancel
+                <X size={10} />
               </button>
               <button
-                onClick={async () => { const r = confirmRow; setConfirmRow(null); await reverseRow(r); }}
-                style={{ flex: 1, background: "hsl(0 70% 50%)", border: "none", cursor: "pointer", padding: "10px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "#fff" }}
+                onClick={async () => { const r = confirmRow; setConfirmRow(null); setConfirmPos(null); await reverseRow(r); }}
+                style={{ background: "none", border: "0.5px solid hsl(0 70% 50%)", cursor: "pointer", padding: "4px 7px", color: "hsl(0 70% 50%)", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                Remove
+                <Check size={10} />
               </button>
             </div>
           </div>
-        </div>,
+        </>,
         document.body
       )}
 
