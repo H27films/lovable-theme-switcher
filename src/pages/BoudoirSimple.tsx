@@ -933,29 +933,29 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
               background: "hsl(var(--background))",
               border: "0.5px solid hsl(var(--border))",
               boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
-              padding: "8px 10px",
-              minWidth: "150px",
-              maxWidth: "210px",
+              padding: "10px 13px",
+              minWidth: "170px",
+              maxWidth: "250px",
             }}
           >
-            <div style={{ fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "5px" }}>
               Remove Transaction
             </div>
-            <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", lineHeight: 1.4, marginBottom: "8px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", lineHeight: 1.4, marginBottom: "10px" }}>
               {new Date(confirmRow.DATE).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {confirmRow["PRODUCT NAME"]}
             </div>
-            <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
               <button
                 onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
-                style={{ background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "4px 7px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "6px 10px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                <X size={10} />
+                <X size={13} />
               </button>
               <button
                 onClick={async () => { const r = confirmRow; setConfirmRow(null); setConfirmPos(null); await reverseRow(r); }}
-                style={{ background: "none", border: "0.5px solid hsl(0 70% 50%)", cursor: "pointer", padding: "4px 7px", color: "hsl(0 70% 50%)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ background: "none", border: "0.5px solid hsl(0 70% 50%)", cursor: "pointer", padding: "6px 10px", color: "hsl(0 70% 50%)", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                <Check size={10} />
+                <Check size={13} />
               </button>
             </div>
           </div>
