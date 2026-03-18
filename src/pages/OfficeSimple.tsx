@@ -356,10 +356,10 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               Recent
             </div>
 
-            {/* Header row — 6 cols: Date | GRN | Supplier | Items | Bal | chevron */}
+            {/* Header row — 6 cols: Date | GRN | Supplier | Items | Bal (only when expanded) | chevron */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: "44px 80px 70px 32px 36px 20px",
+              gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px",
               gap: "6px",
               paddingBottom: "8px",
               borderBottom: "0.5px solid hsl(var(--border))",
@@ -368,7 +368,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               <div style={hdrStyle}>GRN</div>
               <div style={hdrStyle}>Supplier</div>
               <div style={{ ...hdrStyle, textAlign: "center" }}>Items</div>
-              <div style={{ ...hdrStyle, textAlign: "center" }}>Bal</div>
+              <div style={{ ...hdrStyle, textAlign: "center", visibility: expandedGRNs.size > 0 ? "visible" : "hidden" }}>Bal</div>
               <div />
             </div>
 
@@ -389,7 +389,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       onClick={() => toggleGRN(group.grn)}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "44px 80px 70px 32px 36px 20px",
+                        gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px",
                         gap: "6px",
                         padding: "9px 0",
                         borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)",
@@ -423,7 +423,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             key={row.id}
                             style={{
                               display: "grid",
-                              gridTemplateColumns: "44px 80px 70px 32px 36px 20px",
+                              gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px",
                               gap: "6px",
                               padding: "5px 0",
                               borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none",
