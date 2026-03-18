@@ -35,8 +35,6 @@ interface LogRow {
   "NUR YADI BALANCE"?: number;
 }
 
-
-
 interface OfficeSimpleProps {
   onBack: () => void;
   onBackToMain: () => void;
@@ -60,7 +58,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const BRANCH_NAME = "OFFICE";
   const BALANCE_KEY = "OFFICE BALANCE" as keyof OfficeProduct;
 
-  // ── Recent log state ──────────────────────────────────────────
+  // ── Recent log state (all GRNs, all branches) ─────────────────
   const [logRows, setLogRows] = useState<LogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(true);
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
@@ -79,11 +77,74 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       });
   }, []);
 
-  // Group log rows by GRN
+  // ── Product log (for selected product card) ────────────────────
+  const [productLog, setProductLog] = useState<LogRow[]>([]);
+  const [productLogLoading, setProductLogLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProduct) { setProductLog([]); return; }
+    setProductLogLoading(true);
+    (supabase as any)
+      .from("AllFileLog")
+      .select("*")
+      .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
+      .order("DATE", { ascending: false })
+      .limit(30)
+      .then(({ data }: any) => {
+        setProductLog(data || []);
+        setProductLogLoading(false);
+      });
+  }, [selectedProduct]);
+
+  // ── Usage form state ───────────────────────────────────────────
+  const [usageOpen, setUsageOpen] = useState(false);
+  const [usageType, setUsageType] = useState<"Personal Use" | "Expired">("Personal Use");
+  const [usageQty, setUsageQty] = useState("");
+  const [usageSubmitting, setUsageSubmitting] = useState(false);
+
+  const submitUsage = async () => {
+    if (!selectedProduct || !usageQty || isNaN(Number(usageQty)) || Number(usageQty) <= 0) return;
+    setUsageSubmitting(true);
+    const qty = Number(usageQty);
+    const currentBal = selectedProduct["OFFICE BALANCE"] ?? 0;
+    const newBal = currentBal - qty;
+    const today = new Date().toISOString().split("T")[0];
+
+    await (supabase as any).from("AllFileLog").insert({
+      BRANCH: "Office",
+      "PRODUCT NAME": selectedProduct["PRODUCT NAME"],
+      QTY: -qty,
+      TYPE: usageType,
+      DATE: today,
+      "OFFICE BALANCE": newBal,
+    });
+
+    await (supabase as any).from("AllFileProducts")
+      .update({ "OFFICE BALANCE": newBal })
+      .eq("id", selectedProduct.id);
+
+    const updated = { ...selectedProduct, "OFFICE BALANCE": newBal };
+    setSelectedProduct(updated);
+    setUsageQty("");
+    setUsageOpen(false);
+    setUsageSubmitting(false);
+
+    // Refresh product log
+    const { data } = await (supabase as any)
+      .from("AllFileLog")
+      .select("*")
+      .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
+      .order("DATE", { ascending: false })
+      .limit(30);
+    setProductLog(data || []);
+  };
+
+  // Group log rows by GRN for the Recent section
   interface GrnGroup {
     grn: string;
     date: string;
     branch: string;
+    supplier: string;
     rows: LogRow[];
   }
 
@@ -96,7 +157,6 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       }
       map.get(grn)!.rows.push(row);
     }
-    // Sort by most recent date (already ordered from Supabase, but map preserves insertion order)
     return Array.from(map.values());
   })();
 
@@ -133,6 +193,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               setSelectedProduct(null);
               setSelectedSupplier(null);
               setShowDropdown(false);
+              setUsageOpen(false);
             } else {
               onBack();
             }
@@ -162,10 +223,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               setSelectedSupplier(null);
               setSearchMode("active");
               setShowDropdown(val.length > 0);
+              setUsageOpen(false);
             }}
-            onFocus={() => {
-              // Keep result/supplier view on focus — typing will clear it
-            }}
+            onFocus={() => {}}
             placeholder="Enter Product / Supplier"
             style={{
               flex: 1, background: "none", border: "none", outline: "none",
@@ -175,7 +235,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
           />
           {search.length > 0 && searchMode !== "result" && searchMode !== "supplier" && (
             <button
-              onClick={() => { setSearch(""); setSelectedProduct(null); setSelectedSupplier(null); setShowDropdown(false); setSearchMode("active"); }}
+              onClick={() => { setSearch(""); setSelectedProduct(null); setSelectedSupplier(null); setShowDropdown(false); setSearchMode("active"); setUsageOpen(false); }}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
             >
               <X size={15} />
@@ -262,41 +322,141 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
           );
         })()}
 
-        {/* Product result card */}
+        {/* ── PRODUCT RESULT CARD ───────────────────────────────── */}
         {searchMode === "result" && selectedProduct && !showDropdown && (
           <div style={{ paddingTop: "20px" }}>
+
+            {/* Product name */}
             <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", marginBottom: "0" }}>
               {selectedProduct["PRODUCT NAME"]}
             </div>
             <div style={{ borderBottom: "0.5px solid hsl(var(--border))", margin: "16px 0" }} />
+
+            {/* Supplier */}
             <div style={{ marginBottom: "20px" }}>
               <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Supplier</div>
               <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["SUPPLIER"] || "—"}</div>
             </div>
+
+            {/* Prices + Office Balance + Store Room — all in one 2-col grid so Store Room aligns with Branch/Staff Price */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", columnGap: "12px", marginBottom: "20px" }}>
-              {([
-                { label: "Supplier Price", val: selectedProduct["SUPPLIER PRICE"] },
-                { label: "Branch Price", val: selectedProduct["BRANCH PRICE"] },
-                { label: "Customer Price", val: selectedProduct["CUSTOMER PRICE"] },
-                { label: "Staff Price", val: selectedProduct["STAFF PRICE"] },
-              ] as { label: string; val: number | null }[]).map(({ label, val }) => (
-                <div key={label}>
-                  <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>{label}</div>
-                  <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{val != null ? `RM ${val.toFixed(2)}` : "—"}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-              <div style={{ gridColumn: "1 / 3" }}>
-                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Office Balance</div>
-                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE BALANCE"] ?? "—"}</div>
+              {/* Supplier Price */}
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Supplier Price</div>
+                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["SUPPLIER PRICE"] != null ? `RM ${selectedProduct["SUPPLIER PRICE"].toFixed(2)}` : "—"}</div>
               </div>
+              {/* Branch Price */}
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Branch Price</div>
+                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["BRANCH PRICE"] != null ? `RM ${selectedProduct["BRANCH PRICE"].toFixed(2)}` : "—"}</div>
+              </div>
+              {/* Customer Price */}
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Customer Price</div>
+                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["CUSTOMER PRICE"] != null ? `RM ${selectedProduct["CUSTOMER PRICE"].toFixed(2)}` : "—"}</div>
+              </div>
+              {/* Staff Price */}
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Staff Price</div>
+                <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["STAFF PRICE"] != null ? `RM ${selectedProduct["STAFF PRICE"].toFixed(2)}` : "—"}</div>
+              </div>
+              {/* Office Balance + USE button */}
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Office Balance</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE BALANCE"] ?? "—"}</div>
+                  <button
+                    onClick={() => { setUsageOpen(o => !o); setUsageQty(""); }}
+                    style={{
+                      background: "none",
+                      border: "0.5px solid hsl(var(--muted-foreground) / 0.35)",
+                      borderRadius: "4px", padding: "1px 6px", cursor: "pointer",
+                      fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit",
+                      color: "hsl(var(--muted-foreground))", letterSpacing: "0.07em",
+                      textTransform: "uppercase", lineHeight: 1.6,
+                    }}
+                  >
+                    use
+                  </button>
+                </div>
+
+                {/* Usage popover */}
+                {usageOpen && (
+                  <div style={{
+                    marginTop: "10px",
+                    padding: "10px 12px",
+                    border: "0.5px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    background: "hsl(var(--background))",
+                  }}>
+                    {/* Type selector */}
+                    <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+                      {(["Personal Use", "Expired"] as const).map(t => (
+                        <button
+                          key={t}
+                          onClick={() => setUsageType(t)}
+                          style={{
+                            flex: 1, padding: "4px 0", fontSize: "10px", fontWeight: 600,
+                            fontFamily: "Raleway, inherit", letterSpacing: "0.04em",
+                            textTransform: "uppercase", cursor: "pointer", borderRadius: "4px",
+                            border: usageType === t ? "1px solid hsl(var(--foreground))" : "0.5px solid hsl(var(--border))",
+                            background: usageType === t ? "hsl(var(--foreground))" : "none",
+                            color: usageType === t ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                          }}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Qty + confirm/cancel */}
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <input
+                        type="number"
+                        min="1"
+                        value={usageQty}
+                        onChange={e => setUsageQty(e.target.value)}
+                        placeholder="Qty"
+                        style={{
+                          flex: 1, background: "none",
+                          border: "0.5px solid hsl(var(--border))",
+                          borderRadius: "4px", padding: "4px 8px", outline: "none",
+                          fontSize: "13px", fontFamily: "Raleway, inherit",
+                          color: "hsl(var(--foreground))",
+                        }}
+                      />
+                      <button
+                        onClick={() => setUsageOpen(false)}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+                      >
+                        <X size={14} />
+                      </button>
+                      <button
+                        onClick={submitUsage}
+                        disabled={usageSubmitting}
+                        style={{
+                          background: "none",
+                          border: "1px solid hsl(var(--destructive))",
+                          borderRadius: "4px", padding: "3px 10px", cursor: "pointer",
+                          fontSize: "13px", fontFamily: "Raleway, inherit",
+                          color: "hsl(var(--destructive))",
+                          opacity: usageSubmitting ? 0.5 : 1,
+                        }}
+                      >
+                        ✓
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Store Room — right col, aligned with Branch Price / Staff Price */}
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Store Room</div>
                 <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE SECTION"] || "—"}</div>
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "24px" }}>
+
+            {/* Branch balances */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "20px" }}>
               {([
                 { label: "Boudoir", key: "BOUDOIR BALANCE" },
                 { label: "Chic Nailspa", key: "CHIC NAILSPA BALANCE" },
@@ -308,6 +468,46 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 </div>
               ))}
             </div>
+
+            {/* Recent transactions for this product */}
+            <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px", paddingBottom: "24px" }}>
+              <div style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>Recent</div>
+              {/* Header */}
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: "8px", paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                <div style={hdrStyle}>Date</div>
+                <div style={hdrStyle}>GRN</div>
+                <div style={{ ...hdrStyle, textAlign: "right" }}>Supplier</div>
+                <div style={{ ...hdrStyle, textAlign: "right" }}>Qty</div>
+              </div>
+              {productLogLoading && (
+                <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>Loading...</div>
+              )}
+              {!productLogLoading && productLog.length === 0 && (
+                <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>No entries</div>
+              )}
+              {!productLogLoading && productLog.map((row, i) => {
+                const isOffice = (row.BRANCH || "").toLowerCase() === "office";
+                const qty = Math.abs(row.QTY);
+                const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
+                return (
+                  <div
+                    key={row.id}
+                    style={{
+                      display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: "8px",
+                      padding: "6px 0",
+                      borderBottom: i < productLog.length - 1 ? "0.5px solid hsl(var(--border) / 0.3)" : "none",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{fmtDate(row.DATE)}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.GRN || row.TYPE || "—"}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", textAlign: "right", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", textAlign: "right" }}>{qtyDisplay}</div>
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
         )}
 
@@ -356,7 +556,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               Recent
             </div>
 
-            {/* Header row — 6 cols: Date | GRN | Supplier | Items | Bal (only when expanded) | chevron */}
+            {/* Header row */}
             <div style={{
               display: "grid",
               gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px",
@@ -384,7 +584,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 const isOpen = expandedGRNs.has(group.grn);
                 return (
                   <div key={group.grn}>
-                    {/* Collapsed / summary row */}
+                    {/* Summary row */}
                     <div
                       onClick={() => toggleGRN(group.grn)}
                       style={{
@@ -415,7 +615,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       </div>
                     </div>
 
-                    {/* Expanded product rows — no sub-header; product spans GRN+Supplier cols */}
+                    {/* Expanded product rows */}
                     {isOpen && (
                       <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
                         {group.rows.map((row, idx) => (
@@ -430,7 +630,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                               alignItems: "center",
                             }}
                           >
-                            {/* invisible date spacer to keep column width consistent */}
+                            {/* invisible date spacer */}
                             <div style={{ visibility: "hidden", fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit" }}>
                               {fmtDate(group.date)}
                             </div>
@@ -440,13 +640,12 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             </div>
                             {/* Qty under Items col */}
                             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
-                              {(row.BRANCH || "").toLowerCase() === "office" ? `+${row.QTY}` : `-${row.QTY}`}
+                              {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
                             </div>
-                            {/* Bal under Bal col */}
+                            {/* Bal */}
                             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
                               {row["OFFICE BALANCE"] ?? "—"}
                             </div>
-                            {/* empty chevron cell */}
                             <div />
                           </div>
                         ))}
