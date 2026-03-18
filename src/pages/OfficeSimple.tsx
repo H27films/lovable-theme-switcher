@@ -432,7 +432,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                           >
                             {/* invisible date spacer to keep column width consistent */}
                             <div style={{ visibility: "hidden", fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit" }}>
-                              {formatDate(grn.date)}
+                              {fmtDate(group.date)}
                             </div>
                             {/* product name spans GRN + Supplier cols */}
                             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
