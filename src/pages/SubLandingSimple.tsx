@@ -8,7 +8,7 @@ import OfficeSimple from "./OfficeSimple";
 import BoudoirSimple from "./BoudoirSimple";
 import ChicSimple from "./ChicSimple";
 import NurYadiSimple from "./NurYadiSimple";
-import { X, Search, Building2, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Search, Building2, ChevronDown, ChevronUp, Star } from "lucide-react";
 
 const hdrStyle: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
@@ -158,6 +158,26 @@ const SubLandingSimple = () => {
         setSimpleProductLogLoading(false);
       });
   }, [simpleSelectedProduct]);
+
+  // ── Favourite state ────────────────────────────────────────────
+  const [simpleIsFav, setSimpleIsFav] = useState(false);
+
+  useEffect(() => {
+    const v = simpleSelectedProduct ? (simpleSelectedProduct as any)["OfficeFavourites"] : null;
+    setSimpleIsFav(v === true || v === "TRUE" || v === "true" || v === 1);
+  }, [simpleSelectedProduct]);
+
+  const toggleSimpleFav = async () => {
+    if (!simpleSelectedProduct) return;
+    const newVal = !simpleIsFav;
+    setSimpleIsFav(newVal);
+    const updated = { ...simpleSelectedProduct, OfficeFavourites: newVal ? "TRUE" : null } as any;
+    setSimpleSelectedProduct(updated);
+    setProducts(prev => prev.map(p => p.id === simpleSelectedProduct.id ? { ...p, OfficeFavourites: newVal ? "TRUE" : null } : p));
+    await (supabase as any).from("AllFileProducts")
+      .update({ "OfficeFavourites": newVal ? "TRUE" : null })
+      .eq("id", simpleSelectedProduct.id);
+  };
 
   // ── Usage form state ───────────────────────────────────────────
   const [simpleUsageOpen, setSimpleUsageOpen] = useState(false);
@@ -394,7 +414,13 @@ const SubLandingSimple = () => {
 
                   return (
                     <div>
-                      {matchedSuppliers.map((supplier, i) => (
+                      {favourites.length > 0 && (
+                        <>
+                          <SectionHeader label="Office Favourites" />
+                          {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}
+                        </>
+                      )}
+                      {matchedSuppliers.map((supplier) => (
                         <div
                           key={`sup-${supplier}`}
                           onClick={() => { setSimpleSelectedSupplier(supplier); setSimpleSearch(supplier); setSimpleShowDropdown(false); setSimpleSearchMode("supplier"); }}
@@ -406,12 +432,6 @@ const SubLandingSimple = () => {
                           </div>
                         </div>
                       ))}
-                      {favourites.length > 0 && (
-                        <>
-                          <SectionHeader label="Office Favourites" />
-                          {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}
-                        </>
-                      )}
                       {regular.length > 0 && (
                         <>
                           <SectionHeader label="Products" />
@@ -434,8 +454,16 @@ const SubLandingSimple = () => {
                 {/* Product result card */}
                 {simpleSearchMode === "result" && simpleSelectedProduct && !simpleShowDropdown && (
                   <div style={{ paddingTop: "20px" }}>
-                    <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", marginBottom: "0" }}>
-                      {simpleSelectedProduct["PRODUCT NAME"]}
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                      <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
+                        {simpleSelectedProduct["PRODUCT NAME"]}
+                      </div>
+                      <button
+                        onClick={toggleSimpleFav}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: simpleIsFav ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", flexShrink: 0, marginTop: "4px" }}
+                      >
+                        <Star size={16} fill={simpleIsFav ? "currentColor" : "none"} />
+                      </button>
                     </div>
                     <div style={{ borderBottom: "0.5px solid hsl(var(--border))", margin: "16px 0" }} />
                     <div style={{ marginBottom: "20px" }}>
@@ -562,41 +590,40 @@ const SubLandingSimple = () => {
                     {/* Recent transactions for this product */}
                     <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px", paddingBottom: "24px" }}>
                       <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>Recent</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "auto auto 1fr auto auto", gap: "8px", paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-                        <div style={hdrStyle}>Date</div>
-                        <div style={hdrStyle}>GRN</div>
-                        <div style={{ ...hdrStyle, textAlign: "center" as const }}>Supplier</div>
-                        <div style={{ ...hdrStyle, textAlign: "center" as const }}>Qty</div>
-                        <div style={{ ...hdrStyle, textAlign: "right" as const }}>Bal</div>
+                      {/* Flat grid: header + data rows share the same column template */}
+                      <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
+                        {/* Header cells */}
+                        <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>Date</div>
+                        <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>GRN</div>
+                        <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))", textAlign: "center" as const }}>Supplier</div>
+                        <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))", textAlign: "center" as const }}>Qty</div>
+                        <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))", textAlign: "right" as const }}>Bal</div>
+                        {simpleProductLogLoading && (
+                          <div style={{ gridColumn: "1/-1", fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>Loading...</div>
+                        )}
+                        {!simpleProductLogLoading && simpleProductLog.filter((r: any) => r.GRN).length === 0 && (
+                          <div style={{ gridColumn: "1/-1", fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>No entries</div>
+                        )}
+                        {!simpleProductLogLoading && simpleProductLog.filter((r: any) => r.GRN).map((row: any, i: number, arr: any[]) => {
+                          const isOffice = (row.BRANCH || "").toLowerCase() === "office";
+                          const qty = Math.abs(row.QTY);
+                          const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
+                          const cellStyle: React.CSSProperties = {
+                            fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                            padding: "6px 0",
+                            borderBottom: i < arr.length - 1 ? "0.5px solid hsl(var(--border) / 0.3)" : "none",
+                          };
+                          return (
+                            <React.Fragment key={row.id}>
+                              <div style={{ ...cellStyle, color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
+                              <div style={{ ...cellStyle, color: "hsl(var(--foreground))", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.GRN}</div>
+                              <div style={{ ...cellStyle, color: "hsl(var(--muted-foreground))", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
+                              <div style={{ ...cellStyle, color: "hsl(var(--foreground))", textAlign: "center" }}>{qtyDisplay}</div>
+                              <div style={{ ...cellStyle, color: "hsl(var(--muted-foreground))", textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
+                            </React.Fragment>
+                          );
+                        })}
                       </div>
-                      {simpleProductLogLoading && (
-                        <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>Loading...</div>
-                      )}
-                      {!simpleProductLogLoading && simpleProductLog.filter((r: any) => r.GRN).length === 0 && (
-                        <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>No entries</div>
-                      )}
-                      {!simpleProductLogLoading && simpleProductLog.filter((r: any) => r.GRN).map((row: any, i: number, arr: any[]) => {
-                        const isOffice = (row.BRANCH || "").toLowerCase() === "office";
-                        const qty = Math.abs(row.QTY);
-                        const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
-                        return (
-                          <div
-                            key={row.id}
-                            style={{
-                              display: "grid", gridTemplateColumns: "auto auto 1fr auto auto", gap: "8px",
-                              padding: "6px 0",
-                              borderBottom: i < arr.length - 1 ? "0.5px solid hsl(var(--border) / 0.3)" : "none",
-                              alignItems: "center",
-                            }}
-                          >
-                            <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
-                            <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>{row.GRN}</div>
-                            <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
-                            <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", textAlign: "center" }}>{qtyDisplay}</div>
-                            <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
                 )}
