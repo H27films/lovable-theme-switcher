@@ -35,14 +35,7 @@ interface LogRow {
   "NUR YADI BALANCE"?: number;
 }
 
-// Resolve the correct ending balance for a log row based on its branch
-const branchBalance = (row: LogRow): number | null => {
-  const b = (row.BRANCH || "").toLowerCase();
-  if (b.includes("boudoir"))   return row["BOUDOIR BALANCE"] ?? null;
-  if (b.includes("chic"))      return row["CHIC NAILSPA BALANCE"] ?? null;
-  if (b.includes("yadi") || b.includes("nur")) return row["NUR YADI BALANCE"] ?? null;
-  return row["OFFICE BALANCE"] ?? null;
-};
+
 
 interface OfficeSimpleProps {
   onBack: () => void;
@@ -99,7 +92,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     for (const row of logRows) {
       const grn = row.GRN || `no-grn-${row.id}`;
       if (!map.has(grn)) {
-        map.set(grn, { grn, date: row.DATE, branch: row.BRANCH, rows: [] });
+        map.set(grn, { grn, date: row.DATE, branch: row.BRANCH, supplier: row.SUPPLIER ?? "—", rows: [] });
       }
       map.get(grn)!.rows.push(row);
     }
@@ -373,7 +366,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
             }}>
               <div style={hdrStyle}>Date</div>
               <div style={hdrStyle}>GRN</div>
-              <div style={hdrStyle}>Branch</div>
+              <div style={hdrStyle}>Supplier</div>
               <div style={{ ...hdrStyle, textAlign: "center" }}>Items</div>
               <div />
             </div>
@@ -410,7 +403,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         {group.grn}
                       </div>
                       <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                        {group.branch}
+                        {group.supplier}
                       </div>
                       <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
                         {group.rows.length}
@@ -453,10 +446,10 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                               {row["PRODUCT NAME"]}
                             </div>
                             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
-                              +{row.QTY}
+                              {(row.BRANCH || "").toLowerCase() === "office" ? `+${row.QTY}` : `-${row.QTY}`}
                             </div>
                             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
-                              {branchBalance(row) ?? "—"}
+                              {row["OFFICE BALANCE"] ?? "—"}
                             </div>
                           </div>
                         ))}
