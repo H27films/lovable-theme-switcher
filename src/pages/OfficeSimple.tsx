@@ -367,16 +367,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE BALANCE"] ?? "—"}</div>
                   <button
                     onClick={() => { setUsageOpen(o => !o); setUsageQty(""); }}
-                    style={{
-                      background: "none",
-                      border: "0.5px solid hsl(var(--muted-foreground) / 0.35)",
-                      borderRadius: "4px", padding: "1px 6px", cursor: "pointer",
-                      fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit",
-                      color: "hsl(var(--muted-foreground))", letterSpacing: "0.07em",
-                      textTransform: "uppercase", lineHeight: 1.6,
-                    }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}
                   >
-                    use
+                    {usageOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                   </button>
                 </div>
 
@@ -471,21 +464,22 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
             {/* Recent transactions for this product */}
             <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px", paddingBottom: "24px" }}>
-              <div style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>Recent</div>
+              <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>Recent</div>
               {/* Header */}
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: "8px", paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto auto 1fr auto auto", gap: "8px", paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                 <div style={hdrStyle}>Date</div>
                 <div style={hdrStyle}>GRN</div>
-                <div style={{ ...hdrStyle, textAlign: "right" }}>Supplier</div>
-                <div style={{ ...hdrStyle, textAlign: "right" }}>Qty</div>
+                <div style={{ ...hdrStyle, textAlign: "center" }}>Supplier</div>
+                <div style={{ ...hdrStyle, textAlign: "center" }}>Qty</div>
+                <div style={{ ...hdrStyle, textAlign: "right" }}>Bal</div>
               </div>
               {productLogLoading && (
                 <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>Loading...</div>
               )}
-              {!productLogLoading && productLog.length === 0 && (
+              {!productLogLoading && productLog.filter(r => r.GRN).length === 0 && (
                 <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>No entries</div>
               )}
-              {!productLogLoading && productLog.map((row, i) => {
+              {!productLogLoading && productLog.filter(r => r.GRN).map((row, i, arr) => {
                 const isOffice = (row.BRANCH || "").toLowerCase() === "office";
                 const qty = Math.abs(row.QTY);
                 const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
@@ -493,16 +487,17 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   <div
                     key={row.id}
                     style={{
-                      display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: "8px",
+                      display: "grid", gridTemplateColumns: "auto auto 1fr auto auto", gap: "8px",
                       padding: "6px 0",
-                      borderBottom: i < productLog.length - 1 ? "0.5px solid hsl(var(--border) / 0.3)" : "none",
+                      borderBottom: i < arr.length - 1 ? "0.5px solid hsl(var(--border) / 0.3)" : "none",
                       alignItems: "center",
                     }}
                   >
-                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{fmtDate(row.DATE)}</div>
-                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.GRN || row.TYPE || "—"}</div>
-                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", textAlign: "right", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
-                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", textAlign: "right" }}>{qtyDisplay}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>{row.GRN}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", textAlign: "center" }}>{qtyDisplay}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
                   </div>
                 );
               })}
