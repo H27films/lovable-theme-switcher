@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
-import { X, Search, Building2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { X, Search, Building2, ChevronDown, ChevronUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OfficeProduct {
   id: number;
@@ -19,11 +20,41 @@ interface OfficeProduct {
   "OfficeFavourites": string | null;
 }
 
+interface LogRow {
+  id: number;
+  DATE: string;
+  "PRODUCT NAME": string;
+  BRANCH: string;
+  TYPE: string;
+  SUPPLIER: string | null;
+  QTY: number;
+  GRN?: string;
+  "OFFICE BALANCE"?: number;
+  "BOUDOIR BALANCE"?: number;
+  "CHIC NAILSPA BALANCE"?: number;
+  "NUR YADI BALANCE"?: number;
+}
+
+// Resolve the correct ending balance for a log row based on its branch
+const branchBalance = (row: LogRow): number | null => {
+  const b = (row.BRANCH || "").toLowerCase();
+  if (b.includes("boudoir"))   return row["BOUDOIR BALANCE"] ?? null;
+  if (b.includes("chic"))      return row["CHIC NAILSPA BALANCE"] ?? null;
+  if (b.includes("yadi") || b.includes("nur")) return row["NUR YADI BALANCE"] ?? null;
+  return row["OFFICE BALANCE"] ?? null;
+};
+
 interface OfficeSimpleProps {
   onBack: () => void;
   onBackToMain: () => void;
   products: OfficeProduct[];
 }
+
+const hdrStyle: React.CSSProperties = {
+  fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
+  color: "hsl(var(--muted-foreground))", textTransform: "uppercase",
+  letterSpacing: "0.08em",
+};
 
 const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => {
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
@@ -35,6 +66,57 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
   const BRANCH_NAME = "OFFICE";
   const BALANCE_KEY = "OFFICE BALANCE" as keyof OfficeProduct;
+
+  // ── Recent log state ──────────────────────────────────────────
+  const [logRows, setLogRows] = useState<LogRow[]>([]);
+  const [loadingLog, setLoadingLog] = useState(true);
+  const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setLoadingLog(true);
+    (supabase as any)
+      .from("AllFileLog")
+      .select("*")
+      .eq("TYPE", "Order")
+      .order("DATE", { ascending: false })
+      .limit(300)
+      .then(({ data }: { data: LogRow[] | null }) => {
+        setLogRows(data || []);
+        setLoadingLog(false);
+      });
+  }, []);
+
+  // Group log rows by GRN
+  interface GrnGroup {
+    grn: string;
+    date: string;
+    branch: string;
+    rows: LogRow[];
+  }
+
+  const grnGroups: GrnGroup[] = (() => {
+    const map = new Map<string, GrnGroup>();
+    for (const row of logRows) {
+      const grn = row.GRN || `no-grn-${row.id}`;
+      if (!map.has(grn)) {
+        map.set(grn, { grn, date: row.DATE, branch: row.BRANCH, rows: [] });
+      }
+      map.get(grn)!.rows.push(row);
+    }
+    // Sort by most recent date (already ordered from Supabase, but map preserves insertion order)
+    return Array.from(map.values());
+  })();
+
+  const toggleGRN = (grn: string) => {
+    setExpandedGRNs(prev => {
+      const next = new Set(prev);
+      if (next.has(grn)) next.delete(grn); else next.add(grn);
+      return next;
+    });
+  };
+
+  const fmtDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   return (
     <div style={{
@@ -270,6 +352,120 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   </div>
                 </div>
               ))}
+          </div>
+        )}
+
+        {/* ── RECENT SECTION (idle only) ──────────────────────────── */}
+        {searchMode === "idle" && !showDropdown && (
+          <div style={{ paddingTop: "12px", display: "flex", flexDirection: "column", flex: 1 }}>
+
+            <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
+              Recent
+            </div>
+
+            {/* Header row */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "44px 80px 1fr 32px 20px",
+              gap: "6px",
+              paddingBottom: "8px",
+              borderBottom: "0.5px solid hsl(var(--border))",
+            }}>
+              <div style={hdrStyle}>Date</div>
+              <div style={hdrStyle}>GRN</div>
+              <div style={hdrStyle}>Branch</div>
+              <div style={{ ...hdrStyle, textAlign: "center" }}>Items</div>
+              <div />
+            </div>
+
+            {/* Body */}
+            <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+              {loadingLog && (
+                <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
+              )}
+              {!loadingLog && grnGroups.length === 0 && (
+                <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
+              )}
+              {!loadingLog && grnGroups.map((group) => {
+                const isOpen = expandedGRNs.has(group.grn);
+                return (
+                  <div key={group.grn}>
+                    {/* Collapsed row */}
+                    <div
+                      onClick={() => toggleGRN(group.grn)}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "44px 80px 1fr 32px 20px",
+                        gap: "6px",
+                        padding: "9px 0",
+                        borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)",
+                        cursor: "pointer",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                        {fmtDate(group.date)}
+                      </div>
+                      <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>
+                        {group.grn}
+                      </div>
+                      <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                        {group.branch}
+                      </div>
+                      <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
+                        {group.rows.length}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
+                        {isOpen
+                          ? <ChevronUp size={13} />
+                          : <ChevronDown size={13} />
+                        }
+                      </div>
+                    </div>
+
+                    {/* Expanded rows */}
+                    {isOpen && (
+                      <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
+                        {/* Sub-header */}
+                        <div style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 32px 36px",
+                          gap: "6px",
+                          padding: "6px 0 4px 12px",
+                        }}>
+                          <div style={{ ...hdrStyle, fontSize: "9px" }}>Product</div>
+                          <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>Qty</div>
+                          <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>Bal</div>
+                        </div>
+                        {group.rows.map((row, idx) => (
+                          <div
+                            key={row.id}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 32px 36px",
+                              gap: "6px",
+                              padding: "5px 0 5px 12px",
+                              borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none",
+                              alignItems: "center",
+                            }}
+                          >
+                            <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", wordBreak: "break-word" }}>
+                              {row["PRODUCT NAME"]}
+                            </div>
+                            <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
+                              +{row.QTY}
+                            </div>
+                            <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
+                              {branchBalance(row) ?? "—"}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
