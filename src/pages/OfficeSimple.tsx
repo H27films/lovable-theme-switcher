@@ -356,10 +356,10 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               Recent
             </div>
 
-            {/* Header row */}
+            {/* Header row — 6 cols: Date | GRN | Supplier | Items | Bal | chevron */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: "44px 80px 1fr 32px 20px",
+              gridTemplateColumns: "44px 80px 70px 32px 36px 20px",
               gap: "6px",
               paddingBottom: "8px",
               borderBottom: "0.5px solid hsl(var(--border))",
@@ -368,6 +368,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               <div style={hdrStyle}>GRN</div>
               <div style={hdrStyle}>Supplier</div>
               <div style={{ ...hdrStyle, textAlign: "center" }}>Items</div>
+              <div style={{ ...hdrStyle, textAlign: "center" }}>Bal</div>
               <div />
             </div>
 
@@ -383,12 +384,12 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 const isOpen = expandedGRNs.has(group.grn);
                 return (
                   <div key={group.grn}>
-                    {/* Collapsed row */}
+                    {/* Collapsed / summary row */}
                     <div
                       onClick={() => toggleGRN(group.grn)}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "44px 80px 1fr 32px 20px",
+                        gridTemplateColumns: "44px 80px 70px 32px 36px 20px",
                         gap: "6px",
                         padding: "9px 0",
                         borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)",
@@ -402,55 +403,49 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>
                         {group.grn}
                       </div>
-                      <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {group.supplier}
                       </div>
                       <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
                         {group.rows.length}
                       </div>
+                      <div />
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
-                        {isOpen
-                          ? <ChevronUp size={13} />
-                          : <ChevronDown size={13} />
-                        }
+                        {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                       </div>
                     </div>
 
-                    {/* Expanded rows */}
+                    {/* Expanded product rows — no sub-header; product spans GRN+Supplier cols */}
                     {isOpen && (
                       <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
-                        {/* Sub-header */}
-                        <div style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 32px 36px",
-                          gap: "6px",
-                          padding: "6px 0 4px 12px",
-                        }}>
-                          <div style={{ ...hdrStyle, fontSize: "9px" }}>Product</div>
-                          <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>Qty</div>
-                          <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>Bal</div>
-                        </div>
                         {group.rows.map((row, idx) => (
                           <div
                             key={row.id}
                             style={{
                               display: "grid",
-                              gridTemplateColumns: "1fr 32px 36px",
+                              gridTemplateColumns: "44px 80px 70px 32px 36px 20px",
                               gap: "6px",
-                              padding: "5px 0 5px 12px",
+                              padding: "5px 0",
                               borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none",
                               alignItems: "center",
                             }}
                           >
-                            <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", wordBreak: "break-word" }}>
+                            {/* empty date cell */}
+                            <div />
+                            {/* product name spans GRN + Supplier cols */}
+                            <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {row["PRODUCT NAME"]}
                             </div>
+                            {/* Qty under Items col */}
                             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
                               {(row.BRANCH || "").toLowerCase() === "office" ? `+${row.QTY}` : `-${row.QTY}`}
                             </div>
+                            {/* Bal under Bal col */}
                             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
                               {row["OFFICE BALANCE"] ?? "—"}
                             </div>
+                            {/* empty chevron cell */}
+                            <div />
                           </div>
                         ))}
                       </div>
