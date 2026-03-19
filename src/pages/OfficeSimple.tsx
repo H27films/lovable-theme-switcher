@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Search, Building2, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "@/hooks/useTheme";
 
 interface OfficeProduct {
   id: number;
@@ -17,7 +18,7 @@ interface OfficeProduct {
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
-  "OfficeFavourites": string | null;
+  "OFFICE FAVOURITE": string | null;
 }
 
 interface LogRow {
@@ -51,6 +52,8 @@ const hdrStyle: React.CSSProperties = {
 };
 
 const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => {
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () => setTheme(theme === "sand" ? "light" : "sand");
   const [showOrderPanel, setShowOrderPanel] = useState(false);
 
   // ── Search state ────────────────────────────────────────────
@@ -118,7 +121,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   // ── Favourite state ──────────────────────────────────────────
   const [isFav, setIsFav] = useState(false);
   useEffect(() => {
-    const v = selectedProduct ? (selectedProduct as any)["OfficeFavourites"] : null;
+    const v = selectedProduct ? (selectedProduct as any)["OFFICE FAVOURITE"] : null;
     setIsFav(v === true || v === "TRUE" || v === "true" || v === 1);
   }, [selectedProduct]);
 
@@ -126,10 +129,11 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     if (!selectedProduct) return;
     const newVal = !isFav;
     setIsFav(newVal);
-    const updated = { ...selectedProduct, OfficeFavourites: newVal ? "TRUE" : null } as any;
+    const updated = { ...selectedProduct, "OFFICE FAVOURITE": newVal ? "TRUE" : null } as any;
     setSelectedProduct(updated);
+    setLocalProducts(prev => prev.map(p => p.id === selectedProduct.id ? { ...p, "OFFICE FAVOURITE": newVal ? "TRUE" : null } : p));
     await (supabase as any).from("AllFileProducts")
-      .update({ "OfficeFavourites": newVal ? "TRUE" : null }).eq("id", selectedProduct.id);
+      .update({ "OFFICE FAVOURITE": newVal ? "TRUE" : null }).eq("id", selectedProduct.id);
   };
 
   // ── Usage form state ─────────────────────────────────────────
@@ -175,7 +179,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
 
   const isOfficeFav = (p: OfficeProduct) => {
-    const v = (p as any)["OfficeFavourites"];
+    const v = (p as any)["OFFICE FAVOURITE"];
     return v === true || v === "TRUE" || v === "true" || v === 1;
   };
   const isColourProd = (p: OfficeProduct) => {
@@ -354,23 +358,37 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       {/* ── TOP AREA ── */}
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", flexShrink: 0 }}>
 
-        {/* Branch name header */}
-        <button
-          onClick={() => {
-            if (searchMode !== "idle") {
-              setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
-              setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
-            } else { onBack(); }
-          }}
-          style={{
-            display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
-            letterSpacing: "0.08em", color: "hsl(var(--foreground))",
-            background: "none", border: "none", cursor: "pointer", textAlign: "left",
-            padding: 0, fontFamily: "Raleway, inherit", lineHeight: 1, marginBottom: "18px", width: "100%",
-          }}
-        >
-          {BRANCH_NAME}
-        </button>
+        {/* Branch name header row */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
+          <button
+            onClick={() => {
+              if (searchMode !== "idle") {
+                setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
+                setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
+              } else { onBack(); }
+            }}
+            style={{
+              display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
+              letterSpacing: "0.08em", color: "hsl(var(--foreground))",
+              background: "none", border: "none", cursor: "pointer", textAlign: "left",
+              padding: 0, fontFamily: "Raleway, inherit", lineHeight: 1,
+            }}
+          >
+            {BRANCH_NAME}
+          </button>
+          {!showOrderPanel && (
+            <span
+              onClick={toggleTheme}
+              style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", paddingTop: "6px" }}
+              title="Switch theme"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            </span>
+          )}
+        </div>
 
         {/* ORDER button */}
         <div style={{ display: "flex", gap: "28px", borderBottom: "0.5px solid hsl(var(--border))", marginBottom: "20px" }}>
@@ -443,9 +461,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 p["PRODUCT NAME"].toLowerCase().includes(q) && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
               );
               const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-              const favourites = allMatched.filter(p => isTrue(p["OfficeFavourites"])).slice(0, 6);
-              const colours = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && isTrue(p["Colour"])).slice(0, 6);
-              const regular = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && !isTrue(p["Colour"])).slice(0, 6);
+              const favourites = allMatched.filter(p => isTrue(p["OFFICE FAVOURITE"])).slice(0, 6);
+              const colours = allMatched.filter(p => !isTrue(p["OFFICE FAVOURITE"]) && isTrue(p["Colour"])).slice(0, 6);
+              const regular = allMatched.filter(p => !isTrue(p["OFFICE FAVOURITE"]) && !isTrue(p["Colour"])).slice(0, 6);
               const matchedSuppliers = Array.from(new Set(
                 localProducts.map(p => p["SUPPLIER"]).filter((s): s is string => !!s && s.toLowerCase().includes(q))
               )).sort().slice(0, 5);

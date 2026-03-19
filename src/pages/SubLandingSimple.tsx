@@ -31,7 +31,7 @@ interface OfficeProduct {
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
-  "OfficeFavourites": string | null;
+  "OFFICE FAVOURITE": string | null;
 }
 
 const SubLandingSimple = () => {
@@ -163,7 +163,7 @@ const SubLandingSimple = () => {
   const [simpleIsFav, setSimpleIsFav] = useState(false);
 
   useEffect(() => {
-    const v = simpleSelectedProduct ? (simpleSelectedProduct as any)["OfficeFavourites"] : null;
+    const v = simpleSelectedProduct ? (simpleSelectedProduct as any)["OFFICE FAVOURITE"] : null;
     setSimpleIsFav(v === true || v === "TRUE" || v === "true" || v === 1);
   }, [simpleSelectedProduct]);
 
@@ -171,11 +171,11 @@ const SubLandingSimple = () => {
     if (!simpleSelectedProduct) return;
     const newVal = !simpleIsFav;
     setSimpleIsFav(newVal);
-    const updated = { ...simpleSelectedProduct, OfficeFavourites: newVal ? "TRUE" : null } as any;
+    const updated = { ...simpleSelectedProduct, "OFFICE FAVOURITE": newVal ? "TRUE" : null } as any;
     setSimpleSelectedProduct(updated);
-    setProducts(prev => prev.map(p => p.id === simpleSelectedProduct.id ? { ...p, OfficeFavourites: newVal ? "TRUE" : null } : p));
+    setProducts(prev => prev.map(p => p.id === simpleSelectedProduct.id ? { ...p, "OFFICE FAVOURITE": newVal ? "TRUE" : null } : p));
     await (supabase as any).from("AllFileProducts")
-      .update({ "OfficeFavourites": newVal ? "TRUE" : null })
+      .update({ "OFFICE FAVOURITE": newVal ? "TRUE" : null })
       .eq("id", simpleSelectedProduct.id);
   };
 
@@ -252,8 +252,8 @@ const SubLandingSimple = () => {
   return (
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
-      {/* Fixed theme toggle */}
-      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60 }}>
+      {/* Fixed theme toggle - only show when not in branch view (branch pages have their own toggle) */}
+      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60, display: activeBranch !== null ? "none" : "block" }}>
         <span onClick={toggleTheme} style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }} title="Switch theme">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
             <circle cx="12" cy="12" r="4" />
@@ -380,9 +380,9 @@ const SubLandingSimple = () => {
                     (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
                   );
                   const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-                  const favourites = allMatched.filter(p => isTrue(p["OfficeFavourites"])).slice(0, 6);
-                  const colours = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && isTrue(p["Colour"])).slice(0, 6);
-                  const regular = allMatched.filter(p => !isTrue(p["OfficeFavourites"]) && !isTrue(p["Colour"])).slice(0, 6);
+                  const favourites = allMatched.filter(p => isTrue(p["OFFICE FAVOURITE"])).slice(0, 6);
+                  const colours = allMatched.filter(p => !isTrue(p["OFFICE FAVOURITE"]) && isTrue(p["Colour"])).slice(0, 6);
+                  const regular = allMatched.filter(p => !isTrue(p["OFFICE FAVOURITE"]) && !isTrue(p["Colour"])).slice(0, 6);
                   const matchedSuppliers = Array.from(new Set(
                     products
                       .map(p => p["SUPPLIER"])
