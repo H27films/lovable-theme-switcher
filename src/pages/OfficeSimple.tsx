@@ -51,7 +51,7 @@ const hdrStyle: React.CSSProperties = {
 };
 
 const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => {
-  const [activeTab, setActiveTab] = useState<"search" | "order">("search");
+  const [showOrderPanel, setShowOrderPanel] = useState(false);
 
   // ── Search state ────────────────────────────────────────────
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
@@ -372,38 +372,32 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
           {BRANCH_NAME}
         </button>
 
-        {/* Tab row: SEARCH | ORDER */}
-        <div style={{ display: "flex", gap: "24px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-          {(["SEARCH", "ORDER"] as const).map(tab => {
-            const tabId = tab.toLowerCase() as "search" | "order";
-            const active = activeTab === tabId;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tabId)}
-                style={{
-                  fontSize: "13px", fontWeight: 300, letterSpacing: "0.08em",
-                  fontFamily: "Raleway, inherit",
-                  color: active ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                  background: "none", border: "none", cursor: "pointer",
-                  padding: "0 0 10px 0",
-                  borderBottom: active ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent",
-                  marginBottom: "-0.5px",
-                }}
-              >
-                {tab}
-              </button>
-            );
-          })}
+        {/* ORDER button */}
+        <div style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+          <button
+            onClick={() => setShowOrderPanel(true)}
+            style={{
+              fontSize: "13px", fontWeight: 300, letterSpacing: "0.08em",
+              fontFamily: "Raleway, inherit",
+              color: "hsl(var(--muted-foreground))",
+              background: "none", border: "none", cursor: "pointer",
+              padding: "0 0 10px 0",
+              borderBottom: "1.5px solid transparent",
+              marginBottom: "-0.5px",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = "hsl(var(--foreground))"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+          >
+            ORDER
+          </button>
         </div>
       </div>
 
       {/* ── MIDDLE SCROLLABLE ── */}
       <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
 
-        {/* ══ SEARCH TAB ══════════════════════════════════════════ */}
-        {activeTab === "search" && (
-          <>
+        {/* ══ SEARCH + RECENT ══════════════════════════════════════ */}
+        <>
             {/* Search input */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingTop: "14px", paddingBottom: "8px" }}>
               <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
@@ -705,12 +699,27 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 </div>
               </div>
             )}
-          </>
-        )}
+        </>
 
-        {/* ══ ORDER TAB ═══════════════════════════════════════════ */}
-        {activeTab === "order" && (
-          <div style={{ paddingTop: "16px" }}>
+        {/* ══ ORDER PANEL OVERLAY ══════════════════════════════════ */}
+        {showOrderPanel && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "hsl(var(--background))", zIndex: 100,
+            display: "flex", flexDirection: "column",
+            fontFamily: "Raleway, inherit",
+          }}>
+            {/* Panel header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 16px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0 }}>
+              <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>ORDER</span>
+              <button
+                onClick={() => { setShowOrderPanel(false); setOrderSuccess(false); setConfirmError(null); }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
 
             {/* Success / Error */}
             {orderSuccess && (
@@ -913,6 +922,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 </div>
               </div>
             )}
+          </div>
           </div>
         )}
       </div>
