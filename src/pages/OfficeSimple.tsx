@@ -359,7 +359,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", flexShrink: 0 }}>
 
         {/* Branch name header row */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
           <button
             onClick={() => {
               if (searchMode !== "idle") {
@@ -417,6 +417,35 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
             ORDER
           </button>
         </div>
+        {/* Search input */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+          <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="search"
+            value={searchMode === "result" || searchMode === "supplier" ? "" : search}
+            onChange={e => {
+              const val = e.target.value;
+              setSearch(val); setSelectedProduct(null); setSelectedSupplier(null);
+              setSearchMode("active"); setShowDropdown(val.length > 0); setUsageOpen(false);
+            }}
+            placeholder="Enter Product / Supplier"
+            style={{
+              flex: 1, background: "none", border: "none", outline: "none",
+              fontSize: "15px", fontFamily: "Raleway, inherit",
+              color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
+            }}
+          />
+          {search.length > 0 && searchMode !== "result" && searchMode !== "supplier" && (
+            <button
+              onClick={() => { setSearch(""); setSelectedProduct(null); setSelectedSupplier(null); setShowDropdown(false); setSearchMode("active"); setUsageOpen(false); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── MIDDLE SCROLLABLE ── */}
@@ -424,35 +453,6 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
         {/* ══ SEARCH + RECENT ══════════════════════════════════════ */}
         <>
-            {/* Search input */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingTop: "14px", paddingBottom: "8px" }}>
-              <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-              <input
-                ref={inputRef}
-                type="text"
-                inputMode="search"
-                value={searchMode === "result" || searchMode === "supplier" ? "" : search}
-                onChange={e => {
-                  const val = e.target.value;
-                  setSearch(val); setSelectedProduct(null); setSelectedSupplier(null);
-                  setSearchMode("active"); setShowDropdown(val.length > 0); setUsageOpen(false);
-                }}
-                placeholder="Enter Product / Supplier"
-                style={{
-                  flex: 1, background: "none", border: "none", outline: "none",
-                  fontSize: "15px", fontFamily: "Raleway, inherit",
-                  color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
-                }}
-              />
-              {search.length > 0 && searchMode !== "result" && searchMode !== "supplier" && (
-                <button
-                  onClick={() => { setSearch(""); setSelectedProduct(null); setSelectedSupplier(null); setShowDropdown(false); setSearchMode("active"); setUsageOpen(false); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
-                >
-                  <X size={15} />
-                </button>
-              )}
-            </div>
 
             {/* Dropdown */}
             {showDropdown && search.length > 0 && (() => {
