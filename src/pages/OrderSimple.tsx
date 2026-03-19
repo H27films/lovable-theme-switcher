@@ -17,7 +17,7 @@ interface OfficeProduct {
   "STAFF PRICE": number | null;
   "Colour": string | null;
   "OFFICE BALANCE": number | null;
-  "OFFICE FAVOURITE": boolean | null;
+  "OFFICE FAVOURITE": string | null;
   "UNITS/ORDER": number | null;
   "PAR": number | null;
 }
@@ -85,35 +85,40 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
 
   const allSuppliers = Array.from(new Set(products.map(p => p["SUPPLIER"]).filter(Boolean))) as string[];
 
-  const isOfficeFav = (p: OfficeProduct) => p["OFFICE FAVOURITE"] === true;
+  const isOfficeFav = (p: OfficeProduct) => {
+    const v = (p as any)["OFFICE FAVOURITE"];
+    return v === true || v === "TRUE" || v === "true" || v === 1;
+  };
+  const isColourProd = (p: OfficeProduct) => {
+    const v = p["Colour"];
+    return v === true || v === "TRUE" || v === "true" || v === "YES" || v === "yes";
+  };
 
   // Filtered products for supplier filter
   const filteredForOrder = orderSupplierFilter.length > 0
     ? products.filter(p => p["SUPPLIER"] && orderSupplierFilter.includes(p["SUPPLIER"]))
     : products;
 
-  // Search results
+  // Search results — dedup by PRODUCT NAME + SUPPLIER, fav first then products then colours
   const orderDropdownResults: OfficeProduct[] = (() => {
-    const q = orderSearch.trim().toLowerCase();
-    const alreadyAdded = new Set(orderLines.map(l => l.product.id));
-    let pool = filteredForOrder.filter(p => !alreadyAdded.has(p.id));
-    if (!q && !forceOrderDropdown) return [];
-    if (q) {
-      pool = pool.filter(p =>
-        (p["PRODUCT NAME"]?.toLowerCase().includes(q)) ||
-        (p["SUPPLIER"]?.toLowerCase().includes(q))
-      );
+    if (!forceOrderDropdown && orderSearch.length === 0) return [];
+    const matched = filteredForOrder.filter(p =>
+      (orderSearch.length === 0 || p["PRODUCT NAME"]?.toLowerCase().includes(orderSearch.toLowerCase())) &&
+      !orderLines.some(l => l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"])
+    );
+    const seen = new Map<string, OfficeProduct>();
+    for (const p of matched) {
+      const key = `${p["PRODUCT NAME"]}|||${p["SUPPLIER"]}`;
+      const existing = seen.get(key);
+      if (!existing || (p["UNITS/ORDER"] ?? 1) < (existing["UNITS/ORDER"] ?? 1)) seen.set(key, p);
     }
-    // Sort: favourites first, then products, then colours
-    pool.sort((a, b) => {
-      const rank = (p: OfficeProduct) => {
-        if (isOfficeFav(p)) return 0;
-        if (p["Colour"]?.toUpperCase() === "YES") return 2;
-        return 1;
-      };
-      return rank(a) - rank(b);
-    });
-    return pool.slice(0, 30);
+    return Array.from(seen.values()).sort((a, b) => {
+      const af = isOfficeFav(a) ? 0 : 1, bf = isOfficeFav(b) ? 0 : 1;
+      if (af !== bf) return af - bf;
+      const ac = isColourProd(a) ? 1 : 0, bc = isColourProd(b) ? 1 : 0;
+      if (ac !== bc) return ac - bc;
+      return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+    }).slice(0, forceOrderDropdown && orderSearch.length === 0 ? 20 : 100);
   })();
 
   const addToOrder = useCallback((p: OfficeProduct) => {
