@@ -931,17 +931,11 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             </div>
                           )}
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <div style={{ display: "flex", alignItems: "center" }}>
-                            <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} style={{ width: "28px", height: "28px", border: "0.5px solid hsl(var(--border))", borderRadius: "4px 0 0 4px", background: "none", cursor: "pointer", fontSize: "16px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>−</button>
-                            <input
-                              type="number" min="1" value={line.qty}
-                              onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v > 0) setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: v } : l)); }}
-                              style={{ width: "40px", height: "28px", textAlign: "center", border: "0.5px solid hsl(var(--border))", borderLeft: "none", borderRight: "none", background: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}
-                            />
-                            <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} style={{ width: "28px", height: "28px", border: "0.5px solid hsl(var(--border))", borderRadius: "0 4px 4px 0", background: "none", cursor: "pointer", fontSize: "16px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>+</button>
-                          </div>
-                          {units > 1 && <div style={{ fontSize: "10px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>= {line.qty * units}</div>}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} style={{ width: "28px", height: "28px", border: "none", background: "none", cursor: "pointer", fontSize: "20px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>−</button>
+                          <span style={{ minWidth: "20px", textAlign: "center", fontSize: "14px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{line.qty}</span>
+                          <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} style={{ width: "28px", height: "28px", border: "none", background: "none", cursor: "pointer", fontSize: "20px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>+</button>
+                          {units > 1 && <span style={{ fontSize: "10px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>= {line.qty * units}</span>}
                         </div>
                       </div>
                     </div>
@@ -977,12 +971,12 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   });
                   return (
                     <div style={{ marginTop: "24px", paddingTop: "8px" }}>
-                      <div style={{ ...hdrStyle, marginBottom: "16px" }}>ORDER SUMMARY</div>
+                      <div style={{ ...hdrStyle, marginBottom: "16px", fontSize: "13px" }}>ORDER SUMMARY</div>
                       {supplierGroups.map((group, gi) => {
                         const grn = multiSupplier ? `${baseGRN} (${gi + 1})` : baseGRN;
                         const groupTotal = group.lines.reduce((s, { line }) => s + line.qty * (line.product["UNITS/ORDER"] ?? 1) * (line.product["SUPPLIER PRICE"] ?? 0), 0);
                         return (
-                          <div key={group.supplier} style={{ marginBottom: multiSupplier ? "20px" : "8px" }}>
+                          <div key={group.supplier} style={{ marginBottom: multiSupplier ? "40px" : "8px" }}>
                             {/* Supplier header row */}
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                               <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{group.supplier}</div>
@@ -1017,8 +1011,8 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         );
                       })}
                       {/* Grand total */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", marginTop: "4px", borderTop: "0.5px solid hsl(var(--border))" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em" }}>{totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"} · {totalUnits} {totalUnits === 1 ? "UNIT" : "UNITS"} · {supplierGroups.length} {supplierGroups.length === 1 ? "SUPPLIER" : "SUPPLIERS"}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", marginTop: "24px" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em" }}>{totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"} · {supplierGroups.length} {supplierGroups.length === 1 ? "SUPPLIER" : "SUPPLIERS"}</div>
                         {totalPrice > 0 && <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>RM {totalPrice.toFixed(2)}</div>}
                       </div>
                       {/* Confirm button */}
