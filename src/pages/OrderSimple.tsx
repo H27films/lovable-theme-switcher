@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Sun, Moon, Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Sun, Moon, Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -104,11 +104,14 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
         (p["SUPPLIER"]?.toLowerCase().includes(q))
       );
     }
-    // Sort: favourites first
+    // Sort: favourites first, then products, then colours
     pool.sort((a, b) => {
-      const af = isOfficeFav(a) ? 0 : 1;
-      const bf = isOfficeFav(b) ? 0 : 1;
-      return af - bf;
+      const rank = (p: OfficeProduct) => {
+        if (isOfficeFav(p)) return 0;
+        if (p["Colour"]?.toUpperCase() === "YES") return 2;
+        return 1;
+      };
+      return rank(a) - rank(b);
     });
     return pool.slice(0, 30);
   })();
@@ -145,15 +148,10 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <button
-            onClick={onBack}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
-          >
-            <ChevronLeft size={18} strokeWidth={1.5} />
-          </button>
-          <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg }}>DRAFT ORDER</span>
-        </div>
+        <span
+          onClick={onBack}
+          style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}
+        >DRAFT ORDER</span>
         <button
           onClick={handleToggle}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
@@ -238,7 +236,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             )}
           </div>
           {showOrderDropdown && orderDropdownResults.length > 0 && (
-            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderRadius: "8px", marginTop: "2px", maxHeight: "220px", overflowY: "auto" }}>
+            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "hsl(var(--background))", maxHeight: "220px", overflowY: "auto" }}>
               {orderDropdownResults.map((p, i) => (
                 <div
                   key={p.id}

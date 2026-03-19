@@ -253,7 +253,7 @@ const SubLandingSimple = () => {
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
       {/* Fixed theme toggle - only show when not in branch view (branch pages have their own toggle) */}
-      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60, display: activeBranch !== null ? "none" : "block" }}>
+      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60, display: (activeBranch !== null || activeSection === "order") ? "none" : "block" }}>
         <span onClick={toggleTheme} style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }} title="Switch theme">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
             <circle cx="12" cy="12" r="4" />
