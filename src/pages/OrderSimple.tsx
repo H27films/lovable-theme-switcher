@@ -144,11 +144,25 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
     letterSpacing: "0.12em", textTransform: "uppercase", color: muted,
   };
 
-  // Load products
+  // Load products — paginated to fetch ALL rows (same as SubLandingSimple)
   useEffect(() => {
-    (supabase as any).from("AllFileProducts").select("*").then(({ data }: { data: OfficeProduct[] | null }) => {
-      if (data) setProducts(data);
-    });
+    const fetchProducts = async () => {
+      let allData: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await (supabase as any)
+          .from("AllFileProducts")
+          .select("*")
+          .range(from, from + batchSize - 1);
+        if (error || !data?.length) break;
+        allData = allData.concat(data);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      setProducts(allData);
+    };
+    fetchProducts();
   }, []);
 
   // Close dropdowns on outside click
