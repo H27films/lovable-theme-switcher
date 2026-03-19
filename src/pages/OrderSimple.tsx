@@ -192,7 +192,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const allSuppliers = Array.from(new Set(products.map(p => p["SUPPLIER"]).filter(Boolean))) as string[];
+  const allSuppliers = Array.from(new Set(products.map(p => p["SUPPLIER"]).filter(Boolean))).sort() as string[];
 
   const isOfficeFav = (p: OfficeProduct) => {
     const v = (p as any)["OFFICE FAVOURITE"];
