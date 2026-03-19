@@ -52,37 +52,48 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-  // Company name top-left
+  // Row 1: Company name (left) + ORDER SHEET (right)
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.text("CHIC NAILSPA SDN BHD", 15, 20);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text("ORDER SHEET", 195, 20, { align: "right" });
 
-  // Date top-right
-  doc.setFontSize(10);
+  // Divider line below row 1
+  doc.setLineWidth(0.3);
+  doc.line(15, 24, 195, 24);
+
+  // Row 2: Date (left) — below divider
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text(dateStr, 195, 20, { align: "right" });
+  doc.text(dateStr, 15, 30);
+
+  // Contact info below date
+  doc.text("Contact: Soong Ailing", 15, 36);
+  doc.text("Phone Number: +60123333128", 15, 42);
 
   // Supplier name
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text(supplier, 15, 32);
+  doc.text(supplier, 15, 52);
 
-  // Divider line
+  // Divider line below supplier
   doc.setLineWidth(0.3);
-  doc.line(15, 36, 195, 36);
+  doc.line(15, 56, 195, 56);
 
   // Table header
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.text("#", 15, 44);
-  doc.text("PRODUCT", 25, 44);
-  doc.text("QTY", 185, 44, { align: "right" });
+  doc.text("#", 15, 64);
+  doc.text("PRODUCT", 25, 64);
+  doc.text("QTY", 185, 64, { align: "right" });
   doc.setLineWidth(0.2);
-  doc.line(15, 46, 195, 46);
+  doc.line(15, 66, 195, 66);
 
   // Table rows
   doc.setFont("helvetica", "normal");
-  let y = 54;
+  let y = 74;
   lines.forEach((item, i) => {
     doc.text(String(i + 1), 15, y);
     const name = doc.splitTextToSize(item.productName, 145);
@@ -96,7 +107,7 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   });
 
   const blob = doc.output("blob");
-  const filename = "order-" + supplier.replace(/[^a-z0-9]/gi, "-").toLowerCase() + ".pdf";
+  const filename = supplier.replace(/\s+/g, "") + "Order.pdf";
   const file = new File([blob], filename, { type: "application/pdf" });
 
   try {
@@ -477,9 +488,8 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                     return (
                       <div key={group.supplier} style={{ marginBottom: multiSupplier ? "40px" : "8px" }}>
                         {/* Supplier header row */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                        <div style={{ marginBottom: "6px" }}>
                           <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: fg }}>{group.supplier}</div>
-                          <div style={{ fontSize: "11px", fontFamily: "monospace", color: muted, letterSpacing: "0.06em", textTransform: "uppercase" }}>{grn}</div>
                         </div>
                         {/* Product lines */}
                         {group.lines.map(({ line, idx }) => {
