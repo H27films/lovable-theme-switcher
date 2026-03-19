@@ -883,19 +883,15 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   const units = line.product["UNITS/ORDER"] ?? 1;
                   return (
                     <div key={idx} style={{ borderBottom: "0.5px solid hsl(var(--border))", padding: "12px 0" }}>
-                      {/* Row 1: product name + balance + remove */}
+                      {/* Row 1: product name + inline balance + remove */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                         <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1, marginRight: "8px" }}>
                           {line.product["PRODUCT NAME"]}
+                          <span style={{ fontSize: "13px", color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--destructive, 0 84% 60%))" : "hsl(var(--muted-foreground))" }}>{"  "}{line.product["OFFICE BALANCE"] ?? "—"}</span>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--destructive, 0 84% 60%))" : "hsl(var(--muted-foreground))" }}>
-                            {line.product["OFFICE BALANCE"] ?? "—"}
-                          </div>
-                          <button onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-                            <X size={13} />
-                          </button>
-                        </div>
+                        <button onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
+                          <X size={13} />
+                        </button>
                       </div>
                       {/* Row 2: supplier + qty stepper */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -980,13 +976,13 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                     return sibs.length > 0 && l.supplierChoice === null;
                   });
                   return (
-                    <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "0.5px solid hsl(var(--border))" }}>
+                    <div style={{ marginTop: "24px", paddingTop: "8px" }}>
                       <div style={{ ...hdrStyle, marginBottom: "16px" }}>ORDER SUMMARY</div>
                       {supplierGroups.map((group, gi) => {
                         const grn = multiSupplier ? `${baseGRN} (${gi + 1})` : baseGRN;
                         const groupTotal = group.lines.reduce((s, { line }) => s + line.qty * (line.product["UNITS/ORDER"] ?? 1) * (line.product["SUPPLIER PRICE"] ?? 0), 0);
                         return (
-                          <div key={group.supplier} style={{ marginBottom: "8px" }}>
+                          <div key={group.supplier} style={{ marginBottom: multiSupplier ? "20px" : "8px" }}>
                             {/* Supplier header row */}
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                               <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{group.supplier}</div>
@@ -1000,10 +996,10 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                               return (
                                 <div key={idx} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 0", borderBottom: "0.5px solid hsl(var(--border))" }}>
                                   <div style={{ flex: 1, fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</div>
-                                  <div style={{ display: "flex", alignItems: "center" }}>
-                                    <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} style={{ width: "22px", height: "22px", border: "0.5px solid hsl(var(--border))", borderRadius: "3px 0 0 3px", background: "none", cursor: "pointer", fontSize: "14px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>−</button>
-                                    <div style={{ width: "30px", height: "22px", textAlign: "center", border: "0.5px solid hsl(var(--border))", borderLeft: "none", borderRight: "none", lineHeight: "22px", fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{line.qty}</div>
-                                    <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} style={{ width: "22px", height: "22px", border: "0.5px solid hsl(var(--border))", borderRadius: "0 3px 3px 0", background: "none", cursor: "pointer", fontSize: "14px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>+</button>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} style={{ width: "22px", height: "22px", border: "none", background: "none", cursor: "pointer", fontSize: "16px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>−</button>
+                                    <div style={{ minWidth: "20px", textAlign: "center", fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{line.qty}</div>
+                                    <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} style={{ width: "22px", height: "22px", border: "none", background: "none", cursor: "pointer", fontSize: "16px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>+</button>
                                   </div>
                                   {lineTotal != null && (
                                     <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", minWidth: "60px", textAlign: "right" }}>RM {lineTotal.toFixed(2)}</div>
