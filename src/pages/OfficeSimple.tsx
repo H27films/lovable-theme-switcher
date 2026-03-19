@@ -19,6 +19,7 @@ interface OfficeProduct {
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
   "OFFICE FAVOURITE": string | null;
+  "PAR": number | null;
 }
 
 interface LogRow {
@@ -51,10 +52,17 @@ const hdrStyle: React.CSSProperties = {
   letterSpacing: "0.08em",
 };
 
+const checkBelowPar = (balance: number | null | undefined, par: number | null | undefined): boolean => {
+  if (balance == null || par == null) return false;
+  if (par <= 0) return false;
+  return balance <= par;
+};
+
 const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => {
   const { theme, setTheme } = useTheme();
   const toggleTheme = () => setTheme(theme === "sand" ? "light" : "sand");
   const [showOrderPanel, setShowOrderPanel] = useState(false);
+  const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
 
   // ── Search state ────────────────────────────────────────────
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
@@ -850,7 +858,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         </div>
                         {p["SUPPLIER"] && <div style={{ fontSize: "11px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
                       </div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", flexShrink: 0, marginLeft: "8px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: checkBelowPar(p["OFFICE BALANCE"], p["PAR"]) ? "hsl(var(--destructive, 0 84% 60%))" : "hsl(var(--muted-foreground))", flexShrink: 0, marginLeft: "8px" }}>
                         {p["OFFICE BALANCE"] ?? "—"}
                       </div>
                     </div>
@@ -881,7 +889,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                           {line.product["PRODUCT NAME"]}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                          <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: checkBelowPar(line.product["OFFICE BALANCE"], line.product["PAR"]) ? "hsl(var(--destructive, 0 84% 60%))" : "hsl(var(--muted-foreground))" }}>
                             {line.product["OFFICE BALANCE"] ?? "—"}
                           </div>
                           <button onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
@@ -889,24 +897,43 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                           </button>
                         </div>
                       </div>
-                      {/* Supplier choice pills (when needed) */}
-                      {needsChoice && (
-                        <div style={{ marginBottom: "8px" }}>
-                          <div style={{ ...hdrStyle, marginBottom: "6px" }}>Choose Supplier</div>
-                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                            {allChoices.map(sup => (
-                              <button key={sup} onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, supplierChoice: sup } : l))} style={{ fontSize: "11px", fontFamily: "Raleway, inherit", padding: "3px 10px", borderRadius: "20px", border: "0.5px solid hsl(var(--border))", background: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))" }}>
-                                {sup}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {/* Row 2: supplier name + qty stepper */}
+                      {/* Row 2: supplier + qty stepper */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                          {line.supplierChoice ?? (line.product["SUPPLIER"] ?? "—")}
-                          {units > 1 && <span style={{ marginLeft: "6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.04em" }}>× {units} units</span>}
+                        <div style={{ position: "relative" }}>
+                          {siblings.length > 0 ? (
+                            <div>
+                              <button
+                                onClick={() => setOpenSupplierIdx(prev => prev === idx ? null : idx)}
+                                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px", fontFamily: "Raleway, inherit" }}
+                              >
+                                <span style={{ fontSize: "11px", fontWeight: 300, color: needsChoice ? "hsl(var(--destructive, 0 84% 60%))" : "hsl(var(--muted-foreground))" }}>
+                                  {line.supplierChoice ?? "Select supplier"}
+                                </span>
+                                <ChevronDown size={10} style={{ color: "hsl(var(--muted-foreground))" }} />
+                              </button>
+                              {needsChoice && (
+                                <div style={{ fontSize: "10px", color: "hsl(var(--destructive, 0 84% 60%))", marginTop: "2px", letterSpacing: "0.04em" }}>Please select supplier</div>
+                              )}
+                              {openSupplierIdx === idx && (
+                                <div style={{ position: "absolute", top: "100%", left: 0, zIndex: 50, background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderRadius: "6px", marginTop: "2px", minWidth: "160px" }}>
+                                  {allChoices.map(sup => (
+                                    <div
+                                      key={sup}
+                                      onMouseDown={() => { setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, supplierChoice: sup } : l)); setOpenSupplierIdx(null); }}
+                                      style={{ padding: "8px 12px", fontSize: "12px", fontFamily: "Raleway, inherit", color: line.supplierChoice === sup ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", cursor: "pointer", borderBottom: "0.5px solid hsl(var(--border))" }}
+                                    >
+                                      {sup}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                              {line.product["SUPPLIER"] ?? "—"}
+                              {units > 1 && <span style={{ marginLeft: "6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.04em" }}>× {units} units</span>}
+                            </div>
+                          )}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                           <div style={{ display: "flex", alignItems: "center" }}>
@@ -925,40 +952,101 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   );
                 })}
 
-                {/* Order Summary + Confirm */}
-                <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "0.5px solid hsl(var(--border))" }}>
-                  <div style={{ ...hdrStyle, marginBottom: "12px" }}>Order Summary</div>
-                  {orderLines.map((line, idx) => {
-                    const units = line.product["UNITS/ORDER"] ?? 1;
-                    const total = line.qty * units;
-                    return (
-                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1, marginRight: "8px" }}>{line.product["PRODUCT NAME"]}</div>
-                        <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-                          {line.qty}{units > 1 ? ` × ${units} = ${total}` : ""}
-                        </div>
+                {/* ORDER SUMMARY */}
+                {(() => {
+                  const today = new Date();
+                  const dd = String(today.getDate()).padStart(2, "0");
+                  const mm = String(today.getMonth() + 1).padStart(2, "0");
+                  const yy = String(today.getFullYear()).slice(2);
+                  const baseGRN = `OFFICE ${dd}${mm}${yy}`;
+                  type SupplierGroup = { supplier: string; lines: { line: OrderLine; idx: number }[] };
+                  const supplierGroups: SupplierGroup[] = [];
+                  const supplierMap = new Map<string, SupplierGroup>();
+                  orderLines.forEach((line, idx) => {
+                    const supplier = line.supplierChoice ?? line.product["SUPPLIER"] ?? "Unknown";
+                    if (!supplierMap.has(supplier)) {
+                      const entry: SupplierGroup = { supplier, lines: [] };
+                      supplierMap.set(supplier, entry);
+                      supplierGroups.push(entry);
+                    }
+                    supplierMap.get(supplier)!.lines.push({ line, idx });
+                  });
+                  const multiSupplier = supplierGroups.length > 1;
+                  const totalItems = orderLines.length;
+                  const totalUnits = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1), 0);
+                  const totalPrice = orderLines.reduce((s, l) => s + l.qty * (l.product["UNITS/ORDER"] ?? 1) * (l.product["SUPPLIER PRICE"] ?? 0), 0);
+                  const hasUnresolved = orderLines.some(l => {
+                    const sibs = localProducts.filter(s => s["PRODUCT NAME"] === l.product["PRODUCT NAME"] && s.id !== l.product.id && s["SUPPLIER"] !== l.product["SUPPLIER"]);
+                    return sibs.length > 0 && l.supplierChoice === null;
+                  });
+                  return (
+                    <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "0.5px solid hsl(var(--border))" }}>
+                      <div style={{ ...hdrStyle, marginBottom: "16px" }}>ORDER SUMMARY</div>
+                      {supplierGroups.map((group, gi) => {
+                        const grn = multiSupplier ? `${baseGRN} (${gi + 1})` : baseGRN;
+                        const groupTotal = group.lines.reduce((s, { line }) => s + line.qty * (line.product["UNITS/ORDER"] ?? 1) * (line.product["SUPPLIER PRICE"] ?? 0), 0);
+                        return (
+                          <div key={group.supplier} style={{ marginBottom: "8px" }}>
+                            {/* Supplier header row */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                              <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{group.supplier}</div>
+                              <div style={{ fontSize: "11px", fontFamily: "monospace", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em", textTransform: "uppercase" }}>{grn}</div>
+                            </div>
+                            {/* Product lines */}
+                            {group.lines.map(({ line, idx }) => {
+                              const units = line.product["UNITS/ORDER"] ?? 1;
+                              const price = line.product["SUPPLIER PRICE"];
+                              const lineTotal = price != null ? line.qty * units * price : null;
+                              return (
+                                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 0", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                                  <div style={{ flex: 1, fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{line.product["PRODUCT NAME"]}</div>
+                                  <div style={{ display: "flex", alignItems: "center" }}>
+                                    <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} style={{ width: "22px", height: "22px", border: "0.5px solid hsl(var(--border))", borderRadius: "3px 0 0 3px", background: "none", cursor: "pointer", fontSize: "14px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>−</button>
+                                    <div style={{ width: "30px", height: "22px", textAlign: "center", border: "0.5px solid hsl(var(--border))", borderLeft: "none", borderRight: "none", lineHeight: "22px", fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{line.qty}</div>
+                                    <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} style={{ width: "22px", height: "22px", border: "0.5px solid hsl(var(--border))", borderRadius: "0 3px 3px 0", background: "none", cursor: "pointer", fontSize: "14px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>+</button>
+                                  </div>
+                                  {lineTotal != null && (
+                                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", minWidth: "60px", textAlign: "right" }}>RM {lineTotal.toFixed(2)}</div>
+                                  )}
+                                  <button onClick={() => setOrderLines(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--destructive, 0 84% 60%))", flexShrink: 0 }}><X size={12} /></button>
+                                </div>
+                              );
+                            })}
+                            {/* Subtotal */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                              <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.lines.length} {group.lines.length === 1 ? "ORDER" : "ORDERS"}</div>
+                              {groupTotal > 0 && <div style={{ fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>RM {groupTotal.toFixed(2)}</div>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {/* Grand total */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", marginTop: "4px", borderTop: "0.5px solid hsl(var(--border))" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em" }}>{totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"} · {totalUnits} {totalUnits === 1 ? "UNIT" : "UNITS"} · {supplierGroups.length} {supplierGroups.length === 1 ? "SUPPLIER" : "SUPPLIERS"}</div>
+                        {totalPrice > 0 && <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>RM {totalPrice.toFixed(2)}</div>}
                       </div>
-                    );
-                  })}
-                  <button
-                    onClick={handleOrderConfirm}
-                    disabled={orderSubmitting || orderLines.some(l => l.supplierChoice === null)}
-                    style={{
-                      marginTop: "16px", width: "100%", padding: "12px",
-                      fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
-                      letterSpacing: "0.12em", textTransform: "uppercase",
-                      border: "0.5px solid hsl(var(--foreground))",
-                      background: "hsl(var(--foreground))",
-                      color: "hsl(var(--background))",
-                      borderRadius: "6px",
-                      cursor: orderSubmitting ? "default" : "pointer",
-                      opacity: (orderSubmitting || orderLines.some(l => l.supplierChoice === null)) ? 0.5 : 1,
-                    }}
-                  >
-                    {orderSubmitting ? "Confirming…" : "Confirm Order"}
-                  </button>
-                  <div style={{ paddingBottom: "40px" }} />
-                </div>
+                      {/* Confirm button */}
+                      <button
+                        onClick={handleOrderConfirm}
+                        disabled={orderSubmitting || hasUnresolved}
+                        style={{
+                          marginTop: "16px", width: "100%", padding: "12px",
+                          fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                          letterSpacing: "0.12em", textTransform: "uppercase",
+                          border: "0.5px solid hsl(var(--foreground))",
+                          background: "hsl(var(--foreground))",
+                          color: "hsl(var(--background))",
+                          borderRadius: "6px",
+                          cursor: orderSubmitting ? "default" : "pointer",
+                          opacity: (orderSubmitting || hasUnresolved) ? 0.5 : 1,
+                        }}
+                      >
+                        {orderSubmitting ? "Confirming…" : "Confirm Order"}
+                      </button>
+                      <div style={{ paddingBottom: "40px" }} />
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
