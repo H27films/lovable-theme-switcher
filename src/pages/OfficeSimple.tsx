@@ -373,20 +373,28 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
         </button>
 
         {/* ORDER button */}
-        <div style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+        <div style={{ display: "flex", gap: "28px", borderBottom: "0.5px solid hsl(var(--border))", marginBottom: "20px" }}>
           <button
             onClick={() => setShowOrderPanel(true)}
             style={{
-              fontSize: "13px", fontWeight: 300, letterSpacing: "0.08em",
-              fontFamily: "Raleway, inherit",
-              color: "hsl(var(--muted-foreground))",
               background: "none", border: "none", cursor: "pointer",
-              padding: "0 0 10px 0",
-              borderBottom: "1.5px solid transparent",
-              marginBottom: "-0.5px",
+              padding: "0 0 12px 0",
+              fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
+              letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
+              color: "hsl(var(--foreground))",
+              opacity: 0.28,
+              borderBottom: "2px solid transparent",
+              marginBottom: "-1px",
+              transition: "opacity 0.2s ease, border-color 0.2s ease",
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = "hsl(var(--foreground))"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+            onMouseEnter={e => {
+              e.currentTarget.style.opacity = "0.8";
+              e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.opacity = "0.28";
+              e.currentTarget.style.borderBottomColor = "transparent";
+            }}
           >
             ORDER
           </button>
