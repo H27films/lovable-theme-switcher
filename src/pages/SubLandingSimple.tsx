@@ -277,7 +277,7 @@ const SubLandingSimple = () => {
               transition: "opacity 0.38s ease, transform 0.38s ease",
               pointerEvents: simpleSearchMode === "idle" ? "auto" : "none",
             }}>
-              {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
+              {(["BRANCHES", "SEARCH", "ORDER"] as const).map((item) => (
                 <button
                   key={item}
                   onClick={() => {
@@ -722,7 +722,7 @@ const SubLandingSimple = () => {
                         opacity: 0.45, userSelect: "none", zIndex: 1,
                       }}
                     >
-                      {(["SEARCH", "BRANCHES", "ORDER"] as const).map((item) => (
+                      {(["BRANCHES", "SEARCH", "ORDER"] as const).map((item) => (
                         <div key={item} style={{
                           fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.04em",
                           color: "hsl(var(--foreground))", lineHeight: 1, padding: "2px 0",
