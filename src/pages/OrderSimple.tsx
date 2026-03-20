@@ -149,12 +149,9 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
   const [showBelowPar, setShowBelowPar] = useState(false);
   const [belowParList, setBelowParList] = useState<OfficeProduct[]>([]);
-  const [showBelowParSearch, setShowBelowParSearch] = useState(false);
-  const [belowParSearchQuery, setBelowParSearchQuery] = useState("");
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
-  const belowParSearchInputRef = useRef<HTMLInputElement>(null);
 
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
@@ -345,7 +342,6 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             BELOW PAR {products.length > 0 && `(${belowParProducts.length})`}
             <ChevronDown size={11} strokeWidth={2} style={{ color: muted }} />
           </button>
-
         </div>
         <button
           onClick={handleToggle}
@@ -670,119 +666,63 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
           zIndex: 100,
         }}>
           {/* Panel header */}
-          <div style={{ flexShrink: 0 }}>
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "24px 16px 16px",
-            }}>
-              <div>
-                <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg }}>BELOW PAR</div>
-                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, marginTop: "2px" }}>
-                  {belowParList.length} {belowParList.length === 1 ? "product" : "products"} · tap to add/remove from order
-                </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                <button
-                  onClick={() => {
-                    setShowBelowParSearch(s => {
-                      if (!s) setTimeout(() => belowParSearchInputRef.current?.focus(), 50);
-                      else setBelowParSearchQuery("");
-                      return !s;
-                    });
-                  }}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: muted, display: "flex", alignItems: "center" }}
-                >
-                  <Search size={16} strokeWidth={1.5} />
-                </button>
-                <button
-                  onClick={() => { setShowBelowPar(false); setShowBelowParSearch(false); setBelowParSearchQuery(""); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
-                >
-                  <X size={20} strokeWidth={1.5} />
-                </button>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
+          }}>
+            <div>
+              <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg }}>BELOW PAR</div>
+              <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, marginTop: "2px" }}>
+                {belowParList.length} {belowParList.length === 1 ? "product" : "products"} · tap to add/remove from order
               </div>
             </div>
-            {/* Inline search bar */}
-            {showBelowParSearch && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: "8px",
-                margin: "0 16px 12px", padding: "8px 10px",
-                border: `1px solid hsl(var(--border))`, borderRadius: "6px",
-              }}>
-                <Search size={12} style={{ color: muted, flexShrink: 0 }} />
-                <input
-                  ref={belowParSearchInputRef}
-                  type="text"
-                  value={belowParSearchQuery}
-                  onChange={e => setBelowParSearchQuery(e.target.value)}
-                  placeholder="Search all products…"
-                  style={{
-                    flex: 1, background: "none", border: "none", outline: "none",
-                    fontSize: "13px", fontFamily: "Raleway, inherit", color: fg, caretColor: fg,
-                  }}
-                />
-                {belowParSearchQuery && (
-                  <button onClick={() => setBelowParSearchQuery("")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
-                    <X size={12} />
-                  </button>
-                )}
-              </div>
-            )}
-            <div style={{ borderBottom: border }} />
+            <button
+              onClick={() => setShowBelowPar(false)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
+            >
+              <X size={20} strokeWidth={1.5} />
+            </button>
           </div>
 
-          {/* Column headers — only shown in BELOW PAR mode */}
-          {!showBelowParSearch && (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "28px 1fr 40px 40px 40px 40px 28px",
-              gap: "4px",
-              padding: "8px 16px",
-              borderBottom: border,
-              flexShrink: 0,
-            }}>
-              <div />
-              <div style={{ ...hdrStyle, fontSize: "9px" }}>PRODUCT</div>
-              <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>OFF</div>
-              <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>BOU</div>
-              <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>CHI</div>
-              <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>NUR</div>
-              <div />
-            </div>
-          )}
+          {/* Column headers */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "28px 1fr 40px 40px 40px 40px 28px",
+            gap: "4px",
+            padding: "8px 16px",
+            borderBottom: border,
+            flexShrink: 0,
+          }}>
+            <div />
+            <div style={{ ...hdrStyle, fontSize: "9px" }}>PRODUCT</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>OFF</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>BOU</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>CHI</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>NUR</div>
+            <div />
+          </div>
 
           {/* Product list */}
           <div style={{ flex: 1, overflowY: "auto" }}>
-            {showBelowParSearch ? (() => {
-              const q = belowParSearchQuery.toLowerCase();
-              const searchList = products
-                .filter(p =>
-                  !p["Colour"] &&
-                  (!q || p["PRODUCT NAME"]?.toLowerCase().includes(q) || p["SUPPLIER"]?.toLowerCase().includes(q))
-                )
-                .sort((a, b) => {
-                  const aFav = isOfficeFav(a) ? 0 : 1;
-                  const bFav = isOfficeFav(b) ? 0 : 1;
-                  if (aFav !== bFav) return aFav - bFav;
-                  return (a["PRODUCT NAME"] ?? "").localeCompare(b["PRODUCT NAME"] ?? "");
-                });
-              return searchList.length === 0 ? (
-                <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "24px 16px" }}>
-                  {q ? "No products found" : "Start typing to search…"}
-                </div>
-              ) : searchList.map((p, i) => {
+            {belowParList.length === 0 ? (
+              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "24px 16px" }}>
+                All products are above PAR 🎉
+              </div>
+            ) : (
+              belowParList.map((p, i) => {
                 const inOrder = isInOrder(p);
+                const par = p["PAR"];
                 return (
                   <div
                     key={`${p["PRODUCT NAME"]}|||${p["SUPPLIER"]}`}
-                    onClick={() => inOrder
-                      ? setOrderLines(prev => prev.filter(l => !(l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"])))
-                      : addToOrder(p)
-                    }
+                    onClick={() => toggleBelowPar(p)}
                     style={{
-                      display: "flex", alignItems: "center", gap: "12px",
+                      display: "grid",
+                      gridTemplateColumns: "28px 1fr 40px 40px 40px 40px 28px",
+                      gap: "4px",
+                      alignItems: "center",
                       padding: "11px 16px",
-                      borderBottom: i < searchList.length - 1 ? border : "none",
+                      borderBottom: i < belowParList.length - 1 ? border : "none",
                       cursor: "pointer",
                       background: inOrder ? "hsl(var(--card))" : "transparent",
                     }}
@@ -802,102 +742,45 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                         </svg>
                       )}
                     </div>
-                    {/* Product info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+
+                    {/* Product name + supplier */}
+                    <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                         {isOfficeFav(p) && <Star size={8} fill="currentColor" style={{ color: fg, flexShrink: 0 }} />}
-                        <div style={{ fontSize: "13px", fontWeight: inOrder ? 500 : 300, fontFamily: "Raleway, inherit", color: fg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {p["PRODUCT NAME"]}
-                        </div>
+                        <div style={{ fontSize: "13px", fontWeight: inOrder ? 500 : 300, fontFamily: "Raleway, inherit", color: fg, lineHeight: 1.3 }}>{p["PRODUCT NAME"]}</div>
                       </div>
                       {p["SUPPLIER"] && <div style={{ fontSize: "10px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
                     </div>
-                    {/* Office balance */}
-                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", color: getBalanceColor(p["OFFICE BALANCE"], p["PAR"], muted), flexShrink: 0 }}>
-                      {p["OFFICE BALANCE"] ?? "—"}
+
+                    {/* Balances */}
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center" }}>
+                      {balCell(p["OFFICE BALANCE"], par)}
                     </div>
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
+                      {p["BOUDOIR BALANCE"] ?? "—"}
+                    </div>
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
+                      {p["CHIC NAILSPA BALANCE"] ?? "—"}
+                    </div>
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
+                      {p["NUR YADI BALANCE"] ?? "—"}
+                    </div>
+
+                    {/* Favourite star */}
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleOfficeFav(p, setProducts); setBelowParList(prev => prev.map(x => x.id === p.id ? { ...x, "OFFICE FAVOURITE": (isOfficeFav(p) ? null : "TRUE") } : x)); }}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Star
+                        size={13}
+                        strokeWidth={1.5}
+                        fill={isOfficeFav(p) ? fg : "none"}
+                        style={{ color: isOfficeFav(p) ? fg : muted }}
+                      />
+                    </button>
                   </div>
                 );
-              });
-            })() : (
-              belowParList.length === 0 ? (
-                <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "24px 16px" }}>
-                  All products are above PAR 🎉
-                </div>
-              ) : (
-                belowParList.map((p, i) => {
-                  const inOrder = isInOrder(p);
-                  const par = p["PAR"];
-                  return (
-                    <div
-                      key={`${p["PRODUCT NAME"]}|||${p["SUPPLIER"]}`}
-                      onClick={() => toggleBelowPar(p)}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "28px 1fr 40px 40px 40px 40px 28px",
-                        gap: "4px",
-                        alignItems: "center",
-                        padding: "11px 16px",
-                        borderBottom: i < belowParList.length - 1 ? border : "none",
-                        cursor: "pointer",
-                        background: inOrder ? "hsl(var(--card))" : "transparent",
-                      }}
-                    >
-                      {/* Checkbox */}
-                      <div style={{
-                        width: "16px", height: "16px",
-                        border: `1.5px solid ${inOrder ? red : "hsl(var(--border))"}`,
-                        borderRadius: "3px",
-                        background: inOrder ? red : "transparent",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0,
-                      }}>
-                        {inOrder && (
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                            <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </div>
-
-                      {/* Product name + supplier */}
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          {isOfficeFav(p) && <Star size={8} fill="currentColor" style={{ color: fg, flexShrink: 0 }} />}
-                          <div style={{ fontSize: "13px", fontWeight: inOrder ? 500 : 300, fontFamily: "Raleway, inherit", color: fg, lineHeight: 1.3 }}>{p["PRODUCT NAME"]}</div>
-                        </div>
-                        {p["SUPPLIER"] && <div style={{ fontSize: "10px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
-                      </div>
-
-                      {/* Balances */}
-                      <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center" }}>
-                        {balCell(p["OFFICE BALANCE"], par)}
-                      </div>
-                      <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
-                        {p["BOUDOIR BALANCE"] ?? "—"}
-                      </div>
-                      <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
-                        {p["CHIC NAILSPA BALANCE"] ?? "—"}
-                      </div>
-                      <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
-                        {p["NUR YADI BALANCE"] ?? "—"}
-                      </div>
-
-                      {/* Favourite star */}
-                      <button
-                        onClick={e => { e.stopPropagation(); toggleOfficeFav(p, setProducts); setBelowParList(prev => prev.map(x => x.id === p.id ? { ...x, "OFFICE FAVOURITE": (isOfficeFav(p) ? null : "TRUE") } : x)); }}
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center" }}
-                      >
-                        <Star
-                          size={13}
-                          strokeWidth={1.5}
-                          fill={isOfficeFav(p) ? fg : "none"}
-                          style={{ color: isOfficeFav(p) ? fg : muted }}
-                        />
-                      </button>
-                    </div>
-                  );
-                })
-              )
+              })
             )}
             <div style={{ paddingBottom: "40px" }} />
           </div>
