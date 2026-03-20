@@ -32,6 +32,21 @@ interface OrderLine {
   supplierChoice: string | null;
 }
 
+async function toggleOfficeFav(
+  product: OfficeProduct,
+  setProducts: React.Dispatch<React.SetStateAction<OfficeProduct[]>>
+): Promise<void> {
+  const isFav = product["OFFICE FAVOURITE"] === "TRUE" || product["OFFICE FAVOURITE"] === "true" || product["OFFICE FAVOURITE"] === true;
+  const newVal = isFav ? null : "TRUE";
+  setProducts(prev => prev.map(p =>
+    p.id === product.id ? { ...p, "OFFICE FAVOURITE": newVal } : p
+  ));
+  await supabase
+    .from("AllFileProducts")
+    .update({ "OFFICE FAVOURITE": newVal })
+    .eq("id", product.id);
+}
+
 function checkBelowPar(balance: number | null, par: number | null): boolean {
   if (!par || par <= 0) return false;
   if (balance === null) return true;
@@ -671,7 +686,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
           {/* Column headers */}
           <div style={{
             display: "grid",
-            gridTemplateColumns: "28px 1fr 40px 40px 40px 40px",
+            gridTemplateColumns: "28px 1fr 40px 40px 40px 40px 28px",
             gap: "4px",
             padding: "8px 16px",
             borderBottom: border,
@@ -683,6 +698,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>BOU</div>
             <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>CHI</div>
             <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>NUR</div>
+            <div />
           </div>
 
           {/* Product list */}
@@ -701,7 +717,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                     onClick={() => toggleBelowPar(p)}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "28px 1fr 40px 40px 40px 40px",
+                      gridTemplateColumns: "28px 1fr 40px 40px 40px 40px 28px",
                       gap: "4px",
                       alignItems: "center",
                       padding: "11px 16px",
@@ -748,6 +764,19 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                     <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
                       {p["NUR YADI BALANCE"] ?? "—"}
                     </div>
+
+                    {/* Favourite star */}
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleOfficeFav(p, setProducts); }}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Star
+                        size={13}
+                        strokeWidth={1.5}
+                        fill={isOfficeFav(p) ? fg : "none"}
+                        style={{ color: isOfficeFav(p) ? fg : muted }}
+                      />
+                    </button>
                   </div>
                 );
               })
