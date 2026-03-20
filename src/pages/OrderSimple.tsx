@@ -309,19 +309,22 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             onClick={() => setShowBelowPar(true)}
             style={{
               background: "none",
-              border: `0.5px solid ${red}`,
-              borderRadius: "4px",
+              border: "none",
               cursor: "pointer",
-              padding: "3px 8px",
-              fontSize: "9px",
+              padding: 0,
+              fontSize: "10px",
               fontWeight: 600,
               fontFamily: "Raleway, inherit",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: red,
+              color: fg,
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
             }}
           >
-            BELOW PAR
+            BELOW PAR {products.length > 0 && `(${belowParProducts.length})`}
+            <ChevronDown size={11} strokeWidth={2} style={{ color: muted }} />
           </button>
         </div>
         <button
@@ -679,7 +682,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>OFF</div>
             <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>BOU</div>
             <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>CHI</div>
-            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>NYD</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>NUR</div>
           </div>
 
           {/* Product list */}
