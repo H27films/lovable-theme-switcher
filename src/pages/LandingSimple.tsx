@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme, type Theme } from "@/hooks/useTheme";
+import { useTabletMode } from "@/hooks/useTabletMode";
 import React, { useState, useEffect } from "react";
-// icons via inline SVG
 
 export default function LandingSimple() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { tablet, toggle: toggleTablet } = useTabletMode();
   const [visible, setVisible] = useState(false);
 
   // Default to light mode if currently on dark
@@ -179,30 +180,31 @@ export default function LandingSimple() {
             borderTop: "1px solid hsl(var(--border))",
             padding: "22px 44px",
             display: "flex",
-            justifyContent: "flex-start",
+            justifyContent: "space-between",
             alignItems: "center",
             opacity: visible ? 1 : 0,
             transition: "opacity 0.9s ease 1.0s",
           }}
         >
+          {/* Enter Here button */}
           <div
             className="ls-enter-btn"
             onClick={() => navigate("/simple/office")}
             style={{
-              fontSize: "clamp(20px, 5vw, 32px)",
+              fontSize: "clamp(14px, 3.5vw, 32px)",
               fontWeight: 300,
-              letterSpacing: "0.14em",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
               display: "flex",
               alignItems: "center",
-              gap: "14px",
+              gap: "10px",
               color: "hsl(var(--foreground))",
             }}
           >
             Enter Here
             <svg
-              width="28"
-              height="28"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -213,6 +215,28 @@ export default function LandingSimple() {
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </div>
+
+          {/* Phone / Tablet toggle */}
+          <button
+            className="ls-icon-btn"
+            onClick={toggleTablet}
+            title={tablet ? "Switch to Phone view" : "Switch to Tablet view"}
+            style={{ opacity: visible ? 1 : 0, transition: "opacity 0.9s ease 1.2s" }}
+          >
+            {tablet ? (
+              /* Tablet icon (active) */
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--foreground))" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                <circle cx="12" cy="18" r="0.8" fill="hsl(var(--foreground))" stroke="none" />
+              </svg>
+            ) : (
+              /* Phone icon (inactive / muted) */
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <circle cx="12" cy="18" r="0.8" fill="hsl(var(--muted-foreground))" stroke="none" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
     </>

@@ -20,6 +20,7 @@ import NurYadiSimple from "./pages/NurYadiSimple";
 import OfficeSimple from "./pages/OfficeSimple";
 import OrderSimple from "./pages/OrderSimple";
 import SearchSimple from "./pages/SearchSimple";
+import TabletScaler from "./components/TabletScaler";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,15 +35,15 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/prices" element={<Office />} />
           <Route path="/office/mobile" element={<OfficePhone />} />
-          {/* ── Simple / Boss routes ── */}
+          {/* ── Simple / Boss routes (all wrapped in TabletScaler) ── */}
           <Route path="/simple" element={<LandingSimple />} />
-          <Route path="/simple/office" element={<SubLandingSimple />} />
-          <Route path="/simple/boudoir" element={<BoudoirSimple />} />
-          <Route path="/simple/chic" element={<ChicSimple />} />
-          <Route path="/simple/nuryadi" element={<NurYadiSimple />} />
-          <Route path="/simple/branch-office" element={<OfficeSimple />} />
-          <Route path="/simple/order" element={<OrderSimple />} />
-          <Route path="/simple/search" element={<SearchSimple />} />
+          <Route path="/simple/office" element={<TabletScaler><SubLandingSimple /></TabletScaler>} />
+          <Route path="/simple/boudoir" element={<TabletScaler><BoudoirSimple /></TabletScaler>} />
+          <Route path="/simple/chic" element={<TabletScaler><ChicSimple /></TabletScaler>} />
+          <Route path="/simple/nuryadi" element={<TabletScaler><NurYadiSimple /></TabletScaler>} />
+          <Route path="/simple/branch-office" element={<TabletScaler><OfficeSimple /></TabletScaler>} />
+          <Route path="/simple/order" element={<TabletScaler><OrderSimple /></TabletScaler>} />
+          <Route path="/simple/search" element={<TabletScaler><SearchSimple /></TabletScaler>} />
           <Route path="/stock" element={<Boudoir />} />
           <Route path="/stock/mobile" element={<BoudoirPhone />} />
           <Route path="/stocknuryadi" element={<NurYadi />} />
