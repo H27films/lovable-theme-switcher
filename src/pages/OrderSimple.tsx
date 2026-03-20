@@ -47,6 +47,20 @@ async function toggleOfficeFav(
     .eq("id", product.id);
 }
 
+async function saveParValue(
+  product: OfficeProduct,
+  newPar: number | null,
+  setBelowParList: React.Dispatch<React.SetStateAction<OfficeProduct[]>>,
+  setProducts: React.Dispatch<React.SetStateAction<OfficeProduct[]>>
+): Promise<void> {
+  await (supabase as any)
+    .from("AllFileProducts")
+    .update({ "PAR": newPar })
+    .eq("id", product.id);
+  setBelowParList(prev => prev.map(p => p.id === product.id ? { ...p, "PAR": newPar } : p));
+  setProducts(prev => prev.map(p => p.id === product.id ? { ...p, "PAR": newPar } : p));
+}
+
 function checkBelowPar(balance: number | null, par: number | null): boolean {
   if (!par || par <= 0) return false;
   if (balance === null) return true;
@@ -149,6 +163,8 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
   const [showBelowPar, setShowBelowPar] = useState(false);
   const [belowParList, setBelowParList] = useState<OfficeProduct[]>([]);
+  const [editParProduct, setEditParProduct] = useState<OfficeProduct | null>(null);
+  const [editParValue, setEditParValue] = useState<string>("");
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
@@ -752,8 +768,11 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                       {p["SUPPLIER"] && <div style={{ fontSize: "10px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
                     </div>
 
-                    {/* Balances */}
-                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center" }}>
+                    {/* Balances — tap to edit PAR */}
+                    <div
+                      onClick={e => { e.stopPropagation(); setEditParProduct(p); setEditParValue(String(par ?? "")); }}
+                      style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", cursor: "pointer", position: "relative" }}
+                    >
                       {balCell(p["OFFICE BALANCE"], par)}
                     </div>
                     <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
@@ -801,6 +820,102 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             >
               DONE · {orderLines.length} {orderLines.length === 1 ? "ITEM" : "ITEMS"} IN ORDER
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* PAR edit popover */}
+      {editParProduct && (
+        <div
+          onClick={() => setEditParProduct(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            background: "rgba(0,0,0,0.35)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "hsl(var(--background))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "10px",
+              padding: "20px 20px 16px",
+              width: "260px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+            }}
+          >
+            {/* Product name */}
+            <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "4px" }}>
+              {editParProduct["SUPPLIER"]}
+            </div>
+            <div style={{ fontSize: "14px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "16px", lineHeight: 1.3 }}>
+              {editParProduct["PRODUCT NAME"]}
+            </div>
+
+            {/* PAR label + input */}
+            <div style={{ fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", letterSpacing: "0.1em", color: "hsl(var(--muted-foreground))", marginBottom: "6px", textTransform: "uppercase" }}>
+              PAR
+            </div>
+            <input
+              autoFocus
+              type="number"
+              value={editParValue}
+              onChange={e => setEditParValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  const val = editParValue.trim() === "" ? null : Number(editParValue);
+                  saveParValue(editParProduct, isNaN(val as number) ? null : val, setBelowParList, setProducts);
+                  setEditParProduct(null);
+                }
+                if (e.key === "Escape") setEditParProduct(null);
+              }}
+              style={{
+                width: "100%", padding: "10px 12px",
+                fontSize: "18px", fontFamily: "Raleway, inherit", fontWeight: 300,
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "6px",
+                background: "hsl(var(--background))",
+                color: "hsl(var(--foreground))",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+              placeholder="0"
+            />
+
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
+              <button
+                onClick={() => setEditParProduct(null)}
+                style={{
+                  flex: 1, padding: "9px",
+                  fontSize: "12px", fontWeight: 500, fontFamily: "Raleway, inherit", letterSpacing: "0.08em",
+                  background: "transparent",
+                  border: "0.5px solid hsl(var(--border))",
+                  borderRadius: "6px", cursor: "pointer",
+                  color: "hsl(var(--muted-foreground))",
+                }}
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={() => {
+                  const val = editParValue.trim() === "" ? null : Number(editParValue);
+                  saveParValue(editParProduct, isNaN(val as number) ? null : val, setBelowParList, setProducts);
+                  setEditParProduct(null);
+                }}
+                style={{
+                  flex: 1, padding: "9px",
+                  fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", letterSpacing: "0.08em",
+                  background: "hsl(var(--foreground))",
+                  border: "0.5px solid hsl(var(--foreground))",
+                  borderRadius: "6px", cursor: "pointer",
+                  color: "hsl(var(--background))",
+                }}
+              >
+                SAVE
+              </button>
+            </div>
           </div>
         </div>
       )}
