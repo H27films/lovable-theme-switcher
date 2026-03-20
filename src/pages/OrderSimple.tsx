@@ -149,9 +149,12 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
   const [showBelowPar, setShowBelowPar] = useState(false);
   const [belowParList, setBelowParList] = useState<OfficeProduct[]>([]);
+  const [showHeaderSearch, setShowHeaderSearch] = useState(false);
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
+  const headerSearchInputRef = useRef<HTMLInputElement>(null);
 
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
@@ -341,6 +344,13 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
           >
             BELOW PAR {products.length > 0 && `(${belowParProducts.length})`}
             <ChevronDown size={11} strokeWidth={2} style={{ color: muted }} />
+          </button>
+          {/* Header search icon */}
+          <button
+            onClick={() => { setShowHeaderSearch(true); setHeaderSearchQuery(""); setTimeout(() => headerSearchInputRef.current?.focus(), 50); }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
+          >
+            <Search size={14} strokeWidth={1.5} />
           </button>
         </div>
         <button
@@ -656,6 +666,125 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
           </div>
         )}
       </div>
+
+      {/* Header search overlay panel */}
+      {showHeaderSearch && (() => {
+        const q = headerSearchQuery.toLowerCase();
+        const filtered = products
+          .filter(p =>
+            !p["Colour"] &&
+            (!q || p["PRODUCT NAME"]?.toLowerCase().includes(q) || p["SUPPLIER"]?.toLowerCase().includes(q))
+          )
+          .sort((a, b) => {
+            const aFav = isOfficeFav(a) ? 0 : 1;
+            const bFav = isOfficeFav(b) ? 0 : 1;
+            if (aFav !== bFav) return aFav - bFav;
+            return (a["PRODUCT NAME"] ?? "").localeCompare(b["PRODUCT NAME"] ?? "");
+          });
+
+        return (
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 60,
+            background: "hsl(var(--background))",
+            display: "flex", flexDirection: "column",
+          }}>
+            {/* Header */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: "10px",
+              padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
+            }}>
+              <Search size={14} style={{ color: muted, flexShrink: 0 }} />
+              <input
+                ref={headerSearchInputRef}
+                type="text"
+                value={headerSearchQuery}
+                onChange={e => setHeaderSearchQuery(e.target.value)}
+                placeholder="Search products…"
+                style={{
+                  flex: 1, background: "none", border: "none", outline: "none",
+                  fontSize: "14px", fontFamily: "Raleway, inherit", color: fg, caretColor: fg,
+                }}
+              />
+              {headerSearchQuery ? (
+                <button onClick={() => setHeaderSearchQuery("")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
+                  <X size={13} />
+                </button>
+              ) : null}
+              <button onClick={() => setShowHeaderSearch(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: muted, display: "flex" }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Product list */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {filtered.length === 0 ? (
+                <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "24px 16px" }}>
+                  {headerSearchQuery ? "No products found" : "Start typing to search…"}
+                </div>
+              ) : filtered.map((p, i) => {
+                const inOrder = isInOrder(p);
+                return (
+                  <div
+                    key={`${p["PRODUCT NAME"]}|||${p["SUPPLIER"]}`}
+                    onClick={() => inOrder
+                      ? setOrderLines(prev => prev.filter(l => !(l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"])))
+                      : addToOrder(p)
+                    }
+                    style={{
+                      display: "flex", alignItems: "center", gap: "12px",
+                      padding: "12px 16px",
+                      borderBottom: i < filtered.length - 1 ? border : "none",
+                      cursor: "pointer",
+                      background: inOrder ? "hsl(var(--card))" : "transparent",
+                    }}
+                  >
+                    {/* Checkbox */}
+                    <div style={{
+                      width: "18px", height: "18px", borderRadius: "4px", flexShrink: 0,
+                      border: inOrder ? "none" : `1.5px solid hsl(var(--border))`,
+                      background: inOrder ? "hsl(0 84% 60%)" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {inOrder && <span style={{ color: "white", fontSize: "11px", fontWeight: 700 }}>✓</span>}
+                    </div>
+                    {/* Product info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                        {isOfficeFav(p) && <Star size={9} fill="currentColor" style={{ color: fg, flexShrink: 0 }} />}
+                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: fg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {p["PRODUCT NAME"]}
+                        </div>
+                      </div>
+                      {p["SUPPLIER"] && (
+                        <div style={{ fontSize: "11px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>
+                      )}
+                    </div>
+                    {/* Office balance */}
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: getBalanceColor(p["OFFICE BALANCE"], p["PAR"], muted), flexShrink: 0 }}>
+                      {p["OFFICE BALANCE"] ?? "—"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: "16px", borderTop: border, flexShrink: 0 }}>
+              <button
+                onClick={() => setShowHeaderSearch(false)}
+                style={{
+                  width: "100%", padding: "13px", background: "none",
+                  border: "1px solid hsl(var(--border))", borderRadius: "8px",
+                  fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                  letterSpacing: "0.08em", color: fg, cursor: "pointer",
+                }}
+              >
+                DONE · {orderLines.length} IN ORDER
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* BELOW PAR overlay panel */}
       {showBelowPar && (
