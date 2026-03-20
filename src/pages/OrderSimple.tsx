@@ -18,6 +18,9 @@ interface OfficeProduct {
   "STAFF PRICE": number | null;
   "Colour": string | null;
   "OFFICE BALANCE": number | null;
+  "BOUDOIR BALANCE": number | null;
+  "CHIC NAILSPA BALANCE": number | null;
+  "NUR YADI BALANCE": number | null;
   "OFFICE FAVOURITE": string | null;
   "UNITS/ORDER": number | null;
   "PAR": number | null;
@@ -52,37 +55,27 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-  // Row 1: Company name (left) + ORDER SHEET (right)
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.text("CHIC NAILSPA SDN BHD", 15, 20);
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
   doc.text("ORDER SHEET", 195, 20, { align: "right" });
 
-  // Divider line below row 1
   doc.setLineWidth(0.3);
   doc.line(15, 24, 195, 24);
 
-  // Row 2: Date (left) — below divider
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text(dateStr, 15, 30);
-
-  // Contact info below date
   doc.text("Contact: Soong Ailing", 15, 36);
   doc.text("Phone Number: +60123333128", 15, 42);
 
-  // Supplier name
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.text(supplier, 15, 52);
 
-  // Divider line below supplier
   doc.setLineWidth(0.3);
   doc.line(15, 56, 195, 56);
 
-  // Table header
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.text("#", 15, 64);
@@ -91,7 +84,6 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   doc.setLineWidth(0.2);
   doc.line(15, 66, 195, 66);
 
-  // Table rows
   doc.setFont("helvetica", "normal");
   let y = 74;
   lines.forEach((item, i) => {
@@ -100,10 +92,7 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
     doc.text(name, 25, y);
     doc.text(String(item.qty), 185, y, { align: "right" });
     y += name.length > 1 ? name.length * 6 + 2 : 8;
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
+    if (y > 270) { doc.addPage(); y = 20; }
   });
 
   const blob = doc.output("blob");
@@ -143,6 +132,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
   const [orderSupplierFilter, setOrderSupplierFilter] = useState<string[]>([]);
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
+  const [showBelowPar, setShowBelowPar] = useState(false);
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
@@ -150,12 +140,13 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
   const border = "0.5px solid hsl(var(--border))";
+  const red = "hsl(0 84% 60%)";
   const hdrStyle: React.CSSProperties = {
     fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
     letterSpacing: "0.12em", textTransform: "uppercase", color: muted,
   };
 
-  // Load products — paginated to fetch ALL rows (same as SubLandingSimple)
+  // Load products — paginated to fetch ALL rows
   useEffect(() => {
     const fetchProducts = async () => {
       let allData: any[] = [];
@@ -203,12 +194,35 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
     return v === true || v === "TRUE" || v === "true" || v === "YES" || v === "yes";
   };
 
+  // Products below PAR (OFFICE BALANCE only, non-colour products)
+  const belowParProducts: OfficeProduct[] = (() => {
+    const seen = new Map<string, OfficeProduct>();
+    for (const p of products) {
+      if (isColourProd(p)) continue;
+      const par = p["PAR"];
+      if (!par || par <= 0) continue;
+      const bal = p["OFFICE BALANCE"];
+      if (bal !== null && bal > par) continue;
+      const key = `${p["PRODUCT NAME"]}|||${p["SUPPLIER"]}`;
+      if (!seen.has(key)) seen.set(key, p);
+    }
+    return Array.from(seen.values()).sort((a, b) => {
+      const af = isOfficeFav(a) ? 0 : 1, bf = isOfficeFav(b) ? 0 : 1;
+      if (af !== bf) return af - bf;
+      return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+    });
+  })();
+
+  // Check if a product is already in orderLines
+  const isInOrder = (p: OfficeProduct) =>
+    orderLines.some(l => l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"]);
+
   // Filtered products for supplier filter
   const filteredForOrder = orderSupplierFilter.length > 0
     ? products.filter(p => p["SUPPLIER"] && orderSupplierFilter.includes(p["SUPPLIER"]))
     : products;
 
-  // Search results — dedup by PRODUCT NAME + SUPPLIER, fav first then products then colours
+  // Search results
   const orderDropdownResults: OfficeProduct[] = (() => {
     if (!forceOrderDropdown && orderSearch.length === 0) return [];
     const matched = filteredForOrder.filter(p =>
@@ -238,6 +252,18 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
     setOrderActiveIndex(-1);
   }, []);
 
+  const removeFromOrder = useCallback((p: OfficeProduct) => {
+    setOrderLines(prev => prev.filter(l => !(l.product["PRODUCT NAME"] === p["PRODUCT NAME"] && l.product["SUPPLIER"] === p["SUPPLIER"])));
+  }, []);
+
+  const toggleBelowPar = useCallback((p: OfficeProduct) => {
+    if (isInOrder(p)) {
+      removeFromOrder(p);
+    } else {
+      addToOrder(p);
+    }
+  }, [orderLines, addToOrder, removeFromOrder]);
+
   const handleOrderKeyDown = (e: React.KeyboardEvent) => {
     if (!showOrderDropdown || orderDropdownResults.length === 0) return;
     if (e.key === "ArrowDown") { e.preventDefault(); setOrderActiveIndex(i => Math.min(i + 1, orderDropdownResults.length - 1)); }
@@ -250,22 +276,54 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
     setDraftReady(true);
   };
 
+  // Balance display helper: coloured if below PAR
+  const balCell = (balance: number | null, par: number | null) => (
+    <span style={{
+      color: checkBelowPar(balance, par) ? red : muted,
+      fontWeight: checkBelowPar(balance, par) ? 600 : 300,
+    }}>
+      {balance ?? "—"}
+    </span>
+  );
+
   return (
     <div style={{
       height: "100dvh", overflow: "hidden",
       background: "hsl(var(--background))", color: fg,
       fontFamily: "Raleway, inherit",
       display: "flex", flexDirection: "column",
+      position: "relative",
     }}>
       {/* Top bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
       }}>
-        <span
-          onClick={onBack}
-          style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}
-        >DRAFT ORDER</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span
+            onClick={onBack}
+            style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}
+          >ORDER</span>
+          {/* BELOW PAR button */}
+          <button
+            onClick={() => setShowBelowPar(true)}
+            style={{
+              background: "none",
+              border: `0.5px solid ${red}`,
+              borderRadius: "4px",
+              cursor: "pointer",
+              padding: "3px 8px",
+              fontSize: "9px",
+              fontWeight: 600,
+              fontFamily: "Raleway, inherit",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: red,
+            }}
+          >
+            BELOW PAR
+          </button>
+        </div>
         <button
           onClick={handleToggle}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
@@ -455,11 +513,6 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
 
             {/* ORDER SUMMARY */}
             {(() => {
-              const today = new Date();
-              const dd = String(today.getDate()).padStart(2, "0");
-              const mm = String(today.getMonth() + 1).padStart(2, "0");
-              const yy = String(today.getFullYear()).slice(2);
-              const baseGRN = `OFFICE ${dd}${mm}${yy}`;
               type SupplierGroup = { supplier: string; lines: { line: OrderLine; idx: number }[] };
               const supplierGroups: SupplierGroup[] = [];
               const supplierMap = new Map<string, SupplierGroup>();
@@ -483,15 +536,12 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                 <div style={{ marginTop: "24px", paddingTop: "8px" }}>
                   <div style={{ ...hdrStyle, marginBottom: "16px", fontSize: "13px" }}>ORDER SUMMARY</div>
                   {supplierGroups.map((group, gi) => {
-                    const grn = multiSupplier ? `${baseGRN} (${gi + 1})` : baseGRN;
                     const groupTotal = group.lines.reduce((s, { line }) => s + line.qty * (line.product["UNITS/ORDER"] ?? 1) * (line.product["SUPPLIER PRICE"] ?? 0), 0);
                     return (
                       <div key={group.supplier} style={{ marginBottom: multiSupplier ? "40px" : "8px" }}>
-                        {/* Supplier header row */}
                         <div style={{ marginBottom: "6px" }}>
                           <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: fg }}>{group.supplier}</div>
                         </div>
-                        {/* Product lines */}
                         {group.lines.map(({ line, idx }) => {
                           const units = line.product["UNITS/ORDER"] ?? 1;
                           const price = line.product["SUPPLIER PRICE"];
@@ -511,7 +561,6 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                             </div>
                           );
                         })}
-                        {/* Subtotal */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: border }}>
                           <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.lines.length} {group.lines.length === 1 ? "ORDER" : "ORDERS"}</div>
                           {groupTotal > 0 && <div style={{ fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: fg }}>RM {groupTotal.toFixed(2)}</div>}
@@ -519,12 +568,10 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                       </div>
                     );
                   })}
-                  {/* Grand total */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", marginTop: "24px" }}>
                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"} · {supplierGroups.length} {supplierGroups.length === 1 ? "SUPPLIER" : "SUPPLIERS"}</div>
                     {totalPrice > 0 && <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: fg }}>RM {totalPrice.toFixed(2)}</div>}
                   </div>
-                  {/* DRAFT ORDER / WhatsApp buttons */}
                   {!draftReady ? (
                     <button
                       onClick={handleDraftConfirm}
@@ -590,6 +637,140 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
           </div>
         )}
       </div>
+
+      {/* BELOW PAR overlay panel */}
+      {showBelowPar && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "hsl(var(--background))",
+          display: "flex", flexDirection: "column",
+          zIndex: 100,
+        }}>
+          {/* Panel header */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
+          }}>
+            <div>
+              <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg }}>BELOW PAR</div>
+              <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, marginTop: "2px" }}>
+                {belowParProducts.length} {belowParProducts.length === 1 ? "product" : "products"} · tap to add/remove from order
+              </div>
+            </div>
+            <button
+              onClick={() => setShowBelowPar(false)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
+            >
+              <X size={20} strokeWidth={1.5} />
+            </button>
+          </div>
+
+          {/* Column headers */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "28px 1fr 40px 40px 40px 40px",
+            gap: "4px",
+            padding: "8px 16px",
+            borderBottom: border,
+            flexShrink: 0,
+          }}>
+            <div />
+            <div style={{ ...hdrStyle, fontSize: "9px" }}>PRODUCT</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>OFF</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>BOU</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>CHI</div>
+            <div style={{ ...hdrStyle, fontSize: "9px", textAlign: "center" }}>NYD</div>
+          </div>
+
+          {/* Product list */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {belowParProducts.length === 0 ? (
+              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "24px 16px" }}>
+                All products are above PAR 🎉
+              </div>
+            ) : (
+              belowParProducts.map((p, i) => {
+                const inOrder = isInOrder(p);
+                const par = p["PAR"];
+                return (
+                  <div
+                    key={`${p["PRODUCT NAME"]}|||${p["SUPPLIER"]}`}
+                    onClick={() => toggleBelowPar(p)}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "28px 1fr 40px 40px 40px 40px",
+                      gap: "4px",
+                      alignItems: "center",
+                      padding: "11px 16px",
+                      borderBottom: i < belowParProducts.length - 1 ? border : "none",
+                      cursor: "pointer",
+                      background: inOrder ? "hsl(var(--card))" : "transparent",
+                    }}
+                  >
+                    {/* Checkbox */}
+                    <div style={{
+                      width: "16px", height: "16px",
+                      border: `1.5px solid ${inOrder ? red : "hsl(var(--border))"}`,
+                      borderRadius: "3px",
+                      background: inOrder ? red : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {inOrder && (
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+
+                    {/* Product name + supplier */}
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        {isOfficeFav(p) && <Star size={8} fill="currentColor" style={{ color: fg, flexShrink: 0 }} />}
+                        <div style={{ fontSize: "13px", fontWeight: inOrder ? 500 : 300, fontFamily: "Raleway, inherit", color: fg, lineHeight: 1.3 }}>{p["PRODUCT NAME"]}</div>
+                      </div>
+                      {p["SUPPLIER"] && <div style={{ fontSize: "10px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
+                    </div>
+
+                    {/* Balances */}
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center" }}>
+                      {balCell(p["OFFICE BALANCE"], par)}
+                    </div>
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
+                      {p["BOUDOIR BALANCE"] ?? "—"}
+                    </div>
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
+                      {p["CHIC NAILSPA BALANCE"] ?? "—"}
+                    </div>
+                    <div style={{ fontSize: "12px", fontFamily: "Raleway, inherit", textAlign: "center", color: muted, fontWeight: 300 }}>
+                      {p["NUR YADI BALANCE"] ?? "—"}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div style={{ paddingBottom: "40px" }} />
+          </div>
+
+          {/* Footer: done button */}
+          <div style={{ padding: "12px 16px", borderTop: border, flexShrink: 0 }}>
+            <button
+              onClick={() => setShowBelowPar(false)}
+              style={{
+                width: "100%", padding: "12px",
+                fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                letterSpacing: "0.12em", textTransform: "uppercase",
+                border: "0.5px solid hsl(var(--foreground))",
+                background: "hsl(var(--foreground))",
+                color: "hsl(var(--background))",
+                borderRadius: "6px", cursor: "pointer",
+              }}
+            >
+              DONE · {orderLines.length} {orderLines.length === 1 ? "ITEM" : "ITEMS"} IN ORDER
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
