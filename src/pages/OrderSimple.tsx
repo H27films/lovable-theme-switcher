@@ -148,6 +148,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
   const [showBelowPar, setShowBelowPar] = useState(false);
+  const [belowParList, setBelowParList] = useState<OfficeProduct[]>([]);
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
@@ -321,7 +322,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
           >ORDER</span>
           {/* BELOW PAR button */}
           <button
-            onClick={() => setShowBelowPar(true)}
+            onClick={() => { setBelowParList(belowParProducts); setShowBelowPar(true); }}
             style={{
               background: "none",
               border: "none",
@@ -672,7 +673,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             <div>
               <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg }}>BELOW PAR</div>
               <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, marginTop: "2px" }}>
-                {belowParProducts.length} {belowParProducts.length === 1 ? "product" : "products"} · tap to add/remove from order
+                {belowParList.length} {belowParList.length === 1 ? "product" : "products"} · tap to add/remove from order
               </div>
             </div>
             <button
@@ -703,12 +704,12 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
 
           {/* Product list */}
           <div style={{ flex: 1, overflowY: "auto" }}>
-            {belowParProducts.length === 0 ? (
+            {belowParList.length === 0 ? (
               <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "24px 16px" }}>
                 All products are above PAR 🎉
               </div>
             ) : (
-              belowParProducts.map((p, i) => {
+              belowParList.map((p, i) => {
                 const inOrder = isInOrder(p);
                 const par = p["PAR"];
                 return (
@@ -721,7 +722,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
                       gap: "4px",
                       alignItems: "center",
                       padding: "11px 16px",
-                      borderBottom: i < belowParProducts.length - 1 ? border : "none",
+                      borderBottom: i < belowParList.length - 1 ? border : "none",
                       cursor: "pointer",
                       background: inOrder ? "hsl(var(--card))" : "transparent",
                     }}
@@ -767,7 +768,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
 
                     {/* Favourite star */}
                     <button
-                      onClick={e => { e.stopPropagation(); toggleOfficeFav(p, setProducts); }}
+                      onClick={e => { e.stopPropagation(); toggleOfficeFav(p, setProducts); setBelowParList(prev => prev.map(x => x.id === p.id ? { ...x, "OFFICE FAVOURITE": (isOfficeFav(p) ? null : "TRUE") } : x)); }}
                       style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       <Star
