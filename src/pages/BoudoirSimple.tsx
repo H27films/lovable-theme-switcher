@@ -541,6 +541,35 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     doc.save(`${grn} - GRN.pdf`);
   };
 
+  const exportDepositCsv = () => {
+    if (!depStart || !depEnd) return;
+    const start = depStart <= depEnd ? depStart : depEnd;
+    const end = depStart <= depEnd ? depEnd : depStart;
+    const rows = cashLog
+      .filter(r => r.Branch === "Boudoir" && r.Date >= start && r.Date <= end)
+      .sort((a, b) => a.Date.localeCompare(b.Date));
+    const headers = ["Date", "Total GST", "Credit", "QR", "Cash", "Error", "Explanation"];
+    const csvRows = [
+      headers.join(","),
+      ...rows.map(r => [
+        r.Date,
+        r["Total GST"] ?? "",
+        r.Credit ?? "",
+        r.QR ?? "",
+        r.Cash ?? "",
+        r.Error ?? "",
+        `"${(r.Explanation ?? "").replace(/"/g, '""')}"`
+      ].join(","))
+    ];
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Boudoir_Deposit_${start}_to_${end}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportToExcel = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
     const rows = [
       ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
@@ -1950,6 +1979,15 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                   Total: RM {(cashView === "recent" ? recentGSTTotal : monthGSTTotal).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               )}
+              {cashView === "deposit" && (
+                <button
+                  onClick={exportDepositCsv}
+                  title="Export to Excel"
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", color: "hsl(var(--foreground))", display: "flex", alignItems: "center" }}
+                >
+                  <Download size={15} />
+                </button>
+              )}
             </div>
             {/* Log table header */}
             {cashView !== "deposit" && (
@@ -2006,7 +2044,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
               <div style={{ paddingTop: "8px" }}>
 
                 {/* Date range + cash total */}
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "20px" }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "6px" }}>From</div>
                     <select
@@ -2089,8 +2127,8 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                       {denomDiff === 0 ? (
                         <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(120 50% 35%)" }}>✓ Matched</span>
                       ) : (
-                        <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(0 65% 50%)" }}>
-                          {denomDiff > 0 ? "+" : ""}RM {denomDiff.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} difference
+                        <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: denomDiff > 0 ? "hsl(120 50% 35%)" : "hsl(0 65% 50%)" }}>
+                          {denomDiff > 0 ? "+" : ""}RM {denomDiff.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {denomDiff > 0 ? "over" : "under"}
                         </span>
                       )}
                     </div>
