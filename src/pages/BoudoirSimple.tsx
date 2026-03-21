@@ -155,6 +155,8 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [cashSubmitting, setCashSubmitting] = useState(false);
   const [cashSuccess, setCashSuccess] = useState(false);
   const [cashError, setCashError] = useState<string | null>(null);
+  const [editingLogCell, setEditingLogCell] = useState<{id: number, col: string} | null>(null);
+  const [editingLogValue, setEditingLogValue] = useState("");
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -644,6 +646,9 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   }, [cashLog]);
 
   const currentMonthName = new Date().toLocaleString("en-US", { month: "long" });
+  const recentGSTTotal = React.useMemo(() => {
+    return cashLogFiltered.reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
+  }, [cashLogFiltered]);
 
   const refreshCashLog = async () => {
     const today = new Date();
@@ -656,6 +661,27 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       .from("Cash").select("*").eq("Branch", "Boudoir")
       .gte("Date", fromDateStr).order("Date", { ascending: false });
     setCashLog(data || []);
+  };
+
+  const handleDeleteCashEntry = async (entry: CashEntryState, idx: number) => {
+    if (idx === 0) return; // cannot delete today
+    setCashEntries(prev => prev.filter((_, i) => i !== idx));
+    const existing = cashLog.find(r => r.Date === entry.date);
+    if (existing?.id) {
+      await (supabase as any).from("Cash").delete().eq("id", existing.id);
+      setCashLog(prev => prev.filter(r => r.id !== existing.id));
+    }
+  };
+
+  const handleLogCellSave = async (rowId: number, col: string, value: string) => {
+    const numVal = parseFloat(value);
+    const parsed: number | string = isNaN(numVal) ? value : numVal;
+    try {
+      await (supabase as any).from("Cash").update({ [col]: parsed }).eq("id", rowId);
+      setCashLog(prev => prev.map(r => r.id === rowId ? { ...r, [col]: parsed } : r));
+    } catch (_) {}
+    setEditingLogCell(null);
+    setEditingLogValue("");
   };
 
   const handleCashSubmit = async () => {
@@ -1805,16 +1831,22 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                 </div>
                 {entry.expanded && (
                   <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "10px", alignItems: "flex-end" }}>
-                    <div />
-                    <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "center" }}>
+                    <div style={{ gridColumn: "1" }} />
+                    <div style={{ gridColumn: "2", display: "flex", flexDirection: "column", gap: "3px", alignItems: "center" }}>
                       <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>Error</div>
                       <input type="number" inputMode="decimal" value={entry.error} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, error: e.target.value, cashOverride: "" }))} placeholder="0" style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-start", gridColumn: "3 / 6" }}>
+                    <div style={{ gridColumn: "3 / 6", display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-start" }}>
                       <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Note</div>
                       <input type="text" value={entry.errorNote} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, errorNote: e.target.value }))} placeholder="Explanation..." style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0", textAlign: "left" }} />
                     </div>
-                    <div />
+                    <div style={{ gridColumn: "6", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                      {idx !== 0 && (
+                        <button onClick={() => handleDeleteCashEntry(entry, idx)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <X size={13} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1846,20 +1878,24 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
 
           {/* Recent / Month toggle */}
           <div style={{ paddingTop: "20px" }}>
-            <div style={{ display: "flex", gap: "24px", marginBottom: "14px" }}>
-              <button
-                onClick={() => setCashView("recent")}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "recent" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "recent" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
-              >
-                Recent
-              </button>
-              <button
-                onClick={() => setCashView("month")}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "month" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "month" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent", display: "flex", alignItems: "baseline", gap: "8px" }}
-              >
-                <span>{currentMonthName}</span>
-                {cashView === "month" && <span style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>RM {monthGSTTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>}
-              </button>
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ display: "flex", gap: "24px" }}>
+                <button
+                  onClick={() => setCashView("recent")}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "recent" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "recent" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+                >
+                  Recent
+                </button>
+                <button
+                  onClick={() => setCashView("month")}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "month" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "month" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+                >
+                  {currentMonthName}
+                </button>
+              </div>
+              <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", paddingBottom: "6px" }}>
+                Total: RM {(cashView === "recent" ? recentGSTTotal : monthGSTTotal).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
             </div>
             {/* Log table header */}
             <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
@@ -1869,15 +1905,45 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
             </div>
             {loadingCashLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>Loading...</div>}
             {!loadingCashLog && cashLogFiltered.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>No entries</div>}
-            {!loadingCashLog && cashLogFiltered.map(row => (
-              <div key={row.id} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
-                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{new Date(row.Date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
-                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["Total GST"] ?? "—"}</div>
-                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["Credit"] ?? "—"}</div>
-                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["QR"] ?? "—"}</div>
-                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["Cash"] ?? "—"}</div>
-              </div>
-            ))}
+            {!loadingCashLog && cashLogFiltered.map(row => {
+              const editableCols: Array<{key: string, align: "center"|"left"}> = [
+                { key: "Total GST", align: "center" },
+                { key: "Credit", align: "center" },
+                { key: "QR", align: "center" },
+                { key: "Cash", align: "center" },
+              ];
+              return (
+                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{new Date(row.Date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+                  {editableCols.map(({ key, align }) => {
+                    const isEditing = editingLogCell?.id === row.id && editingLogCell?.col === key;
+                    return (
+                      <div key={key} style={{ textAlign: align }}>
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            inputMode="decimal"
+                            value={editingLogValue}
+                            onChange={e => setEditingLogValue(e.target.value)}
+                            onBlur={() => handleLogCellSave(row.id, key, editingLogValue)}
+                            onKeyDown={e => { if (e.key === "Enter") handleLogCellSave(row.id, key, editingLogValue); if (e.key === "Escape") setEditingLogCell(null); }}
+                            style={{ width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--foreground))", outline: "none", fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: align, padding: "1px 0" }}
+                          />
+                        ) : (
+                          <div
+                            onClick={() => { setEditingLogCell({ id: row.id, col: key }); setEditingLogValue(String(row[key] ?? "")); }}
+                            style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", cursor: "text", minHeight: "16px" }}
+                          >
+                            {row[key] ?? "—"}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
 
         </div>
