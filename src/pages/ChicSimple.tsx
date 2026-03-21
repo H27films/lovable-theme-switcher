@@ -847,20 +847,6 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
     });
   };
 
-  const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
-    setActivePanel(panel);
-    setShowDropdown(false);
-    setShowUsageDropdown(false);
-  };
-
-  const closePanel = () => {
-    setActivePanel(null);
-    setUsageSearch("");
-    setShowUsageDropdown(false);
-    setOrderSearch("");
-    setShowOrderDropdown(false);
-  };
-
   // Shared header cell style helpers
   const hdrLeft   = { fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" } as React.CSSProperties;
   const hdrCenter = { ...hdrLeft, textAlign: "center" as const };
