@@ -51,6 +51,8 @@ interface CashRow {
   QR: number | null;
   Cash: number | null;
   Date: string;
+  Error: number | null;
+  Explanation: string | null;
 }
 
 interface CashEntryState {
@@ -229,9 +231,9 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
           credit: existing ? String(existing["Credit"] ?? "") : "",
           qr: existing ? String(existing["QR"] ?? "") : "",
           cashOverride: "",
-          error: "",
-          errorNote: "",
-          expanded: false,
+          error: existing ? String(existing["Error"] ?? "") : "",
+          errorNote: existing ? String(existing["Explanation"] ?? "") : "",
+          expanded: !!(existing?.Error),
           existingId: existing?.id,
         });
       }
@@ -661,7 +663,8 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         const qr = parseFloat(entry.qr) || 0;
         const err = parseFloat(entry.error) || 0;
         const cash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
-        const payload = { Branch: "Boudoir", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash };
+        const errVal = parseFloat(entry.error) || null;
+        const payload = { Branch: "Boudoir", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash, Error: errVal || null, Explanation: entry.errorNote || null };
         if (entry.existingId) {
           const { error: uErr } = await (supabase as any).from("Cash").update(payload).eq("id", entry.existingId);
           if (uErr) { setCashError(uErr.message || "Update failed"); break; }
