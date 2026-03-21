@@ -760,14 +760,9 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
     setCashLog(data || []);
   };
 
-  const handleDeleteCashEntry = async (entry: CashEntryState, idx: number) => {
+  const handleDeleteCashEntry = (entry: CashEntryState, idx: number) => {
     if (idx === 0) return; // cannot delete today
     setCashEntries(prev => prev.filter((_, i) => i !== idx));
-    const existing = cashLog.find(r => r.Date === entry.date);
-    if (existing?.id) {
-      await (supabase as any).from("Cash").delete().eq("id", existing.id);
-      setCashLog(prev => prev.filter(r => r.id !== existing.id));
-    }
   };
 
   const handleLogCellSave = async (rowId: number, col: string, value: string) => {
