@@ -158,10 +158,14 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [editingLogCell, setEditingLogCell] = useState<{id: number, col: string} | null>(null);
   const [editingLogValue, setEditingLogValue] = useState("");
 
-  // Deposit state
-  const [depositStart, setDepositStart] = useState<string>("");
-  const [depositEnd, setDepositEnd] = useState<string>("");
-  const [depositDenom, setDepositDenom] = useState<Record<string, string>>({ "100": "", "50": "", "20": "", "10": "", "5": "", "1": "", coins: "" });
+  // Deposit tab state
+  const [depStart, setDepStart] = useState<string>("");
+  const [depEnd, setDepEnd] = useState<string>("");
+  const [depCashTotal, setDepCashTotal] = useState<number | null>(null);
+  const [depLoading, setDepLoading] = useState(false);
+  const [denomCounts, setDenomCounts] = useState<Record<string,string>>({
+    "100": "", "50": "", "20": "", "10": "", "5": "", "1": "", "coins": ""
+  });
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -637,11 +641,9 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const cashLogFiltered = React.useMemo(() => {
     if (cashView === "recent") {
       return [...cashLog].sort((a, b) => b.Date.localeCompare(a.Date)).slice(0, 7);
-    } else if (cashView === "month") {
+    } else {
       const now = new Date();
       return cashLog.filter(r => { const d = new Date(r.Date + "T00:00:00"); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); });
-    } else {
-      return [];
     }
   }, [cashLog, cashView]);
 
@@ -653,34 +655,46 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   }, [cashLog]);
 
   const currentMonthName = new Date().toLocaleString("en-US", { month: "long" });
+  const currentMonthDates = React.useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const days: string[] = [];
+    for (let d = 1; d <= today.getDate(); d++) {
+      days.push(`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+    }
+    return days.reverse(); // newest first
+  }, []);
+
+  // Deposit: compute cash total from cashLog when date range changes
+  React.useEffect(() => {
+    if (!depStart || !depEnd) { setDepCashTotal(null); return; }
+    const start = depStart <= depEnd ? depStart : depEnd;
+    const end = depStart <= depEnd ? depEnd : depStart;
+    const total = cashLog
+      .filter(r => r.Date >= start && r.Date <= end)
+      .reduce((sum, r) => sum + (Number(r["Cash"]) || 0), 0);
+    setDepCashTotal(total);
+  }, [depStart, depEnd, cashLog]);
+
+  const denominations: Array<{key: string, label: string, value: number}> = [
+    { key: "100", label: "RM 100", value: 100 },
+    { key: "50",  label: "RM 50",  value: 50  },
+    { key: "20",  label: "RM 20",  value: 20  },
+    { key: "10",  label: "RM 10",  value: 10  },
+    { key: "5",   label: "RM 5",   value: 5   },
+    { key: "1",   label: "RM 1",   value: 1   },
+    { key: "coins", label: "Coins", value: 1  },
+  ];
+  const denomTotal = denominations.reduce((sum, d) => {
+    if (d.key === "coins") return sum + (parseFloat(denomCounts["coins"]) || 0);
+    return sum + (parseInt(denomCounts[d.key] || "0") || 0) * d.value;
+  }, 0);
+  const denomDiff = depCashTotal !== null ? denomTotal - depCashTotal : null;
+
   const recentGSTTotal = React.useMemo(() => {
     return cashLogFiltered.reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
   }, [cashLogFiltered]);
-
-  // Deposit computed values
-  const depositLast8 = React.useMemo(() => {
-    const arr: string[] = [];
-    for (let i = 0; i < 8; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      arr.push(d.toISOString().split("T")[0]);
-    }
-    return arr;
-  }, []);
-
-  const depositCashTotal = React.useMemo(() => {
-    if (!depositStart || !depositEnd) return 0;
-    const start = depositStart <= depositEnd ? depositStart : depositEnd;
-    const end = depositStart <= depositEnd ? depositEnd : depositStart;
-    return cashLog
-      .filter(r => r.Date >= start && r.Date <= end)
-      .reduce((sum, r) => sum + (Number(r["Cash"]) || 0), 0);
-  }, [cashLog, depositStart, depositEnd]);
-
-  const depositDenomTotal = React.useMemo(() => {
-    const vals: Record<string, number> = { "100": 100, "50": 50, "20": 20, "10": 10, "5": 5, "1": 1, coins: 1 };
-    return Object.entries(depositDenom).reduce((sum, [k, v]) => sum + (Number(v) || 0) * vals[k], 0);
-  }, [depositDenom]);
 
   const refreshCashLog = async () => {
     const today = new Date();
@@ -1908,7 +1922,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
             {cashError && <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {cashError}</div>}
           </div>
 
-          {/* Bottom Tabs: Recent / Month / Deposit */}
+          {/* Recent / Month / Deposit toggle */}
           <div style={{ paddingTop: "20px" }}>
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "14px" }}>
               <div style={{ display: "flex", gap: "24px" }}>
@@ -1937,164 +1951,152 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                 </div>
               )}
             </div>
-
-            {/* ── DEPOSIT SECTION ── */}
-            {cashView === "deposit" && (
-              <div style={{ paddingTop: "4px" }}>
-                {/* Date range row */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "18px" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <span style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em" }}>From</span>
-                    <select
-                      value={depositStart}
-                      onChange={e => setDepositStart(e.target.value)}
-                      style={{ background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0", cursor: "pointer" }}
-                    >
-                      <option value="">Select</option>
-                      {depositLast8.map(d => (
-                        <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <span style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em" }}>To</span>
-                    <select
-                      value={depositEnd}
-                      onChange={e => setDepositEnd(e.target.value)}
-                      style={{ background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0", cursor: "pointer" }}
-                    >
-                      <option value="">Select</option>
-                      {depositLast8.map(d => (
-                        <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ marginLeft: "auto", textAlign: "right" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", marginBottom: "2px" }}>Total Cash</div>
-                    <div style={{ fontSize: "15px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                      RM {depositCashTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Separator */}
-                <div style={{ borderTop: "0.5px solid hsl(var(--border))", marginBottom: "14px" }} />
-
-                {/* Denomination grid header */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px", gap: "8px", marginBottom: "8px" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em" }}>Denomination</div>
-                  <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: "center" }}>Count</div>
-                  <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: "right" }}>Amount</div>
-                </div>
-
-                {/* Note denominations */}
-                {(["100","50","20","10","5","1"] as const).map(denom => {
-                  const count = Number(depositDenom[denom]) || 0;
-                  const amount = count * Number(denom);
-                  return (
-                    <div key={denom} style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px", gap: "8px", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>RM {denom}</div>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min="0"
-                        value={depositDenom[denom]}
-                        onChange={e => setDepositDenom(prev => ({ ...prev, [denom]: e.target.value }))}
-                        placeholder="0"
-                        style={{ background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0", width: "100%" }}
-                      />
-                      <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "right" }}>
-                        {amount > 0 ? `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Coins row */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px", gap: "8px", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Coins</div>
-                  <div />
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    value={depositDenom["coins"]}
-                    onChange={e => setDepositDenom(prev => ({ ...prev, coins: e.target.value }))}
-                    placeholder="0.00"
-                    style={{ background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "right", padding: "2px 0", width: "100%" }}
-                  />
-                </div>
-
-                {/* Totals comparison */}
-                <div style={{ paddingTop: "14px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Counted Total</span>
-                    <span style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                      RM {depositDenomTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Difference</span>
-                    <span style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: Math.abs(depositDenomTotal - depositCashTotal) < 0.01 ? "#16a34a" : "#dc2626" }}>
-                      {Math.abs(depositDenomTotal - depositCashTotal) < 0.01
-                        ? "✓ Matched"
-                        : `RM ${(depositDenomTotal - depositCashTotal).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" })}`}
-                    </span>
-                  </div>
-                </div>
+            {/* Log table header */}
+            {cashView !== "deposit" && (
+              <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
+                  <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+                ))}
               </div>
             )}
-
-            {/* ── TABLE (Recent / Month) ── */}
-            {cashView !== "deposit" && (
-              <>
-                <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-                  {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
-                    <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
-                  ))}
-                </div>
-                {loadingCashLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>Loading...</div>}
-                {!loadingCashLog && cashLogFiltered.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>No entries</div>}
-                {!loadingCashLog && cashLogFiltered.map(row => {
-                  const editableCols: Array<{key: string, align: "center"|"left"}> = [
-                    { key: "Total GST", align: "center" },
-                    { key: "Credit", align: "center" },
-                    { key: "QR", align: "center" },
-                    { key: "Cash", align: "center" },
-                  ];
-                  return (
-                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{new Date(row.Date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
-                      {editableCols.map(({ key, align }) => {
-                        const isEditing = editingLogCell?.id === row.id && editingLogCell?.col === key;
-                        return (
-                          <div key={key} style={{ textAlign: align }}>
-                            {isEditing ? (
-                              <input
-                                autoFocus
-                                type="number"
-                                inputMode="decimal"
-                                value={editingLogValue}
-                                onChange={e => setEditingLogValue(e.target.value)}
-                                onBlur={() => handleLogCellSave(row.id, key, editingLogValue)}
-                                onKeyDown={e => { if (e.key === "Enter") handleLogCellSave(row.id, key, editingLogValue); if (e.key === "Escape") setEditingLogCell(null); }}
-                                style={{ width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--foreground))", outline: "none", fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: align, padding: "1px 0" }}
-                              />
-                            ) : (
-                              <div
-                                onClick={() => { setEditingLogCell({ id: row.id, col: key }); setEditingLogValue(String(row[key] ?? "")); }}
-                                style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", cursor: "text", minHeight: "16px" }}
-                              >
-                                {row[key] ?? "—"}
-                              </div>
-                            )}
+            {cashView !== "deposit" && loadingCashLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>Loading...</div>}
+            {cashView !== "deposit" && !loadingCashLog && cashLogFiltered.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>No entries</div>}
+            {cashView !== "deposit" && !loadingCashLog && cashLogFiltered.map(row => {
+              const editableCols: Array<{key: string, align: "center"|"left"}> = [
+                { key: "Total GST", align: "center" },
+                { key: "Credit", align: "center" },
+                { key: "QR", align: "center" },
+                { key: "Cash", align: "center" },
+              ];
+              return (
+                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{new Date(row.Date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+                  {editableCols.map(({ key, align }) => {
+                    const isEditing = editingLogCell?.id === row.id && editingLogCell?.col === key;
+                    return (
+                      <div key={key} style={{ textAlign: align }}>
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            inputMode="decimal"
+                            value={editingLogValue}
+                            onChange={e => setEditingLogValue(e.target.value)}
+                            onBlur={() => handleLogCellSave(row.id, key, editingLogValue)}
+                            onKeyDown={e => { if (e.key === "Enter") handleLogCellSave(row.id, key, editingLogValue); if (e.key === "Escape") setEditingLogCell(null); }}
+                            style={{ width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--foreground))", outline: "none", fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: align, padding: "1px 0" }}
+                          />
+                        ) : (
+                          <div
+                            onClick={() => { setEditingLogCell({ id: row.id, col: key }); setEditingLogValue(String(row[key] ?? "")); }}
+                            style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", cursor: "text", minHeight: "16px" }}
+                          >
+                            {row[key] ?? "—"}
                           </div>
-                        );
-                      })}
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            {/* ── Deposit tab ── */}
+            {cashView === "deposit" && (
+              <div style={{ paddingTop: "8px" }}>
+
+                {/* Date range + cash total */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "6px" }}>From</div>
+                    <select
+                      value={depStart}
+                      onChange={e => setDepStart(e.target.value)}
+                      style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                    >
+                      <option value="">Select date</option>
+                      {currentMonthDates.map(d => (
+                        <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "6px" }}>To</div>
+                    <select
+                      value={depEnd}
+                      onChange={e => setDepEnd(e.target.value)}
+                      style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                    >
+                      <option value="">Select date</option>
+                      {currentMonthDates.map(d => (
+                        <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "4px" }}>Total Cash</div>
+                    <div style={{ fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                      {depCashTotal !== null ? `RM ${depCashTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
                     </div>
-                  );
-                })}
-              </>
+                  </div>
+                </div>
+
+                {/* Denomination table */}
+                <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "12px" }}>
+                  {/* Header */}
+                  <div style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", marginBottom: "8px" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>Denomination</div>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", textAlign: "center" }}>Count</div>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", textAlign: "right" }}>Amount</div>
+                  </div>
+                  {denominations.map(({ key, label, value }) => {
+                    const count = denomCounts[key] || "";
+                    const amount = key === "coins"
+                      ? (parseFloat(count) || 0)
+                      : (parseInt(count) || 0) * value;
+                    return (
+                      <div key={key} style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{label}</div>
+                        <div style={{ textAlign: "center" }}>
+                          <input
+                            type={key === "coins" ? "number" : "number"}
+                            inputMode="decimal"
+                            value={count}
+                            onChange={e => setDenomCounts(prev => ({ ...prev, [key]: e.target.value }))}
+                            placeholder="0"
+                            style={{ width: "48px", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "0" }}
+                          />
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "right" }}>
+                          {amount > 0 ? `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Totals row */}
+                  <div style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", alignItems: "center", padding: "10px 0 4px 0" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000" }}>Counted</div>
+                    <div />
+                    <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", textAlign: "right" }}>
+                      RM {denomTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+
+                  {/* Match indicator */}
+                  {denomDiff !== null && (
+                    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", paddingTop: "6px" }}>
+                      {denomDiff === 0 ? (
+                        <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(120 50% 35%)" }}>✓ Matched</span>
+                      ) : (
+                        <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(0 65% 50%)" }}>
+                          {denomDiff > 0 ? "+" : ""}RM {denomDiff.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} difference
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
