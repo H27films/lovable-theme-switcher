@@ -790,8 +790,9 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
         const cash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
         const errVal = parseFloat(entry.error) || null;
         const payload = { Branch: "Chic Nailspa", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash, Error: errVal || null, Explanation: entry.errorNote || null };
-        if (entry.existingId) {
-          const { error: uErr } = await (supabase as any).from("Cash").update(payload).eq("id", entry.existingId);
+        const { data: existingRow } = await (supabase as any).from("Cash").select("id").eq("Branch", "Chic Nailspa").eq("Date", entry.date).maybeSingle();
+        if (existingRow?.id) {
+          const { error: uErr } = await (supabase as any).from("Cash").update(payload).eq("id", existingRow.id);
           if (uErr) { setCashError(uErr.message || "Update failed"); break; }
         } else {
           const { error: iErr } = await (supabase as any).from("Cash").insert(payload);
