@@ -789,13 +789,18 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         const err = parseFloat(entry.error) || 0;
         const cash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
         const errVal = parseFloat(entry.error) || null;
-        const payload = { Branch: "Nur Yadi", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash, Error: errVal || null, Explanation: entry.errorNote || null };
-        const { data: existingRow } = await (supabase as any).from("Cash").select("id").eq("Branch", "Nur Yadi").eq("Date", entry.date).maybeSingle();
-        if (existingRow?.id) {
-          const { error: uErr } = await (supabase as any).from("Cash").update(payload).eq("id", existingRow.id);
+        const basePayload = { Branch: "Nur Yadi", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash, Error: errVal || null, Explanation: entry.errorNote || null };
+        // Always check Supabase for existing row by Branch+Date
+        const { data: existingRows } = await (supabase as any).from("Cash").select("id").eq("Branch", "Nur Yadi").eq("Date", entry.date);
+        const existingId = existingRows && existingRows.length > 0 ? existingRows[0].id : null;
+        if (existingId) {
+          const { error: uErr } = await (supabase as any).from("Cash").update(basePayload).eq("id", existingId);
           if (uErr) { setCashError(uErr.message || "Update failed"); break; }
         } else {
-          const { error: iErr } = await (supabase as any).from("Cash").insert(payload);
+          // Get max id to avoid sequence conflicts
+          const { data: maxRows } = await (supabase as any).from("Cash").select("id").order("id", { ascending: false }).limit(1);
+          const newId = maxRows && maxRows.length > 0 ? maxRows[0].id + 1 : 1;
+          const { error: iErr } = await (supabase as any).from("Cash").insert({ id: newId, ...basePayload });
           if (iErr) { setCashError(iErr.message || "Insert failed"); break; }
         }
       }
