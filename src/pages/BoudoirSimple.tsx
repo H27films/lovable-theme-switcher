@@ -541,12 +541,11 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     doc.save(`${grn} - GRN.pdf`);
   };
 
-  const exportDepositCsv = () => {
-    if (!depStart || !depEnd) return;
-    const start = depStart <= depEnd ? depStart : depEnd;
-    const end = depStart <= depEnd ? depEnd : depStart;
+  const exportDepositCsv = (start: string, end: string) => {
+    const s = start <= end ? start : end;
+    const e2 = start <= end ? end : start;
     const rows = cashLog
-      .filter(r => r.Branch === "Boudoir" && r.Date >= start && r.Date <= end)
+      .filter(r => r.Branch === "Boudoir" && r.Date >= s && r.Date <= e2)
       .sort((a, b) => a.Date.localeCompare(b.Date));
     const headers = ["Date", "Total GST", "Credit", "QR", "Cash", "Error", "Explanation"];
     const csvRows = [
@@ -565,7 +564,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Boudoir_Deposit_${start}_to_${end}.csv`;
+    a.download = "Boudoir Cash Export.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1981,9 +1980,10 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
               )}
               {cashView === "deposit" && (
                 <button
-                  onClick={exportDepositCsv}
+                  onClick={() => exportDepositCsv(depStart, depEnd)}
                   title="Export to Excel"
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", color: "hsl(var(--foreground))", display: "flex", alignItems: "center" }}
+                  disabled={!depStart || !depEnd}
+                  style={{ background: "none", border: "none", cursor: depStart && depEnd ? "pointer" : "not-allowed", padding: "0 0 6px 0", color: depStart && depEnd ? "hsl(var(--foreground))" : "hsl(var(--foreground) / 0.3)", display: "flex", alignItems: "center", opacity: depStart && depEnd ? 1 : 0.4 }}
                 >
                   <Download size={15} />
                 </button>
@@ -2128,7 +2128,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                         <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(120 50% 35%)" }}>✓ Matched</span>
                       ) : (
                         <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: denomDiff > 0 ? "hsl(120 50% 35%)" : "hsl(0 65% 50%)" }}>
-                          {denomDiff > 0 ? "+" : ""}RM {denomDiff.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {denomDiff > 0 ? "over" : "under"}
+                          {denomDiff > 0 ? "+" : ""}RM {Math.abs(denomDiff).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {denomDiff > 0 ? "over" : "under"}
                         </span>
                       )}
                     </div>
