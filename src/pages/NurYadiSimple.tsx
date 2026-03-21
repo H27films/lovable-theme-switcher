@@ -43,6 +43,30 @@ interface EntryLine {
   qty: number;
 }
 
+interface CashRow {
+  id: number;
+  Branch: string;
+  "Total GST": number | null;
+  Credit: number | null;
+  QR: number | null;
+  Cash: number | null;
+  Date: string;
+  Error: number | null;
+  Explanation: string | null;
+}
+
+interface CashEntryState {
+  date: string;
+  totalGST: string;
+  credit: string;
+  qr: string;
+  cashOverride: string;
+  error: string;
+  errorNote: string;
+  expanded: boolean;
+  existingId?: number;
+}
+
 interface NurYadiSimpleProps {
   onBack?: () => void;
   onBackToMain?: () => void;
@@ -135,6 +159,27 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
   const [loadingProductLog, setLoadingProductLog] = useState(false);
   const [reversing, setReversing] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
+
+  // Cash panel state
+  const [cashEntries, setCashEntries] = useState<CashEntryState[]>([]);
+  const [cashView, setCashView] = useState<"recent" | "month" | "deposit">("recent");
+  const [cashLog, setCashLog] = useState<CashRow[]>([]);
+  const [loadingCashLog, setLoadingCashLog] = useState(false);
+  const [cashSubmitting, setCashSubmitting] = useState(false);
+  const [cashSuccess, setCashSuccess] = useState(false);
+  const [cashError, setCashError] = useState<string | null>(null);
+  const [editingLogCell, setEditingLogCell] = useState<{id: number, col: string} | null>(null);
+  const [editingLogValue, setEditingLogValue] = useState("");
+
+  // Deposit tab state
+  const [depStart, setDepStart] = useState<string>("");
+  const [depEnd, setDepEnd] = useState<string>("");
+  const [depCashTotal, setDepCashTotal] = useState<number | null>(null);
+  const [depLoading, setDepLoading] = useState(false);
+  const [denomCounts, setDenomCounts] = useState<Record<string,string>>({
+    "100": "", "50": "", "20": "", "10": "", "5": "", "1": "", "coins": ""
+  });
+
   const [confirmPos, setConfirmPos] = useState<{ top: number; right: number } | null>(null);
 
   useEffect(() => {
@@ -498,6 +543,57 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     doc.save(`${grn} - GRN.pdf`);
   };
 
+  const exportDepositCsv = (start: string, end: string) => {
+    const s = start <= end ? start : end;
+    const e2 = start <= end ? end : start;
+    const rows = cashLog
+      .filter(r => r.Branch === "Nur Yadi" && r.Date >= s && r.Date <= e2)
+      .sort((a, b) => a.Date.localeCompare(b.Date));
+    const headers = ["Date", "Total GST", "Credit", "QR", "Cash", "Error", "Explanation"];
+    const csvRows = [
+      headers.join(","),
+      ...rows.map(r => [
+        r.Date,
+        r["Total GST"] ?? "",
+        r.Credit ?? "",
+        r.QR ?? "",
+        r.Cash ?? "",
+        r.Error ?? "",
+        `"${(r.Explanation ?? "").replace(/"/g, '""')}"`
+      ].join(","))
+    ];
+    // 2 blank rows then denomination section
+    csvRows.push("", "");
+    csvRows.push("Denomination,Count,Amount");
+    const denomRows: Array<{label: string; key: string; value: number}> = [
+      { label: "RM 100", key: "100", value: 100 },
+      { label: "RM 50",  key: "50",  value: 50  },
+      { label: "RM 20",  key: "20",  value: 20  },
+      { label: "RM 10",  key: "10",  value: 10  },
+      { label: "RM 5",   key: "5",   value: 5   },
+      { label: "RM 1",   key: "1",   value: 1   },
+    ];
+    denomRows.forEach(d => {
+      const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+      const amt = cnt * d.value;
+      csvRows.push(`${d.label},${cnt},${amt.toFixed(2)}`);
+    });
+    const coinsAmt = parseFloat(denomCounts["coins"] || "0") || 0;
+    csvRows.push(`Coins,,${coinsAmt.toFixed(2)}`);
+    const totalAmt = denomRows.reduce((sum, d) => {
+      const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+      return sum + cnt * d.value;
+    }, 0) + coinsAmt;
+    csvRows.push(`Counted Total,,${totalAmt.toFixed(2)}`);
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Nur Yadi Cash Export.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportToExcel = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
     const rows = [
       ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
@@ -543,6 +639,320 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     });
     return groups.sort((a, b) => b.date.localeCompare(a.date));
   })();
+
+  const cycleType = (id: number) => {
+    setUsageEntries(prev => prev.map(e => {
+      if (e.id !== id) return e;
+      const idx = USAGE_TYPES.indexOf(e.type);
+      return { ...e, type: USAGE_TYPES[(idx + 1) % USAGE_TYPES.length] };
+    }));
+  };
+
+  const handleUsageSubmit = async () => {
+    const valid = usageEntries.filter(e => e.productName && e.qty > 0);
+    if (!valid.length) return;
+    setUsageError(null);
+    setUsageSubmitting(true);
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      for (const entry of valid) {
+        const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+        const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
+        const endingBalance = currentBalance - entry.qty;
+        const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+          "DATE": today,
+          "PRODUCT NAME": entry.productName,
+          "BRANCH": BRANCH_LOG_NAME,
+          "SUPPLIER": null,
+          "TYPE": entry.type,
+          "STARTING BALANCE": currentBalance,
+          "QTY": -entry.qty,
+          "ENDING BALANCE": endingBalance,
+          "GRN": null,
+          "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
+        });
+        if (logErr) { setUsageError(logErr.message || "Write failed"); break; }
+        await (supabase as any).from("AllFileProducts")
+          .update({ [BALANCE_KEY]: endingBalance })
+          .eq("PRODUCT NAME", entry.productName);
+      }
+      if (!usageError) {
+        setUsageEntries([]);
+        setUsageSuccess(true);
+        setTimeout(() => setUsageSuccess(false), 3000);
+        const { data } = await (supabase as any)
+          .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
+          .order("DATE", { ascending: false }).limit(50);
+        setBranchLog(data || []);
+      }
+    } catch (err: any) {
+      setUsageError(err?.message || "Unknown error");
+    }
+    setUsageSubmitting(false);
+  };
+
+  const cashLogFiltered = React.useMemo(() => {
+    if (cashView === "recent") {
+      return [...cashLog].sort((a, b) => b.Date.localeCompare(a.Date)).slice(0, 7);
+    } else {
+      const now = new Date();
+      return cashLog.filter(r => { const d = new Date(r.Date + "T00:00:00"); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); });
+    }
+  }, [cashLog, cashView]);
+
+  const monthGSTTotal = React.useMemo(() => {
+    const now = new Date();
+    return cashLog
+      .filter(r => { const d = new Date(r.Date + "T00:00:00"); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); })
+      .reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
+  }, [cashLog]);
+
+  const currentMonthName = new Date().toLocaleString("en-US", { month: "long" });
+  const currentMonthDates = React.useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const days: string[] = [];
+    for (let d = 1; d <= today.getDate(); d++) {
+      days.push(`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+    }
+    return days.reverse(); // newest first
+  }, []);
+
+  // Deposit: compute cash total from cashLog when date range changes
+  React.useEffect(() => {
+    if (!depStart || !depEnd) { setDepCashTotal(null); return; }
+    const start = depStart <= depEnd ? depStart : depEnd;
+    const end = depStart <= depEnd ? depEnd : depStart;
+    const total = cashLog
+      .filter(r => r.Date >= start && r.Date <= end)
+      .reduce((sum, r) => sum + (Number(r["Cash"]) || 0), 0);
+    setDepCashTotal(total);
+  }, [depStart, depEnd, cashLog]);
+
+  const denominations: Array<{key: string, label: string, value: number}> = [
+    { key: "100", label: "RM 100", value: 100 },
+    { key: "50",  label: "RM 50",  value: 50  },
+    { key: "20",  label: "RM 20",  value: 20  },
+    { key: "10",  label: "RM 10",  value: 10  },
+    { key: "5",   label: "RM 5",   value: 5   },
+    { key: "1",   label: "RM 1",   value: 1   },
+    { key: "coins", label: "Coins", value: 1  },
+  ];
+  const denomTotal = denominations.reduce((sum, d) => {
+    if (d.key === "coins") return sum + (parseFloat(denomCounts["coins"]) || 0);
+    return sum + (parseInt(denomCounts[d.key] || "0") || 0) * d.value;
+  }, 0);
+  const denomDiff = depCashTotal !== null ? denomTotal - depCashTotal : null;
+
+  const recentGSTTotal = React.useMemo(() => {
+    return cashLogFiltered.reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
+  }, [cashLogFiltered]);
+
+  const refreshCashLog = async () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 6);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const fromDate = sevenDaysAgo < monthStart ? sevenDaysAgo : monthStart;
+    const fromDateStr = fromDate.toISOString().split("T")[0];
+    const { data } = await (supabase as any)
+      .from("Cash").select("*").eq("Branch", "Nur Yadi")
+      .gte("Date", fromDateStr).order("Date", { ascending: false });
+    setCashLog(data || []);
+  };
+
+  const handleDeleteCashEntry = async (entry: CashEntryState, idx: number) => {
+    if (idx === 0) return; // cannot delete today
+    setCashEntries(prev => prev.filter((_, i) => i !== idx));
+    const existing = cashLog.find(r => r.Date === entry.date);
+    if (existing?.id) {
+      await (supabase as any).from("Cash").delete().eq("id", existing.id);
+      setCashLog(prev => prev.filter(r => r.id !== existing.id));
+    }
+  };
+
+  const handleLogCellSave = async (rowId: number, col: string, value: string) => {
+    const numVal = parseFloat(value);
+    const parsed: number | string = isNaN(numVal) ? value : numVal;
+    try {
+      await (supabase as any).from("Cash").update({ [col]: parsed }).eq("id", rowId);
+      setCashLog(prev => prev.map(r => r.id === rowId ? { ...r, [col]: parsed } : r));
+    } catch (_) {}
+    setEditingLogCell(null);
+    setEditingLogValue("");
+  };
+
+  const handleCashSubmit = async () => {
+    const toSubmit = cashEntries.filter(e => e.totalGST !== "" || e.credit !== "" || e.qr !== "");
+    if (!toSubmit.length) return;
+    setCashSubmitting(true);
+    setCashError(null);
+    try {
+      for (const entry of toSubmit) {
+        const total = parseFloat(entry.totalGST) || 0;
+        const credit = parseFloat(entry.credit) || 0;
+        const qr = parseFloat(entry.qr) || 0;
+        const err = parseFloat(entry.error) || 0;
+        const cash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
+        const errVal = parseFloat(entry.error) || null;
+        const payload = { Branch: "Nur Yadi", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash, Error: errVal || null, Explanation: entry.errorNote || null };
+        if (entry.existingId) {
+          const { error: uErr } = await (supabase as any).from("Cash").update(payload).eq("id", entry.existingId);
+          if (uErr) { setCashError(uErr.message || "Update failed"); break; }
+        } else {
+          const { error: iErr } = await (supabase as any).from("Cash").insert(payload);
+          if (iErr) { setCashError(iErr.message || "Insert failed"); break; }
+        }
+      }
+      if (!cashError) {
+        setCashSuccess(true);
+        setTimeout(() => setCashSuccess(false), 3000);
+        await refreshCashLog();
+        const today = new Date();
+        const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 6);
+        const fromDateStr = sevenDaysAgo.toISOString().split("T")[0];
+        const { data: freshData } = await (supabase as any).from("Cash").select("*").eq("Branch", "Nur Yadi").gte("Date", fromDateStr);
+        const freshRows: CashRow[] = freshData || [];
+        setCashEntries(prev => prev.map(en => {
+          const found = freshRows.find(r => r.Date === en.date);
+          return found ? { ...en, existingId: found.id } : en;
+        }));
+      }
+    } catch (err: any) {
+      setCashError(err?.message || "Unknown error");
+    }
+    setCashSubmitting(false);
+  };
+
+  const handleAddCashRow = () => {
+    setCashEntries(prev => {
+      const last = prev[prev.length - 1];
+      const [ly, lm, ld] = last.date.split("-").map(Number);
+      const lastDate = new Date(ly, lm - 1, ld);
+      lastDate.setDate(lastDate.getDate() - 1);
+      const newDate = `${lastDate.getFullYear()}-${String(lastDate.getMonth()+1).padStart(2,"0")}-${String(lastDate.getDate()).padStart(2,"0")}`;
+      const existing = cashLog.find(r => r.Date === newDate);
+      return [...prev, {
+        date: newDate,
+        totalGST: existing ? String(existing["Total GST"] ?? "") : "",
+        credit: existing ? String(existing["Credit"] ?? "") : "",
+        qr: existing ? String(existing["QR"] ?? "") : "",
+        cashOverride: "",
+        error: existing ? String(existing["Error"] ?? "") : "",
+        errorNote: existing ? String(existing["Explanation"] ?? "") : "",
+        expanded: !!(existing?.Error),
+        existingId: existing?.id,
+      }];
+    });
+  };
+
+  const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
+    setActivePanel(panel);
+    setShowDropdown(false);
+    setShowUsageDropdown(false);
+  };
+
+  const closePanel = () => {
+    setActivePanel(null);
+    setUsageSearch("");
+    setShowUsageDropdown(false);
+    setOrderSearch("");
+    setShowOrderDropdown(false);
+  };
+
+  // Shared header cell style helpers
+  const hdrLeft   = { fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" } as React.CSSProperties;
+  const hdrCenter = { ...hdrLeft, textAlign: "center" as const };
+
+
+  const exportToExcel = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
+    const rows = [
+      ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
+      ...entries.map(e => [e.productName, e.starting, e.qty, e.ending])
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${grn}-order.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleResetOrder = () => {
+    setPendingOrder(null);
+    setOrderError(null);
+    setGrnNotes("");
+  };
+
+  const toggleGRN = (key: string) => {
+    setExpandedGRNs(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const allOrderGroups = (() => {
+    const orders = branchLog.filter(r => r.TYPE === "Order");
+    const seen = new Map<string, LogRow[]>();
+    orders.forEach(r => {
+      const grn = r.GRN || r.DATE;
+      const key = `${r.DATE}__${grn}`;
+      if (!seen.has(key)) seen.set(key, []);
+      seen.get(key)!.push(r);
+    });
+    const groups: { key: string; date: string; grn: string; rows: LogRow[] }[] = [];
+    seen.forEach((rows, key) => {
+      const [date, grn] = key.split("__");
+      groups.push({ key, date, grn, rows });
+    });
+    return groups.sort((a, b) => b.date.localeCompare(a.date));
+  })();
+
+  useEffect(() => {
+    if (activePanel !== "CASH") return;
+    const fetchCashData = async () => {
+      setLoadingCashLog(true);
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 29);
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const fromDate = thirtyDaysAgo < monthStart ? thirtyDaysAgo : monthStart;
+      const fromDateStr = fromDate.toISOString().split("T")[0];
+      const { data } = await (supabase as any)
+        .from("Cash")
+        .select("*")
+        .eq("Branch", "Nur Yadi")
+        .gte("Date", fromDateStr)
+        .order("Date", { ascending: false });
+      const rows: CashRow[] = data || [];
+      setCashLog(rows);
+      setLoadingCashLog(false);
+      const entries: CashEntryState[] = [];
+      for (let i = 0; i < 1; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        const existing = rows.find(r => r.Date === dateStr);
+        entries.push({
+          date: dateStr,
+          totalGST: existing ? String(existing["Total GST"] ?? "") : "",
+          credit: existing ? String(existing["Credit"] ?? "") : "",
+          qr: existing ? String(existing["QR"] ?? "") : "",
+          cashOverride: "",
+          error: existing ? String(existing["Error"] ?? "") : "",
+          errorNote: existing ? String(existing["Explanation"] ?? "") : "",
+          expanded: !!(existing?.Error),
+          existingId: existing?.id,
+        });
+      }
+      setCashEntries(entries);
+    };
+    fetchCashData();
+  }, [activePanel]);
 
   const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
     setActivePanel(panel);
@@ -1570,16 +1980,297 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
-        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>CASH</span>
+        {/* Header */}
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>CASH</span>
+              <span style={{ fontSize: "14px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Month Total: RM {monthGSTTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
               <X size={18} />
             </button>
           </div>
+          {/* Column headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "8px" }}>
+            {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
+              <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+            ))}
+            <div />
+          </div>
         </div>
-        <div style={{ flex: 1, paddingLeft: "12px", paddingRight: "12px", display: "flex", alignItems: "center" }}>
-          <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Cash entry — coming soon</span>
+
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 24px), 24px)" }}>
+
+          {/* 7-day entry rows */}
+          {cashEntries.map((entry, idx) => {
+            const total = parseFloat(entry.totalGST) || 0;
+            const credit = parseFloat(entry.credit) || 0;
+            const qr = parseFloat(entry.qr) || 0;
+            const err = parseFloat(entry.error) || 0;
+            const computedCash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
+            const hasData = entry.totalGST !== "" || entry.credit !== "" || entry.qr !== "";
+            const dateObj = new Date(entry.date + "T00:00:00");
+            const dateLabel = dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+            const isToday = idx === 0;
+            const inputStyle: React.CSSProperties = { width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0", boxSizing: "border-box" };
+            return (
+              <div key={entry.date} style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", alignItems: "center", padding: "9px 0" }}>
+                  <div style={{ fontSize: "11px", fontWeight: hasData ? 700 : 300, fontFamily: "Raleway, inherit", color: hasData ? "#000" : "hsl(var(--muted-foreground))", letterSpacing: "0.02em" }}>{dateLabel}</div>
+                  <input type="number" inputMode="decimal" value={entry.totalGST} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, totalGST: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                  <input type="number" inputMode="decimal" value={entry.credit} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, credit: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                  <input type="number" inputMode="decimal" value={entry.qr} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, qr: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                  <input
+                    type="number" inputMode="decimal"
+                    value={hasData || entry.cashOverride !== "" ? (entry.cashOverride !== "" ? entry.cashOverride : String(computedCash)) : ""}
+                    onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, cashOverride: e.target.value }))}
+                    placeholder="0"
+                    style={{ ...inputStyle, color: hasData ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                  />
+                  <button
+                    onClick={() => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, expanded: !en.expanded }))}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: entry.expanded || entry.error !== "" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  >
+                    {entry.expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+                </div>
+                {entry.expanded && (
+                  <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "10px", alignItems: "flex-end" }}>
+                    <div style={{ gridColumn: "1" }} />
+                    <div style={{ gridColumn: "2", display: "flex", flexDirection: "column", gap: "3px", alignItems: "center" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>Error</div>
+                      <input type="number" inputMode="decimal" value={entry.error} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, error: e.target.value, cashOverride: "" }))} placeholder="0" style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
+                    </div>
+                    <div style={{ gridColumn: "3 / 6", display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-start" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Note</div>
+                      <input type="text" value={entry.errorNote} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, errorNote: e.target.value }))} placeholder="Explanation..." style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0", textAlign: "left" }} />
+                    </div>
+                    <div style={{ gridColumn: "6", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                      {idx !== 0 && (
+                        <button onClick={() => handleDeleteCashEntry(entry, idx)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <X size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Add row button */}
+          <div style={{ paddingTop: "8px", paddingBottom: "4px" }}>
+            <button
+              onClick={handleAddCashRow}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", padding: "4px 0" }}
+            >
+              Add +
+            </button>
+          </div>
+
+          {/* Submit */}
+          <div style={{ paddingTop: "20px", paddingBottom: "24px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+            <button
+              onClick={handleCashSubmit}
+              disabled={cashSubmitting}
+              style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: cashSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: cashSubmitting ? 0.5 : 1 }}
+            >
+              {cashSubmitting ? "Saving..." : "Submit"}
+            </button>
+            {cashSuccess && <span style={{ marginLeft: "16px", fontSize: "11px", color: "hsl(120 60% 40%)", letterSpacing: "0.06em" }}>✓ Saved</span>}
+            {cashError && <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {cashError}</div>}
+          </div>
+
+          {/* Recent / Month / Deposit toggle */}
+          <div style={{ paddingTop: "20px" }}>
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ display: "flex", gap: "24px" }}>
+                <button
+                  onClick={() => setCashView("recent")}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "recent" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "recent" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+                >
+                  Recent
+                </button>
+                <button
+                  onClick={() => setCashView("month")}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "month" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "month" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+                >
+                  {currentMonthName}
+                </button>
+                <button
+                  onClick={() => setCashView("deposit")}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "deposit" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "deposit" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+                >
+                  Deposit
+                </button>
+              </div>
+              {cashView !== "deposit" && (
+                <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", paddingBottom: "6px" }}>
+                  Total: RM {(cashView === "recent" ? recentGSTTotal : monthGSTTotal).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              )}
+              {cashView === "deposit" && (
+                <button
+                  onClick={() => exportDepositCsv(depStart, depEnd)}
+                  title="Export to Excel"
+                  disabled={!depStart || !depEnd}
+                  style={{ background: "none", border: "none", cursor: depStart && depEnd ? "pointer" : "not-allowed", padding: "0 0 6px 0", color: depStart && depEnd ? "hsl(var(--foreground))" : "hsl(var(--foreground) / 0.3)", display: "flex", alignItems: "center", opacity: depStart && depEnd ? 1 : 0.4 }}
+                >
+                  <Download size={15} />
+                </button>
+              )}
+            </div>
+            {/* Log table header */}
+            {cashView !== "deposit" && (
+              <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
+                  <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+                ))}
+              </div>
+            )}
+            {cashView !== "deposit" && loadingCashLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>Loading...</div>}
+            {cashView !== "deposit" && !loadingCashLog && cashLogFiltered.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>No entries</div>}
+            {cashView !== "deposit" && !loadingCashLog && cashLogFiltered.map(row => {
+              const editableCols: Array<{key: string, align: "center"|"left"}> = [
+                { key: "Total GST", align: "center" },
+                { key: "Credit", align: "center" },
+                { key: "QR", align: "center" },
+                { key: "Cash", align: "center" },
+              ];
+              return (
+                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{new Date(row.Date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+                  {editableCols.map(({ key, align }) => {
+                    const isEditing = editingLogCell?.id === row.id && editingLogCell?.col === key;
+                    return (
+                      <div key={key} style={{ textAlign: align }}>
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            inputMode="decimal"
+                            value={editingLogValue}
+                            onChange={e => setEditingLogValue(e.target.value)}
+                            onBlur={() => handleLogCellSave(row.id, key, editingLogValue)}
+                            onKeyDown={e => { if (e.key === "Enter") handleLogCellSave(row.id, key, editingLogValue); if (e.key === "Escape") setEditingLogCell(null); }}
+                            style={{ width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--foreground))", outline: "none", fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: align, padding: "1px 0" }}
+                          />
+                        ) : (
+                          <div
+                            onClick={() => { setEditingLogCell({ id: row.id, col: key }); setEditingLogValue(String(row[key] ?? "")); }}
+                            style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", cursor: "text", minHeight: "16px" }}
+                          >
+                            {row[key] ?? "—"}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            {/* ── Deposit tab ── */}
+            {cashView === "deposit" && (
+              <div style={{ paddingTop: "8px" }}>
+
+                {/* Date range + cash total */}
+                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "20px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "6px" }}>From</div>
+                    <select
+                      value={depStart}
+                      onChange={e => setDepStart(e.target.value)}
+                      style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                    >
+                      <option value="">Select date</option>
+                      {currentMonthDates.map(d => (
+                        <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "6px" }}>To</div>
+                    <select
+                      value={depEnd}
+                      onChange={e => setDepEnd(e.target.value)}
+                      style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                    >
+                      <option value="">Select date</option>
+                      {currentMonthDates.map(d => (
+                        <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "4px" }}>Total Cash</div>
+                    <div style={{ fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                      {depCashTotal !== null ? `RM ${depCashTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Denomination table */}
+                <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "12px" }}>
+                  {/* Header */}
+                  <div style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", marginBottom: "8px" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>Denomination</div>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", textAlign: "center" }}>Count</div>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", textAlign: "right" }}>Amount</div>
+                  </div>
+                  {denominations.map(({ key, label, value }) => {
+                    const count = denomCounts[key] || "";
+                    const amount = key === "coins"
+                      ? (parseFloat(count) || 0)
+                      : (parseInt(count) || 0) * value;
+                    return (
+                      <div key={key} style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{label}</div>
+                        <div style={{ textAlign: "center" }}>
+                          <input
+                            type={key === "coins" ? "number" : "number"}
+                            inputMode="decimal"
+                            value={count}
+                            onChange={e => setDenomCounts(prev => ({ ...prev, [key]: e.target.value }))}
+                            placeholder="0"
+                            style={{ width: "48px", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "0" }}
+                          />
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "right" }}>
+                          {amount > 0 ? `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Totals row */}
+                  <div style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", alignItems: "center", padding: "10px 0 4px 0" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000" }}>Counted</div>
+                    <div />
+                    <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", textAlign: "right" }}>
+                      RM {denomTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+
+                  {/* Match indicator */}
+                  {denomDiff !== null && (
+                    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", paddingTop: "6px" }}>
+                      {denomDiff === 0 ? (
+                        <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(120 50% 35%)" }}>✓ Matched</span>
+                      ) : (
+                        <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: denomDiff > 0 ? "hsl(120 50% 35%)" : "hsl(0 65% 50%)" }}>
+                          {denomDiff > 0 ? "+" : ""}RM {Math.abs(denomDiff).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {denomDiff > 0 ? "over" : "under"}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>, document.body
       )}

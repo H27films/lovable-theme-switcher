@@ -560,6 +560,29 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         `"${(r.Explanation ?? "").replace(/"/g, '""')}"`
       ].join(","))
     ];
+    // 2 blank rows then denomination section
+    csvRows.push("", "");
+    csvRows.push("Denomination,Count,Amount");
+    const denomRows: Array<{label: string; key: string; value: number}> = [
+      { label: "RM 100", key: "100", value: 100 },
+      { label: "RM 50",  key: "50",  value: 50  },
+      { label: "RM 20",  key: "20",  value: 20  },
+      { label: "RM 10",  key: "10",  value: 10  },
+      { label: "RM 5",   key: "5",   value: 5   },
+      { label: "RM 1",   key: "1",   value: 1   },
+    ];
+    denomRows.forEach(d => {
+      const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+      const amt = cnt * d.value;
+      csvRows.push(`${d.label},${cnt},${amt.toFixed(2)}`);
+    });
+    const coinsAmt = parseFloat(denomCounts["coins"] || "0") || 0;
+    csvRows.push(`Coins,,${coinsAmt.toFixed(2)}`);
+    const totalAmt = denomRows.reduce((sum, d) => {
+      const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+      return sum + cnt * d.value;
+    }, 0) + coinsAmt;
+    csvRows.push(`Counted Total,,${totalAmt.toFixed(2)}`);
     const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
