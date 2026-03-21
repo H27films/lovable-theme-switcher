@@ -43,6 +43,28 @@ interface EntryLine {
   qty: number;
 }
 
+interface CashRow {
+  id: number;
+  Branch: string;
+  "Total GST": number | null;
+  Credit: number | null;
+  QR: number | null;
+  Cash: number | null;
+  Date: string;
+}
+
+interface CashEntryState {
+  date: string;
+  totalGST: string;
+  credit: string;
+  qr: string;
+  cashOverride: string;
+  error: string;
+  errorNote: string;
+  expanded: boolean;
+  existingId?: number;
+}
+
 interface BoudoirSimpleProps {
   onBack?: () => void;
   onBackToMain?: () => void;
@@ -123,6 +145,15 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
   const [grnNotes, setGrnNotes] = useState("");
   const [lastConfirmedEntries, setLastConfirmedEntries] = useState<Array<{productName: string; starting: number; qty: number; ending: number}> | null>(null);
 
+  // Cash panel state
+  const [cashEntries, setCashEntries] = useState<CashEntryState[]>([]);
+  const [cashView, setCashView] = useState<"recent" | "month">("recent");
+  const [cashLog, setCashLog] = useState<CashRow[]>([]);
+  const [loadingCashLog, setLoadingCashLog] = useState(false);
+  const [cashSubmitting, setCashSubmitting] = useState(false);
+  const [cashSuccess, setCashSuccess] = useState(false);
+  const [cashError, setCashError] = useState<string | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const BRANCH_NAME = "BOUDOIR";
@@ -166,6 +197,48 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         setLoadingProductLog(false);
       });
   }, [selectedProduct]);
+
+  useEffect(() => {
+    if (activePanel !== "CASH") return;
+    const fetchCashData = async () => {
+      setLoadingCashLog(true);
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 6);
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const fromDate = sevenDaysAgo < monthStart ? sevenDaysAgo : monthStart;
+      const fromDateStr = fromDate.toISOString().split("T")[0];
+      const { data } = await (supabase as any)
+        .from("Cash")
+        .select("*")
+        .eq("Branch", "Boudoir")
+        .gte("Date", fromDateStr)
+        .order("Date", { ascending: false });
+      const rows: CashRow[] = data || [];
+      setCashLog(rows);
+      setLoadingCashLog(false);
+      const entries: CashEntryState[] = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        const existing = rows.find(r => r.Date === dateStr);
+        entries.push({
+          date: dateStr,
+          totalGST: existing ? String(existing["Total GST"] ?? "") : "",
+          credit: existing ? String(existing["Credit"] ?? "") : "",
+          qr: existing ? String(existing["QR"] ?? "") : "",
+          cashOverride: "",
+          error: "",
+          errorNote: "",
+          expanded: false,
+          existingId: existing?.id,
+        });
+      }
+      setCashEntries(entries);
+    };
+    fetchCashData();
+  }, [activePanel]);
 
   const reverseRow = async (row: LogRow) => {
     setReversing(row.id);
@@ -550,6 +623,71 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       setUsageError(err?.message || "Unknown error");
     }
     setUsageSubmitting(false);
+  };
+
+  const cashLogFiltered = React.useMemo(() => {
+    if (cashView === "recent") {
+      const today = new Date(); today.setHours(23,59,59,999);
+      const sevenAgo = new Date(); sevenAgo.setDate(sevenAgo.getDate() - 6); sevenAgo.setHours(0,0,0,0);
+      return cashLog.filter(r => { const d = new Date(r.Date + "T00:00:00"); return d >= sevenAgo && d <= today; });
+    } else {
+      const now = new Date();
+      return cashLog.filter(r => { const d = new Date(r.Date + "T00:00:00"); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); });
+    }
+  }, [cashLog, cashView]);
+
+  const refreshCashLog = async () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 6);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const fromDate = sevenDaysAgo < monthStart ? sevenDaysAgo : monthStart;
+    const fromDateStr = fromDate.toISOString().split("T")[0];
+    const { data } = await (supabase as any)
+      .from("Cash").select("*").eq("Branch", "Boudoir")
+      .gte("Date", fromDateStr).order("Date", { ascending: false });
+    setCashLog(data || []);
+  };
+
+  const handleCashSubmit = async () => {
+    const toSubmit = cashEntries.filter(e => e.totalGST !== "" || e.credit !== "" || e.qr !== "");
+    if (!toSubmit.length) return;
+    setCashSubmitting(true);
+    setCashError(null);
+    try {
+      for (const entry of toSubmit) {
+        const total = parseFloat(entry.totalGST) || 0;
+        const credit = parseFloat(entry.credit) || 0;
+        const qr = parseFloat(entry.qr) || 0;
+        const err = parseFloat(entry.error) || 0;
+        const cash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
+        const payload = { Branch: "Boudoir", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash };
+        if (entry.existingId) {
+          const { error: uErr } = await (supabase as any).from("Cash").update(payload).eq("id", entry.existingId);
+          if (uErr) { setCashError(uErr.message || "Update failed"); break; }
+        } else {
+          const { error: iErr } = await (supabase as any).from("Cash").insert(payload);
+          if (iErr) { setCashError(iErr.message || "Insert failed"); break; }
+        }
+      }
+      if (!cashError) {
+        setCashSuccess(true);
+        setTimeout(() => setCashSuccess(false), 3000);
+        await refreshCashLog();
+        const today = new Date();
+        const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 6);
+        const fromDateStr = sevenDaysAgo.toISOString().split("T")[0];
+        const { data: freshData } = await (supabase as any).from("Cash").select("*").eq("Branch", "Boudoir").gte("Date", fromDateStr);
+        const freshRows: CashRow[] = freshData || [];
+        setCashEntries(prev => prev.map(en => {
+          const found = freshRows.find(r => r.Date === en.date);
+          return found ? { ...en, existingId: found.id } : en;
+        }));
+      }
+    } catch (err: any) {
+      setCashError(err?.message || "Unknown error");
+    }
+    setCashSubmitting(false);
   };
 
   const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
@@ -1577,16 +1715,120 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
-        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "16px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* Header */}
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>CASH</span>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
               <X size={18} />
             </button>
           </div>
+          {/* Column headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+            {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
+              <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+            ))}
+            <div />
+          </div>
         </div>
-        <div style={{ flex: 1, paddingLeft: "12px", paddingRight: "12px", display: "flex", alignItems: "center" }}>
-          <span style={{ fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Cash entry — coming soon</span>
+
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 24px), 24px)" }}>
+
+          {/* 7-day entry rows */}
+          {cashEntries.map((entry, idx) => {
+            const total = parseFloat(entry.totalGST) || 0;
+            const credit = parseFloat(entry.credit) || 0;
+            const qr = parseFloat(entry.qr) || 0;
+            const err = parseFloat(entry.error) || 0;
+            const computedCash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
+            const hasData = entry.totalGST !== "" || entry.credit !== "" || entry.qr !== "";
+            const dateObj = new Date(entry.date + "T00:00:00");
+            const dateLabel = dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+            const isToday = idx === 0;
+            const inputStyle: React.CSSProperties = { width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0", boxSizing: "border-box" };
+            return (
+              <div key={entry.date} style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", alignItems: "center", padding: "9px 0" }}>
+                  <div style={{ fontSize: "11px", fontWeight: isToday ? 700 : 300, fontFamily: "Raleway, inherit", color: isToday ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", letterSpacing: "0.02em" }}>{dateLabel}</div>
+                  <input type="number" inputMode="decimal" value={entry.totalGST} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, totalGST: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                  <input type="number" inputMode="decimal" value={entry.credit} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, credit: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                  <input type="number" inputMode="decimal" value={entry.qr} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, qr: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                  <input
+                    type="number" inputMode="decimal"
+                    value={hasData || entry.cashOverride !== "" ? (entry.cashOverride !== "" ? entry.cashOverride : String(computedCash)) : ""}
+                    onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, cashOverride: e.target.value }))}
+                    placeholder="0"
+                    style={{ ...inputStyle, color: hasData ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                  />
+                  <button
+                    onClick={() => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, expanded: !en.expanded }))}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: entry.expanded || entry.error !== "" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  >
+                    {entry.expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+                </div>
+                {entry.expanded && (
+                  <div style={{ paddingBottom: "10px", paddingLeft: "48px", display: "flex", gap: "12px", alignItems: "flex-end" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Error</div>
+                      <input type="number" inputMode="decimal" value={entry.error} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, error: e.target.value, cashOverride: "" }))} placeholder="0" style={{ width: "64px", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
+                    </div>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "3px" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Note</div>
+                      <input type="text" value={entry.errorNote} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, errorNote: e.target.value }))} placeholder="Explanation..." style={{ width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0" }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Submit */}
+          <div style={{ paddingTop: "20px", paddingBottom: "24px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+            <button
+              onClick={handleCashSubmit}
+              disabled={cashSubmitting}
+              style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: cashSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: cashSubmitting ? 0.5 : 1 }}
+            >
+              {cashSubmitting ? "Saving..." : "Submit"}
+            </button>
+            {cashSuccess && <span style={{ marginLeft: "16px", fontSize: "11px", color: "hsl(120 60% 40%)", letterSpacing: "0.06em" }}>✓ Saved</span>}
+            {cashError && <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {cashError}</div>}
+          </div>
+
+          {/* Recent / Month toggle */}
+          <div style={{ paddingTop: "20px" }}>
+            <div style={{ display: "flex", gap: "24px", marginBottom: "14px" }}>
+              {(["recent", "month"] as const).map(v => (
+                <button
+                  key={v}
+                  onClick={() => setCashView(v)}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === v ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === v ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent", textTransform: "capitalize" }}
+                >
+                  {v === "recent" ? "Recent" : "Month"}
+                </button>
+              ))}
+            </div>
+            {/* Log table header */}
+            <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+              {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
+                <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+              ))}
+            </div>
+            {loadingCashLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>Loading...</div>}
+            {!loadingCashLog && cashLogFiltered.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>No entries</div>}
+            {!loadingCashLog && cashLogFiltered.map(row => (
+              <div key={row.id} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{new Date(row.Date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["Total GST"] ?? "—"}</div>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["Credit"] ?? "—"}</div>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["QR"] ?? "—"}</div>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["Cash"] ?? "—"}</div>
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>, document.body
       )}
