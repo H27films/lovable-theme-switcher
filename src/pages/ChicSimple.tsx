@@ -852,52 +852,6 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
   const hdrCenter = { ...hdrLeft, textAlign: "center" as const };
 
 
-  const exportToExcel = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
-    const rows = [
-      ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
-      ...entries.map(e => [e.productName, e.starting, e.qty, e.ending])
-    ];
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${grn}-order.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleResetOrder = () => {
-    setPendingOrder(null);
-    setOrderError(null);
-    setGrnNotes("");
-  };
-
-  const toggleGRN = (key: string) => {
-    setExpandedGRNs(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
-
-  const allOrderGroups = (() => {
-    const orders = branchLog.filter(r => r.TYPE === "Order");
-    const seen = new Map<string, LogRow[]>();
-    orders.forEach(r => {
-      const grn = r.GRN || r.DATE;
-      const key = `${r.DATE}__${grn}`;
-      if (!seen.has(key)) seen.set(key, []);
-      seen.get(key)!.push(r);
-    });
-    const groups: { key: string; date: string; grn: string; rows: LogRow[] }[] = [];
-    seen.forEach((rows, key) => {
-      const [date, grn] = key.split("__");
-      groups.push({ key, date, grn, rows });
-    });
-    return groups.sort((a, b) => b.date.localeCompare(a.date));
-  })();
-
   useEffect(() => {
     if (activePanel !== "CASH") return;
     const fetchCashData = async () => {
@@ -953,11 +907,6 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
     setOrderSearch("");
     setShowOrderDropdown(false);
   };
-
-  // Shared header cell style helpers
-  const hdrLeft   = { fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" } as React.CSSProperties;
-  const hdrCenter = { ...hdrLeft, textAlign: "center" as const };
-
   return (
     <div style={{
       position: "relative", height: "100dvh",
