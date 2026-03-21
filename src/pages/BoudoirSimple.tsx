@@ -629,14 +629,21 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
 
   const cashLogFiltered = React.useMemo(() => {
     if (cashView === "recent") {
-      const today = new Date(); today.setHours(23,59,59,999);
-      const sevenAgo = new Date(); sevenAgo.setDate(sevenAgo.getDate() - 6); sevenAgo.setHours(0,0,0,0);
-      return cashLog.filter(r => { const d = new Date(r.Date + "T00:00:00"); return d >= sevenAgo && d <= today; });
+      return [...cashLog].sort((a, b) => b.Date.localeCompare(a.Date)).slice(0, 7);
     } else {
       const now = new Date();
       return cashLog.filter(r => { const d = new Date(r.Date + "T00:00:00"); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); });
     }
   }, [cashLog, cashView]);
+
+  const monthGSTTotal = React.useMemo(() => {
+    const now = new Date();
+    return cashLog
+      .filter(r => { const d = new Date(r.Date + "T00:00:00"); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); })
+      .reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
+  }, [cashLog]);
+
+  const currentMonthName = new Date().toLocaleString("en-US", { month: "long" });
 
   const refreshCashLog = async () => {
     const today = new Date();
@@ -691,6 +698,27 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       setCashError(err?.message || "Unknown error");
     }
     setCashSubmitting(false);
+  };
+
+  const handleAddCashRow = () => {
+    setCashEntries(prev => {
+      const last = prev[prev.length - 1];
+      const lastDate = new Date(last.date + "T00:00:00");
+      lastDate.setDate(lastDate.getDate() - 1);
+      const newDate = lastDate.toISOString().split("T")[0];
+      const existing = cashLog.find(r => r.Date === newDate);
+      return [...prev, {
+        date: newDate,
+        totalGST: existing ? String(existing["Total GST"] ?? "") : "",
+        credit: existing ? String(existing["Credit"] ?? "") : "",
+        qr: existing ? String(existing["QR"] ?? "") : "",
+        cashOverride: "",
+        error: existing ? String(existing["Error"] ?? "") : "",
+        errorNote: existing ? String(existing["Explanation"] ?? "") : "",
+        expanded: !!(existing?.Error),
+        existingId: existing?.id,
+      }];
+    });
   };
 
   const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
@@ -1721,15 +1749,18 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         {/* Header */}
         <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
-            <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>CASH</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>CASH</span>
+              <span style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{currentMonthName} GST: {monthGSTTotal.toFixed(2)}</span>
+            </div>
             <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
               <X size={18} />
             </button>
           </div>
           {/* Column headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "8px" }}>
             {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
-              <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+              <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
             ))}
             <div />
           </div>
@@ -1753,7 +1784,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
             return (
               <div key={entry.date} style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", alignItems: "center", padding: "9px 0" }}>
-                  <div style={{ fontSize: "11px", fontWeight: isToday ? 700 : 300, fontFamily: "Raleway, inherit", color: isToday ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", letterSpacing: "0.02em" }}>{dateLabel}</div>
+                  <div style={{ fontSize: "11px", fontWeight: hasData ? 700 : 300, fontFamily: "Raleway, inherit", color: hasData ? "#000" : "hsl(var(--muted-foreground))", letterSpacing: "0.02em" }}>{dateLabel}</div>
                   <input type="number" inputMode="decimal" value={entry.totalGST} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, totalGST: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
                   <input type="number" inputMode="decimal" value={entry.credit} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, credit: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
                   <input type="number" inputMode="decimal" value={entry.qr} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, qr: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
@@ -1772,20 +1803,30 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
                   </button>
                 </div>
                 {entry.expanded && (
-                  <div style={{ paddingBottom: "10px", paddingLeft: "48px", display: "flex", gap: "12px", alignItems: "flex-end" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Error</div>
-                      <input type="number" inputMode="decimal" value={entry.error} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, error: e.target.value, cashOverride: "" }))} placeholder="0" style={{ width: "64px", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
+                  <div style={{ paddingBottom: "10px", display: "flex", gap: "16px", alignItems: "flex-end", justifyContent: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "center" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Error</div>
+                      <input type="number" inputMode="decimal" value={entry.error} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, error: e.target.value, cashOverride: "" }))} placeholder="0" style={{ width: "64px", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
                     </div>
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "3px" }}>
-                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Note</div>
-                      <input type="text" value={entry.errorNote} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, errorNote: e.target.value }))} placeholder="Explanation..." style={{ width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--border))", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0" }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "center", minWidth: "120px" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Note</div>
+                      <input type="text" value={entry.errorNote} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, errorNote: e.target.value }))} placeholder="Explanation..." style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0", textAlign: "center" }} />
                     </div>
                   </div>
                 )}
               </div>
             );
           })}
+
+          {/* Add row button */}
+          <div style={{ paddingTop: "8px", paddingBottom: "4px" }}>
+            <button
+              onClick={handleAddCashRow}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", padding: "4px 0" }}
+            >
+              Add +
+            </button>
+          </div>
 
           {/* Submit */}
           <div style={{ paddingTop: "20px", paddingBottom: "24px", borderBottom: "0.5px solid hsl(var(--border))" }}>
@@ -1803,20 +1844,24 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
           {/* Recent / Month toggle */}
           <div style={{ paddingTop: "20px" }}>
             <div style={{ display: "flex", gap: "24px", marginBottom: "14px" }}>
-              {(["recent", "month"] as const).map(v => (
-                <button
-                  key={v}
-                  onClick={() => setCashView(v)}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === v ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === v ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent", textTransform: "capitalize" }}
-                >
-                  {v === "recent" ? "Recent" : "Month"}
-                </button>
-              ))}
+              <button
+                onClick={() => setCashView("recent")}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "recent" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "recent" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+              >
+                Recent
+              </button>
+              <button
+                onClick={() => setCashView("month")}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "month" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "month" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent", display: "flex", alignItems: "baseline", gap: "8px" }}
+              >
+                <span>{currentMonthName}</span>
+                {cashView === "month" && <span style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>{monthGSTTotal.toFixed(2)}</span>}
+              </button>
             </div>
             {/* Log table header */}
             <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
               {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
-                <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+                <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
               ))}
             </div>
             {loadingCashLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>Loading...</div>}
