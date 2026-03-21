@@ -1,9 +1,9 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import jsPDF from "jspdf";
 import { X, Check, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { USAGE_TYPES, makeIsFavourite, UsageType, isYes } from "@/lib/branchSimpleUtils";
+import jsPDF from "jspdf";
 
 interface OfficeProduct {
   id: number;
@@ -16,7 +16,7 @@ interface OfficeProduct {
   "OFFICE BALANCE": number | null;
   "OFFICE SECTION": string | null;
   "UNITS/ORDER": number | null;
-  "BOUDOIR BALANCE": number | null;
+  "NUR YADI BALANCE": number | null;
   "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
@@ -147,19 +147,6 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
   const [grnNotes, setGrnNotes] = useState("");
   const [lastConfirmedEntries, setLastConfirmedEntries] = useState<Array<{productName: string; starting: number; qty: number; ending: number}> | null>(null);
 
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const BRANCH_NAME = "NUR YADI";
-  const BALANCE_KEY = "NUR YADI BALANCE" as keyof OfficeProduct;
-  const BRANCH_LOG_NAME = "Nur Yadi";
-
-  const [branchLog, setBranchLog] = useState<LogRow[]>([]);
-  const [loadingBranchLog, setLoadingBranchLog] = useState(true);
-  const [productLog, setProductLog] = useState<LogRow[]>([]);
-  const [loadingProductLog, setLoadingProductLog] = useState(false);
-  const [reversing, setReversing] = useState<number | null>(null);
-  const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
-
   // Cash panel state
   const [cashEntries, setCashEntries] = useState<CashEntryState[]>([]);
   const [cashView, setCashView] = useState<"recent" | "month" | "deposit">("recent");
@@ -180,6 +167,18 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     "100": "", "50": "", "20": "", "10": "", "5": "", "1": "", "coins": ""
   });
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const BRANCH_NAME = "NUR YADI";
+  const BALANCE_KEY = "NUR YADI BALANCE" as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = "Nur Yadi";
+
+  const [branchLog, setBranchLog] = useState<LogRow[]>([]);
+  const [loadingBranchLog, setLoadingBranchLog] = useState(true);
+  const [productLog, setProductLog] = useState<LogRow[]>([]);
+  const [loadingProductLog, setLoadingProductLog] = useState(false);
+  const [reversing, setReversing] = useState<number | null>(null);
+  const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; right: number } | null>(null);
 
   useEffect(() => {
@@ -189,7 +188,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
       .select("*")
       .eq("BRANCH", BRANCH_LOG_NAME)
       .order("DATE", { ascending: false })
-      .limit(50)
+      .limit(200)
       .then(({ data }: { data: LogRow[] | null }) => {
         setBranchLog(data || []);
         setLoadingBranchLog(false);
@@ -205,12 +204,54 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
       .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
       .eq("BRANCH", BRANCH_LOG_NAME)
       .order("DATE", { ascending: false })
-      .limit(50)
+      .limit(200)
       .then(({ data }: { data: LogRow[] | null }) => {
         setProductLog(data || []);
         setLoadingProductLog(false);
       });
   }, [selectedProduct]);
+
+  useEffect(() => {
+    if (activePanel !== "CASH") return;
+    const fetchCashData = async () => {
+      setLoadingCashLog(true);
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 29);
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const fromDate = thirtyDaysAgo < monthStart ? thirtyDaysAgo : monthStart;
+      const fromDateStr = fromDate.toISOString().split("T")[0];
+      const { data } = await (supabase as any)
+        .from("Cash")
+        .select("*")
+        .eq("Branch", "Nur Yadi")
+        .gte("Date", fromDateStr)
+        .order("Date", { ascending: false });
+      const rows: CashRow[] = data || [];
+      setCashLog(rows);
+      setLoadingCashLog(false);
+      const entries: CashEntryState[] = [];
+      for (let i = 0; i < 1; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        const existing = rows.find(r => r.Date === dateStr);
+        entries.push({
+          date: dateStr,
+          totalGST: existing ? String(existing["Total GST"] ?? "") : "",
+          credit: existing ? String(existing["Credit"] ?? "") : "",
+          qr: existing ? String(existing["QR"] ?? "") : "",
+          cashOverride: "",
+          error: existing ? String(existing["Error"] ?? "") : "",
+          errorNote: existing ? String(existing["Explanation"] ?? "") : "",
+          expanded: !!(existing?.Error),
+          existingId: existing?.id,
+        });
+      }
+      setCashEntries(entries);
+    };
+    fetchCashData();
+  }, [activePanel]);
 
   const reverseRow = async (row: LogRow) => {
     setReversing(row.id);
@@ -259,6 +300,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
   const usageFavs    = usageFiltered.filter(p =>  isNurYadiFav(p));
   const usageColours = usageFiltered.filter(p => !isNurYadiFav(p) &&  isYes(p["Colour"]));
   const usageRegular = usageFiltered.filter(p => !isNurYadiFav(p) && !isYes(p["Colour"]));
+
   const orderFiltered = orderSearch.length > 0
     ? products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(orderSearch.toLowerCase()))
     : products;
@@ -286,6 +328,315 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     setUsageSearch("");
     usageInputRef.current?.blur();
   };
+
+  const handleAddOrderProduct = (p: OfficeProduct) => {
+    const existing = orderEntries.find(e => e.productName === p["PRODUCT NAME"]);
+    if (!existing) {
+      setOrderEntries(prev => [...prev, { id: Date.now(), productName: p["PRODUCT NAME"], qty: 1 }]);
+    }
+    setOrderSearch("");
+    setShowOrderDropdown(false);
+    orderInputRef.current?.blur();
+  };
+
+  const dismissOrderDropdown = () => {
+    setShowOrderDropdown(false);
+    setOrderSearch("");
+    orderInputRef.current?.blur();
+  };
+
+  const handleOrderSubmit = () => {
+    const valid = orderEntries.filter(e => e.productName && e.qty > 0);
+    if (!valid.length) return;
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yy = String(today.getFullYear()).slice(-2);
+    const grn = `NUR ${dd}${mm}${yy}`;
+    const dateStr = today.toISOString().split("T")[0];
+    const entries = valid.map(entry => {
+      const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+      const starting = Number((product as any)?.[BALANCE_KEY] ?? 0);
+      return { id: entry.id, productName: entry.productName, starting, qty: entry.qty, ending: starting + entry.qty };
+    });
+    setPendingOrder({ grn, date: dateStr, entries });
+    setOrderError(null);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!pendingOrder) return;
+    setOrderConfirming(true);
+    setOrderError(null);
+    let hasError = false;
+    try {
+      for (const entry of pendingOrder.entries) {
+        const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+        const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
+        const endingOfficeBalance = currentOfficeBalance - entry.qty;
+        const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
+          "DATE": pendingOrder.date,
+          "PRODUCT NAME": entry.productName,
+          "BRANCH": BRANCH_LOG_NAME,
+          "SUPPLIER": "Office",
+          "TYPE": "Order",
+          "STARTING BALANCE": entry.starting,
+          "QTY": entry.qty,
+          "ENDING BALANCE": entry.ending,
+          "GRN": pendingOrder.grn,
+          "OFFICE BALANCE": endingOfficeBalance,
+        });
+        if (logErr) { setOrderError(logErr.message || "Write failed"); hasError = true; break; }
+        await (supabase as any).from("AllFileProducts")
+          .update({ [BALANCE_KEY]: entry.ending })
+          .eq("PRODUCT NAME", entry.productName);
+        await (supabase as any).from("AllFileProducts")
+          .update({ "OFFICE BALANCE": endingOfficeBalance })
+          .eq("PRODUCT NAME", entry.productName);
+        setProducts(prev => prev.map(p =>
+          p["PRODUCT NAME"] === entry.productName
+            ? { ...p, [BALANCE_KEY]: entry.ending, "OFFICE BALANCE": endingOfficeBalance }
+            : p
+        ));
+      }
+      if (!hasError) {
+        setOrderEntries([]);
+        setPendingOrder(null);
+        setGrnNotes("");
+        setConfirmSuccess(true);
+        setTimeout(() => setConfirmSuccess(false), 3000);
+        const { data: freshBLog } = await (supabase as any)
+          .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
+          .order("DATE", { ascending: false }).limit(200);
+        setBranchLog(freshBLog || []);
+      }
+    } catch (err: any) {
+      setOrderError(err?.message || "Unknown error");
+    }
+    setOrderConfirming(false);
+  };
+
+
+  const generateGRNPdf = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const W = 595;
+    const margin = 50;
+    const dateStr = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(26, 26, 26);
+    doc.text("NUR YADI", margin, 58);
+    doc.text("GOODS RECEIVED NOTE", W - margin, 58, { align: "right" });
+    doc.setDrawColor(26, 26, 26);
+    doc.setLineWidth(0.8);
+    doc.line(margin, 64, W - margin, 64);
+    // Address
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("ADDRESS", margin, 78);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(128, 128, 128);
+    doc.text("+60123333128  /  soongailing@gmail.com", margin, 90);
+    doc.text("2F-11, Bangsar Village 2, No 2, Jalan Telawi 1, Bangsar Baru, Kuala Lumpur, 59100, Malaysia", margin, 101);
+    // Meta
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(26, 26, 26);
+    doc.text("DATE", margin, 130);
+    doc.text("GRN NUMBER", margin + 120, 130);
+    doc.setFontSize(9);
+    doc.text(dateStr, margin, 143);
+    doc.text(grn, margin + 120, 143);
+    // Notes box
+    const notesY = 160;
+    const notesH = 56;
+    doc.setFillColor(247, 247, 247);
+    doc.rect(margin, notesY, W - 2 * margin, notesH, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(26, 26, 26);
+    doc.text("NOTES", margin, notesY + 12);
+    if (grnNotes.trim()) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(90, 90, 90);
+      doc.text(grnNotes, margin + 6, notesY + 26, { maxWidth: W - 2 * margin - 12 });
+    }
+    // Column positions
+    const numX  = margin;
+    const nameX = margin + 30;
+    const oldCX = margin + 285;
+    const qtyCX = margin + 355;
+    const endCX = margin + 427;
+    const tableTop = 250;
+    const headerH = 28;
+    doc.setFillColor(242, 242, 242);
+    doc.rect(margin, tableTop - headerH + 12, W - 2 * margin, headerH, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(26, 26, 26);
+    doc.text("NO", numX + 10, tableTop - 2, { align: "center" });
+    doc.text("PRODUCT NAME", nameX, tableTop - 2);
+    doc.text("OLD", oldCX, tableTop + 5, { align: "center" });
+    doc.text("BALANCE", oldCX, tableTop - 5, { align: "center" });
+    doc.text("ORDER", qtyCX, tableTop + 5, { align: "center" });
+    doc.text("QTY", qtyCX, tableTop - 5, { align: "center" });
+    doc.text("ENDING", endCX, tableTop + 5, { align: "center" });
+    doc.text("BALANCE", endCX, tableTop - 5, { align: "center" });
+    // Rows
+    const sorted = [...entries].sort((a, b) => a.productName.localeCompare(b.productName));
+    const rowH = 26;
+    let y = tableTop + 16;
+    let totalQty = 0;
+    sorted.forEach((row, idx) => {
+      totalQty += row.qty;
+      if (idx % 2 === 0) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(margin, y - 2, W - 2 * margin, rowH, "F");
+      }
+      doc.setDrawColor(224, 224, 224);
+      doc.setLineWidth(0.4);
+      doc.line(margin, y + rowH - 2, W - margin, y + rowH - 2);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(140, 140, 140);
+      doc.text(String(idx + 1), numX + 10, y + 14, { align: "center" });
+      doc.setFontSize(9.5);
+      doc.setTextColor(38, 38, 38);
+      doc.text(row.productName, nameX, y + 14);
+      doc.text(String(row.starting), oldCX, y + 14, { align: "center" });
+      doc.text(String(row.qty), qtyCX, y + 14, { align: "center" });
+      doc.text(String(row.ending), endCX, y + 14, { align: "center" });
+      y += rowH;
+    });
+    // Total row
+    doc.setDrawColor(77, 77, 77);
+    doc.setLineWidth(0.6);
+    doc.line(margin, y - 2, W - margin, y - 2);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(26, 26, 26);
+    doc.text("TOTAL ORDER QTY", nameX, y + 14);
+    doc.text(String(totalQty), qtyCX, y + 14, { align: "center" });
+    y += rowH;
+    // Signatures
+    const pageH = 842;
+    const sigY = Math.max(y + 70, pageH - 110);
+    const sigW = 180;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(128, 128, 128);
+    doc.text("RECEIVED BY", margin, sigY - 14);
+    doc.setDrawColor(77, 77, 77);
+    doc.setLineWidth(0.5);
+    doc.line(margin, sigY, margin + sigW, sigY);
+    const rightSigX = W - margin - sigW;
+    doc.text("ORDER PROCESSED BY", rightSigX, sigY - 14);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(38, 38, 38);
+    doc.text("Hamza Riazuddin", rightSigX, sigY - 4);
+    doc.line(rightSigX, sigY, rightSigX + sigW, sigY);
+    doc.save(`${grn} - GRN.pdf`);
+  };
+
+  const exportDepositCsv = (start: string, end: string) => {
+    const s = start <= end ? start : end;
+    const e2 = start <= end ? end : start;
+    const rows = cashLog
+      .filter(r => r.Branch === "Nur Yadi" && r.Date >= s && r.Date <= e2)
+      .sort((a, b) => a.Date.localeCompare(b.Date));
+    const headers = ["Date", "Total GST", "Credit", "QR", "Cash", "Error", "Explanation"];
+    const csvRows = [
+      headers.join(","),
+      ...rows.map(r => [
+        r.Date,
+        r["Total GST"] ?? "",
+        r.Credit ?? "",
+        r.QR ?? "",
+        r.Cash ?? "",
+        r.Error ?? "",
+        `"${(r.Explanation ?? "").replace(/"/g, '""')}"`
+      ].join(","))
+    ];
+    // 2 blank rows then denomination section
+    csvRows.push("", "");
+    csvRows.push("Denomination,Count,Amount");
+    const denomRows: Array<{label: string; key: string; value: number}> = [
+      { label: "RM 100", key: "100", value: 100 },
+      { label: "RM 50",  key: "50",  value: 50  },
+      { label: "RM 20",  key: "20",  value: 20  },
+      { label: "RM 10",  key: "10",  value: 10  },
+      { label: "RM 5",   key: "5",   value: 5   },
+      { label: "RM 1",   key: "1",   value: 1   },
+    ];
+    denomRows.forEach(d => {
+      const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+      const amt = cnt * d.value;
+      csvRows.push(`${d.label},${cnt},${amt.toFixed(2)}`);
+    });
+    const coinsAmt = parseFloat(denomCounts["coins"] || "0") || 0;
+    csvRows.push(`Coins,,${coinsAmt.toFixed(2)}`);
+    const totalAmt = denomRows.reduce((sum, d) => {
+      const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+      return sum + cnt * d.value;
+    }, 0) + coinsAmt;
+    csvRows.push(`Counted Total,,${totalAmt.toFixed(2)}`);
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Nur Yadi Cash Export.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToExcel = (entries: Array<{productName: string; starting: number; qty: number; ending: number}>, grn: string) => {
+    const rows = [
+      ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
+      ...entries.map(e => [e.productName, e.starting, e.qty, e.ending])
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${grn}-order.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleResetOrder = () => {
+    setPendingOrder(null);
+    setOrderError(null);
+    setGrnNotes("");
+  };
+
+  const toggleGRN = (key: string) => {
+    setExpandedGRNs(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const allOrderGroups = (() => {
+    const orders = branchLog.filter(r => r.TYPE === "Order");
+    const seen = new Map<string, LogRow[]>();
+    orders.forEach(r => {
+      const grn = r.GRN || r.DATE;
+      const key = `${r.DATE}__${grn}`;
+      if (!seen.has(key)) seen.set(key, []);
+      seen.get(key)!.push(r);
+    });
+    const groups: { key: string; date: string; grn: string; rows: LogRow[] }[] = [];
+    seen.forEach((rows, key) => {
+      const [date, grn] = key.split("__");
+      groups.push({ key, date, grn, rows });
+    });
+    return groups.sort((a, b) => b.date.localeCompare(a.date));
+  })();
 
   const cycleType = (id: number) => {
     setUsageEntries(prev => prev.map(e => {
@@ -337,8 +688,6 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     }
     setUsageSubmitting(false);
   };
-
-  const cashLogFiltered
 
   const cashLogFiltered = React.useMemo(() => {
     if (cashView === "recent") {
@@ -496,53 +845,6 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     });
   };
 
-  // Shared header cell style helpers
-  const hdrLeft   = { fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" } as React.CSSProperties;
-  const hdrCenter = { ...hdrLeft, textAlign: "center" as const };
-
-
-  useEffect(() => {
-    if (activePanel !== "CASH") return;
-    const fetchCashData = async () => {
-      setLoadingCashLog(true);
-      const today = new Date();
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(today.getDate() - 29);
-      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-      const fromDate = thirtyDaysAgo < monthStart ? thirtyDaysAgo : monthStart;
-      const fromDateStr = fromDate.toISOString().split("T")[0];
-      const { data } = await (supabase as any)
-        .from("Cash")
-        .select("*")
-        .eq("Branch", "Nur Yadi")
-        .gte("Date", fromDateStr)
-        .order("Date", { ascending: false });
-      const rows: CashRow[] = data || [];
-      setCashLog(rows);
-      setLoadingCashLog(false);
-      const entries: CashEntryState[] = [];
-      for (let i = 0; i < 1; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-        const existing = rows.find(r => r.Date === dateStr);
-        entries.push({
-          date: dateStr,
-          totalGST: existing ? String(existing["Total GST"] ?? "") : "",
-          credit: existing ? String(existing["Credit"] ?? "") : "",
-          qr: existing ? String(existing["QR"] ?? "") : "",
-          cashOverride: "",
-          error: existing ? String(existing["Error"] ?? "") : "",
-          errorNote: existing ? String(existing["Explanation"] ?? "") : "",
-          expanded: !!(existing?.Error),
-          existingId: existing?.id,
-        });
-      }
-      setCashEntries(entries);
-    };
-    fetchCashData();
-  }, [activePanel]);
-
   const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
     setActivePanel(panel);
     setShowDropdown(false);
@@ -556,6 +858,11 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     setOrderSearch("");
     setShowOrderDropdown(false);
   };
+
+  // Shared header cell style helpers
+  const hdrLeft   = { fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" } as React.CSSProperties;
+  const hdrCenter = { ...hdrLeft, textAlign: "center" as const };
+
   return (
     <div style={{
       position: "relative", height: "100dvh",
@@ -1151,7 +1458,6 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
       )}
 
       {/* ORDER Panel */}
-      {/* ORDER Panel */}
       {activePanel === "ORDER" && createPortal(
       <div style={{
         position: "fixed", top: 0, left: 0,
@@ -1273,7 +1579,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             const dd = String(d.getDate()).padStart(2,"0");
             const mm = String(d.getMonth()+1).padStart(2,"0");
             const yy = String(d.getFullYear()).slice(-2);
-            const confirmedGrn = `NYD ${dd}${mm}${yy}`;
+            const confirmedGrn = `NUR ${dd}${mm}${yy}`;
             return (
               <div style={{ paddingTop: "24px" }}>
                 <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(120 60% 40%)", fontFamily: "Raleway, inherit", marginBottom: "12px" }}>✓ Order confirmed</div>
