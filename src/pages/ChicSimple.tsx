@@ -744,8 +744,19 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
   const denomDiff = depCashTotal !== null ? denomTotal - depCashTotal : null;
 
   const recentGSTTotal = React.useMemo(() => {
-    return cashLogFiltered.reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
-  }, [cashLogFiltered]);
+    // Sum entries from Monday of current week through today
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ...6=Sat
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysFromMonday);
+    monday.setHours(0, 0, 0, 0);
+    const mondayStr = monday.toISOString().split("T")[0];
+    const todayStr = today.toISOString().split("T")[0];
+    return cashLog
+      .filter(r => r.Date >= mondayStr && r.Date <= todayStr)
+      .reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
+  }, [cashLog]);
 
   const refreshCashLog = async () => {
     const today = new Date();
@@ -808,15 +819,15 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
         setCashSuccess(true);
         setTimeout(() => setCashSuccess(false), 3000);
         await refreshCashLog();
-        const today = new Date();
-        const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 6);
-        const fromDateStr = sevenDaysAgo.toISOString().split("T")[0];
-        const { data: freshData } = await (supabase as any).from("Cash").select("*").eq("Branch", "Chic Nailspa").gte("Date", fromDateStr);
-        const freshRows: CashRow[] = freshData || [];
-        setCashEntries(prev => prev.map(en => {
-          const found = freshRows.find(r => r.Date === en.date);
-          return found ? { ...en, existingId: found.id } : en;
-        }));
+        // After submit: reset entry area — show today row only if today has no Supabase entry
+        const todayStr = new Date().toISOString().split("T")[0];
+        const { data: todayCheck } = await (supabase as any).from("Cash").select("id").eq("Branch", "Chic Nailspa").eq("Date", todayStr);
+        const todayExists = todayCheck && todayCheck.length > 0;
+        if (todayExists) {
+          setCashEntries([]);
+        } else {
+          setCashEntries([{ date: todayStr, totalGST: "", credit: "", qr: "", cashOverride: "", error: "", errorNote: "", expanded: false, existingId: undefined }]);
+        }
       }
     } catch (err: any) {
       setCashError(err?.message || "Unknown error");
@@ -1999,7 +2010,7 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
               </div>
               {cashView !== "deposit" && (
                 <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", paddingBottom: "6px" }}>
-                  Total: RM {(cashView === "recent" ? recentGSTTotal : monthGSTTotal).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {cashView === "recent" ? "This Week" : "Total"}: RM {(cashView === "recent" ? recentGSTTotal : monthGSTTotal).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               )}
               {cashView === "deposit" && (
