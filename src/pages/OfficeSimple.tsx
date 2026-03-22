@@ -70,6 +70,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [salesData, setSalesData] = useState<{ Branch: string; Date: string; "Total GST": number }[]>([]);
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesMonthFilter, setSalesMonthFilter] = useState<string>("all");
+  const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
   const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
   const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
   const [importError, setImportError] = useState<string | null>(null);
@@ -557,6 +558,73 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
+
+  // ─── SALES HELPERS ───────────────────────────────────────────────
+  const BRANCHES = [
+    { key: "Boudoir", color: "#6366f1" },
+    { key: "Chic Nailspa", color: "#ec4899" },
+    { key: "Nur Yadi", color: "#f59e0b" },
+  ];
+
+  const fetchSales = React.useCallback(async () => {
+    setSalesLoading(true);
+    try {
+      const apikey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bWhndGZua2FtdGJidW1wb2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxOTM0MDksImV4cCI6MjA1Nzc2OTQwOX0.eiPdMDhCEPJxv3a3VeIeSjAqE2dq_ZvSTiAdRxIJUqI";
+      const res = await fetch(
+        'https://yumhgtfnkamtbbumpoia.supabase.co/rest/v1/Cash?select=Branch,Date,Total%20GST&order=Date.asc',
+        { headers: { apikey, Authorization: `Bearer ${apikey}` } }
+      );
+      const json = await res.json();
+      setSalesData(json || []);
+    } catch {}
+    setSalesLoading(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (showSalesPanel) fetchSales();
+  }, [showSalesPanel, fetchSales]);
+
+  const salesMonths = React.useMemo(() => {
+    const set = new Set<string>();
+    salesData.forEach(r => { if (r.Date) set.add(r.Date.slice(0, 7)); });
+    return Array.from(set).sort();
+  }, [salesData]);
+
+  const monthName = (ym: string) => {
+    const [y, m] = ym.split("-");
+    return new Date(Number(y), Number(m) - 1, 1).toLocaleString("default", { month: "long", year: "numeric" });
+  };
+
+  const getMonday = (d: Date) => {
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const mon = new Date(d);
+    mon.setDate(d.getDate() + diff);
+    return mon;
+  };
+
+  const buildWeeklyData = (branch: string) => {
+    const filtered = salesData.filter(r => {
+      if (r.Branch !== branch) return false;
+      if (salesMonthFilter !== "all" && !r.Date?.startsWith(salesMonthFilter)) return false;
+      return true;
+    });
+    const weekMap: Record<string, number> = {};
+    filtered.forEach(r => {
+      const d = new Date(r.Date);
+      const mon = getMonday(d);
+      const label = mon.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
+      weekMap[label] = (weekMap[label] || 0) + (Number(r["Total GST"]) || 0);
+    });
+    return Object.entries(weekMap).map(([week, total]) => ({ week, total }));
+  };
+
+  const salesGrandTotal = (branch: string) => {
+    return salesData
+      .filter(r => r.Branch === branch && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)))
+      .reduce((s, r) => s + (Number(r["Total GST"]) || 0), 0);
+  };
+  // ─────────────────────────────────────────────────────────────────
 
   return (
     <div style={{
@@ -1332,27 +1400,61 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>SALES</span>
             </div>
             {/* Month filter */}
-            <div style={{ display: "flex", gap: "8px", padding: "14px 20px 10px 20px", flexWrap: "wrap", alignItems: "center" }}>
-              {["all", ...salesMonths].map(m => (
-                <button
-                  key={m}
-                  onClick={() => setSalesMonthFilter(m)}
-                  style={{
-                    background: salesMonthFilter === m ? "hsl(var(--foreground))" : "transparent",
-                    color: salesMonthFilter === m ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
-                    border: "0.5px solid hsl(var(--border))",
-                    borderRadius: "20px",
-                    padding: "4px 14px",
-                    fontSize: "11px",
-                    fontWeight: 300,
-                    fontFamily: "Raleway, inherit",
-                    cursor: "pointer",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {m === "all" ? "All" : monthName(m)}
-                </button>
-              ))}
+            <div style={{ padding: "14px 20px 10px 20px", position: "relative", display: "inline-block" }}>
+              <button
+                onClick={() => setSalesDropdownOpen(v => !v)}
+                style={{
+                  background: "transparent",
+                  border: "0.5px solid hsl(var(--border))",
+                  borderRadius: "20px",
+                  padding: "4px 12px",
+                  fontSize: "11px",
+                  fontWeight: 300,
+                  fontFamily: "Raleway, inherit",
+                  cursor: "pointer",
+                  color: "hsl(var(--foreground))",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {salesMonthFilter === "all" ? "All" : monthName(salesMonthFilter)}
+                <span style={{ fontSize: "9px", opacity: 0.6 }}>{salesDropdownOpen ? "▲" : "▼"}</span>
+              </button>
+              {salesDropdownOpen && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: "20px",
+                  background: "hsl(var(--background))",
+                  border: "0.5px solid hsl(var(--border))",
+                  borderRadius: "10px",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                  zIndex: 100,
+                  minWidth: "160px",
+                  overflow: "hidden",
+                  marginTop: "4px",
+                }}>
+                  {["all", ...salesMonths].map(m => (
+                    <div
+                      key={m}
+                      onClick={() => { setSalesMonthFilter(m); setSalesDropdownOpen(false); }}
+                      style={{
+                        padding: "9px 16px",
+                        fontSize: "11px",
+                        fontWeight: salesMonthFilter === m ? 500 : 300,
+                        fontFamily: "Raleway, inherit",
+                        cursor: "pointer",
+                        color: salesMonthFilter === m ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        background: salesMonthFilter === m ? "hsl(var(--muted) / 0.4)" : "transparent",
+                      }}
+                    >
+                      {m === "all" ? "All" : monthName(m)}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Charts */}
