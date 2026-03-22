@@ -1508,6 +1508,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             <YAxis
                               ticks={yTicks}
                               domain={[0, topTick]}
+                              interval={0}
                               tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
                               axisLine={false}
                               tickLine={false}
