@@ -1403,10 +1403,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 onClick={() => setSalesDropdownOpen(v => !v)}
                 style={{
                   background: "transparent",
-                  border: "0.5px solid hsl(var(--border))",
-                  borderRadius: "20px",
-                  padding: "4px 12px",
-                  fontSize: "11px",
+                  border: "none",
+                  padding: "0",
+                  fontSize: "14px",
                   fontWeight: 300,
                   fontFamily: "Raleway, inherit",
                   cursor: "pointer",
@@ -1418,7 +1417,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 }}
               >
                 {salesMonthFilter === "all" ? "All" : monthName(salesMonthFilter)}
-                <span style={{ fontSize: "9px", opacity: 0.6 }}>{salesDropdownOpen ? "▲" : "▼"}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
+                  {salesDropdownOpen ? <path d="M18 15l-6-6-6 6"/> : <path d="M6 9l6 6 6-6"/>}
+                </svg>
               </button>
               {salesDropdownOpen && (
                 <div style={{
@@ -1475,43 +1476,50 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                     </div>
                     {data.length === 0 ? (
                       <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300, padding: "12px 0" }}>No data</div>
-                    ) : (
-                      <ResponsiveContainer width="100%" height={160}>
-                        <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="50%">
-                          <CartesianGrid vertical={false} strokeDasharray="" stroke="#e0e0e0" strokeWidth={0.8} />
-                          <XAxis
-                            dataKey="week"
-                            tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
-                            axisLine={false}
-                            tickLine={false}
-                            tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`}
-                            width={36}
-                          />
-                          <Tooltip
-                            formatter={(v: number) => [`RM ${v.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`, "Sales"]}
-                            contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
-                            cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
-                          />
-                          <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} />
-                          {(() => {
-                            const filtered = salesData.filter(r => r.Branch === key && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)));
-                            if (filtered.length < 2) return null;
-                            const dates = filtered.map(r => new Date(r.Date).getTime());
-                            const minD = Math.min(...dates);
-                            const maxD = Math.max(...dates);
-                            const days = Math.max(1, Math.round((maxD - minD) / 86400000) + 1);
-                            const grandTotal = filtered.reduce((s, r) => s + (parseFloat(r["Total GST"]) || 0), 0);
-                            const weeklyAvg = grandTotal / days * 7;
-                            return <ReferenceLine y={weeklyAvg} stroke="#555" strokeDasharray="4 4" strokeWidth={1} strokeOpacity={0.5} />;
-                          })()}
-                        </BarChart>
-                      </ResponsiveContainer>
-                    )}
+                    ) : (() => {
+                      const maxVal = Math.max(...data.map((d: {week: string; total: number}) => d.total), 0);
+                      const topTick = Math.ceil(maxVal / 5000) * 5000 || 5000;
+                      const yTicks = Array.from({ length: topTick / 5000 + 1 }, (_, i) => i * 5000);
+                      const filtered2 = salesData.filter(r => r.Branch === key && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)));
+                      let weeklyAvg: number | null = null;
+                      if (filtered2.length >= 2) {
+                        const dates2 = filtered2.map(r => new Date(r.Date).getTime());
+                        const days2 = Math.max(1, Math.round((Math.max(...dates2) - Math.min(...dates2)) / 86400000) + 1);
+                        const sum2 = filtered2.reduce((s, r) => s + (parseFloat(r["Total GST"] as any) || 0), 0);
+                        weeklyAvg = sum2 / days2 * 7;
+                      }
+                      return (
+                        <ResponsiveContainer width="100%" height={160}>
+                          <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="50%">
+                            <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
+                            <XAxis
+                              dataKey="week"
+                              tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <YAxis
+                              ticks={yTicks}
+                              domain={[0, topTick]}
+                              tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
+                              axisLine={false}
+                              tickLine={false}
+                              tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`}
+                              width={36}
+                            />
+                            <Tooltip
+                              formatter={(v: number) => [`RM ${v.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`, "Sales"]}
+                              contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
+                              cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                            />
+                            <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} isAnimationActive={false} />
+                            {weeklyAvg !== null && (
+                              <ReferenceLine y={weeklyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
+                            )}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
                   </div>
                 );
               })}
