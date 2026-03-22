@@ -130,7 +130,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               const result: Record<string, string> = {};
               for (const [k, v] of Object.entries(row)) {
                 const key = k.trim();
-                if (key === "Date" && typeof v === "number") {
+                if (key.toLowerCase() === "date" && typeof v === "number") {
                   result[key] = excelSerialToDateStr(v);
                 } else {
                   result[key] = String(v).trim();
