@@ -1512,7 +1512,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                               contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
                               cursor={{ fill: "rgba(0,0,0,0.04)" }}
                             />
-                            <Bar dataKey="total" fill={color} isAnimationActive={false} maxBarSize={40} />
+                            <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} isAnimationActive={false} maxBarSize={40} />
                             {weeklyAvg !== null && (
                               <ReferenceLine y={weeklyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
                             )}
