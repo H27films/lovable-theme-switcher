@@ -943,6 +943,12 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   {!loadingLog && grnGroups.map(group => {
                     const isOpen = expandedGRNs.has(group.grn);
                     const isOfficeGRN = group.grn.startsWith("OFFICE");
+                    const groupTotal = isOfficeGRN && isOpen
+                      ? group.rows.reduce((sum, row) => {
+                          const mp = localProducts.find(lp => lp["PRODUCT NAME"] === row["PRODUCT NAME"]);
+                          return sum + (mp ? Number(mp["SUPPLIER PRICE"] ?? 0) * Math.abs(row.QTY ?? 0) : 0);
+                        }, 0)
+                      : null;
                     return (
                       <div key={group.grn}>
                         <div
@@ -951,7 +957,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         >
                           <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{fmtDate(group.date)}</div>
                           <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{group.grn}</div>
-                          <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{group.supplier}</div>
+                          <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {group.supplier}{groupTotal !== null ? ` — RM ${groupTotal.toFixed(2)}` : ""}
+                          </div>
                           <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
                           <div />
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
