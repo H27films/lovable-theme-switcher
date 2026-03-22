@@ -1469,8 +1469,8 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
                         {key.toUpperCase()}
                       </span>
-                      <span style={{ fontSize: "14px", fontWeight: 500, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>
-                        Total: RM {total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <span style={{ fontSize: "14px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>
+                        RM {total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                     {data.length === 0 ? (
