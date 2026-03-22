@@ -569,13 +569,11 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const fetchSales = React.useCallback(async () => {
     setSalesLoading(true);
     try {
-      const apikey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bWhndGZua2FtdGJidW1wb2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxOTM0MDksImV4cCI6MjA1Nzc2OTQwOX0.eiPdMDhCEPJxv3a3VeIeSjAqE2dq_ZvSTiAdRxIJUqI";
-      const res = await fetch(
-        'https://yumhgtfnkamtbbumpoia.supabase.co/rest/v1/Cash?select=Branch,Date,Total%20GST&order=Date.asc',
-        { headers: { apikey, Authorization: `Bearer ${apikey}` } }
-      );
-      const json = await res.json();
-      setSalesData(json || []);
+      const { data } = await (supabase as any)
+        .from("Cash")
+        .select("*")
+        .order("Date", { ascending: true });
+      setSalesData(data || []);
     } catch {}
     setSalesLoading(false);
   }, []);
