@@ -942,6 +942,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   {!loadingLog && grnGroups.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>}
                   {!loadingLog && grnGroups.map(group => {
                     const isOpen = expandedGRNs.has(group.grn);
+                    const isOfficeGRN = group.grn.startsWith("OFFICE");
                     return (
                       <div key={group.grn}>
                         <div
@@ -959,17 +960,31 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         </div>
                         {isOpen && (
                           <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
-                            {group.rows.map((row, idx) => (
-                              <div key={row.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
-                                <div style={{ visibility: "hidden", fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
-                                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row["PRODUCT NAME"]}</div>
-                                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
-                                  {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
+                            {group.rows.map((row, idx) => {
+                              const matchedProduct = localProducts.find(lp => lp["PRODUCT NAME"] === row["PRODUCT NAME"]);
+                              const lineTotal = isOfficeGRN && matchedProduct
+                                ? (Number(matchedProduct["SUPPLIER PRICE"] ?? 0) * Math.abs(row.QTY ?? 0))
+                                : null;
+                              return (
+                                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
+                                  <div style={{ visibility: "hidden", fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
+                                  <div
+                                    onClick={(e) => { e.stopPropagation(); if (matchedProduct) { setSelectedProduct(matchedProduct); setSearch(matchedProduct["PRODUCT NAME"]); setShowDropdown(false); setSearchMode("result"); }}}
+                                    style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: matchedProduct ? "pointer" : "default", textDecoration: matchedProduct ? "underline" : "none", textUnderlineOffset: "2px" }}
+                                  >{row["PRODUCT NAME"]}</div>
+                                  {isOfficeGRN && (
+                                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {lineTotal !== null && lineTotal > 0 ? `RM ${lineTotal.toFixed(2)}` : "—"}
+                                    </div>
+                                  )}
+                                  <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
+                                    {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
+                                  </div>
+                                  <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
+                                  <div />
                                 </div>
-                                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
-                                <div />
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
