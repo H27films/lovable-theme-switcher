@@ -77,6 +77,17 @@ const isBoudoirFav = makeIsFavourite("BOUDOIR FAVOURITE");
 const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: BoudoirSimpleProps) => {
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
 
+  // Sort log: DATE desc, within same date Order rows first (logged last at night)
+  const sortLog = (rows: LogRow[]) => [...rows].sort((a, b) => {
+    const dateDiff = b.DATE.localeCompare(a.DATE);
+    if (dateDiff !== 0) return dateDiff;
+    const aOrder = a.TYPE === 'Order' ? 0 : 1;
+    const bOrder = b.TYPE === 'Order' ? 0 : 1;
+    return aOrder - bOrder;
+  });
+
+
+
   useEffect(() => {
     if (propProducts && propProducts.length > 0) {
       setProducts(propProducts);
@@ -190,7 +201,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       .order("DATE", { ascending: false })
       .limit(200)
       .then(({ data }: { data: LogRow[] | null }) => {
-        setBranchLog(data || []);
+        setBranchLog(sortLog(data || []));
         setLoadingBranchLog(false);
       });
   }, []);
@@ -206,7 +217,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
       .order("DATE", { ascending: false })
       .limit(200)
       .then(({ data }: { data: LogRow[] | null }) => {
-        setProductLog(data || []);
+        setProductLog(sortLog(data || []));
         setLoadingProductLog(false);
       });
   }, [selectedProduct]);
@@ -274,13 +285,13 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
           .eq("PRODUCT NAME", row["PRODUCT NAME"])
           .eq("BRANCH", BRANCH_LOG_NAME)
           .order("DATE", { ascending: false }).limit(50);
-        setProductLog(freshPLog || []);
+        setProductLog(sortLog(freshPLog || []));
       }
       // Refresh branch log
       const { data: freshBLog } = await (supabase as any)
         .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
         .order("DATE", { ascending: false }).limit(50);
-      setBranchLog(freshBLog || []);
+      setBranchLog(sortLog(freshBLog || []));
     } catch (err) {
       console.error("Reverse row error:", err);
     }
@@ -407,7 +418,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         const { data: freshBLog } = await (supabase as any)
           .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
           .order("DATE", { ascending: false }).limit(200);
-        setBranchLog(freshBLog || []);
+        setBranchLog(sortLog(freshBLog || []));
       }
     } catch (err: any) {
       setOrderError(err?.message || "Unknown error");
@@ -681,7 +692,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         const { data } = await (supabase as any)
           .from("AllFileLog").select("*").eq("BRANCH", BRANCH_LOG_NAME)
           .order("DATE", { ascending: false }).limit(50);
-        setBranchLog(data || []);
+        setBranchLog(sortLog(data || []));
       }
     } catch (err: any) {
       setUsageError(err?.message || "Unknown error");
