@@ -561,9 +561,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
   // ─── SALES HELPERS ───────────────────────────────────────────────
   const BRANCHES = [
-    { key: "Boudoir" },
-    { key: "Chic Nailspa" },
-    { key: "Nur Yadi" },
+    { key: "Boudoir", color: "#9CA998" },
+    { key: "Chic Nailspa", color: "#707F84" },
+    { key: "Nur Yadi", color: "#CAB99E" },
   ];
 
   const fetchSales = React.useCallback(async () => {
@@ -1460,7 +1460,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               {salesLoading && (
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
-              {!salesLoading && BRANCHES.map(({ key }) => {
+              {!salesLoading && BRANCHES.map(({ key, color }) => {
                 const data = buildWeeklyData(key);
                 const total = salesGrandTotal(key);
                 return (
@@ -1497,13 +1497,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
                             cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                           />
-                          <defs>
-                            <linearGradient id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#111111" stopOpacity={1} />
-                              <stop offset="100%" stopColor="#cccccc" stopOpacity={1} />
-                            </linearGradient>
-                          </defs>
-                          <Bar dataKey="total" fill={`url(#grad-${key})`} radius={[3, 3, 0, 0]} />
+                          <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} />
                           {(() => {
                             const filtered = salesData.filter(r => r.Branch === key && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)));
                             if (filtered.length < 2) return null;
