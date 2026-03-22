@@ -65,6 +65,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   // ── IMPORT PANEL STATE ────────────────────────────────────
   const [showImportPanel, setShowImportPanel] = useState(false);
+  const [showSalesPanel, setShowSalesPanel] = useState(false);
   const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
   const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
   const [importError, setImportError] = useState<string | null>(null);
@@ -621,11 +622,35 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
             ORDER
           </button>
           <button
-            onClick={() => { setShowImportPanel(true); resetImport(); }}
+            onClick={() => setShowSalesPanel(true)}
             style={{
               background: "none", border: "none", cursor: "pointer",
               padding: "0 0 12px 0",
               fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
+              letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
+              color: "hsl(var(--foreground))",
+              opacity: 0.28,
+              borderBottom: "2px solid transparent",
+              marginBottom: "-1px",
+              transition: "opacity 0.2s ease, border-color 0.2s ease",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.opacity = "0.8";
+              e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.opacity = "0.28";
+              e.currentTarget.style.borderBottomColor = "transparent";
+            }}
+          >
+            SALES
+          </button>
+          <button
+            onClick={() => { setShowImportPanel(true); resetImport(); }}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              padding: "0 0 12px 0",
+              fontSize: "clamp(11px, 3vw, 15px)", fontWeight: 300,
               letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
               color: "hsl(var(--foreground))",
               opacity: 0.28,
@@ -1263,6 +1288,27 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
           </div>
         )}
       </div>
+
+        {/* ══ SALES PANEL OVERLAY ══════════════════════════════════ */}
+        {showSalesPanel && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "hsl(var(--background))", zIndex: 100,
+            display: "flex", flexDirection: "column",
+            fontFamily: "Raleway, inherit",
+          }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", padding: "20px 20px 0 20px" }}>
+              <button onClick={() => setShowSalesPanel(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginRight: "16px" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+              </button>
+              <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>SALES</span>
+            </div>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.4, fontSize: "14px", fontWeight: 300, letterSpacing: "0.06em" }}>
+              Coming soon
+            </div>
+          </div>
+        )}
 
         {/* ══ IMPORT PANEL OVERLAY ═════════════════════════════════ */}
         {showImportPanel && (
