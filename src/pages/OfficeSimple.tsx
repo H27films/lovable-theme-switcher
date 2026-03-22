@@ -294,7 +294,13 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       .from("AllFileLog").select("*").eq("TYPE", "Order")
       .order("DATE", { ascending: false }).limit(300)
       .then(({ data }: { data: LogRow[] | null }) => {
-        setLogRows(data || []);
+        const sorted = (data || []).sort((a, b) => {
+          if (a.DATE !== b.DATE) return a.DATE > b.DATE ? -1 : 1;
+          const aOff = a.BRANCH === "Office" ? 1 : 0;
+          const bOff = b.BRANCH === "Office" ? 1 : 0;
+          return aOff - bOff; // Branch orders first, Office last within same date
+        });
+        setLogRows(sorted);
         setLoadingLog(false);
       });
   }, []);
