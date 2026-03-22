@@ -69,7 +69,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [showSalesPanel, setShowSalesPanel] = useState(false);
   const [salesData, setSalesData] = useState<{ Branch: string; Date: string; "Total GST": number }[]>([]);
   const [salesLoading, setSalesLoading] = useState(false);
-  const [salesMonthFilter, setSalesMonthFilter] = useState<string>("all");
+  const [salesMonthFilter, setSalesMonthFilter] = useState<string>(new Date().toISOString().slice(0, 7));
   const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
   const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
   const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
@@ -1477,7 +1477,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300, padding: "12px 0" }}>No data</div>
                     ) : (
                       <ResponsiveContainer width="100%" height={160}>
-                        <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
+                        <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="50%">
                           <CartesianGrid vertical={false} strokeDasharray="" stroke="#e0e0e0" strokeWidth={0.8} />
                           <XAxis
                             dataKey="week"
