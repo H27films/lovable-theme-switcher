@@ -607,14 +607,21 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       if (salesMonthFilter !== "all" && !r.Date?.startsWith(salesMonthFilter)) return false;
       return true;
     });
-    const weekMap: Record<string, number> = {};
+    // Group into fixed date bands: 1-7, 8-14, 15-21, 22-end
+    const bandMap: Record<string, { total: number; sortKey: string }> = {};
     filtered.forEach(r => {
-      const d = new Date(r.Date);
-      const mon = getMonday(d);
-      const label = mon.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
-      weekMap[label] = (weekMap[label] || 0) + (Number(r["Total GST"]) || 0);
+      const d = new Date(r.Date + "T00:00:00");
+      const day = d.getDate();
+      const bandStart = day <= 7 ? 1 : day <= 14 ? 8 : day <= 21 ? 15 : 22;
+      const startDate = new Date(d.getFullYear(), d.getMonth(), bandStart);
+      const label = startDate.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
+      const sortKey = r.Date.slice(0, 7) + "-" + String(bandStart).padStart(2, "0");
+      if (!bandMap[label]) bandMap[label] = { total: 0, sortKey };
+      bandMap[label].total += Number(r["Total GST"]) || 0;
     });
-    return Object.entries(weekMap).map(([week, total]) => ({ week, total }));
+    return Object.entries(bandMap)
+      .sort((a, b) => a[1].sortKey.localeCompare(b[1].sortKey))
+      .map(([week, { total }]) => ({ week, total }));
   };
 
   const salesGrandTotal = (branch: string) => {
