@@ -3,6 +3,7 @@ import { X, Search, Building2, ChevronDown, ChevronUp, Star, Upload } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useTheme } from "@/hooks/useTheme";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface OfficeProduct {
   id: number;
@@ -66,6 +67,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   // ── IMPORT PANEL STATE ────────────────────────────────────
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [showSalesPanel, setShowSalesPanel] = useState(false);
+  const [salesData, setSalesData] = useState<{ Branch: string; Date: string; "Total GST": number }[]>([]);
+  const [salesLoading, setSalesLoading] = useState(false);
+  const [salesMonthFilter, setSalesMonthFilter] = useState<string>("all");
   const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
   const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
   const [importError, setImportError] = useState<string | null>(null);
@@ -1327,8 +1331,79 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               </button>
               <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>SALES</span>
             </div>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.4, fontSize: "14px", fontWeight: 300, letterSpacing: "0.06em" }}>
-              Coming soon
+            {/* Month filter */}
+            <div style={{ display: "flex", gap: "8px", padding: "14px 20px 10px 20px", flexWrap: "wrap", alignItems: "center" }}>
+              {["all", ...salesMonths].map(m => (
+                <button
+                  key={m}
+                  onClick={() => setSalesMonthFilter(m)}
+                  style={{
+                    background: salesMonthFilter === m ? "hsl(var(--foreground))" : "transparent",
+                    color: salesMonthFilter === m ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                    border: "0.5px solid hsl(var(--border))",
+                    borderRadius: "20px",
+                    padding: "4px 14px",
+                    fontSize: "11px",
+                    fontWeight: 300,
+                    fontFamily: "Raleway, inherit",
+                    cursor: "pointer",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {m === "all" ? "All" : monthName(m)}
+                </button>
+              ))}
+            </div>
+
+            {/* Charts */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 24px 20px" }}>
+              {salesLoading && (
+                <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
+              )}
+              {!salesLoading && BRANCHES.map(({ key, color }) => {
+                const data = buildWeeklyData(key);
+                const total = salesGrandTotal(key);
+                return (
+                  <div key={key} style={{ marginBottom: "32px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px" }}>
+                      <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                        {key.toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
+                        Total: RM {total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    {data.length === 0 ? (
+                      <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300, padding: "12px 0" }}>No data</div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={160}>
+                        <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis
+                            dataKey="week"
+                            tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`}
+                            width={36}
+                          />
+                          <Tooltip
+                            formatter={(v: number) => [`RM ${v.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`, "Sales"]}
+                            contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
+                            cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                          />
+                          <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
