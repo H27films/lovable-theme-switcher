@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Search, Building2, ChevronDown, ChevronUp, Star, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
 import { useTheme } from "@/hooks/useTheme";
 
 interface OfficeProduct {
@@ -108,16 +109,30 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     setImportError(null);
     setImportSuccess(null);
     setImportRows([]);
+    const isExcel = file.name.match(/\.xlsx?$/i);
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const text = ev.target?.result as string;
-        const rows = parseCSV(text);
-        if (rows.length === 0) { setImportError("No valid rows found. Make sure you saved as CSV."); return; }
-        setImportRows(rows);
-      } catch { setImportError("Failed to parse file."); }
+        if (isExcel) {
+          const data = new Uint8Array(ev.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          const rows = json
+            .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), String(v).trim()])))
+            .filter(row => !Object.values(row).some(v => v.toLowerCase().startsWith("e.g.")))
+            .filter(row => Object.values(row).some(v => v !== ""));
+          if (rows.length === 0) { setImportError("No valid rows found in the file."); return; }
+          setImportRows(rows);
+        } else {
+          const text = ev.target?.result as string;
+          const rows = parseCSV(text);
+          if (rows.length === 0) { setImportError("No valid rows found in the file."); return; }
+          setImportRows(rows);
+        }
+      } catch { setImportError("Failed to parse file. Please check the format."); }
     };
-    reader.readAsText(file);
+    if (isExcel) { reader.readAsArrayBuffer(file); } else { reader.readAsText(file); }
   };
 
   const handleBalanceImport = async () => {
@@ -1295,7 +1310,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       <input
                         ref={importFileRef}
                         type="file"
-                        accept=".csv"
+                        accept=".csv,.xlsx,.xls"
                         onChange={handleImportFile}
                         style={{ display: "none" }}
                         id="importFileInput"
@@ -1318,7 +1333,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         </div>
                         {!importFileName && (
                           <div style={{ fontSize: "11px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                            Save your Excel template as CSV before uploading
+                            Upload your Excel template (.xlsx) or a CSV file
                           </div>
                         )}
                       </label>
