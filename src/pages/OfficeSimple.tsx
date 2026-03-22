@@ -970,7 +970,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                                   <div style={{ visibility: "hidden", fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
                                   <div
                                     onClick={(e) => { e.stopPropagation(); if (matchedProduct) { setSelectedProduct(matchedProduct); setSearch(matchedProduct["PRODUCT NAME"]); setShowDropdown(false); setSearchMode("result"); }}}
-                                    style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: matchedProduct ? "pointer" : "default", textDecoration: matchedProduct ? "underline" : "none", textUnderlineOffset: "2px" }}
+                                    style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: matchedProduct ? "pointer" : "default", textDecoration: "none" }}
                                   >{row["PRODUCT NAME"]}</div>
                                   {isOfficeGRN && (
                                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
