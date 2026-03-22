@@ -115,11 +115,20 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       try {
         if (isExcel) {
           const data = new Uint8Array(ev.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array" });
+          const workbook = XLSX.read(data, { type: "array", cellDates: true });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const json: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          const toDateStr = (v: any): string => {
+            if (v instanceof Date) {
+              const y = v.getFullYear();
+              const m = String(v.getMonth() + 1).padStart(2, '0');
+              const d = String(v.getDate()).padStart(2, '0');
+              return `${y}-${m}-${d}`;
+            }
+            return String(v).trim();
+          };
           const rows = json
-            .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), String(v).trim()])))
+            .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), toDateStr(v)])))
             .filter(row => !Object.values(row).some(v => v.toLowerCase().startsWith("e.g.")))
             .filter(row => Object.values(row).some(v => v !== ""));
           if (rows.length === 0) { setImportError("No valid rows found in the file."); return; }
