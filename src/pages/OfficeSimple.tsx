@@ -3,7 +3,7 @@ import { X, Search, Building2, ChevronDown, ChevronUp, Star, Upload } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useTheme } from "@/hooks/useTheme";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 interface OfficeProduct {
   id: number;
@@ -561,9 +561,9 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
   // ─── SALES HELPERS ───────────────────────────────────────────────
   const BRANCHES = [
-    { key: "Boudoir", color: "#6366f1" },
-    { key: "Chic Nailspa", color: "#ec4899" },
-    { key: "Nur Yadi", color: "#f59e0b" },
+    { key: "Boudoir" },
+    { key: "Chic Nailspa" },
+    { key: "Nur Yadi" },
   ];
 
   const fetchSales = React.useCallback(async () => {
@@ -1460,7 +1460,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               {salesLoading && (
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
-              {!salesLoading && BRANCHES.map(({ key, color }) => {
+              {!salesLoading && BRANCHES.map(({ key }) => {
                 const data = buildWeeklyData(key);
                 const total = salesGrandTotal(key);
                 return (
@@ -1497,7 +1497,18 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
                             cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                           />
-                          <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} />
+                          <Bar dataKey="total" fill="hsl(var(--foreground))" radius={[3, 3, 0, 0]} />
+                          {(() => {
+                            const filtered = salesData.filter(r => r.Branch === key && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)));
+                            if (filtered.length < 2) return null;
+                            const dates = filtered.map(r => new Date(r.Date).getTime());
+                            const minD = Math.min(...dates);
+                            const maxD = Math.max(...dates);
+                            const days = Math.max(1, Math.round((maxD - minD) / 86400000) + 1);
+                            const grandTotal = filtered.reduce((s, r) => s + (parseFloat(r["Total GST"]) || 0), 0);
+                            const weeklyAvg = grandTotal / days * 7;
+                            return <ReferenceLine y={weeklyAvg} stroke="black" strokeDasharray="4 4" strokeWidth={1} strokeOpacity={0.4} />;
+                          })()}
                         </BarChart>
                       </ResponsiveContainer>
                     )}
