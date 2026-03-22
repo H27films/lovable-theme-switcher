@@ -77,7 +77,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     let current = "";
     let inQuotes = false;
     for (let i = 0; i < line.length; i++) {
-      if (line[i] === """) { inQuotes = !inQuotes; }
+      if (line[i] === '"') { inQuotes = !inQuotes; }
       else if (line[i] === "," && !inQuotes) { result.push(current); current = ""; }
       else { current += line[i]; }
     }
