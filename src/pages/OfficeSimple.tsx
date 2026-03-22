@@ -1469,7 +1469,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
                         {key.toUpperCase()}
                       </span>
-                      <span style={{ fontSize: "11px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 500, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>
                         Total: RM {total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
@@ -1478,7 +1478,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                     ) : (
                       <ResponsiveContainer width="100%" height={160}>
                         <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
-                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <CartesianGrid vertical={false} strokeDasharray="" stroke="#e0e0e0" strokeWidth={0.8} />
                           <XAxis
                             dataKey="week"
                             tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
@@ -1497,7 +1497,13 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
                             cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                           />
-                          <Bar dataKey="total" fill="hsl(var(--foreground))" radius={[3, 3, 0, 0]} />
+                          <defs>
+                            <linearGradient id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#111111" stopOpacity={1} />
+                              <stop offset="100%" stopColor="#cccccc" stopOpacity={1} />
+                            </linearGradient>
+                          </defs>
+                          <Bar dataKey="total" fill={`url(#grad-${key})`} radius={[3, 3, 0, 0]} />
                           {(() => {
                             const filtered = salesData.filter(r => r.Branch === key && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)));
                             if (filtered.length < 2) return null;
@@ -1507,7 +1513,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             const days = Math.max(1, Math.round((maxD - minD) / 86400000) + 1);
                             const grandTotal = filtered.reduce((s, r) => s + (parseFloat(r["Total GST"]) || 0), 0);
                             const weeklyAvg = grandTotal / days * 7;
-                            return <ReferenceLine y={weeklyAvg} stroke="black" strokeDasharray="4 4" strokeWidth={1} strokeOpacity={0.4} />;
+                            return <ReferenceLine y={weeklyAvg} stroke="#555" strokeDasharray="4 4" strokeWidth={1} strokeOpacity={0.5} />;
                           })()}
                         </BarChart>
                       </ResponsiveContainer>
