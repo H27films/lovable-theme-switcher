@@ -115,20 +115,29 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       try {
         if (isExcel) {
           const data = new Uint8Array(ev.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array", cellDates: true });
+          const workbook = XLSX.read(data, { type: "array" });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-          const toDateStr = (v: any): string => {
-            if (v instanceof Date) {
-              const y = v.getFullYear();
-              const m = String(v.getMonth() + 1).padStart(2, '0');
-              const d = String(v.getDate()).padStart(2, '0');
-              return `${y}-${m}-${d}`;
-            }
-            return String(v).trim();
+          const json: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: true });
+          const excelSerialToDateStr = (serial: number): string => {
+            const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            const y = d.getUTCFullYear();
+            const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
           };
           const rows = json
-            .map(row => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim(), toDateStr(v)])))
+            .map(row => {
+              const result: Record<string, string> = {};
+              for (const [k, v] of Object.entries(row)) {
+                const key = k.trim();
+                if (key === "Date" && typeof v === "number") {
+                  result[key] = excelSerialToDateStr(v);
+                } else {
+                  result[key] = String(v).trim();
+                }
+              }
+              return result;
+            })
             .filter(row => !Object.values(row).some(v => v.toLowerCase().startsWith("e.g.")))
             .filter(row => Object.values(row).some(v => v !== ""));
           if (rows.length === 0) { setImportError("No valid rows found in the file."); return; }
