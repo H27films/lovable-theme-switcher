@@ -187,6 +187,10 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [salesMonthFilter, setSalesMonthFilter] = useState<string>(String(new Date().getMonth() + 1).padStart(2, '0'));
   const [salesYearFilter, setSalesYearFilter] = useState<string>(String(new Date().getFullYear()));
   const [salesViewMode, setSalesViewMode] = useState<"week" | "day">("week");
+  // Reset to week view when "All" months is selected
+  React.useEffect(() => {
+    if (salesMonthFilter === "all") setSalesViewMode("week");
+  }, [salesMonthFilter]);
   const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
   const [salesYearDropdownOpen, setSalesYearDropdownOpen] = useState(false);
   const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
@@ -1919,9 +1923,22 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                               width={36}
                             />
                             <Tooltip
-                              formatter={(v: number) => [`RM ${v.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`, "Sales"]}
-                              contentStyle={{ fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, border: "0.5px solid hsl(var(--border))", borderRadius: "6px", background: "hsl(var(--background))" }}
-                              cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                              formatter={(v: number) => [`RM ${v.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, ""]}
+                              labelFormatter={(label: string) => label}
+                              contentStyle={{
+                                fontSize: "12px",
+                                fontFamily: "Raleway, inherit",
+                                fontWeight: 400,
+                                border: "0.5px solid rgba(255,255,255,0.15)",
+                                borderRadius: "8px",
+                                background: "#1a1a1a",
+                                color: "#ffffff",
+                                padding: "8px 12px",
+                                boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+                              }}
+                              labelStyle={{ color: "#aaaaaa", fontSize: "11px", marginBottom: "4px", fontWeight: 300, letterSpacing: "0.04em" }}
+                              itemStyle={{ color: "#ffffff", padding: 0 }}
+                              cursor={{ fill: "rgba(255,255,255,0.06)" }}
                             />
                             <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} isAnimationActive={false} maxBarSize={40} />
                             {weeklyAvg !== null && (
