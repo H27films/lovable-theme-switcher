@@ -79,6 +79,14 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
 
+  // ── EXPORT PANEL STATE ────────────────────────────────────
+  const [showExportPanel, setShowExportPanel] = useState(false);
+  const [exportType, setExportType] = useState<"log" | "cash" | null>(null);
+  const [exportDateFrom, setExportDateFrom] = useState<string>("");
+  const [exportDateTo, setExportDateTo] = useState<string>("");
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
   const parseCSVLine = (line: string): string[] => {
     const result: string[] = [];
     let current = "";
@@ -256,6 +264,39 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     setImportSuccess(null);
     setImportFileName(null);
     if (importFileRef.current) importFileRef.current.value = "";
+  };
+
+  const resetExport = () => {
+    setExportType(null);
+    setExportDateFrom("");
+    setExportDateTo("");
+    setExportError(null);
+  };
+
+  const handleExport = async () => {
+    if (!exportType) return;
+    setExportLoading(true);
+    setExportError(null);
+    try {
+      const table = exportType === "log" ? "AllFileLog" : "Cash";
+      const dateCol = exportType === "log" ? "DATE" : "Date";
+      let query = (supabase as any).from(table).select("*").order(dateCol, { ascending: true });
+      if (exportDateFrom) query = query.gte(dateCol, exportDateFrom);
+      if (exportDateTo) query = query.lte(dateCol, exportDateTo);
+      const { data, error } = await query;
+      if (error) { setExportError(error.message); setExportLoading(false); return; }
+      if (!data || data.length === 0) { setExportError("No data found for the selected range."); setExportLoading(false); return; }
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, exportType === "log" ? "Log" : "Cash");
+      const from = exportDateFrom || "start";
+      const to = exportDateTo || "end";
+      const filename = `${exportType}_export_${from}_to_${to}.xlsx`;
+      XLSX.writeFile(wb, filename);
+    } catch {
+      setExportError("Export failed. Please try again.");
+    }
+    setExportLoading(false);
   };
 
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
@@ -745,6 +786,30 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
             }}
           >
             IMPORT
+          </button>
+          <button
+            onClick={() => { setShowExportPanel(true); resetExport(); }}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              padding: "0 0 12px 0",
+              fontSize: "clamp(11px, 3vw, 15px)", fontWeight: 300,
+              letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
+              color: "hsl(var(--foreground))",
+              opacity: 0.28,
+              borderBottom: "2px solid transparent",
+              marginBottom: "-1px",
+              transition: "opacity 0.2s ease, border-color 0.2s ease",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.opacity = "0.8";
+              e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.opacity = "0.28";
+              e.currentTarget.style.borderBottomColor = "transparent";
+            }}
+          >
+            EXPORT
           </button>
         </div>
         {/* Search input */}
@@ -1709,6 +1774,133 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       </button>
                     </div>
                   )}
+                </div>
+              )}
+
+            </div>
+          </div>
+        )}
+
+        {/* ══ EXPORT PANEL OVERLAY ═════════════════════════════════ */}
+        {showExportPanel && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "hsl(var(--background))", zIndex: 100,
+            display: "flex", flexDirection: "column",
+            fontFamily: "Raleway, inherit",
+          }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 16px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {exportType && (
+                  <button onClick={resetExport} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", fontSize: "18px", lineHeight: 1 }}>‹</button>
+                )}
+                <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>
+                  {exportType === "log" ? "LOG EXPORT" : exportType === "cash" ? "CASH EXPORT" : "EXPORT"}
+                </span>
+              </div>
+              <button
+                onClick={() => { setShowExportPanel(false); resetExport(); }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
+
+              {/* Choice selection */}
+              {!exportType && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingTop: "8px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "8px", letterSpacing: "0.04em" }}>
+                    Choose what to export. Select a date range to filter results.
+                  </div>
+                  {([
+                    { key: "log",  label: "Log",  desc: "Export entries from AllFileLog (orders, usage, etc.)" },
+                    { key: "cash", label: "Cash", desc: "Export entries from the Cash table" },
+                  ] as { key: "log" | "cash"; label: string; desc: string }[]).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => { setExportType(opt.key); setExportError(null); }}
+                      style={{
+                        background: "none", border: "0.5px solid hsl(var(--border))", borderRadius: "10px",
+                        padding: "16px", cursor: "pointer", textAlign: "left",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        transition: "border-color 0.2s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = "hsl(var(--foreground))"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = "hsl(var(--border))"}
+                    >
+                      <div>
+                        <div style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.06em", marginBottom: "4px" }}>{opt.label}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{opt.desc}</div>
+                      </div>
+                      <span style={{ color: "hsl(var(--muted-foreground))", fontSize: "20px", lineHeight: 1 }}>›</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Export form */}
+              {exportType && (
+                <div style={{ paddingTop: "8px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "20px", letterSpacing: "0.04em" }}>
+                    Select a date range to filter the export. Leave blank to export all records.
+                  </div>
+
+                  {/* Date range */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "24px" }}>
+                    <div>
+                      <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>From</div>
+                      <input
+                        type="date"
+                        value={exportDateFrom}
+                        onChange={e => setExportDateFrom(e.target.value)}
+                        style={{
+                          width: "100%", background: "none", border: "0.5px solid hsl(var(--border))",
+                          borderRadius: "6px", padding: "8px 10px", outline: "none",
+                          fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))",
+                          colorScheme: "dark",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>To</div>
+                      <input
+                        type="date"
+                        value={exportDateTo}
+                        onChange={e => setExportDateTo(e.target.value)}
+                        style={{
+                          width: "100%", background: "none", border: "0.5px solid hsl(var(--border))",
+                          borderRadius: "6px", padding: "8px 10px", outline: "none",
+                          fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))",
+                          colorScheme: "dark",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {exportError && (
+                    <div style={{ fontSize: "12px", color: "hsl(var(--destructive))", marginBottom: "12px", fontFamily: "Raleway, inherit" }}>{exportError}</div>
+                  )}
+
+                  <button
+                    onClick={handleExport}
+                    disabled={exportLoading}
+                    style={{
+                      width: "100%", padding: "12px",
+                      fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                      letterSpacing: "0.12em", textTransform: "uppercase",
+                      border: "0.5px solid hsl(var(--foreground))",
+                      background: "hsl(var(--foreground))",
+                      color: "hsl(var(--background))",
+                      borderRadius: "6px",
+                      cursor: exportLoading ? "default" : "pointer",
+                      opacity: exportLoading ? 0.5 : 1,
+                    }}
+                  >
+                    {exportLoading ? "Exporting…" : `Export ${exportType === "log" ? "Log" : "Cash"} as Excel`}
+                  </button>
                 </div>
               )}
 
