@@ -60,6 +60,121 @@ const checkBelowPar = (balance: number | null | undefined, par: number | null | 
   return balance <= par;
 };
 
+
+// ── Mini Calendar ────────────────────────────────────────────
+const CAL_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const CAL_DAYS   = ["M","T","W","T","F","S","S"];
+
+const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
+  value: string; onChange: (v: string) => void; placeholder?: string;
+}) => {
+  const today   = new Date();
+  const parsed  = value ? new Date(value + "T00:00:00") : null;
+  const [open, setOpen]           = useState(false);
+  const [viewYear, setViewYear]   = useState(parsed ? parsed.getFullYear() : today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(parsed ? parsed.getMonth()    : today.getMonth());
+
+  const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+  const firstDay    = (y: number, m: number) => { const d = new Date(y, m, 1).getDay(); return d === 0 ? 6 : d - 1; };
+
+  const handleSelect = (day: number) => {
+    const mm = String(viewMonth + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    onChange(`${viewYear}-${mm}-${dd}`);
+    setOpen(false);
+  };
+
+  const displayStr = parsed
+    ? `${String(parsed.getDate()).padStart(2,"0")}/${String(parsed.getMonth()+1).padStart(2,"0")}/${String(parsed.getFullYear()).slice(-2)}`
+    : placeholder;
+
+  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y-1); } else setViewMonth(m => m-1); };
+  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y+1); } else setViewMonth(m => m+1); };
+
+  const totalDays   = daysInMonth(viewYear, viewMonth);
+  const startOffset = firstDay(viewYear, viewMonth);
+  const cells: (number|null)[] = [...Array(startOffset).fill(null), ...Array.from({length: totalDays}, (_, i) => i+1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const selDay   = parsed && parsed.getFullYear()===viewYear && parsed.getMonth()===viewMonth ? parsed.getDate() : null;
+  const todayDay = today.getFullYear()===viewYear && today.getMonth()===viewMonth ? today.getDate() : null;
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", background: "none", border: "0.5px solid hsl(var(--border))",
+          borderRadius: "6px", padding: "9px 12px", cursor: "pointer", textAlign: "left",
+          fontSize: "13px", fontFamily: "Raleway, inherit",
+          color: parsed ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          letterSpacing: "0.04em",
+        }}
+      >
+        <span>{displayStr}</span>
+        <span style={{ fontSize: "9px", opacity: 0.4 }}>▾</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 300,
+          background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))",
+          borderRadius: "10px", padding: "14px 12px", minWidth: "248px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+        }}>
+          {/* Month nav */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <button onClick={prevMonth} style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))", fontSize: "18px", padding: "0 6px", lineHeight: 1 }}>‹</button>
+            <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.08em" }}>
+              {CAL_MONTHS[viewMonth]} {viewYear}
+            </span>
+            <button onClick={nextMonth} style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))", fontSize: "18px", padding: "0 6px", lineHeight: 1 }}>›</button>
+          </div>
+          {/* Day headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: "2px", marginBottom: "4px" }}>
+            {CAL_DAYS.map((d,i) => (
+              <div key={i} style={{ textAlign: "center", fontSize: "10px", fontWeight: 700, color: "hsl(var(--muted-foreground))", padding: "2px 0", fontFamily: "Raleway, inherit" }}>{d}</div>
+            ))}
+          </div>
+          {/* Day cells */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: "2px" }}>
+            {cells.map((day, i) => (
+              <button
+                key={i}
+                disabled={!day}
+                onClick={() => day && handleSelect(day)}
+                style={{
+                  background: day === selDay ? "hsl(var(--foreground))" : "none",
+                  border: day === todayDay && day !== selDay ? "0.5px solid hsl(var(--border))" : "none",
+                  borderRadius: "4px",
+                  padding: "6px 2px",
+                  cursor: day ? "pointer" : "default",
+                  fontSize: "12px",
+                  fontFamily: "Raleway, inherit",
+                  color: day === selDay
+                    ? "hsl(var(--background))"
+                    : day === todayDay
+                      ? "hsl(var(--foreground))"
+                      : day ? "hsl(var(--muted-foreground))" : "transparent",
+                  fontWeight: day === todayDay ? 700 : 400,
+                  textAlign: "center",
+                }}
+              >{day ?? ""}</button>
+            ))}
+          </div>
+          {/* Clear */}
+          {parsed && (
+            <div style={{ marginTop: "10px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "8px", display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => { onChange(""); setOpen(false); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.04em" }}>Clear</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => {
   const { theme, setTheme } = useTheme();
   const toggleTheme = () => setTheme(theme === "sand" ? "light" : "sand");
@@ -84,6 +199,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [exportType, setExportType] = useState<"log" | "cash" | null>(null);
   const [exportDateFrom, setExportDateFrom] = useState<string>("");
   const [exportDateTo, setExportDateTo] = useState<string>("");
+  const [quickSelect, setQuickSelect] = useState<"7d"|"month"|null>(null);
   const [exportLoading, setExportLoading] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -278,99 +394,23 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     setExportLoading(true);
     setExportError(null);
     try {
-      if (exportType === 'log') {
-        // ── AllFileLog export with full column transformation ──
-        let query = (supabase as any)
-          .from('AllFileLog')
-          .select('DATE, "PRODUCT NAME", BRANCH, TYPE, QTY')
-          .order('DATE', { ascending: true });
-        if (exportDateFrom) query = query.gte('DATE', exportDateFrom);
-        if (exportDateTo)   query = query.lte('DATE', exportDateTo);
-        const { data, error } = await query;
-        if (error) { setExportError(error.message); setExportLoading(false); return; }
-        if (!data || data.length === 0) { setExportError('No data found for the selected range.'); setExportLoading(false); return; }
-
-        const branchMap: Record<string, string> = {
-          'Boudoir':      'BOUDOIR',
-          'Chic Nailspa': 'CHIC',
-          'Nur Yadi':     'NUR YADI',
-          'Office':       'OFFICE',
-        };
-
-        const rows = data.map((row: any) => {
-          // Date → dd/mm/yy
-          let dateStr = row['DATE'] || '';
-          if (dateStr) {
-            const d = new Date(dateStr);
-            if (!isNaN(d.getTime())) {
-              const dd = String(d.getDate()).padStart(2, '0');
-              const mm = String(d.getMonth() + 1).padStart(2, '0');
-              const yy = String(d.getFullYear()).slice(-2);
-              dateStr = `${dd}/${mm}/${yy}`;
-            }
-          }
-
-          const rawBranch = row['BRANCH'] || '';
-          const rawType   = row['TYPE']   || '';
-          const branch    = branchMap[rawBranch] || rawBranch.toUpperCase();
-          const isOffice  = rawBranch === 'Office';
-
-          let type        = '';
-          let subType     = '';
-          let productSold = '';
-
-          if (isOffice) {
-            if      (rawType === 'Order')        { type = 'ORDER'; }
-            else if (rawType === 'Personal Use') { type = 'USAGE'; subType = 'Personal Use'; }
-            else if (rawType === 'Expired')      { type = 'USAGE'; subType = 'Expired'; }
-            else if (rawType === 'Error')        { type = 'USAGE'; subType = 'Expired'; }
-            else                                  { type = rawType.toUpperCase(); }
-          } else {
-            // Boudoir / Chic Nailspa / Nur Yadi
-            if      (rawType === 'Order')     { type = 'ORDER'; }
-            else if (rawType === 'Salon use') { type = 'USAGE'; }
-            else if (rawType === 'Customer')  { type = 'USAGE'; productSold = 'CUSTOMER'; }
-            else if (rawType === 'Staff')     { type = 'USAGE'; productSold = 'STAFF'; }
-            else                               { type = rawType.toUpperCase(); }
-          }
-
-          return {
-            'PRODUCT NAME': row['PRODUCT NAME'] || '',
-            'DATE':         dateStr,
-            'BRANCH':       branch,
-            'TYPE':         type,
-            'QTY':          row['QTY'] ?? '',
-            'SUB TYPE':     subType,
-            'PRODUCT SOLD': productSold,
-          };
-        });
-
-        const ws = XLSX.utils.json_to_sheet(rows, {
-          header: ['PRODUCT NAME', 'DATE', 'BRANCH', 'TYPE', 'QTY', 'SUB TYPE', 'PRODUCT SOLD'],
-        });
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Log');
-        const from = exportDateFrom || 'start';
-        const to   = exportDateTo   || 'end';
-        XLSX.writeFile(wb, `log_export_${from}_to_${to}.xlsx`);
-
-      } else {
-        // ── Cash export – raw ──
-        let query = (supabase as any).from('Cash').select('*').order('Date', { ascending: true });
-        if (exportDateFrom) query = query.gte('Date', exportDateFrom);
-        if (exportDateTo)   query = query.lte('Date', exportDateTo);
-        const { data, error } = await query;
-        if (error) { setExportError(error.message); setExportLoading(false); return; }
-        if (!data || data.length === 0) { setExportError('No data found for the selected range.'); setExportLoading(false); return; }
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Cash');
-        const from = exportDateFrom || 'start';
-        const to   = exportDateTo   || 'end';
-        XLSX.writeFile(wb, `cash_export_${from}_to_${to}.xlsx`);
-      }
+      const table = exportType === "log" ? "AllFileLog" : "Cash";
+      const dateCol = exportType === "log" ? "DATE" : "Date";
+      let query = (supabase as any).from(table).select("*").order(dateCol, { ascending: true });
+      if (exportDateFrom) query = query.gte(dateCol, exportDateFrom);
+      if (exportDateTo) query = query.lte(dateCol, exportDateTo);
+      const { data, error } = await query;
+      if (error) { setExportError(error.message); setExportLoading(false); return; }
+      if (!data || data.length === 0) { setExportError("No data found for the selected range."); setExportLoading(false); return; }
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, exportType === "log" ? "Log" : "Cash");
+      const from = exportDateFrom || "start";
+      const to = exportDateTo || "end";
+      const filename = `${exportType}_export_${from}_to_${to}.xlsx`;
+      XLSX.writeFile(wb, filename);
     } catch {
-      setExportError('Export failed. Please try again.');
+      setExportError("Export failed. Please try again.");
     }
     setExportLoading(false);
   };
@@ -1924,34 +1964,46 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                     Select a date range to filter the export. Leave blank to export all records.
                   </div>
 
+                  {/* Quick select pills */}
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+                    {([
+                      { key: "7d",    label: "Last 7 days" },
+                      { key: "month", label: "This month"  },
+                    ] as { key: "7d"|"month"; label: string }[]).map(p => (
+                      <button
+                        key={p.key}
+                        onClick={() => applyQuickSelect(p.key)}
+                        style={{
+                          padding: "6px 14px",
+                          fontSize: "11px", fontWeight: 500, fontFamily: "Raleway, inherit",
+                          letterSpacing: "0.04em",
+                          border: "0.5px solid " + (quickSelect === p.key ? "hsl(var(--foreground))" : "hsl(var(--border))"),
+                          borderRadius: "20px",
+                          background: quickSelect === p.key ? "hsl(var(--foreground))" : "none",
+                          color: quickSelect === p.key ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >{p.label}</button>
+                    ))}
+                  </div>
+
                   {/* Date range */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "24px" }}>
                     <div>
                       <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>From</div>
-                      <input
-                        type="date"
+                      <MiniCalendar
                         value={exportDateFrom}
-                        onChange={e => setExportDateFrom(e.target.value)}
-                        style={{
-                          width: "100%", background: "none", border: "0.5px solid hsl(var(--border))",
-                          borderRadius: "6px", padding: "8px 10px", outline: "none",
-                          fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))",
-                          colorScheme: "dark",
-                        }}
+                        onChange={v => { setExportDateFrom(v); setQuickSelect(null); }}
+                        placeholder="dd/mm/yy"
                       />
                     </div>
                     <div>
                       <div style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>To</div>
-                      <input
-                        type="date"
+                      <MiniCalendar
                         value={exportDateTo}
-                        onChange={e => setExportDateTo(e.target.value)}
-                        style={{
-                          width: "100%", background: "none", border: "0.5px solid hsl(var(--border))",
-                          borderRadius: "6px", padding: "8px 10px", outline: "none",
-                          fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))",
-                          colorScheme: "dark",
-                        }}
+                        onChange={v => { setExportDateTo(v); setQuickSelect(null); }}
+                        placeholder="dd/mm/yy"
                       />
                     </div>
                   </div>
