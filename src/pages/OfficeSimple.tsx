@@ -1806,7 +1806,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   onClick={() => { setSalesDropdownOpen(v => !v); setSalesYearDropdownOpen(false); }}
                   style={{
                     background: "transparent", border: "none", padding: "0",
-                    fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit",
                     cursor: "pointer", color: "hsl(var(--foreground))",
                     display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
                   }}
@@ -1848,7 +1848,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   onClick={() => { setSalesYearDropdownOpen(v => !v); setSalesDropdownOpen(false); }}
                   style={{
                     background: "transparent", border: "none", padding: "0",
-                    fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit",
                     cursor: "pointer", color: "hsl(var(--muted-foreground))",
                     display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
                   }}
@@ -1911,7 +1911,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
             </div>
 
             {/* Charts */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 24px 20px" }} onClick={() => setTappedBar(null)}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 24px 20px" }} onClick={() => setTappedBar(null)}>
               {salesLoading && (
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
@@ -1922,7 +1922,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                   <div key={key} style={{ marginBottom: "32px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px" }}>
                       <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                        {key.toUpperCase()}
+                        {({ "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC NAILSPA", "Nur Yadi": "NUR YADI" } as Record<string,string>)[key] ?? key.toUpperCase()}
                       </span>
                       <span style={{ fontSize: "14px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>
                         RM {total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1938,7 +1938,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         topTick = 10000;
                         yTicks = [0, 5000, 10000];
                       } else {
-                        const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.value || 0), 0);
+                        const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.total || d.value || 0), 0);
                         topTick = Math.ceil(Math.max(maxVal, 5000) / 5000) * 5000;
                         yTicks = Array.from({ length: topTick / 5000 + 1 }, (_, i) => i * 5000);
                       }
