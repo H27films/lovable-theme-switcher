@@ -145,16 +145,16 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
                 disabled={!day}
                 onClick={() => day && handleSelect(day)}
                 style={{
-                  background: day === selDay ? "hsl(var(--foreground))" : "none",
+                  background: day !== null && day === selDay ? "hsl(var(--foreground))" : "none",
                   border: day === todayDay && day !== selDay ? "0.5px solid hsl(var(--border))" : "none",
                   borderRadius: "4px",
                   padding: "6px 2px",
                   cursor: day ? "pointer" : "default",
                   fontSize: "12px",
                   fontFamily: "Raleway, inherit",
-                  color: day === selDay
+                  color: day !== null && day === selDay
                     ? "hsl(var(--background))"
-                    : day === todayDay
+                    : day !== null && day === todayDay
                       ? "hsl(var(--foreground))"
                       : day ? "hsl(var(--muted-foreground))" : "transparent",
                   fontWeight: day === todayDay ? 700 : 400,
@@ -200,6 +200,24 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [exportDateFrom, setExportDateFrom] = useState<string>("");
   const [exportDateTo, setExportDateTo] = useState<string>("");
   const [quickSelect, setQuickSelect] = useState<"7d"|"month"|null>(null);
+
+  const applyQuickSelect = (key: "7d" | "month") => {
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const toStr = fmt(today);
+    let fromStr = "";
+    if (key === "7d") {
+      const from = new Date(today);
+      from.setDate(today.getDate() - 6); // 6 days back + today = 7 days
+      fromStr = fmt(from);
+    } else {
+      fromStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-01`;
+    }
+    setExportDateFrom(fromStr);
+    setExportDateTo(toStr);
+    setQuickSelect(key);
+  };
   const [exportLoading, setExportLoading] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
