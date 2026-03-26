@@ -184,8 +184,11 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const [showSalesPanel, setShowSalesPanel] = useState(false);
   const [salesData, setSalesData] = useState<{ Branch: string; Date: string; "Total GST": number }[]>([]);
   const [salesLoading, setSalesLoading] = useState(false);
-  const [salesMonthFilter, setSalesMonthFilter] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [salesMonthFilter, setSalesMonthFilter] = useState<string>(String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [salesYearFilter, setSalesYearFilter] = useState<string>(String(new Date().getFullYear()));
+  const [salesViewMode, setSalesViewMode] = useState<"week" | "day">("week");
   const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
+  const [salesYearDropdownOpen, setSalesYearDropdownOpen] = useState(false);
   const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
   const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
   const [importError, setImportError] = useState<string | null>(null);
@@ -878,15 +881,24 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     if (showSalesPanel) fetchSales();
   }, [showSalesPanel, fetchSales]);
 
-  const salesMonths = React.useMemo(() => {
+  const salesYears = React.useMemo(() => {
     const set = new Set<string>();
-    salesData.forEach(r => { if (r.Date) set.add(r.Date.slice(0, 7)); });
+    salesData.forEach(r => { if (r.Date) set.add(r.Date.slice(0, 4)); });
     return Array.from(set).sort();
   }, [salesData]);
 
-  const monthName = (ym: string) => {
-    const [y, m] = ym.split("-");
-    return new Date(Number(y), Number(m) - 1, 1).toLocaleString("default", { month: "long", year: "numeric" });
+  const salesMonths = React.useMemo(() => {
+    const set = new Set<string>();
+    salesData.forEach(r => { if (r.Date && r.Date.slice(0, 4) === salesYearFilter) set.add(r.Date.slice(5, 7)); });
+    return Array.from(set).sort();
+  }, [salesData, salesYearFilter]);
+
+  const monthName = (mm: string) => {
+    return new Date(2000, Number(mm) - 1, 1).toLocaleString("default", { month: "long" });
+  };
+
+  const monthNameShort = (mm: string) => {
+    return new Date(2000, Number(mm) - 1, 1).toLocaleString("default", { month: "short" });
   };
 
   const getMonday = (d: Date) => {
@@ -900,7 +912,8 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const buildWeeklyData = (branch: string) => {
     const filtered = salesData.filter(r => {
       if (r.Branch !== branch) return false;
-      if (salesMonthFilter !== "all" && !r.Date?.startsWith(salesMonthFilter)) return false;
+      const prefix = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
+      if (!r.Date?.startsWith(prefix)) return false;
       return true;
     });
     // Group into fixed date bands: 1-7, 8-14, 15-21, 22-end
@@ -920,9 +933,24 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
       .map(([week, { total }]) => ({ week, total }));
   };
 
+  const buildDailyData = (branch: string) => {
+    const prefix = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
+    const filtered = salesData.filter(r => r.Branch === branch && r.Date?.startsWith(prefix));
+    const dayMap: Record<string, { total: number; sortKey: string }> = {};
+    filtered.forEach(r => {
+      const d = new Date(r.Date + "T00:00:00");
+      const label = d.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
+      if (!dayMap[label]) dayMap[label] = { total: 0, sortKey: r.Date };
+      dayMap[label].total += Number(r["Total GST"]) || 0;
+    });
+    return Object.entries(dayMap)
+      .sort((a, b) => a[1].sortKey.localeCompare(b[1].sortKey))
+      .map(([day, { total }]) => ({ week: day, total }));
+  };
+
   const salesGrandTotal = (branch: string) => {
     return salesData
-      .filter(r => r.Branch === branch && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)))
+      .filter(r => { const p = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`; return r.Branch === branch && (r.Date?.startsWith(p) ?? false); })
       .reduce((s, r) => s + (Number(r["Total GST"]) || 0), 0);
   };
   // ─────────────────────────────────────────────────────────────────
@@ -1724,60 +1752,114 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               </button>
               <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>SALES</span>
             </div>
-            {/* Month filter */}
-            <div style={{ padding: "14px 20px 10px 20px", position: "relative", display: "inline-block" }}>
-              <button
-                onClick={() => setSalesDropdownOpen(v => !v)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  padding: "0",
-                  fontSize: "14px",
-                  fontWeight: 300,
-                  fontFamily: "Raleway, inherit",
-                  cursor: "pointer",
-                  color: "hsl(var(--foreground))",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {salesMonthFilter === "all" ? "All" : monthName(salesMonthFilter)}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
-                  {salesDropdownOpen ? <path d="M18 15l-6-6-6 6"/> : <path d="M6 9l6 6 6-6"/>}
-                </svg>
-              </button>
-              {salesDropdownOpen && (
-                <div style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: "20px",
-                  background: "hsl(var(--background))",
-                  border: "0.5px solid hsl(var(--border))",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
-                  zIndex: 100,
-                  minWidth: "160px",
-                  overflow: "hidden",
-                  marginTop: "4px",
-                }}>
-                  {["all", ...salesMonths].map(m => (
-                    <div
-                      key={m}
-                      onClick={() => { setSalesMonthFilter(m); setSalesDropdownOpen(false); }}
+            {/* Month + Year filter + View toggle */}
+            <div style={{ padding: "14px 20px 10px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
+
+              {/* Month dropdown */}
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => { setSalesDropdownOpen(v => !v); setSalesYearDropdownOpen(false); }}
+                  style={{
+                    background: "transparent", border: "none", padding: "0",
+                    fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    cursor: "pointer", color: "hsl(var(--foreground))",
+                    display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
+                  }}
+                >
+                  {salesMonthFilter === "all" ? "All" : monthName(salesMonthFilter)}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
+                    {salesDropdownOpen ? <path d="M18 15l-6-6-6 6"/> : <path d="M6 9l6 6 6-6"/>}
+                  </svg>
+                </button>
+                {salesDropdownOpen && (
+                  <div style={{
+                    position: "absolute", top: "100%", left: 0,
+                    background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))",
+                    borderRadius: "10px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                    zIndex: 100, minWidth: "140px", overflow: "hidden", marginTop: "6px",
+                  }}>
+                    {["all", ...salesMonths].map(m => (
+                      <div
+                        key={m}
+                        onClick={() => { setSalesMonthFilter(m); setSalesDropdownOpen(false); if (m !== "all") {} }}
+                        style={{
+                          padding: "9px 16px", fontSize: "11px", fontFamily: "Raleway, inherit",
+                          fontWeight: salesMonthFilter === m ? 500 : 300,
+                          cursor: "pointer",
+                          color: salesMonthFilter === m ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                          background: salesMonthFilter === m ? "hsl(var(--muted) / 0.4)" : "transparent",
+                        }}
+                      >
+                        {m === "all" ? "All" : monthName(m)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Year dropdown */}
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => { setSalesYearDropdownOpen(v => !v); setSalesDropdownOpen(false); }}
+                  style={{
+                    background: "transparent", border: "none", padding: "0",
+                    fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    cursor: "pointer", color: "hsl(var(--muted-foreground))",
+                    display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
+                  }}
+                >
+                  {salesYearFilter}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
+                    {salesYearDropdownOpen ? <path d="M18 15l-6-6-6 6"/> : <path d="M6 9l6 6 6-6"/>}
+                  </svg>
+                </button>
+                {salesYearDropdownOpen && (
+                  <div style={{
+                    position: "absolute", top: "100%", left: 0,
+                    background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))",
+                    borderRadius: "10px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                    zIndex: 100, minWidth: "100px", overflow: "hidden", marginTop: "6px",
+                  }}>
+                    {salesYears.map(y => (
+                      <div
+                        key={y}
+                        onClick={() => { setSalesYearFilter(y); setSalesYearDropdownOpen(false); setSalesMonthFilter("all"); }}
+                        style={{
+                          padding: "9px 16px", fontSize: "11px", fontFamily: "Raleway, inherit",
+                          fontWeight: salesYearFilter === y ? 500 : 300,
+                          cursor: "pointer",
+                          color: salesYearFilter === y ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                          background: salesYearFilter === y ? "hsl(var(--muted) / 0.4)" : "transparent",
+                        }}
+                      >
+                        {y}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+
+              {/* Week / Day toggle — only when a specific month is selected */}
+              {salesMonthFilter !== "all" && (
+                <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: "0.5px solid hsl(var(--border))" }}>
+                  {(["week", "day"] as const).map(mode => (
+                    <button
+                      key={mode}
+                      onClick={() => setSalesViewMode(mode)}
                       style={{
-                        padding: "9px 16px",
-                        fontSize: "11px",
-                        fontWeight: salesMonthFilter === m ? 500 : 300,
-                        fontFamily: "Raleway, inherit",
-                        cursor: "pointer",
-                        color: salesMonthFilter === m ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                        background: salesMonthFilter === m ? "hsl(var(--muted) / 0.4)" : "transparent",
+                        background: salesViewMode === mode ? "hsl(var(--foreground))" : "transparent",
+                        color: salesViewMode === mode ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                        border: "none", padding: "5px 12px",
+                        fontSize: "10px", fontWeight: 400, fontFamily: "Raleway, inherit",
+                        letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
+                        transition: "background 0.15s, color 0.15s",
                       }}
                     >
-                      {m === "all" ? "All" : monthName(m)}
-                    </div>
+                      {mode === "week" ? "Week" : "Day"}
+                    </button>
                   ))}
                 </div>
               )}
@@ -1789,7 +1871,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
               {!salesLoading && BRANCHES.map(({ key, color }) => {
-                const data = buildWeeklyData(key);
+                const data = salesViewMode === "week" ? buildWeeklyData(key) : buildDailyData(key);
                 const total = salesGrandTotal(key);
                 return (
                   <div key={key} style={{ marginBottom: "32px" }}>
@@ -1807,7 +1889,8 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                       const maxVal = Math.max(...data.map((d: {week: string; total: number}) => d.total), 0);
                       const topTick = Math.ceil(maxVal / 5000) * 5000 || 5000;
                       const yTicks = Array.from({ length: topTick / 5000 + 1 }, (_, i) => i * 5000);
-                      const filtered2 = salesData.filter(r => r.Branch === key && (salesMonthFilter === "all" || r.Date?.startsWith(salesMonthFilter)));
+                      const prefix2 = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
+                      const filtered2 = salesData.filter(r => r.Branch === key && r.Date?.startsWith(prefix2));
                       let weeklyAvg: number | null = null;
                       if (filtered2.length >= 2) {
                         const dates2 = filtered2.map(r => new Date(r.Date).getTime());
