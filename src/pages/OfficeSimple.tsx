@@ -191,6 +191,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   React.useEffect(() => {
     if (salesMonthFilter === "all") setSalesViewMode("week");
   }, [salesMonthFilter]);
+  const [tappedBar, setTappedBar] = useState<{ branchKey: string; label: string; total: number } | null>(null);
   const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
   const [salesYearDropdownOpen, setSalesYearDropdownOpen] = useState(false);
   const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
@@ -1870,7 +1871,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
             </div>
 
             {/* Charts */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 24px 20px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 24px 20px" }} onClick={() => setTappedBar(null)}>
               {salesLoading && (
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
@@ -1903,7 +1904,20 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                         weeklyAvg = sum2 / days2 * 7;
                       }
                       return (
-                        <ResponsiveContainer width="100%" height={160}>
+                        <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+                          {tappedBar?.branchKey === key && (
+                            <div style={{
+                              position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)",
+                              zIndex: 10, background: "#1a1a1a", border: "0.5px solid rgba(255,255,255,0.18)",
+                              borderRadius: "8px", padding: "5px 12px", display: "flex", flexDirection: "column",
+                              alignItems: "center", gap: "1px", boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                              pointerEvents: "none",
+                            }}>
+                              <span style={{ fontSize: "10px", fontWeight: 300, color: "#aaa", letterSpacing: "0.04em", fontFamily: "Raleway, inherit" }}>{tappedBar.label}</span>
+                              <span style={{ fontSize: "13px", fontWeight: 500, color: "#fff", fontFamily: "Raleway, inherit" }}>RM {tappedBar.total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </div>
+                          )}
+                          <ResponsiveContainer width="100%" height={160}>
                           <BarChart data={data} barCategoryGap="25%" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
@@ -1922,30 +1936,27 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                               tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`}
                               width={36}
                             />
-                            <Tooltip
-                              formatter={(v: number) => [`RM ${v.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, ""]}
-                              labelFormatter={(label: string) => label}
-                              contentStyle={{
-                                fontSize: "12px",
-                                fontFamily: "Raleway, inherit",
-                                fontWeight: 400,
-                                border: "0.5px solid rgba(255,255,255,0.15)",
-                                borderRadius: "8px",
-                                background: "#1a1a1a",
-                                color: "#ffffff",
-                                padding: "8px 12px",
-                                boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+                            <Bar
+                              dataKey="total"
+                              fill={color}
+                              radius={[3, 3, 0, 0]}
+                              isAnimationActive={false}
+                              maxBarSize={40}
+                              cursor="pointer"
+                              onClick={(barData: any) => {
+                                if (tappedBar?.branchKey === key && tappedBar?.label === barData.week) {
+                                  setTappedBar(null);
+                                } else {
+                                  setTappedBar({ branchKey: key, label: barData.week, total: barData.total });
+                                }
                               }}
-                              labelStyle={{ color: "#aaaaaa", fontSize: "11px", marginBottom: "4px", fontWeight: 300, letterSpacing: "0.04em" }}
-                              itemStyle={{ color: "#ffffff", padding: 0 }}
-                              cursor={{ fill: "rgba(255,255,255,0.06)" }}
                             />
-                            <Bar dataKey="total" fill={color} radius={[3, 3, 0, 0]} isAnimationActive={false} maxBarSize={40} />
                             {weeklyAvg !== null && (
                               <ReferenceLine y={weeklyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
                             )}
                           </BarChart>
                         </ResponsiveContainer>
+                        </div>
                       );
                     })()}
                   </div>
