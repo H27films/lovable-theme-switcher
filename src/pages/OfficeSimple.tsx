@@ -412,22 +412,122 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     setExportLoading(true);
     setExportError(null);
     try {
-      const table = exportType === "log" ? "AllFileLog" : "Cash";
-      const dateCol = exportType === "log" ? "DATE" : "Date";
-      let query = (supabase as any).from(table).select("*").order(dateCol, { ascending: true });
-      if (exportDateFrom) query = query.gte(dateCol, exportDateFrom);
-      if (exportDateTo) query = query.lte(dateCol, exportDateTo);
-      const { data, error } = await query;
-      if (error) { setExportError(error.message); setExportLoading(false); return; }
-      if (!data || data.length === 0) { setExportError("No data found for the selected range."); setExportLoading(false); return; }
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, exportType === "log" ? "Log" : "Cash");
-      const from = exportDateFrom || "start";
-      const to = exportDateTo || "end";
-      const filename = `${exportType}_export_${from}_to_${to}.xlsx`;
-      XLSX.writeFile(wb, filename);
-    } catch {
+      if (exportType === "log") {
+        // ── LOG EXPORT ──────────────────────────────────────────────
+        let query = (supabase as any).from("AllFileLog").select("*").order("DATE", { ascending: true });
+        if (exportDateFrom) query = query.gte("DATE", exportDateFrom);
+        if (exportDateTo)   query = query.lte("DATE", exportDateTo);
+        const { data, error } = await query;
+        if (error) { setExportError(error.message); setExportLoading(false); return; }
+        if (!data || data.length === 0) { setExportError("No data found for the selected range."); setExportLoading(false); return; }
+
+        const branchMap: Record<string, string> = {
+          "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC", "Nur Yadi": "NUR YADI", "Office": "OFFICE",
+        };
+        const toExcelDate = (dateStr: string) => {
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return dateStr;
+          const epoch = new Date(Date.UTC(1899, 11, 30));
+          return Math.floor((d.getTime() - epoch.getTime()) / 86400000);
+        };
+
+        const transformedData = data.map((row: any) => {
+          const branch = branchMap[row["BRANCH"]] || row["BRANCH"];
+          const rawType = (row["TYPE"] || "").trim();
+          const isOffice = branch === "OFFICE";
+          let type = "", subType = "", productSold = "";
+          if (rawType === "Order") {
+            type = "ORDER";
+          } else if (isOffice) {
+            type = "USAGE";
+            subType = rawType === "Error" ? "Expired" : rawType;
+          } else {
+            type = "USAGE";
+            if (rawType === "Customer") productSold = "CUSTOMER";
+            else if (rawType === "Staff")    productSold = "STAFF";
+          }
+          const dateVal = toExcelDate(row["DATE"]);
+          return {
+            "PRODUCT NAME": row["PRODUCT NAME"],
+            "DATE": dateVal,
+            "BRANCH": branch,
+            "TYPE": type,
+            "QTY": row["QTY"],
+            "SUB TYPE": subType,
+            "PRODUCT SOLD": productSold,
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(transformedData, {
+          header: ["PRODUCT NAME","DATE","BRANCH","TYPE","QTY","SUB TYPE","PRODUCT SOLD"],
+        });
+        // Format DATE column as dd/mm/yyyy
+        const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+        for (let R = range.s.r + 1; R <= range.e.r; R++) {
+          const cell = ws[XLSX.utils.encode_cell({ r: R, c: 1 })];
+          if (cell && typeof cell.v === "number") {
+            cell.t = "n"; cell.z = "dd/mm/yyyy";
+          }
+        }
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Log");
+        const from = exportDateFrom || "start";
+        const to   = exportDateTo   || "end";
+        XLSX.writeFile(wb, `log_export_${from}_to_${to}.xlsx`);
+
+      } else {
+        // ── CASH EXPORT ─────────────────────────────────────────────
+        let query = (supabase as any).from("Cash").select("*");
+        if (exportDateFrom) query = query.gte("Date", exportDateFrom);
+        if (exportDateTo)   query = query.lte("Date", exportDateTo);
+        const { data, error } = await query;
+        if (error) { setExportError(error.message); setExportLoading(false); return; }
+        if (!data || data.length === 0) { setExportError("No data found for the selected range."); setExportLoading(false); return; }
+
+        const branchOrder: Record<string, number> = { "Boudoir": 0, "Chic Nailspa": 1, "Nur Yadi": 2 };
+        const toExcelDate = (dateStr: string) => {
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return dateStr;
+          const epoch = new Date(Date.UTC(1899, 11, 30));
+          return Math.floor((d.getTime() - epoch.getTime()) / 86400000);
+        };
+
+        // Sort: branch order first, then date ascending
+        const sorted = [...data].sort((a: any, b: any) => {
+          const bo = (branchOrder[a["Branch"]] ?? 99) - (branchOrder[b["Branch"]] ?? 99);
+          if (bo !== 0) return bo;
+          return (a["Date"] || "").localeCompare(b["Date"] || "");
+        });
+
+        const transformedData = sorted.map((row: any) => ({
+          "Date":        toExcelDate(row["Date"]),
+          "Branch":      row["Branch"],
+          "Total GST":   row["Total GST"],
+          "Credit":      row["Credit"],
+          "QR":          row["QR"],
+          "Cash":        row["Cash"],
+          "Explanation": row["Explanation"],
+          "Error":       row["Error"],
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(transformedData, {
+          header: ["Date","Branch","Total GST","Credit","QR","Cash","Explanation","Error"],
+        });
+        // Format Date column as dd/mm/yyyy
+        const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+        for (let R = range.s.r + 1; R <= range.e.r; R++) {
+          const cell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+          if (cell && typeof cell.v === "number") {
+            cell.t = "n"; cell.z = "dd/mm/yyyy";
+          }
+        }
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Cash");
+        const from = exportDateFrom || "start";
+        const to   = exportDateTo   || "end";
+        XLSX.writeFile(wb, `cash_export_${from}_to_${to}.xlsx`);
+      }
+    } catch (e) {
       setExportError("Export failed. Please try again.");
     }
     setExportLoading(false);
