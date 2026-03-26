@@ -278,23 +278,99 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     setExportLoading(true);
     setExportError(null);
     try {
-      const table = exportType === "log" ? "AllFileLog" : "Cash";
-      const dateCol = exportType === "log" ? "DATE" : "Date";
-      let query = (supabase as any).from(table).select("*").order(dateCol, { ascending: true });
-      if (exportDateFrom) query = query.gte(dateCol, exportDateFrom);
-      if (exportDateTo) query = query.lte(dateCol, exportDateTo);
-      const { data, error } = await query;
-      if (error) { setExportError(error.message); setExportLoading(false); return; }
-      if (!data || data.length === 0) { setExportError("No data found for the selected range."); setExportLoading(false); return; }
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, exportType === "log" ? "Log" : "Cash");
-      const from = exportDateFrom || "start";
-      const to = exportDateTo || "end";
-      const filename = `${exportType}_export_${from}_to_${to}.xlsx`;
-      XLSX.writeFile(wb, filename);
+      if (exportType === 'log') {
+        // ── AllFileLog export with full column transformation ──
+        let query = (supabase as any)
+          .from('AllFileLog')
+          .select('DATE, "PRODUCT NAME", BRANCH, TYPE, QTY')
+          .order('DATE', { ascending: true });
+        if (exportDateFrom) query = query.gte('DATE', exportDateFrom);
+        if (exportDateTo)   query = query.lte('DATE', exportDateTo);
+        const { data, error } = await query;
+        if (error) { setExportError(error.message); setExportLoading(false); return; }
+        if (!data || data.length === 0) { setExportError('No data found for the selected range.'); setExportLoading(false); return; }
+
+        const branchMap: Record<string, string> = {
+          'Boudoir':      'BOUDOIR',
+          'Chic Nailspa': 'CHIC',
+          'Nur Yadi':     'NUR YADI',
+          'Office':       'OFFICE',
+        };
+
+        const rows = data.map((row: any) => {
+          // Date → dd/mm/yy
+          let dateStr = row['DATE'] || '';
+          if (dateStr) {
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+              const dd = String(d.getDate()).padStart(2, '0');
+              const mm = String(d.getMonth() + 1).padStart(2, '0');
+              const yy = String(d.getFullYear()).slice(-2);
+              dateStr = `${dd}/${mm}/${yy}`;
+            }
+          }
+
+          const rawBranch = row['BRANCH'] || '';
+          const rawType   = row['TYPE']   || '';
+          const branch    = branchMap[rawBranch] || rawBranch.toUpperCase();
+          const isOffice  = rawBranch === 'Office';
+
+          let type        = '';
+          let subType     = '';
+          let productSold = '';
+
+          if (isOffice) {
+            if      (rawType === 'Order')        { type = 'ORDER'; }
+            else if (rawType === 'Personal Use') { type = 'USAGE'; subType = 'Personal Use'; }
+            else if (rawType === 'Expired')      { type = 'USAGE'; subType = 'Expired'; }
+            else if (rawType === 'Error')        { type = 'USAGE'; subType = 'Expired'; }
+            else                                  { type = rawType.toUpperCase(); }
+          } else {
+            // Boudoir / Chic Nailspa / Nur Yadi
+            if      (rawType === 'Order')     { type = 'ORDER'; }
+            else if (rawType === 'Salon use') { type = 'USAGE'; }
+            else if (rawType === 'Customer')  { type = 'USAGE'; productSold = 'CUSTOMER'; }
+            else if (rawType === 'Staff')     { type = 'USAGE'; productSold = 'STAFF'; }
+            else                               { type = rawType.toUpperCase(); }
+          }
+
+          return {
+            'PRODUCT NAME': row['PRODUCT NAME'] || '',
+            'DATE':         dateStr,
+            'BRANCH':       branch,
+            'TYPE':         type,
+            'QTY':          row['QTY'] ?? '',
+            'SUB TYPE':     subType,
+            'PRODUCT SOLD': productSold,
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(rows, {
+          header: ['PRODUCT NAME', 'DATE', 'BRANCH', 'TYPE', 'QTY', 'SUB TYPE', 'PRODUCT SOLD'],
+        });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Log');
+        const from = exportDateFrom || 'start';
+        const to   = exportDateTo   || 'end';
+        XLSX.writeFile(wb, `log_export_${from}_to_${to}.xlsx`);
+
+      } else {
+        // ── Cash export – raw ──
+        let query = (supabase as any).from('Cash').select('*').order('Date', { ascending: true });
+        if (exportDateFrom) query = query.gte('Date', exportDateFrom);
+        if (exportDateTo)   query = query.lte('Date', exportDateTo);
+        const { data, error } = await query;
+        if (error) { setExportError(error.message); setExportLoading(false); return; }
+        if (!data || data.length === 0) { setExportError('No data found for the selected range.'); setExportLoading(false); return; }
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Cash');
+        const from = exportDateFrom || 'start';
+        const to   = exportDateTo   || 'end';
+        XLSX.writeFile(wb, `cash_export_${from}_to_${to}.xlsx`);
+      }
     } catch {
-      setExportError("Export failed. Please try again.");
+      setExportError('Export failed. Please try again.');
     }
     setExportLoading(false);
   };
