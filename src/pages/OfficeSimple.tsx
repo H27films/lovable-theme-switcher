@@ -853,6 +853,17 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
+  // Month navigation (chevrons on SALES header)
+  const navigateMonth = (dir: 1 | -1) => {
+    let m = salesMonthFilter === "all" ? (dir === -1 ? 13 : 0) : parseInt(salesMonthFilter);
+    let y = parseInt(salesYearFilter);
+    m += dir;
+    if (m > 12) { m = 1; y += 1; }
+    if (m < 1)  { m = 12; y -= 1; }
+    setSalesYearFilter(String(y));
+    setSalesMonthFilter(String(m).padStart(2, '0'));
+  };
+
   // Custom bar shape: half-circle top, straight bottom
   const makeRoundedBar = (baseColor: string, highlightColor: string, isDay: boolean) =>
     (props: any) => {
@@ -1763,11 +1774,28 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
             fontFamily: "Raleway, inherit",
           }}>
             {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", padding: "20px 20px 0 20px" }}>
-              <button onClick={() => setShowSalesPanel(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginRight: "16px" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
-              </button>
-              <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>SALES</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 20px 0 20px" }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <button onClick={() => setShowSalesPanel(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginRight: "16px" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+                </button>
+                <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>SALES</span>
+              </div>
+              {/* Month navigation chevrons */}
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <button
+                  onClick={() => navigateMonth(-1)}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: 0.7, lineHeight: 1 }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <button
+                  onClick={() => navigateMonth(1)}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: 0.7, lineHeight: 1 }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+              </div>
             </div>
             {/* Month + Year filter + View toggle */}
             <div style={{ padding: "14px 20px 10px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
