@@ -853,11 +853,23 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
+  // Custom bar shape: half-circle top, straight bottom
+  const makeRoundedBar = (baseColor: string, highlightColor: string, isDay: boolean) =>
+    (props: any) => {
+      const { x, y, width, height } = props;
+      const value = props.value ?? props.total ?? 0;
+      if (!width || height == null || height <= 0) return null;
+      const fill = isDay && value > 5000 ? highlightColor : baseColor;
+      const r = Math.min(width / 2, height);
+      const d = `M ${x},${y + height} L ${x},${y + r} A ${r},${r} 0 0 1 ${x + width},${y + r} L ${x + width},${y + height} Z`;
+      return <path d={d} fill={fill} cursor="pointer" />;
+    };
+
   // ─── SALES HELPERS ───────────────────────────────────────────────
   const BRANCHES = [
-    { key: "Boudoir", color: "#9CA998" },
-    { key: "Chic Nailspa", color: "#707F84" },
-    { key: "Nur Yadi", color: "#CAB99E" },
+    { key: "Boudoir", color: "#9CA998", highlight: "#7BC47A" },
+    { key: "Chic Nailspa", color: "#707F84", highlight: "#5BA3B5" },
+    { key: "Nur Yadi", color: "#CAB99E", highlight: "#E09660" },
   ];
 
   const fetchSales = React.useCallback(async () => {
@@ -1875,7 +1887,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
               {salesLoading && (
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
-              {!salesLoading && BRANCHES.map(({ key, color }) => {
+              {!salesLoading && BRANCHES.map(({ key, color, highlight }) => {
                 const data = salesViewMode === "week" ? buildWeeklyData(key) : buildDailyData(key);
                 const total = salesGrandTotal(key);
                 return (
@@ -1937,11 +1949,10 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             />
                             <Bar
                               dataKey="total"
-                              fill={color}
-                              radius={[3, 3, 0, 0]}
                               isAnimationActive={false}
                               maxBarSize={40}
                               cursor="pointer"
+                              shape={makeRoundedBar(color, highlight, salesViewMode === "day")}
                               onClick={(barData: any) => {
                                 if (tappedBar?.branchKey === key && tappedBar?.label === barData.week) {
                                   setTappedBar(null);
