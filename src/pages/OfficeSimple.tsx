@@ -165,7 +165,7 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
           </div>
           {/* Clear */}
           {parsed && (
-            <div style={{ marginTop: "10px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "8px", display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ marginTop: "10px", borderTop: "0.5px solid #d8d0c8", paddingTop: "8px", display: "flex", justifyContent: "flex-end" }}>
               <button onClick={() => { onChange(""); setOpen(false); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.04em" }}>Clear</button>
             </div>
           )}
@@ -1313,7 +1313,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 </div>
 
                 {/* Recent transactions for this product */}
-                <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "16px", paddingBottom: "24px" }}>
+                <div style={{ borderTop: "0.5px solid #d8d0c8", paddingTop: "16px", paddingBottom: "24px" }}>
                   <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>Recent</div>
                   <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
                     <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>Date</div>
@@ -1518,7 +1518,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 </div>
               )}
               {showSupplierDropdown && (
-                <div style={{ marginTop: "8px", maxHeight: "180px", overflowY: "auto", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "4px" }}>
+                <div style={{ marginTop: "8px", maxHeight: "180px", overflowY: "auto", borderTop: "0.5px solid #d8d0c8", paddingTop: "4px" }}>
                   {allSuppliers.map((sup, i) => {
                     const selected = orderSupplierFilter.includes(sup);
                     return (
@@ -1919,12 +1919,12 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 const data = salesViewMode === "week" ? buildWeeklyData(key) : buildDailyData(key);
                 const total = salesGrandTotal(key);
                 return (
-                  <div key={key} style={{ marginBottom: "32px" }}>
+                  <div key={key} style={{ marginBottom: "20px", background: "#F2EDE6", borderRadius: "18px", padding: "16px 16px 8px 16px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px" }}>
-                      <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                      <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "#2a2a2a" }}>
                         {({ "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC NAILSPA", "Nur Yadi": "NUR YADI" } as Record<string,string>)[key] ?? key.toUpperCase()}
                       </span>
-                      <span style={{ fontSize: "14px", fontWeight: 300, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 300, color: "#2a2a2a", fontFamily: "Raleway, inherit" }}>
                         RM {total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
@@ -1970,7 +1970,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
                               dataKey="week"
-                              tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
+                              tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "#888" }}
                               axisLine={false}
                               tickLine={false}
                             />
@@ -1978,7 +1978,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                               ticks={yTicks}
                               domain={[0, topTick]}
                               interval={0}
-                              tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "hsl(var(--muted-foreground))" }}
+                              tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "#888" }}
                               axisLine={false}
                               tickLine={false}
                               tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`}
@@ -2010,8 +2010,8 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 );
               })}
               {/* ── Combined grand total ─────────────────────── */}
-              <div style={{ textAlign: "right", paddingTop: "8px", borderTop: "0.5px solid hsl(var(--border))" }}>
-                <span style={{ fontSize: "15px", fontWeight: 700, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
+              <div style={{ textAlign: "right", paddingTop: "8px", borderTop: "0.5px solid #d8d0c8" }}>
+                <span style={{ fontSize: "15px", fontWeight: 700, color: "#2a2a2a", fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
                   Total: RM {BRANCHES.reduce((sum, b) => sum + salesGrandTotal(b.key), 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
