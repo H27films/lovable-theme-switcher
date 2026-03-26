@@ -2010,7 +2010,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                 );
               })}
               {/* ── Combined grand total ─────────────────────── */}
-              <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 20px 6px 20px" }}>
+              <div style={{ textAlign: "right", paddingTop: "8px", borderTop: "0.5px solid hsl(var(--border))" }}>
                 <span style={{ fontSize: "15px", fontWeight: 700, color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
                   Total: RM {BRANCHES.reduce((sum, b) => sum + salesGrandTotal(b.key), 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
