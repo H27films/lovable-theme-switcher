@@ -477,11 +477,22 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
       } else {
         // ── CASH EXPORT ─────────────────────────────────────────────
-        let query = (supabase as any).from("Cash").select("*");
-        if (exportDateFrom) query = query.gte("Date", exportDateFrom);
-        if (exportDateTo)   query = query.lte("Date", exportDateTo);
-        const { data, error } = await query;
-        if (error) { setExportError(error.message); setExportLoading(false); return; }
+        // Paginate to get all rows (Supabase default cap is 1000)
+        let allCashData: any[] = [];
+        let pageFrom = 0;
+        const pageSize = 1000;
+        while (true) {
+          let query = (supabase as any).from("Cash").select("*").range(pageFrom, pageFrom + pageSize - 1);
+          if (exportDateFrom) query = query.gte("Date", exportDateFrom);
+          if (exportDateTo)   query = query.lte("Date", exportDateTo);
+          const { data: pageData, error } = await query;
+          if (error) { setExportError(error.message); setExportLoading(false); return; }
+          if (!pageData || pageData.length === 0) break;
+          allCashData = allCashData.concat(pageData);
+          if (pageData.length < pageSize) break;
+          pageFrom += pageSize;
+        }
+        const data = allCashData;
         if (!data || data.length === 0) { setExportError("No data found for the selected range."); setExportLoading(false); return; }
 
         const branchOrder: Record<string, number> = { "Boudoir": 0, "Chic Nailspa": 1, "Nur Yadi": 2 };
@@ -844,11 +855,21 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
   const fetchSales = React.useCallback(async () => {
     setSalesLoading(true);
     try {
-      const { data } = await (supabase as any)
-        .from("Cash")
-        .select("*")
-        .order("Date", { ascending: true });
-      setSalesData(data || []);
+      // Paginate to get all rows (Supabase default cap is 1000)
+      let allSales: any[] = [];
+      let salesFrom = 0;
+      const salesPageSize = 1000;
+      while (true) {
+        const { data: pageData } = await (supabase as any)
+          .from("Cash").select("*")
+          .order("Date", { ascending: true })
+          .range(salesFrom, salesFrom + salesPageSize - 1);
+        if (!pageData || pageData.length === 0) break;
+        allSales = allSales.concat(pageData);
+        if (pageData.length < salesPageSize) break;
+        salesFrom += salesPageSize;
+      }
+      setSalesData(allSales);
     } catch {}
     setSalesLoading(false);
   }, []);
