@@ -1891,9 +1891,8 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
                     {data.length === 0 ? (
                       <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300, padding: "12px 0" }}>No data</div>
                     ) : (() => {
-                      const maxVal = Math.max(...data.map((d: {week: string; total: number}) => d.total), 0);
-                      const topTick = Math.ceil(maxVal / 5000) * 5000 || 5000;
-                      const yTicks = Array.from({ length: topTick / 5000 + 1 }, (_, i) => i * 5000);
+                      const topTick = 10000;
+                      const yTicks = [0, 5000, 10000];
                       const prefix2 = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
                       const filtered2 = salesData.filter(r => r.Branch === key && r.Date?.startsWith(prefix2));
                       let weeklyAvg: number | null = null;
