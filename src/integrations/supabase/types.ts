@@ -14,30 +14,186 @@ export type Database = {
   }
   public: {
     Tables: {
-      inputfulllist: {
+      AllFileLog: {
         Row: {
-          "China Price (CNY)": string | null
-          "New Price (CNY)": string | null
-          "New Price (RM)": string | null
-          "Old Price (RM)": string | null
-          "Product Name": string
-          Savings: string | null
+          BRANCH: string | null
+          DATE: string | null
+          "ENDING BALANCE": number | null
+          GRN: string | null
+          id: number
+          "OFFICE BALANCE": number | null
+          "PRODUCT NAME": string | null
+          QTY: number | null
+          "STARTING BALANCE": number | null
+          SUPPLIER: string | null
+          TYPE: string | null
         }
         Insert: {
-          "China Price (CNY)"?: string | null
-          "New Price (CNY)"?: string | null
-          "New Price (RM)"?: string | null
-          "Old Price (RM)"?: string | null
-          "Product Name": string
-          Savings?: string | null
+          BRANCH?: string | null
+          DATE?: string | null
+          "ENDING BALANCE"?: number | null
+          GRN?: string | null
+          id?: number
+          "OFFICE BALANCE"?: number | null
+          "PRODUCT NAME"?: string | null
+          QTY?: number | null
+          "STARTING BALANCE"?: number | null
+          SUPPLIER?: string | null
+          TYPE?: string | null
         }
         Update: {
-          "China Price (CNY)"?: string | null
-          "New Price (CNY)"?: string | null
-          "New Price (RM)"?: string | null
-          "Old Price (RM)"?: string | null
+          BRANCH?: string | null
+          DATE?: string | null
+          "ENDING BALANCE"?: number | null
+          GRN?: string | null
+          id?: number
+          "OFFICE BALANCE"?: number | null
+          "PRODUCT NAME"?: string | null
+          QTY?: number | null
+          "STARTING BALANCE"?: number | null
+          SUPPLIER?: string | null
+          TYPE?: string | null
+        }
+        Relationships: []
+      }
+      AllFileProducts: {
+        Row: {
+          "BOUDOIR BALANCE": number | null
+          "BOUDOIR FAVOURITE": string | null
+          "BRANCH PRICE": number | null
+          "CHIC NAILSPA BALANCE": number | null
+          "CHIC NAILSPA FAVOURITE": string | null
+          COLOUR: string | null
+          "CUSTOMER PRICE": number | null
+          id: number
+          "NUR YADI BALANCE": number | null
+          "NUR YADI FAVOURITE": string | null
+          "OFFICE BALANCE": number | null
+          "OFFICE FAVOURITE": string | null
+          "OFFICE SECTION": string | null
+          PAR: number | null
+          "PRODUCT NAME": string | null
+          "STAFF PRICE": number | null
+          SUPPLIER: string | null
+          "SUPPLIER PRICE": number | null
+          "UNITS/ORDER": number | null
+        }
+        Insert: {
+          "BOUDOIR BALANCE"?: number | null
+          "BOUDOIR FAVOURITE"?: string | null
+          "BRANCH PRICE"?: number | null
+          "CHIC NAILSPA BALANCE"?: number | null
+          "CHIC NAILSPA FAVOURITE"?: string | null
+          COLOUR?: string | null
+          "CUSTOMER PRICE"?: number | null
+          id: number
+          "NUR YADI BALANCE"?: number | null
+          "NUR YADI FAVOURITE"?: string | null
+          "OFFICE BALANCE"?: number | null
+          "OFFICE FAVOURITE"?: string | null
+          "OFFICE SECTION"?: string | null
+          PAR?: number | null
+          "PRODUCT NAME"?: string | null
+          "STAFF PRICE"?: number | null
+          SUPPLIER?: string | null
+          "SUPPLIER PRICE"?: number | null
+          "UNITS/ORDER"?: number | null
+        }
+        Update: {
+          "BOUDOIR BALANCE"?: number | null
+          "BOUDOIR FAVOURITE"?: string | null
+          "BRANCH PRICE"?: number | null
+          "CHIC NAILSPA BALANCE"?: number | null
+          "CHIC NAILSPA FAVOURITE"?: string | null
+          COLOUR?: string | null
+          "CUSTOMER PRICE"?: number | null
+          id?: number
+          "NUR YADI BALANCE"?: number | null
+          "NUR YADI FAVOURITE"?: string | null
+          "OFFICE BALANCE"?: number | null
+          "OFFICE FAVOURITE"?: string | null
+          "OFFICE SECTION"?: string | null
+          PAR?: number | null
+          "PRODUCT NAME"?: string | null
+          "STAFF PRICE"?: number | null
+          SUPPLIER?: string | null
+          "SUPPLIER PRICE"?: number | null
+          "UNITS/ORDER"?: number | null
+        }
+        Relationships: []
+      }
+      Cash: {
+        Row: {
+          Branch: string | null
+          Cash: number | null
+          Credit: number | null
+          Date: string | null
+          Deposit: boolean | null
+          Error: number | null
+          Explanation: string | null
+          id: number
+          QR: number | null
+          "Total GST": number | null
+        }
+        Insert: {
+          Branch?: string | null
+          Cash?: number | null
+          Credit?: number | null
+          Date?: string | null
+          Deposit?: boolean | null
+          Error?: number | null
+          Explanation?: string | null
+          id?: number
+          QR?: number | null
+          "Total GST"?: number | null
+        }
+        Update: {
+          Branch?: string | null
+          Cash?: number | null
+          Credit?: number | null
+          Date?: string | null
+          Deposit?: boolean | null
+          Error?: number | null
+          Explanation?: string | null
+          id?: number
+          QR?: number | null
+          "Total GST"?: number | null
+        }
+        Relationships: []
+      }
+      InputFullTable: {
+        Row: {
+          "China Price (CNY)": number | null
+          "New Price (CNY)": number | null
+          "New Price (RM)": number | null
+          "Office Stock": number | null
+          "Old Price (RM)": number | null
+          "Order Qty": number | null
+          "Order Value (RM)": number | null
+          "Product Name": string
+          Savings: number | null
+        }
+        Insert: {
+          "China Price (CNY)"?: number | null
+          "New Price (CNY)"?: number | null
+          "New Price (RM)"?: number | null
+          "Office Stock"?: number | null
+          "Old Price (RM)"?: number | null
+          "Order Qty"?: number | null
+          "Order Value (RM)"?: number | null
+          "Product Name": string
+          Savings?: number | null
+        }
+        Update: {
+          "China Price (CNY)"?: number | null
+          "New Price (CNY)"?: number | null
+          "New Price (RM)"?: number | null
+          "Office Stock"?: number | null
+          "Old Price (RM)"?: number | null
+          "Order Qty"?: number | null
+          "Order Value (RM)"?: number | null
           "Product Name"?: string
-          Savings?: string | null
+          Savings?: number | null
         }
         Relationships: []
       }
