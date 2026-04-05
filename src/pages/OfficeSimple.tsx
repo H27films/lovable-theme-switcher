@@ -43,9 +43,9 @@ interface OrderLine {
 }
 
 interface OfficeSimpleProps {
-  onBack: () => void;
-  onBackToMain: () => void;
-  products: OfficeProduct[];
+  onBack?: () => void;
+  onBackToMain?: () => void;
+  products?: OfficeProduct[];
 }
 
 const hdrStyle: React.CSSProperties = {

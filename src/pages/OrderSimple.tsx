@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 
 interface OrderSimpleProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 interface OfficeProduct {

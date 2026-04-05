@@ -32,6 +32,10 @@ interface OfficeProduct {
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
   "OFFICE FAVOURITE": string | null;
+  "PAR": number | null;
+  "BOUDOIR FAVOURITE": string | boolean | null;
+  "CHIC NAILSPA FAVOURITE": string | boolean | null;
+  "NUR YADI FAVOURITE": string | boolean | null;
 }
 
 const SubLandingSimple = () => {
