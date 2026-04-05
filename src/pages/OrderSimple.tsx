@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 
 interface OrderSimpleProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 interface OfficeProduct {
@@ -36,7 +36,7 @@ async function toggleOfficeFav(
   product: OfficeProduct,
   setProducts: React.Dispatch<React.SetStateAction<OfficeProduct[]>>
 ): Promise<void> {
-  const isFav = product["OFFICE FAVOURITE"] === "TRUE" || product["OFFICE FAVOURITE"] === "true" || product["OFFICE FAVOURITE"] === true;
+  const isFav = product["OFFICE FAVOURITE"] === "TRUE" || product["OFFICE FAVOURITE"] === "true" || (product as any)["OFFICE FAVOURITE"] === true;
   const newVal = isFav ? null : "TRUE";
   setProducts(prev => prev.map(p =>
     p.id === product.id ? { ...p, "OFFICE FAVOURITE": newVal } : p
@@ -222,7 +222,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
     return v === true || v === "TRUE" || v === "true" || v === 1;
   };
   const isColourProd = (p: OfficeProduct) => {
-    const v = p["Colour"];
+    const v = (p as any)["Colour"];
     return v === true || v === "TRUE" || v === "true" || v === "YES" || v === "yes";
   };
 

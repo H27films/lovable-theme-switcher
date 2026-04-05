@@ -17,7 +17,6 @@ interface OfficeProduct {
   "OFFICE SECTION": string | null;
   "UNITS/ORDER": number | null;
   "CHIC NAILSPA BALANCE": number | null;
-  "CHIC NAILSPA BALANCE": number | null;
   "NUR YADI BALANCE": number | null;
   "Colour": string | null;
   "CHIC NAILSPA FAVOURITE": string | boolean | null;

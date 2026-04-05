@@ -12,7 +12,7 @@ interface Product {
 }
 
 interface SearchSimpleProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 function belowPar(balance: number | null | undefined, par: number | null | undefined): boolean {

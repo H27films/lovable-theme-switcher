@@ -43,9 +43,9 @@ interface OrderLine {
 }
 
 interface OfficeSimpleProps {
-  onBack: () => void;
-  onBackToMain: () => void;
-  products: OfficeProduct[];
+  onBack?: () => void;
+  onBackToMain?: () => void;
+  products?: OfficeProduct[];
 }
 
 const hdrStyle: React.CSSProperties = {
@@ -687,7 +687,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
     return v === true || v === "TRUE" || v === "true" || v === 1;
   };
   const isColourProd = (p: OfficeProduct) => {
-    const v = p["Colour"];
+    const v = (p as any)["Colour"];
     return v === true || v === "TRUE" || v === "true" || v === "YES" || v === "yes";
   };
 
