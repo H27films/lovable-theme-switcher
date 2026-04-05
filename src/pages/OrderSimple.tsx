@@ -36,7 +36,7 @@ async function toggleOfficeFav(
   product: OfficeProduct,
   setProducts: React.Dispatch<React.SetStateAction<OfficeProduct[]>>
 ): Promise<void> {
-  const isFav = product["OFFICE FAVOURITE"] === "TRUE" || product["OFFICE FAVOURITE"] === "true" || product["OFFICE FAVOURITE"] === true;
+  const isFav = product["OFFICE FAVOURITE"] === "TRUE" || product["OFFICE FAVOURITE"] === "true" || (product as any)["OFFICE FAVOURITE"] === true;
   const newVal = isFav ? null : "TRUE";
   setProducts(prev => prev.map(p =>
     p.id === product.id ? { ...p, "OFFICE FAVOURITE": newVal } : p
