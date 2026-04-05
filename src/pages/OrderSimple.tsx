@@ -222,7 +222,7 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
     return v === true || v === "TRUE" || v === "true" || v === 1;
   };
   const isColourProd = (p: OfficeProduct) => {
-    const v = p["Colour"];
+    const v = (p as any)["Colour"];
     return v === true || v === "TRUE" || v === "true" || v === "YES" || v === "yes";
   };
 
