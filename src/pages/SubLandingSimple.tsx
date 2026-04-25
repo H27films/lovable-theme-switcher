@@ -8,7 +8,7 @@ import OfficeSimple from "./OfficeSimple";
 import BoudoirSimple from "./BoudoirSimple";
 import ChicSimple from "./ChicSimple";
 import NurYadiSimple from "./NurYadiSimple";
-import { X, Search, Building2, ChevronDown, ChevronUp, Star } from "lucide-react";
+import { X, Search, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
 
 const hdrStyle: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
@@ -265,6 +265,26 @@ const SubLandingSimple = () => {
           </svg>
         </span>
       </div>
+
+      {/* Fixed Home button (bottom right) - only show on home menu */}
+      <a
+        href="/"
+        aria-label="Go to main landing page"
+        title="Home"
+        style={{
+          position: "fixed",
+          right: "20px",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+          zIndex: 60,
+          display: (activeBranch !== null || activeSection !== null) ? "none" : "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "hsl(var(--muted-foreground))",
+          textDecoration: "none",
+        }}
+      >
+        <Home size={18} strokeWidth={1.4} />
+      </a>
 
       <div className="max-w-full mx-auto px-3">
 
