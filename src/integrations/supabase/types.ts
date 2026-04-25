@@ -86,7 +86,7 @@ export type Database = {
           "CHIC NAILSPA FAVOURITE"?: string | null
           COLOUR?: string | null
           "CUSTOMER PRICE"?: number | null
-          id: number
+          id?: number
           "NUR YADI BALANCE"?: number | null
           "NUR YADI FAVOURITE"?: string | null
           "OFFICE BALANCE"?: number | null
