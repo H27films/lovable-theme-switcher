@@ -21,6 +21,7 @@ import OfficeSimple from "./pages/OfficeSimple";
 import OrderSimple from "./pages/OrderSimple";
 import SearchSimple from "./pages/SearchSimple";
 import TabletScaler from "./components/TabletScaler";
+import SafeAreaTop from "./components/SafeAreaTop";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,15 +36,15 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/prices" element={<Office />} />
           <Route path="/office/mobile" element={<OfficePhone />} />
-          {/* ── Simple / Boss routes (all wrapped in TabletScaler) ── */}
-          <Route path="/simple" element={<LandingSimple />} />
-          <Route path="/simple/office" element={<TabletScaler><SubLandingSimple /></TabletScaler>} />
-          <Route path="/simple/boudoir" element={<TabletScaler><BoudoirSimple /></TabletScaler>} />
-          <Route path="/simple/chic" element={<TabletScaler><ChicSimple /></TabletScaler>} />
-          <Route path="/simple/nuryadi" element={<TabletScaler><NurYadiSimple /></TabletScaler>} />
-          <Route path="/simple/branch-office" element={<TabletScaler><OfficeSimple /></TabletScaler>} />
-          <Route path="/simple/order" element={<TabletScaler><OrderSimple /></TabletScaler>} />
-          <Route path="/simple/search" element={<TabletScaler><SearchSimple /></TabletScaler>} />
+          {/* ── Simple / Boss routes (all wrapped in TabletScaler + SafeAreaTop for iOS notch / status bar) ── */}
+          <Route path="/simple" element={<SafeAreaTop><LandingSimple /></SafeAreaTop>} />
+          <Route path="/simple/office" element={<SafeAreaTop><TabletScaler><SubLandingSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/boudoir" element={<SafeAreaTop><TabletScaler><BoudoirSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/chic" element={<SafeAreaTop><TabletScaler><ChicSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/nuryadi" element={<SafeAreaTop><TabletScaler><NurYadiSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/branch-office" element={<SafeAreaTop><TabletScaler><OfficeSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/order" element={<SafeAreaTop><TabletScaler><OrderSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/search" element={<SafeAreaTop><TabletScaler><SearchSimple /></TabletScaler></SafeAreaTop>} />
           <Route path="/stock" element={<Boudoir />} />
           <Route path="/stock/mobile" element={<BoudoirPhone />} />
           <Route path="/stocknuryadi" element={<NurYadi />} />
