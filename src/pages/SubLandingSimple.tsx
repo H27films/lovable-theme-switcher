@@ -276,7 +276,7 @@ const SubLandingSimple = () => {
           right: "20px",
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
           zIndex: 60,
-          display: (activeBranch !== null || activeSection !== null) ? "none" : "flex",
+          display: (activeBranch !== null || activeSection !== null || simpleSearchMode !== "idle") ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "hsl(var(--muted-foreground))",
