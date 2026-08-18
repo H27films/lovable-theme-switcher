@@ -943,40 +943,70 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
           {BRANCH_NAME}
         </button>
 
-        {/* USAGE / ORDER / CASH tabs — above search bar */}
-        {!showDropdown && !selectedProduct && (
+        {/* USAGE / ORDER / CASH tabs — with search icon */}
+        {!selectedProduct && (
           <div style={{
-            display: "flex", gap: "28px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
             borderBottom: "0.5px solid hsl(var(--border))",
             marginBottom: "20px",
           }}>
-            {(["USAGE", "ORDER", "CASH"] as const).map(btn => (
-              <button
-                key={btn}
-                onClick={() => openPanel(btn)}
-                style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  padding: "0 0 12px 0",
-                  fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
-                  letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
-                  color: "hsl(var(--foreground))",
-                  opacity: 0.28,
-                  borderBottom: "2px solid transparent",
-                  marginBottom: "-1px",
-                  transition: "opacity 0.2s ease, border-color 0.2s ease",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.8";
-                  e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.opacity = "0.28";
-                  e.currentTarget.style.borderBottomColor = "transparent";
-                }}
-              >
-                {btn}
-              </button>
-            ))}
+            <div style={{ display: "flex", gap: "28px" }}>
+              {(["USAGE", "ORDER", "CASH"] as const).map(btn => (
+                <button
+                  key={btn}
+                  onClick={() => openPanel(btn)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: "0 0 12px 0",
+                    fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
+                    letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
+                    color: "hsl(var(--foreground))",
+                    opacity: 0.28,
+                    borderBottom: "2px solid transparent",
+                    marginBottom: "-1px",
+                    transition: "opacity 0.2s ease, border-color 0.2s ease",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.opacity = "0.8";
+                    e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.opacity = "0.28";
+                    e.currentTarget.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  {btn}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                if (showSearchInput) {
+                  setShowSearchInput(false);
+                  setSearchMode("idle");
+                  setSearch("");
+                  setSelectedProduct(null);
+                  setShowDropdown(false);
+                } else {
+                  setShowSearchInput(true);
+                  setSearchMode("active");
+                  setSearch("");
+                  setSelectedProduct(null);
+                  setShowDropdown(false);
+                  setTimeout(() => inputRef.current?.focus(), 0);
+                }
+              }}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                padding: "0 0 12px 0", color: "hsl(var(--foreground))",
+                opacity: showSearchInput ? 0.8 : 0.28,
+                transition: "opacity 0.2s ease",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.8"; }}
+              onMouseLeave={e => { if (!showSearchInput) e.currentTarget.style.opacity = "0.28"; }}
+            >
+              <Search size={18} />
+            </button>
           </div>
         )}
 
