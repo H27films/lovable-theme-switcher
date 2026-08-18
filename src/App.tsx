@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingSimple from "./pages/LandingSimple";
 import SubLandingSimple from "./pages/SubLandingSimple";
-import BoudoirSimple from "./pages/BoudoirSimple";
+import BranchSimple from "@/components/branch-simple/BranchSimple";
 import ChicSimple from "./pages/ChicSimple";
 import NurYadiSimple from "./pages/NurYadiSimple";
 import OfficeSimple from "./pages/OfficeSimple";
@@ -28,9 +28,9 @@ const App = () => (
           {/* ── Simple / Boss routes (all wrapped in TabletScaler + SafeAreaTop for iOS notch / status bar) ── */}
           <Route path="/simple" element={<SafeAreaTop><LandingSimple /></SafeAreaTop>} />
           <Route path="/simple/office" element={<SafeAreaTop><TabletScaler><SubLandingSimple /></TabletScaler></SafeAreaTop>} />
-          <Route path="/simple/boudoir" element={<SafeAreaTop><TabletScaler><BoudoirSimple /></TabletScaler></SafeAreaTop>} />
-          <Route path="/simple/chic" element={<SafeAreaTop><TabletScaler><ChicSimple /></TabletScaler></SafeAreaTop>} />
-          <Route path="/simple/nuryadi" element={<SafeAreaTop><TabletScaler><NurYadiSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/boudoir" element={<SafeAreaTop><TabletScaler><BranchSimple branch="boudoir" /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/chic" element={<SafeAreaTop><TabletScaler><BranchSimple branch="chic" /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/nuryadi" element={<SafeAreaTop><TabletScaler><BranchSimple branch="nuryadi" /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/branch-office" element={<SafeAreaTop><TabletScaler><OfficeSimple /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/order" element={<SafeAreaTop><TabletScaler><OrderSimple /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/search" element={<SafeAreaTop><TabletScaler><SearchSimple /></TabletScaler></SafeAreaTop>} />

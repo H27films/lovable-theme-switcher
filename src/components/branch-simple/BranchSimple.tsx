@@ -2,81 +2,18 @@ import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Check, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
-import { USAGE_TYPES, makeIsFavourite, UsageType, isYes, THERAPISTS } from "@/lib/branchSimpleUtils";
+import { USAGE_TYPES, THERAPISTS, makeIsFavourite, isYes } from "@/lib/branchSimpleUtils";
+import { BRANCH_CONFIGS, type BranchKey, type OfficeProduct, type LogRow, type EntryLine, type CashRow, type CashEntryState } from "@/lib/branchSimple";
 import jsPDF from "jspdf";
 
-interface OfficeProduct {
-  id: number;
-  "PRODUCT NAME": string;
-  "SUPPLIER": string | null;
-  "SUPPLIER PRICE": number | null;
-  "BRANCH PRICE": number | null;
-  "STAFF PRICE": number | null;
-  "CUSTOMER PRICE": number | null;
-  "OFFICE BALANCE": number | null;
-  "OFFICE SECTION": string | null;
-  "UNITS/ORDER": number | null;
-  "NUR YADI BALANCE": number | null;
-  "CHIC NAILSPA BALANCE": number | null;
-  "Colour": string | null;
-  "NUR YADI FAVOURITE": string | boolean | null;
-}
-
-interface LogRow {
-  id: number;
-  DATE: string;
-  "PRODUCT NAME": string;
-  BRANCH: string;
-  TYPE: string;
-  QTY: number;
-  "STARTING BALANCE": number;
-  "ENDING BALANCE": number;
-  GRN?: string;
-  "OFFICE BALANCE"?: number;
-}
-
-interface EntryLine {
-  id: number;
-  productName: string;
-  type: UsageType;
-  qty: number;
-  therapist: string;
-  note: string;
-  noteOpen: boolean;
-}
-
-interface CashRow {
-  id: number;
-  Branch: string;
-  "Total GST": number | null;
-  Credit: number | null;
-  QR: number | null;
-  Cash: number | null;
-  Date: string;
-  Error: number | null;
-  Explanation: string | null;
-}
-
-interface CashEntryState {
-  date: string;
-  totalGST: string;
-  credit: string;
-  qr: string;
-  cashOverride: string;
-  error: string;
-  errorNote: string;
-  expanded: boolean;
-  existingId?: number;
-}
-
-interface NurYadiSimpleProps {
+interface BranchSimpleProps {
+  branch: BranchKey;
   onBack?: () => void;
   onBackToMain?: () => void;
   products?: OfficeProduct[];
 }
-const isNurYadiFav = makeIsFavourite("NUR YADI FAVOURITE");
 
-const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadiSimpleProps) => {
+const BranchSimple = ({ onBack, onBackToMain, products: propProducts, branch }: BranchSimpleProps) => {
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
 
   // Sort log: DATE desc, within same date Order rows first (logged last at night)
@@ -120,17 +57,17 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
 
   const toggleFavourite = async (product: OfficeProduct) => {
-    const currentlyFav = isNurYadiFav(product);
+    const currentlyFav = isFav(product);
     const newVal = !currentlyFav;
     await (supabase as any)
       .from("AllFileProducts")
-      .update({ "NUR YADI FAVOURITE": newVal })
+      .update({ [config.favouriteKey]: newVal })
       .eq("id", product.id);
     setProducts(prev =>
-      prev.map(p => p.id === product.id ? { ...p, "NUR YADI FAVOURITE": newVal } : p)
+      prev.map(p => p.id === product.id ? { ...p, [config.favouriteKey]: newVal } : p)
     );
     setSelectedProduct(prev =>
-      prev && prev.id === product.id ? { ...prev, "NUR YADI FAVOURITE": newVal } : prev
+      prev && prev.id === product.id ? { ...prev, [config.favouriteKey]: newVal } : prev
     );
   };
 
@@ -182,9 +119,9 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const BRANCH_NAME = "NUR YADI";
-  const BALANCE_KEY = "NUR YADI BALANCE" as keyof OfficeProduct;
-  const BRANCH_LOG_NAME = "Nur Yadi";
+  const config = BRANCH_CONFIGS[branch];
+  const isFav = makeIsFavourite(config.favouriteKey);
+  const { displayName: BRANCH_NAME, balanceKey: BALANCE_KEY, logBranchName: BRANCH_LOG_NAME } = config;
 
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
   const [loadingBranchLog, setLoadingBranchLog] = useState(true);
@@ -237,7 +174,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
       const { data } = await (supabase as any)
         .from("Cash")
         .select("*")
-        .eq("Branch", "Nur Yadi")
+        .eq("Branch", config.cashBranchName)
         .gte("Date", fromDateStr)
         .order("Date", { ascending: false });
       const rows: CashRow[] = data || [];
@@ -310,16 +247,16 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
       )
     : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
 
-  const usageFavs    = usageFiltered.filter(p =>  isNurYadiFav(p));
-  const usageColours = usageFiltered.filter(p => !isNurYadiFav(p) &&  isYes(p["Colour"]));
-  const usageRegular = usageFiltered.filter(p => !isNurYadiFav(p) && !isYes(p["Colour"]));
+  const usageFavs    = usageFiltered.filter(p =>  isFav(p));
+  const usageColours = usageFiltered.filter(p => !isFav(p) &&  isYes(p["Colour"]));
+  const usageRegular = usageFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
 
   const orderFiltered = orderSearch.length > 0
     ? products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(orderSearch.toLowerCase()))
     : products;
-  const orderFavs    = orderFiltered.filter(p =>  isNurYadiFav(p));
-  const orderColours = orderFiltered.filter(p => !isNurYadiFav(p) &&  isYes(p["Colour"]));
-  const orderRegular = orderFiltered.filter(p => !isNurYadiFav(p) && !isYes(p["Colour"]));
+  const orderFavs    = orderFiltered.filter(p =>  isFav(p));
+  const orderColours = orderFiltered.filter(p => !isFav(p) &&  isYes(p["Colour"]));
+  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
 
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);
@@ -368,7 +305,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     const dd = String(today.getDate()).padStart(2, "0");
     const mm = String(today.getMonth() + 1).padStart(2, "0");
     const yy = String(today.getFullYear()).slice(-2);
-    const grn = `NUR ${dd}${mm}${yy}`;
+    const grn = `${config.grnPrefix} ${dd}${mm}${yy}`;
     const dateStr = today.toISOString().split("T")[0];
     const entries = valid.map(entry => {
       const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
@@ -441,7 +378,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(26, 26, 26);
-    doc.text("NUR YADI", margin, 58);
+    doc.text(config.pdfHeader, margin, 58);
     doc.text("GOODS RECEIVED NOTE", W - margin, 58, { align: "right" });
     doc.setDrawColor(26, 26, 26);
     doc.setLineWidth(0.8);
@@ -561,7 +498,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     const s = start <= end ? start : end;
     const e2 = start <= end ? end : start;
     const rows = cashLog
-      .filter(r => r.Branch === "Nur Yadi" && r.Date >= s && r.Date <= e2)
+      .filter(r => r.Branch === config.cashBranchName && r.Date >= s && r.Date <= e2)
       .sort((a, b) => a.Date.localeCompare(b.Date));
     const headers = ["Date", "Total GST", "Credit", "QR", "Cash", "Error", "Explanation"];
     const csvRows = [
@@ -603,7 +540,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "Nur Yadi Cash Export.csv";
+    a.download = config.cashExportFilename;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -794,7 +731,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     const fromDate = sevenDaysAgo < monthStart ? sevenDaysAgo : monthStart;
     const fromDateStr = fromDate.toISOString().split("T")[0];
     const { data } = await (supabase as any)
-      .from("Cash").select("*").eq("Branch", "Nur Yadi")
+      .from("Cash").select("*").eq("Branch", config.cashBranchName)
       .gte("Date", fromDateStr).order("Date", { ascending: false });
     setCashLog(data || []);
   };
@@ -828,9 +765,9 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         const err = parseFloat(entry.error) || 0;
         const cash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
         const errVal = parseFloat(entry.error) || null;
-        const basePayload = { Branch: "Nur Yadi", Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash, Error: errVal || null, Explanation: entry.errorNote || null };
+        const basePayload = { Branch: config.cashBranchName, Date: entry.date, "Total GST": total, Credit: credit, QR: qr, Cash: cash, Error: errVal || null, Explanation: entry.errorNote || null };
         // Always check Supabase for existing row by Branch+Date
-        const { data: existingRows } = await (supabase as any).from("Cash").select("id").eq("Branch", "Nur Yadi").eq("Date", entry.date);
+        const { data: existingRows } = await (supabase as any).from("Cash").select("id").eq("Branch", config.cashBranchName).eq("Date", entry.date);
         const existingId = existingRows && existingRows.length > 0 ? existingRows[0].id : null;
         if (existingId) {
           const { error: uErr } = await (supabase as any).from("Cash").update(basePayload).eq("id", existingId);
@@ -849,7 +786,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         await refreshCashLog();
         // After submit: reset entry area — show today row only if today has no Supabase entry
         const todayStr = new Date().toISOString().split("T")[0];
-        const { data: todayCheck } = await (supabase as any).from("Cash").select("id").eq("Branch", "Nur Yadi").eq("Date", todayStr);
+        const { data: todayCheck } = await (supabase as any).from("Cash").select("id").eq("Branch", config.cashBranchName).eq("Date", todayStr);
         const todayExists = todayCheck && todayCheck.length > 0;
         if (todayExists) {
           setCashEntries([]);
@@ -1020,9 +957,9 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             p["PRODUCT NAME"].toLowerCase().includes(q) &&
             (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
           );
-          const favourites = allMatched.filter(p =>  isNurYadiFav(p));
-          const colours    = allMatched.filter(p => !isNurYadiFav(p) &&  isYes(p["Colour"]));
-          const regular    = allMatched.filter(p => !isNurYadiFav(p) && !isYes(p["Colour"]));
+          const favourites = allMatched.filter(p =>  isFav(p));
+          const colours    = allMatched.filter(p => !isFav(p) &&  isYes(p["Colour"]));
+          const regular    = allMatched.filter(p => !isFav(p) && !isYes(p["Colour"]));
           const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
           const SectionHeader = ({ label }: { label: string }) => (
@@ -1050,7 +987,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             <div style={{ flex: 1, overflowY: "auto" }}>
               {favourites.length > 0 && (
                 <>
-                  <SectionHeader label="Nur Yadi Favourites" />
+                  <SectionHeader label={config.favouritesLabel} />
                   {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}
                 </>
               )}
@@ -1095,7 +1032,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                   >
                     <Star
                       size={16}
-                      fill={isNurYadiFav(selectedProduct) ? "hsl(var(--foreground))" : "none"}
+                      fill={isFav(selectedProduct) ? "hsl(var(--foreground))" : "none"}
                       color="hsl(var(--foreground))"
                     />
                   </button>
@@ -1402,7 +1339,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                 </div>
               );
               const sections: React.ReactNode[] = [];
-              if (usageFavs.length > 0)    { sections.push(sectionLabel("Nur Yadi Favourites")); usageFavs.forEach(p => sections.push(renderRow(p, true))); }
+              if (usageFavs.length > 0)    { sections.push(sectionLabel(config.favouritesLabel)); usageFavs.forEach(p => sections.push(renderRow(p, true))); }
               if (usageRegular.length > 0) { sections.push(sectionLabel("Products"));           usageRegular.forEach(p => sections.push(renderRow(p))); }
               if (usageColours.length > 0) { sections.push(sectionLabel("Colours"));            usageColours.forEach(p => sections.push(renderRow(p))); }
               if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
@@ -1642,7 +1579,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                 </div>
               );
               const sections: React.ReactNode[] = [];
-              if (orderFavs.length > 0)    { sections.push(sectionLabel("Nur Yadi Favourites")); orderFavs.forEach(p => sections.push(renderRow(p, true))); }
+              if (orderFavs.length > 0)    { sections.push(sectionLabel(config.favouritesLabel)); orderFavs.forEach(p => sections.push(renderRow(p, true))); }
               if (orderRegular.length > 0) { sections.push(sectionLabel("Products"));            orderRegular.forEach(p => sections.push(renderRow(p))); }
               if (orderColours.length > 0) { sections.push(sectionLabel("Colours"));             orderColours.forEach(p => sections.push(renderRow(p))); }
               if (sections.length === 0) return <div style={{ padding: "14px 0", fontSize: "13px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>No products found</div>;
@@ -1666,7 +1603,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             const dd = String(d.getDate()).padStart(2,"0");
             const mm = String(d.getMonth()+1).padStart(2,"0");
             const yy = String(d.getFullYear()).slice(-2);
-            const confirmedGrn = `NUR ${dd}${mm}${yy}`;
+            const confirmedGrn = `${config.grnPrefix} ${dd}${mm}${yy}`;
             return (
               <div style={{ paddingTop: "24px" }}>
                 <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(120 60% 40%)", fontFamily: "Raleway, inherit", marginBottom: "12px" }}>✓ Order confirmed</div>
@@ -2256,4 +2193,4 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
   );
 };
 
-export default NurYadiSimple;
+export default BranchSimple;

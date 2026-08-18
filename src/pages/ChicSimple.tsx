@@ -665,7 +665,7 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
   const cycleTherapist = (id: number) => {
     setUsageEntries(prev => prev.map(e => {
       if (e.id !== id) return e;
-      const idx = THERAPISTS.indexOf(e.therapist);
+      const idx = THERAPISTS.indexOf(e.therapist as (typeof THERAPISTS)[number]);
       return { ...e, therapist: THERAPISTS[(idx + 1) % THERAPISTS.length] };
     }));
   };
