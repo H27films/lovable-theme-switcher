@@ -922,11 +922,12 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         {/* Branch name header */}
         <button
           onClick={() => {
-            if (searchMode !== "idle") {
+            if (searchMode !== "idle" || showSearchInput) {
               setSearchMode("idle");
               setSearch("");
               setSelectedProduct(null);
               setShowDropdown(false);
+              setShowSearchInput(false);
             } else {
               onBack?.();
             }
