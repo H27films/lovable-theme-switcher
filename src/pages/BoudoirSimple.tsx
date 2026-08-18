@@ -891,6 +891,7 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
     setActivePanel(panel);
     setShowDropdown(false);
     setShowUsageDropdown(false);
+    setShowSearchInput(false);
   };
 
   const closePanel = () => {

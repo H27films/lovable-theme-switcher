@@ -890,6 +890,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     setActivePanel(panel);
     setShowDropdown(false);
     setShowUsageDropdown(false);
+    setShowSearchInput(false);
   };
 
   const closePanel = () => {

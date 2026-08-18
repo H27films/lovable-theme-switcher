@@ -890,6 +890,7 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
     setActivePanel(panel);
     setShowDropdown(false);
     setShowUsageDropdown(false);
+    setShowSearchInput(false);
   };
 
   const closePanel = () => {
