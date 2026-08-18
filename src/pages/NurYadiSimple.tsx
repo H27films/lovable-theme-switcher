@@ -117,6 +117,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
 
   const toggleFavourite = async (product: OfficeProduct) => {
