@@ -1,4 +1,6 @@
-export const USAGE_TYPES = ["Salon Use", "Customer", "Staff"] as const;
+export const USAGE_TYPES = ["Customer Sale", "Staff Sale", "Salon Use", "FOC"] as const;
+
+export const THERAPISTS = ["AILING", "SZI WAH", "ANNIE", "HAMZA"] as const;
 
 export type UsageType = (typeof USAGE_TYPES)[number];
 

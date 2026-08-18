@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import SearchSimple from "./SearchSimple";
@@ -8,7 +9,7 @@ import OfficeSimple from "./OfficeSimple";
 import BoudoirSimple from "./BoudoirSimple";
 import ChicSimple from "./ChicSimple";
 import NurYadiSimple from "./NurYadiSimple";
-import { X, Search, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
+import { X, Search, Building2, ChevronDown, ChevronUp, Star, Home, ArrowLeft } from "lucide-react";
 
 const hdrStyle: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
@@ -39,6 +40,7 @@ interface OfficeProduct {
 }
 
 const SubLandingSimple = () => {
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const isSandTheme = theme === "sand";
   const toggleTheme = () => setTheme(isSandTheme ? "light" : "sand");
@@ -265,6 +267,29 @@ const SubLandingSimple = () => {
           </svg>
         </span>
       </div>
+
+      {/* Fixed Back arrow (top left, same row as theme toggle) - goes back to landing page */}
+      <button
+        onClick={() => navigate("/")}
+        aria-label="Go back to landing page"
+        title="Back to landing"
+        style={{
+          position: "fixed",
+          top: "28px",
+          left: "20px",
+          zIndex: 60,
+          display: (activeBranch !== null || activeSection === "order") ? "none" : "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "hsl(var(--muted-foreground))",
+          padding: 0,
+        }}
+      >
+        <ArrowLeft size={15} strokeWidth={1.4} />
+      </button>
 
       {/* Fixed Home button (bottom right) - only show on home menu */}
       <a

@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Check, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
-import { USAGE_TYPES, makeIsFavourite, UsageType, isYes } from "@/lib/branchSimpleUtils";
+import { USAGE_TYPES, makeIsFavourite, UsageType, isYes, THERAPISTS } from "@/lib/branchSimpleUtils";
 import jsPDF from "jspdf";
 
 interface OfficeProduct {
@@ -40,6 +40,9 @@ interface EntryLine {
   productName: string;
   type: UsageType;
   qty: number;
+  therapist: string;
+  note: string;
+  noteOpen: boolean;
 }
 
 interface CashRow {
@@ -326,6 +329,9 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         productName: p["PRODUCT NAME"],
         type: "Salon Use",
         qty: 1,
+        therapist: "THERAPIST",
+        note: "",
+        noteOpen: false,
       }]);
     }
     setUsageSearch("");
@@ -656,6 +662,18 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
     }));
   };
 
+  const cycleTherapist = (id: number) => {
+    setUsageEntries(prev => prev.map(e => {
+      if (e.id !== id) return e;
+      const idx = THERAPISTS.indexOf(e.therapist);
+      return { ...e, therapist: THERAPISTS[(idx + 1) % THERAPISTS.length] };
+    }));
+  };
+
+  const toggleNote = (id: number) => {
+    setUsageEntries(prev => prev.map(e => e.id === id ? { ...e, noteOpen: !e.noteOpen } : e));
+  };
+
   const handleUsageSubmit = async () => {
     const valid = usageEntries.filter(e => e.productName && e.qty > 0);
     if (!valid.length) return;
@@ -672,7 +690,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
           "PRODUCT NAME": entry.productName,
           "BRANCH": BRANCH_LOG_NAME,
           "SUPPLIER": null,
-          "TYPE": entry.type,
+          "TYPE": entry.type === "FOC" ? "Salon Use" : entry.type,
           "STARTING BALANCE": currentBalance,
           "QTY": -entry.qty,
           "ENDING BALANCE": endingBalance,
@@ -1291,8 +1309,11 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
         <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
             <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>USAGE</span>
-            <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
-              <X size={18} />
+            <button onClick={closePanel} aria-label="Back to menu" title="Back" style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}>
+              <svg width="30" height="20" viewBox="0 0 30 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M27 10H6" />
+                <path d="M13 3l-7 7 7 7" />
+              </svg>
             </button>
           </div>
 
@@ -1303,7 +1324,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "uppercase" }}>
               Enter Today's Stock Movements
             </span>
-            <span style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
+            <span style={{ fontSize: "15px", fontWeight: 400, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
               {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
             </span>
           </div>
@@ -1317,7 +1338,7 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
                 value={usageSearch}
                 onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
                 onFocus={() => setShowUsageDropdown(true)}
-                placeholder="Select product..."
+                placeholder="SELECT PRODUCT..."
                 style={{
                   flex: 1, background: "none", border: "none", outline: "none",
                   fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300,
@@ -1346,19 +1367,6 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
             </div>
           </div>
 
-          <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingTop: "12px", paddingBottom: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Salon Use</span>
-                <ChevronDown size={13} style={{ color: "hsl(var(--muted-foreground))" }} />
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                <ChevronLeft size={14} style={{ color: "hsl(var(--muted-foreground))" }} />
-                <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", minWidth: "28px", textAlign: "center", color: "hsl(var(--foreground))" }}>1</span>
-                <ChevronRight size={14} style={{ color: "hsl(var(--muted-foreground))" }} />
-              </div>
-            </div>
-          </div>
         </div>
 
         {showUsageDropdown && (
@@ -1410,46 +1418,103 @@ const NurYadiSimple = ({ onBack, onBackToMain, products: propProducts }: NurYadi
               Select a product above to add it
             </div>
           )}
-          {usageEntries.map(entry => (
-            <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1 }}>{entry.productName}</span>
-                <button
-                  onClick={() => setUsageEntries(prev => prev.filter(e => e.id !== entry.id))}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}
-                >
-                  <X size={13} />
-                </button>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <button
-                  onClick={() => cycleType(entry.id)}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer", padding: 0,
-                    fontSize: "11px", fontWeight: 300, letterSpacing: "0.06em",
-                    fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))",
-                  }}
-                >
-                  {entry.type}
-                </button>
-                <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+          {usageEntries.map(entry => {
+            const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+            const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
+            const projectedBalance = currentBalance - entry.qty;
+            return (
+              <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                {/* Line 1: Product name + projected balance (left), QTY stepper (right) */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <span style={{ display: "flex", alignItems: "baseline", gap: "10px", flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{entry.productName}</span>
+                    <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: projectedBalance <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--green, 120 60% 40%))", flexShrink: 0 }}>{projectedBalance}</span>
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
+                    <button
+                      onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <span style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", minWidth: "30px", textAlign: "center" }}>{entry.qty}</span>
+                    <button
+                      onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                </div>
+                {/* Line 2: TYPE (uppercase) + THERAPIST buttons, X on the right */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+                    <button
+                      onClick={() => cycleType(entry.id)}
+                      style={{
+                        background: "#ffffff", color: "hsl(var(--foreground))",
+                        border: "0.5px solid hsl(var(--border))", cursor: "pointer",
+                        padding: "5px 12px", borderRadius: "999px",
+                        fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em",
+                        fontFamily: "Raleway, inherit", textTransform: "uppercase",
+                      }}
+                    >
+                      {entry.type}
+                    </button>
+                    <button
+                      onClick={() => cycleTherapist(entry.id)}
+                      style={{
+                        background: entry.therapist !== "THERAPIST" ? "#ffffff" : "none",
+                        color: entry.therapist !== "THERAPIST" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                        border: "0.5px solid hsl(var(--border))",
+                        cursor: "pointer",
+                        padding: "5px 12px", borderRadius: "999px",
+                        fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em",
+                        fontFamily: "Raleway, inherit", textTransform: "uppercase",
+                      }}
+                    >
+                      {entry.therapist}
+                    </button>
+                    <button
+                      onClick={() => toggleNote(entry.id)}
+                      style={{
+                        background: entry.noteOpen || entry.note.trim().length > 0 ? "hsl(24 35% 28%)" : "none",
+                        color: entry.noteOpen || entry.note.trim().length > 0 ? "#ffffff" : "hsl(var(--muted-foreground))",
+                        border: "0.5px solid hsl(var(--border))",
+                        cursor: "pointer",
+                        padding: "5px 12px", borderRadius: "999px",
+                        fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em",
+                        fontFamily: "Raleway, inherit", textTransform: "uppercase",
+                      }}
+                    >
+                      +NOTE
+                    </button>
+                  </div>
                   <button
-                    onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+                    onClick={() => setUsageEntries(prev => prev.filter(e => e.id !== entry.id))}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(0 60% 35%)", flexShrink: 0 }}
                   >
-                    <ChevronLeft size={14} />
-                  </button>
-                  <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", minWidth: "28px", textAlign: "center" }}>{entry.qty}</span>
-                  <button
-                    onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
-                  >
-                    <ChevronRight size={14} />
+                    <X size={16} />
                   </button>
                 </div>
+                {entry.noteOpen && (
+                  <div style={{ marginTop: "12px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0 8px" }}>
+                    <input
+                      type="text"
+                      value={entry.note}
+                      onChange={e => setUsageEntries(prev => prev.map(x => x.id === entry.id ? { ...x, note: e.target.value } : x))}
+                      placeholder="Add note..."
+                      style={{
+                        width: "100%", background: "none", border: "none", outline: "none",
+                        fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300,
+                        color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
+                      }}
+                    />
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {usageEntries.length > 0 && (
