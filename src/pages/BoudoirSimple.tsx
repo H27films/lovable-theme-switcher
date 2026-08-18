@@ -1011,36 +1011,36 @@ const BoudoirSimple = ({ onBack, onBackToMain, products: propProducts }: Boudoir
         )}
 
         {/* Search input row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-          <input
-            ref={inputRef}
-            type="text"
-            inputMode="search"
-            value={searchMode === "result" ? "" : search}
-            onChange={e => {
-              const val = e.target.value;
-              setSearch(val);
-              setSelectedProduct(null);
-              setSearchMode("active");
-              setShowDropdown(val.length > 0);
-            }}
-            placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Enter Product"}
-            style={{
-              flex: 1, background: "none", border: "none", outline: "none",
-              fontSize: "15px", fontFamily: "Raleway, inherit",
-              color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
-            }}
-          />
-          {search.length > 0 && searchMode !== "result" && (
+        {showSearchInput && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+            <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="search"
+              value={searchMode === "result" ? "" : search}
+              onChange={e => {
+                const val = e.target.value;
+                setSearch(val);
+                setSelectedProduct(null);
+                setSearchMode("active");
+                setShowDropdown(val.length > 0);
+              }}
+              placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Enter Product"}
+              style={{
+                flex: 1, background: "none", border: "none", outline: "none",
+                fontSize: "15px", fontFamily: "Raleway, inherit",
+                color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
+              }}
+            />
             <button
-              onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); setSearchMode("idle"); }}
+              onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); setSearchMode("idle"); setShowSearchInput(false); }}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
             >
               <X size={15} />
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
       </div>
 
