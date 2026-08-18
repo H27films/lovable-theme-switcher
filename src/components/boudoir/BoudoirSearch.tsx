@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 interface BoudoirSearchProps {
   search: string;

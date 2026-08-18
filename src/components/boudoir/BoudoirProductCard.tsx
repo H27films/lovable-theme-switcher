@@ -1,15 +1,20 @@
 import React from "react";
 import { Star } from "lucide-react";
+import { isYes } from "@/lib/branchSimpleUtils";
+import { type OfficeProduct } from "@/lib/branchSimple";
 
 interface BoudoirProductCardProps {
   selectedProduct: any;
-  isFav: (p: any) => boolean;
+  balanceKey: keyof OfficeProduct;
+  favouriteKey: keyof OfficeProduct;
   onToggleFav: (product: any) => void;
   onBack: () => void;
 }
 
-export const BoudoirProductCard = ({ selectedProduct, isFav, onToggleFav, onBack }: BoudoirProductCardProps) => {
+export const BoudoirProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggleFav, onBack }: BoudoirProductCardProps) => {
   if (!selectedProduct) return null;
+
+  const isFav = (p: any) => isYes(p[favouriteKey]);
 
   return (
     <div style={{ flexShrink: 0, marginBottom: "24px", paddingBottom: "20px", borderBottom: "0.5px solid hsl(var(--border))" }}>
@@ -17,14 +22,14 @@ export const BoudoirProductCard = ({ selectedProduct, isFav, onToggleFav, onBack
         <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
           {selectedProduct["PRODUCT NAME"]}
         </div>
-        {(selectedProduct as any)["BOUDOIR BALANCE"] != null && (
+        {(selectedProduct as any)[balanceKey] != null && (
           <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-            {(selectedProduct as any)["BOUDOIR BALANCE"]}
+            {(selectedProduct as any)[balanceKey]}
           </div>
         )}
 
         <button
-          onClick={() => toggleFavourite(selectedProduct)}
+          onClick={() => onToggleFav(selectedProduct)}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}
         >
           <Star size={16} fill={isFav(selectedProduct) ? "hsl(var(--foreground))" : "none"} color="hsl(var(--foreground))" />

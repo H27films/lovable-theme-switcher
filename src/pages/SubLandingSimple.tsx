@@ -5,9 +5,7 @@ import SearchSimple from "./SearchSimple";
 import BranchesPage from "./BranchesPage";
 import OrderSimple from "./OrderSimple";
 import OfficeSimple from "./OfficeSimple";
-import BoudoirSimple from "./BoudoirSimple";
-import ChicSimple from "./ChicSimple";
-import NurYadiSimple from "./NurYadiSimple";
+import BranchSimple from "@/components/branch-simple/BranchSimple";
 import { X, Search, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
 
 const hdrStyle: React.CSSProperties = {
@@ -794,10 +792,10 @@ const SubLandingSimple = () => {
                   opacity: branchTransitionPhase === "at-page" ? 1 : 0,
                   pointerEvents: branchTransitionPhase === "at-page" ? "auto" : "none",
                 }}>
-                  {activeBranch === "office"   && <OfficeSimple   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "boudoir"  && <BoudoirSimple  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "chic"     && <ChicSimple     onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "nuryadi"  && <NurYadiSimple  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                                    {activeBranch === "office"   && <OfficeSimple   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "boudoir"  && <BranchSimple   branch="boudoir"  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "chic"     && <BranchSimple   branch="chic"     onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "nuryadi"  && <BranchSimple   branch="nuryadi"  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                 </div>
 
               </div>

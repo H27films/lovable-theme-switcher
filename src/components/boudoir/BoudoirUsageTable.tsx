@@ -5,6 +5,7 @@ interface BoudoirUsageTableProps {
   activePanel: "USAGE" | "ORDER" | "CASH" | null;
   setActivePanel: (panel: "USAGE" | "ORDER" | "CASH" | null) => void;
   products: any[];
+  setProducts: React.Dispatch<React.SetStateAction<any[]>>;
   isFav: (p: any) => boolean;
   usageSearch: string;
   setUsageSearch: React.Dispatch<React.SetStateAction<string>>;
@@ -18,6 +19,7 @@ export const BoudoirUsageTable = ({
   activePanel,
   setActivePanel,
   products,
+  setProducts,
   isFav,
   usageSearch,
   setUsageSearch,
@@ -69,8 +71,8 @@ export const BoudoirUsageTable = ({
         <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
             <span style={{ display: "flex", alignItems: "baseline", gap: "10px", flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }>{entry.productName}</span>
-              <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--green, 120 60% 40%))", flexShrink: 0 }>{entry.projectedBalance}</span>
+              <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{entry.productName}</span>
+              <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--green, 120 60% 40%))", flexShrink: 0 }}>{entry.projectedBalance}</span>
             </span>
 
             <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
@@ -82,7 +84,7 @@ export const BoudoirUsageTable = ({
               </button>
             </div>
 
-            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }>{entry.starting + entry.qty}</div>
+            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{entry.starting + entry.qty}</div>
           </div>
         </div>
       ))}

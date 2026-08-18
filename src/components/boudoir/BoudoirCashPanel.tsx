@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronUp, ChevronDown, X } from "lucide-react";
 
 interface BoudoirCashPanelProps {
@@ -10,6 +10,16 @@ interface BoudoirCashPanelProps {
 }
 
 export const BoudoirCashPanel = ({ activePanel, setActivePanel, cashEntries, cashLog, onBack }: BoudoirCashPanelProps) => {
+  const closePanel = () => {
+    setActivePanel(null);
+  };
+
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const toggleExpanded = (date: string) => {
+    setExpanded(prev => ({ ...prev, [date]: !prev[date] }));
+  };
+
   return (
     <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "hsl(var(--background))", zIndex: 200, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
@@ -29,8 +39,8 @@ export const BoudoirCashPanel = ({ activePanel, setActivePanel, cashEntries, cas
                 <input type="number" inputMode="decimal" value={entry.totalGST} onChange={(e) => { /* update */ }} placeholder="0" style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
                 <input type="number" inputMode="decimal" value={entry.credit} onChange={(e) => { /* update */ }} placeholder="0" style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
                 <input type="number" inputMode="decimal" value={entry.qr} onChange={(e) => { /* update */ }} placeholder="0" style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
-                <button onClick={() => {/* toggle expanded */}} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <ChevronDown size={13} />
+                                <button onClick={() => toggleExpanded(entry.date)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {expanded[entry.date] ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                 </button>
               </div>
             </div>
@@ -38,9 +48,5 @@ export const BoudoirCashPanel = ({ activePanel, setActivePanel, cashEntries, cas
         </div>
       </div>
     </div>
-  );
-
-  const closePanel = () => {
-    setActivePanel(null);
-  };
-}
+    );
+};

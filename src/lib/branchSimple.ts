@@ -97,15 +97,47 @@ export interface BranchConfig {
   favouritesLabel: string;
 }
 
-export const boudoirConfig = {
+export const boudoirConfig: BranchConfig = {
   key: "boudoir",
   displayName: "BOUDOIR",
-  balanceKey: "BOUDOIR BALANCE" as keyof OfficeProduct,
-  favouriteKey: "BOUDOIR FAVOURITE" as keyof OfficeProduct,
+  balanceKey: "BOUDOIR BALANCE",
+  favouriteKey: "BOUDOIR FAVOURITE",
   logBranchName: "Boudoir",
   cashBranchName: "Boudoir",
   grnPrefix: "BOU",
   pdfHeader: "BOUDOIR",
   cashExportFilename: "Boudoir Cash Export.csv",
   favouritesLabel: "Boudoir Favourites",
+};
+
+export const chicConfig: BranchConfig = {
+  key: "chic",
+  displayName: "CHIC",
+  balanceKey: "CHIC NAILSPA BALANCE",
+  favouriteKey: "CHIC NAILSPA FAVOURITE",
+  logBranchName: "Chic Nailspa",
+  cashBranchName: "Chic Nailspa",
+  grnPrefix: "CHIC",
+  pdfHeader: "CHIC",
+  cashExportFilename: "Chic Nailspa Export.csv",
+  favouritesLabel: "Chic Nailspa Favourites",
+};
+
+export const nuryadiConfig: BranchConfig = {
+  key: "nuryadi",
+  displayName: "NUR YADI",
+  balanceKey: "NUR YADI BALANCE",
+  favouriteKey: "NUR YADI FAVOURITE",
+  logBranchName: "Nur Yadi",
+  cashBranchName: "Nur Yadi",
+  grnPrefix: "NUR",
+  pdfHeader: "NUR YADI",
+  cashExportFilename: "Nur Yadi Cash Export.csv",
+  favouritesLabel: "Nur Yadi Favourites",
+};
+
+export const BRANCH_CONFIGS: Record<BranchKey, BranchConfig> = {
+  boudoir: boudoirConfig,
+  chic: chicConfig,
+  nuryadi: nuryadiConfig,
 };
