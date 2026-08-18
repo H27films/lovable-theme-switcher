@@ -117,6 +117,7 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
 
   const toggleFavourite = async (product: OfficeProduct) => {
@@ -889,6 +890,7 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
     setActivePanel(panel);
     setShowDropdown(false);
     setShowUsageDropdown(false);
+    setShowSearchInput(false);
   };
 
   const closePanel = () => {
@@ -920,11 +922,12 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
         {/* Branch name header */}
         <button
           onClick={() => {
-            if (searchMode !== "idle") {
+            if (searchMode !== "idle" || showSearchInput) {
               setSearchMode("idle");
               setSearch("");
               setSelectedProduct(null);
               setShowDropdown(false);
+              setShowSearchInput(false);
             } else {
               onBack?.();
             }
@@ -940,73 +943,104 @@ const ChicSimple = ({ onBack, onBackToMain, products: propProducts }: ChicSimple
         </button>
 
         {/* USAGE / ORDER / CASH tabs — above search bar */}
-        {!showDropdown && !selectedProduct && (
+        {/* USAGE / ORDER / CASH tabs — with search icon */}
+        {!selectedProduct && (
           <div style={{
-            display: "flex", gap: "28px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
             borderBottom: "0.5px solid hsl(var(--border))",
             marginBottom: "20px",
           }}>
-            {(["USAGE", "ORDER", "CASH"] as const).map(btn => (
-              <button
-                key={btn}
-                onClick={() => openPanel(btn)}
-                style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  padding: "0 0 12px 0",
-                  fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
-                  letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
-                  color: "hsl(var(--foreground))",
-                  opacity: 0.28,
-                  borderBottom: "2px solid transparent",
-                  marginBottom: "-1px",
-                  transition: "opacity 0.2s ease, border-color 0.2s ease",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.8";
-                  e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.opacity = "0.28";
-                  e.currentTarget.style.borderBottomColor = "transparent";
-                }}
-              >
-                {btn}
-              </button>
-            ))}
+            <div style={{ display: "flex", gap: "28px" }}>
+              {(["USAGE", "ORDER", "CASH"] as const).map(btn => (
+                <button
+                  key={btn}
+                  onClick={() => openPanel(btn)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: "0 0 12px 0",
+                    fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
+                    letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
+                    color: "hsl(var(--foreground))",
+                    opacity: 0.28,
+                    borderBottom: "2px solid transparent",
+                    marginBottom: "-1px",
+                    transition: "opacity 0.2s ease, border-color 0.2s ease",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.opacity = "0.8";
+                    e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.opacity = "0.28";
+                    e.currentTarget.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  {btn}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                if (showSearchInput) {
+                  setShowSearchInput(false);
+                  setSearchMode("idle");
+                  setSearch("");
+                  setSelectedProduct(null);
+                  setShowDropdown(false);
+                } else {
+                  setShowSearchInput(true);
+                  setSearchMode("active");
+                  setSearch("");
+                  setSelectedProduct(null);
+                  setShowDropdown(false);
+                  setTimeout(() => inputRef.current?.focus(), 0);
+                }
+              }}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                padding: "0 0 12px 0", color: "hsl(var(--foreground))",
+                opacity: showSearchInput ? 0.8 : 0.28,
+                transition: "opacity 0.2s ease",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.8"; }}
+              onMouseLeave={e => { if (!showSearchInput) e.currentTarget.style.opacity = "0.28"; }}
+            >
+              <Search size={18} />
+            </button>
           </div>
         )}
 
         {/* Search input row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-          <input
-            ref={inputRef}
-            type="text"
-            inputMode="search"
-            value={searchMode === "result" ? "" : search}
-            onChange={e => {
-              const val = e.target.value;
-              setSearch(val);
-              setSelectedProduct(null);
-              setSearchMode("active");
-              setShowDropdown(val.length > 0);
-            }}
-            placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Enter Product"}
-            style={{
-              flex: 1, background: "none", border: "none", outline: "none",
-              fontSize: "15px", fontFamily: "Raleway, inherit",
-              color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
-            }}
-          />
-          {search.length > 0 && searchMode !== "result" && (
+        {showSearchInput && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+            <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="search"
+              value={searchMode === "result" ? "" : search}
+              onChange={e => {
+                const val = e.target.value;
+                setSearch(val);
+                setSelectedProduct(null);
+                setSearchMode("active");
+                setShowDropdown(val.length > 0);
+              }}
+              placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Enter Product"}
+              style={{
+                flex: 1, background: "none", border: "none", outline: "none",
+                fontSize: "15px", fontFamily: "Raleway, inherit",
+                color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
+              }}
+            />
             <button
-              onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); setSearchMode("idle"); }}
+              onClick={() => { setSearch(""); setSelectedProduct(null); setShowDropdown(false); setSearchMode("idle"); setShowSearchInput(false); }}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
             >
               <X size={15} />
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
       </div>
 
