@@ -30,20 +30,22 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
             cursor: "pointer",
             padding: "0 0 12px 0",
             fontSize: "clamp(16px, 4.5vw, 24px)",
-            fontWeight: 300,
+            fontWeight: 600,
             letterSpacing: "0.08em",
             fontFamily: "Raleway, inherit",
-            color: "hsl(var(--foreground))",
+            color: "#000000",
             opacity: activePanel === btn ? 1 : 0.28,
-            borderBottom: "2px solid transparent",
+            borderBottom: activePanel === btn ? "2px solid #000000" : "2px solid transparent",
             marginBottom: "-1px",
             transition: "opacity 0.2s ease, border-color 0.2s ease",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.opacity = "0.5";
+            e.currentTarget.style.borderBottom = "2px solid #000000";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.opacity = activePanel === btn ? "1" : "0.28";
+            e.currentTarget.style.borderBottom = activePanel === btn ? "2px solid #000000" : "2px solid transparent";
           }}
         >
           {btn}
@@ -58,16 +60,22 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
         cursor: "pointer",
         padding: "0 0 8px 0",
         fontSize: 0, // reset font size to avoid extra space
-        color: "hsl(var(--foreground))",
+        color: "#000000",
         opacity: isSearchActive ? 1 : 0.28,
         borderBottom: "2px solid transparent",
         marginBottom: "-1px",
-        transition: "opacity 0.2s ease, border-color 0.2s ease",
+        transition: "opacity 0.2s ease, transform 0.2s ease",
         display: "flex",
         alignItems: "center",
       }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "scale(1.1)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "scale(1)";
+      }}
     >
-      {isSearchActive ? <X size={24} /> : <SearchIcon size={24} />}
+      {isSearchActive ? <X size={24} strokeWidth={1.5} /> : <SearchIcon size={24} strokeWidth={1.5} />}
     </button>
   </div>
 );
