@@ -16,7 +16,7 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
   const isFav = (p: any) => isYes(p[favouriteKey]);
 
   return (
-    <div style={{ flexShrink: 0, marginBottom: "24px", paddingBottom: "20px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+    <div style={{ flexShrink: 0, marginBottom: "12px", paddingBottom: "0px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px" }}>
         <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
           {selectedProduct["PRODUCT NAME"]}
