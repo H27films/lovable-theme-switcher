@@ -15,7 +15,7 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
       justifyContent: "space-between",
       alignItems: "center",
       borderBottom: "0.5px solid hsl(var(--border))",
-      marginBottom: "20px",
+      marginBottom: "8px",
       padding: "0 12px",
     }}
   >

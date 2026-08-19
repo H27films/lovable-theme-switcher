@@ -257,7 +257,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
         )}
 
       {/* MIDDLE SCROLLABLE */}
-      <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
+       <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "0px" }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
@@ -277,7 +277,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
           />
         )}
         {!searchActive && (
-          <div style={{ paddingTop: selectedProduct ? "0px" : "16px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
+          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
             {selectedProduct && (
               <ProductCard 
                 selectedProduct={selectedProduct} 
