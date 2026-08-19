@@ -45,15 +45,19 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
    };
 
    const toggleSearch = () => {
-     setSearchActive(!searchActive);
-     if (!searchActive) { // closing the search
+     if (selectedProduct || searchActive) {
+       // Icon is in "X" state (product selected or search open) -> back to default view
        resetSearchState();
+       setSearchActive(false);
+     } else {
+       setSearchActive(true);
      }
    };
 
    const closeSearch = () => {
      setSearchActive(false);
-     // Do not reset state - used when selecting a product
+     setShowDropdown(false);
+     setSearchMode("idle");
    };
 
   // Sort log: DATE desc, within same date Order rows first (logged last at night)
@@ -229,12 +233,12 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
        <Header branch={boudoirConfig.displayName} onBack={handleHeaderBack} />
 
        {/* Tabs with search icon */}
-       <Tabs 
-         activePanel={activePanel} 
-         setActivePanel={setActivePanel}
-         isSearchActive={searchActive}
-         toggleSearch={() => setSearchActive(!searchActive)}
-       />
+        <Tabs 
+          activePanel={activePanel} 
+          setActivePanel={setActivePanel}
+          isSearchActive={searchActive || !!selectedProduct}
+          toggleSearch={toggleSearch}
+        />
 
 {/* Search input - only show when search is active */}
         {searchActive && (
@@ -254,7 +258,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
 
       {/* MIDDLE SCROLLABLE */}
       <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
-        {showDropdown && search.length > 0 && (
+        {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
             isFav={isFav}
@@ -273,7 +277,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
           />
         )}
         {!searchActive && (
-          <div style={{ paddingTop: "16px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
+          <div style={{ paddingTop: selectedProduct ? "0px" : "16px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
             {selectedProduct && (
               <ProductCard 
                 selectedProduct={selectedProduct} 
