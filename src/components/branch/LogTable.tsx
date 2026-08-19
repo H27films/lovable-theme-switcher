@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Check } from "lucide-react";
 import { type LogRow } from "@/lib/branchSimple";
@@ -17,6 +17,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate }: LogTabl
   const [confirmPos, setConfirmPos] = useState<{ top: number; right: number } | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editRow, setEditRow] = useState<LogRow | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleConfirm = async (row: LogRow) => {
     const r = row;
@@ -31,8 +32,23 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate }: LogTabl
     }
   };
 
+  useEffect(() => {
+    if (expandedId === null) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setExpandedId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [expandedId]);
+
   return (
-    <div style={{ flex: 1, overflowX: "hidden", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {selectedProduct ? (
           <div style={{ display: "grid", gridTemplateColumns: "50px 44px 52px 90px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
@@ -86,7 +102,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate }: LogTabl
                   )}
                 </div>
                 {expanded && (
-                  <div style={{ display: "flex", gap: "8px", paddingBottom: "8px", paddingTop: "2px", paddingLeft: selectedProduct ? "54px" : "46px" }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ display: "flex", gap: "8px", paddingBottom: "8px", paddingTop: "2px", paddingLeft: selectedProduct ? "42px" : "34px" }} onClick={(e) => e.stopPropagation()}>
                     {withinCutoff && !isReversing && (
                       <button
                         onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); setConfirmPos({ top: rect.top + rect.height / 2, right: window.innerWidth - rect.left + 6 }); setConfirmRow(row); }}

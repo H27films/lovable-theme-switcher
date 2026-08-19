@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { USAGE_TYPES, THERAPISTS, type UsageType } from "@/lib/branchSimpleUtils";
 import { type LogRow } from "@/lib/branchSimple";
 
@@ -17,7 +17,6 @@ interface EditEntryModalProps {
   onClose: () => void;
 }
 
-// Convert a stored log row (TYPE / USAGE PILL) back into the pill value shown in the edit card.
 const pillFromRow = (row: LogRow): UsageType => {
   const up = (row as any)["USAGE PILL"];
   if (up) {
@@ -41,7 +40,7 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: "0.12em",
   textTransform: "uppercase",
   fontFamily: "Raleway, inherit",
-  color: "hsl(var(--muted-foreground))",
+  color: "#000000",
   marginBottom: "6px",
 };
 
@@ -57,6 +56,20 @@ const inputStyle: React.CSSProperties = {
   borderRadius: "10px",
   outline: "none",
   boxSizing: "border-box",
+};
+
+const pillButtonStyle: React.CSSProperties = {
+  background: "#ffffff",
+  color: "hsl(var(--foreground))",
+  border: "0.5px solid hsl(var(--border))",
+  cursor: "pointer",
+  padding: "5px 12px",
+  borderRadius: "999px",
+  fontSize: "11px",
+  fontWeight: 500,
+  letterSpacing: "0.1em",
+  fontFamily: "Raleway, inherit",
+  textTransform: "uppercase",
 };
 
 export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) => {
@@ -101,43 +114,82 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
         justifyContent: "center",
       }}
     >
-      <div style={{ width: "100%", maxWidth: "520px", margin: "0 12px 12px", background: "hsl(var(--background))", borderRadius: "20px", boxShadow: "0 -4px 30px rgba(0,0,0,0.2)", padding: "20px 16px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
-          <div style={{ fontSize: "18px", fontWeight: 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit" }}>Edit Entry</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))", padding: "4px", display: "flex", alignItems: "center" }}><X size={16} /></button>
+      <div style={{ width: "100%", maxWidth: "520px", margin: "0 12px 0", background: "hsl(var(--background))", borderRadius: "20px", boxShadow: "0 -4px 30px rgba(0,0,0,0.2)", padding: "20px 16px 16px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "0.04em", fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px" }}>
+              {new Date(row.DATE).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
+            </div>
+            <div style={{ fontSize: "18px", fontWeight: 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit" }}>
+              {row["PRODUCT NAME"]}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))", padding: "8px", display: "flex", alignItems: "center", flexShrink: 0, marginTop: "-4px" }}>
+            <X size={24} />
+          </button>
         </div>
 
         <div style={{ marginBottom: "14px" }}>
-          <div style={labelStyle}>Product Name</div>
-          <div style={{ ...inputStyle, background: "hsl(var(--muted) / 0.3)", opacity: 0.7, userSelect: "none" }}>{row["PRODUCT NAME"]}</div>
+          <div style={labelStyle}>QTY</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button 
+              onClick={() => setQty(prev => (parseInt(prev || "0") - 1).toString())}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <input 
+              type="text" 
+              inputMode="numeric" 
+              value={qty} 
+              onChange={e => setQty(e.target.value)} 
+              style={{ 
+                ...inputStyle, 
+                width: "60px", 
+                padding: "6px 10px", 
+                fontSize: "13px",
+                textAlign: "center",
+                background: "#ffffff"
+              }} 
+            />
+            <button 
+              onClick={() => setQty(prev => (parseInt(prev || "0") + 1).toString())}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
 
-        <div style={{ marginBottom: "14px" }}>
-          <div style={labelStyle}>Qty</div>
-          <input type="text" inputMode="numeric" value={qty} onChange={e => setQty(e.target.value)} style={inputStyle} />
-        </div>
-
-        <div style={{ marginBottom: "14px" }}>
-          <div style={labelStyle}>Therapist</div>
-          <button onClick={cycleTherapist} style={pillButtonStyle}>{therapist ? therapist : "NONE"}</button>
-        </div>
-
-        <div style={{ marginBottom: "14px" }}>
-          <div style={labelStyle}>Type</div>
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-            {USAGE_TYPES.map(t => (
-              <button
-                key={t}
-                onClick={() => setType(t)}
-                style={{
-                  ...pillButtonStyle,
-                  background: type === t ? "hsl(var(--foreground))" : "#ffffff",
-                  color: type === t ? "hsl(var(--background))" : "hsl(var(--foreground))",
-                }}
-              >
-                {t}
-              </button>
-            ))}
+        <div style={{ display: "flex", gap: "48px", marginBottom: "20px" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={labelStyle}>Type</div>
+            <button 
+              onClick={() => setType(prev => {
+                const idx = USAGE_TYPES.indexOf(prev);
+                return USAGE_TYPES[(idx + 1) % USAGE_TYPES.length];
+              })} 
+              style={{
+                ...pillButtonStyle,
+                background: "#ffffff",
+                color: "hsl(var(--foreground))",
+              }}
+            >
+              {type}
+            </button>
+          </div>
+          <div>
+            <div style={labelStyle}>Therapist</div>
+            <button 
+              onClick={cycleTherapist} 
+              style={{
+                ...pillButtonStyle,
+                background: therapist ? "#ffffff" : "none",
+                color: therapist ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+              }}
+            >
+              {therapist ? therapist : "NONE"}
+            </button>
           </div>
         </div>
 
@@ -158,4 +210,3 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
     document.body
   );
 };
-
