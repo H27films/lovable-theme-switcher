@@ -182,7 +182,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
               value={usageSearch}
               onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
               onFocus={() => setShowUsageDropdown(true)}
-              placeholder="SELECT PRODUCT..."
+              placeholder="Select Product..."
               style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))" }}
             />
             <button
@@ -232,11 +232,6 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
       )}
 
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => setShowUsageDropdown(false)}>
-        {usageEntries.length === 0 && (
-          <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
-            Select a product above to add it
-          </div>
-        )}
         {usageEntries.map(entry => {
           const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
           const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
@@ -286,7 +281,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
 
       {usageEntries.length > 0 && (
         <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))" }}>
-          <button onClick={handleUsageSubmit} disabled={usageSubmitting} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1 }}>{usageSubmitting ? "Saving..." : "Submit"}</button>
+          <button onClick={handleUsageSubmit} disabled={usageSubmitting} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1, borderRadius: "999px" }}>{usageSubmitting ? "Saving..." : "Submit"}</button>
           {usageSuccess && <span style={{ marginLeft: "16px", fontSize: "11px", color: "hsl(var(--green, 120 60% 40%))", letterSpacing: "0.06em" }}>✓ Saved</span>}
           {usageError && <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {usageError}</div>}
         </div>
