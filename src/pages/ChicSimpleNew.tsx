@@ -31,11 +31,12 @@ const ChicSimpleNew = ({ onBack, onBackToMain, products: propProducts }: ChicSim
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
   const [productLog, setProductLog] = useState<LogRow[]>([]);
 const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
-   const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
-   const [search, setSearch] = useState("");
-   const [showDropdown, setShowDropdown] = useState(false);
-   const [searchActive, setSearchActive] = useState(false);
-   const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | null>(null);
+    const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
+    const [search, setSearch] = useState("");
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [searchActive, setSearchActive] = useState(false);
+    const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | null>(null);
+    const [logView, setLogView] = useState<"all" | "week">("all");
 
    const resetSearchState = () => {
      setSearch("");
@@ -94,40 +95,90 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     fetchProducts();
   }, [propProducts]);
 
-  // Branch log fetch
-  const refreshBranchLog = async () => {
-    const { data } = await (supabase as any)
-      .from("AllFileLog")
-      .select("*")
-      .eq("BRANCH", BRANCH_LOG_NAME)
-      .order("DATE", { ascending: false })
-      .limit(200);
-    setBranchLog(sortLog(data || []));
-  };
+// Branch log fetch
+   const refreshBranchLog = async () => {
+     const { data } = await (supabase as any)
+       .from("AllFileLog")
+       .select("*")
+       .eq("BRANCH", BRANCH_LOG_NAME)
+       .order("DATE", { ascending: false })
+       .limit(200);
+     let fetchedLog = sortLog(data || []);
+     
+     // Filter based on logView
+     if (logView === "week") {
+       const today = new Date();
+       today.setHours(0, 0, 0, 0);
+       // Get Monday of this week
+       const day = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+       const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+       const monday = new Date(today);
+       monday.setDate(diff);
+       monday.setHours(0, 0, 0, 0);
+       
+       fetchedLog = fetchedLog.filter(row => {
+         const rowDate = new Date(row.DATE);
+         rowDate.setHours(0, 0, 0, 0);
+         return rowDate >= monday;
+       });
+       
+       // Sort chronologically (Monday first) for week view
+       fetchedLog = [...fetchedLog].sort((a, b) => 
+         new Date(a.DATE).getTime() - new Date(b.DATE).getTime()
+       );
+     }
+     
+     setBranchLog(fetchedLog);
+   };
 
-  // Product log fetch
-  useEffect(() => {
-    if (!selectedProduct) { 
-      setProductLog([]); 
-      return; 
-    }
-    const fetchProductLog = async () => {
-      const { data } = await (supabase as any)
-        .from("AllFileLog")
-        .select("*")
-        .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
-        .eq("BRANCH", BRANCH_LOG_NAME)
-        .order("DATE", { ascending: false })
-        .limit(200);
-      setProductLog(sortLog(data || []));
-    };
-    fetchProductLog();
-  }, [selectedProduct]);
+// Product log fetch
+   useEffect(() => {
+     if (!selectedProduct) { 
+       setProductLog([]); 
+       return; 
+     }
+     const fetchProductLog = async () => {
+       const { data } = await (supabase as any)
+         .from("AllFileLog")
+         .select("*")
+         .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
+         .eq("BRANCH", BRANCH_LOG_NAME)
+         .order("DATE", { ascending: false })
+         .limit(200);
+       let fetchedLog = sortLog(data || []);
+       
+       // Filter based on logView
+       if (logView === "week") {
+         const today = new Date();
+         today.setHours(0, 0, 0, 0);
+         // Get Monday of this week
+         const day = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+         const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+         const monday = new Date(today);
+         monday.setDate(diff);
+         monday.setHours(0, 0, 0, 0);
+         
+         fetchedLog = fetchedLog.filter(row => {
+           const rowDate = new Date(row.DATE);
+           rowDate.setHours(0, 0, 0, 0);
+           return rowDate >= monday;
+         });
+         
+         // Sort chronologically (Monday first) for week view
+         fetchedLog = [...fetchedLog].sort((a, b) => 
+           new Date(a.DATE).getTime() - new Date(b.DATE).getTime()
+         );
+       }
+       
+       setProductLog(fetchedLog);
+     };
+     fetchProductLog();
+   }, [selectedProduct, logView]);
 
-  // Initial fetches
-  useEffect(() => {
-    refreshBranchLog();
-  }, []);
+// Initial fetches
+   useEffect(() => {
+     refreshBranchLog();
+   }, [logView]);
 
   const toggleFavourite = async (product: OfficeProduct) => {
     const currentlyFav = isFav(product);
@@ -198,16 +249,24 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     }
   };
 
-  const handleHeaderBack = () => {
+const handleHeaderBack = () => {
     if (searchMode !== "idle") {
-      setSearchMode("idle");
-      setSearch("");
-      setSelectedProduct(null);
-      setShowDropdown(false);
+        setSearchMode("idle");
+        setSearch("");
+        setSelectedProduct(null);
+        setShowDropdown(false);
     } else {
-      navigate("/simple/office");
+        navigate("/simple/office");
     }
-  };
+};
+
+const setLogViewToAll = () => {
+    setLogView("all");
+};
+
+const setLogViewToWeek = () => {
+    setLogView("week";
+};
 
   const activeLog = selectedProduct ? productLog : branchLog;
 
@@ -309,12 +368,130 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
                 onToggleFav={toggleFavourite} 
               />
             )}
-            {!selectedProduct && (
-              <div style={{ flexShrink: 0, fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
-                Recent
-              </div>
-            )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} />
+{!selectedProduct && (
+  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+    {logView === "all" ? (
+      <>
+        <button
+          onClick={setLogViewToAll}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: "0 0 12px 0",
+            fontSize: "16px",
+            fontWeight: 400,
+            letterSpacing: "0.06em",
+            fontFamily: "Raleway, inherit",
+            color: "hsl(var(--foreground))",
+            opacity: 1,
+            borderBottom: "2px solid transparent",
+            marginBottom: "-1px",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = "0.9";
+            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = "1";
+            e.currentTarget.style.borderBottom = "2px solid transparent";
+          }}
+        >
+          All Data
+        </button>
+        <button
+          onClick={setLogViewToWeek}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: "0 0 12px 0",
+            fontSize: "14px",
+            fontWeight: 300,
+            letterSpacing: "0.06em",
+            fontFamily: "Raleway, inherit",
+            color: "hsl(var(--foreground))",
+            opacity: 0.6,
+            borderBottom: "2px solid transparent",
+            marginBottom: "-1px",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = "0.8";
+            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = "0.6";
+            e.currentTarget.style.borderBottom = "2px solid transparent";
+          }}
+        >
+          Week
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+          onClick={setLogViewToWeek}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: "0 0 12px 0",
+            fontSize: "16px",
+            fontWeight: 400,
+            letterSpacing: "0.06em",
+            fontFamily: "Raleway, inherit",
+            color: "hsl(var(--foreground))",
+            opacity: 1,
+            borderBottom: "2px solid transparent",
+            marginBottom: "-1px",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = "0.9";
+            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = "1";
+            e.currentTarget.style.borderBottom = "2px solid transparent";
+          }}
+        >
+          Week
+        </button>
+        <button
+          onClick={setLogViewToAll}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: "0 0 12px 0",
+            fontSize: "14px",
+            fontWeight: 300,
+            letterSpacing: "0.06em",
+            fontFamily: "Raleway, inherit",
+            color: "hsl(var(--foreground))",
+            opacity: 0.6,
+            borderBottom: "2px solid transparent",
+            marginBottom: "-1px",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = "0.8";
+            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = "0.6";
+            e.currentTarget.style.borderBottom = "2px solid transparent";
+          }}
+        >
+          All Data
+        </button>
+      </>
+    )}
+  </div>
+)}
+            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={logView} />
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Menu, Phone, Tablet } from "lucide-react";
+import { Menu, Phone, Tablet, Laptop } from "lucide-react";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 
@@ -122,17 +122,17 @@ export const BranchHeader = ({ branch, onBack }: BranchHeaderProps) => {
                   textAlign: "left",
                 }}
               >
-                {tablet ? (
-                  <>
-                    <Tablet size={16} />
-                    Phone View
-                  </>
-                ) : (
-                  <>
-                    <Phone size={16} />
-                    Tablet View
-                  </>
-                )}
+{tablet ? (
+  <>
+    <Tablet size={16} />
+    Phone View
+  </>
+) : (
+  <>
+    <Laptop size={16} />
+    Tablet View
+  </>
+)}
               </button>
               <button
                 onClick={() => {
