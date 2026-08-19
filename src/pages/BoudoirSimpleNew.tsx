@@ -378,28 +378,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
         )}
       </div>
 
-      {/* BOTTOM BLUR BAR */}
-      <div style={{
-        flexShrink: 0, paddingLeft: "12px", paddingRight: "12px",
-        paddingTop: "4px", paddingBottom: "max(env(safe-area-inset-bottom, 12px), 12px)",
-        filter: "blur(1px)", opacity: 0.25,
-      }}>
-        {(["SEARCH", "ORDER"] as const).map(item => (
-          <button
-            key={item}
-            onClick={item === "SEARCH" ? () => onBackToMain?.() : undefined}
-            style={{
-              display: "block", fontSize: "clamp(10px, 2.8vw, 15px)", fontWeight: 300,
-              letterSpacing: "0.06em", color: "hsl(var(--foreground))",
-              background: "none", border: "none", cursor: item === "SEARCH" ? "pointer" : "default", textAlign: "left",
-              fontFamily: "Raleway, inherit", lineHeight: 1.35, padding: 0,
-            }}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-
       {/* Confirmation Popover */}
       {confirmRow && confirmPos && createPortal(
         <>
