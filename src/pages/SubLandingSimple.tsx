@@ -39,10 +39,13 @@ interface OfficeProduct {
   "NUR YADI FAVOURITE": string | boolean | null;
 }
 
+import { useNavigate } from "react-router-dom";
+
 const SubLandingSimple = () => {
   const { theme, setTheme } = useTheme();
   const isSandTheme = theme === "sand";
   const toggleTheme = () => setTheme(isSandTheme ? "light" : "sand");
+  const navigate = useNavigate();
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
 
@@ -66,77 +69,50 @@ const SubLandingSimple = () => {
     fetchProducts();
   }, []);
 
-  const [activeSection, setActiveSection] = useState<"search" | "branches" | "order" | null>(null);
-  const [transitionPhase, setTransitionPhase] = useState<
-    "at-menu" | "menu-leaving" | "section-entering" | "at-section" | "section-leaving" | "menu-entering"
-  >("at-menu");
+   const [activeSection, setActiveSection] = useState<"search" | "branches" | "order" | null>(null);
+   const [transitionPhase, setTransitionPhase] = useState<
+     "at-menu" | "menu-leaving" | "section-entering" | "at-section" | "section-leaving" | "menu-entering"
+   >("at-menu");
 
-  const navigateTo = (section: "search" | "branches" | "order") => {
-    setTransitionPhase("menu-leaving");
-    setTimeout(() => {
-      setActiveSection(section);
-      setTransitionPhase("section-entering");
-      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-section")));
-    }, 280);
-  };
+   const navigateTo = (section: "search" | "branches" | "order") => {
+     setTransitionPhase("menu-leaving");
+     setTimeout(() => {
+       setActiveSection(section);
+       setTransitionPhase("section-entering");
+       requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-section")));
+     }, 280);
+   };
 
-  const navigateBack = () => {
-    setTransitionPhase("section-leaving");
-    setTimeout(() => {
-      setActiveSection(null);
-      setActiveBranch(null);
-      setBranchTransitionPhase("at-list");
-      setSimpleSearchMode("idle");
-      setSimpleSearch("");
-      setSimpleSelectedProduct(null);
-      setSimpleSelectedSupplier(null);
-      setSimpleShowDropdown(false);
-      setSimpleUsageOpen(false);
-      setTransitionPhase("menu-entering");
-      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
-    }, 280);
-  };
+    const navigateBack = () => {
+      setTransitionPhase("section-leaving");
+      setTimeout(() => {
+        setActiveSection(null);
+        setSimpleSearchMode("idle");
+        setSimpleSearch("");
+        setSimpleSelectedProduct(null);
+        setSimpleSelectedSupplier(null);
+        setSimpleShowDropdown(false);
+        setSimpleUsageOpen(false);
+        setTransitionPhase("menu-entering");
+        requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
+      }, 280);
+    };
 
-  const [activeBranch, setActiveBranch] = useState<"office" | "boudoir" | "chic" | "nuryadi" | null>(null);
-  const [branchTransitionPhase, setBranchTransitionPhase] = useState<
-    "at-list" | "list-leaving" | "page-entering" | "at-page" | "page-leaving" | "list-entering"
-  >("at-list");
+   const navigateToBranch = (branch: "office" | "boudoir" | "chic" | "nuryadi") => {
+     if (branch === "office") {
+       navigate("/simple/branch-office");
+     } else {
+       navigate(`/simple/${branch}`);
+     }
+   };
 
-  const navigateToBranch = (branch: "office" | "boudoir" | "chic" | "nuryadi") => {
-    setBranchTransitionPhase("list-leaving");
-    setTimeout(() => {
-      setActiveBranch(branch);
-      setBranchTransitionPhase("page-entering");
-      requestAnimationFrame(() => requestAnimationFrame(() => setBranchTransitionPhase("at-page")));
-    }, 280);
-  };
+   const navigateBackToBranches = () => {
+     navigate("/simple/office");
+   };
 
-  const navigateBackToBranches = () => {
-    setBranchTransitionPhase("page-leaving");
-    setTimeout(() => {
-      setActiveBranch(null);
-      setBranchTransitionPhase("list-entering");
-      requestAnimationFrame(() => requestAnimationFrame(() => setBranchTransitionPhase("at-list")));
-    }, 280);
-  };
-
-  const navigateBackToMain = () => {
-    setBranchTransitionPhase("page-leaving");
-    setTransitionPhase("section-leaving");
-    setTimeout(() => {
-      setActiveBranch(null);
-      setActiveSection(null);
-      setBranchTransitionPhase("at-list");
-      setSimpleSearchMode("idle");
-      setSimpleSearch("");
-      setSimpleSelectedProduct(null);
-      setSimpleSelectedSupplier(null);
-      setSimpleShowDropdown(false);
-      setSimpleUsageOpen(false);
-      setTransitionPhase("menu-entering");
-      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
-    }, 280);
-  };
+   const navigateBackToMain = () => {
+     navigate("/");
+   };
 
   const [simpleSearchMode, setSimpleSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
   const [simpleSearch, setSimpleSearch] = useState("");
@@ -258,7 +234,7 @@ const SubLandingSimple = () => {
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
       {/* Fixed theme toggle - only show when not in branch view (branch pages have their own toggle) */}
-      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60, display: (activeBranch !== null || activeSection === "order") ? "none" : "block" }}>
+      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60, display: (activeSection === "order") ? "none" : "block" }}>
         <span onClick={toggleTheme} style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }} title="Switch theme">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
             <circle cx="12" cy="12" r="4" />
@@ -277,7 +253,7 @@ const SubLandingSimple = () => {
           right: "20px",
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
           zIndex: 60,
-          display: (activeBranch !== null || activeSection !== null || simpleSearchMode !== "idle") ? "none" : "flex",
+          display: (activeSection !== null || simpleSearchMode !== "idle") ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "hsl(var(--muted-foreground))",
@@ -726,17 +702,9 @@ const SubLandingSimple = () => {
             {activeSection === "branches" && (
               <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative", overflow: "hidden" }}>
 
-                {/* LAYER 1: Branch list with ghost menu */}
-                <div style={{
-                  position: "absolute", inset: 0,
-                  transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
-                  transform: branchTransitionPhase === "list-leaving" || branchTransitionPhase === "page-entering" || branchTransitionPhase === "at-page" || branchTransitionPhase === "page-leaving" ? "translateX(-30%)" : "translateX(0)",
-                  filter: branchTransitionPhase === "list-leaving" ? "blur(6px)" : "blur(0px)",
-                  opacity: branchTransitionPhase === "list-leaving" || branchTransitionPhase === "page-entering" || branchTransitionPhase === "at-page" || branchTransitionPhase === "page-leaving" ? 0 : 1,
-                  pointerEvents: branchTransitionPhase === "at-list" ? "auto" : "none",
-                }}>
+                {/* Branch list */}
+                <div style={{ position: "absolute", inset: 0 }}>
                   <div style={{ display: "flex", position: "relative", minHeight: "100dvh", overflow: "hidden" }}>
-
                     {/* Ghost menu on left */}
                     <div
                       onClick={navigateBack}
@@ -782,23 +750,7 @@ const SubLandingSimple = () => {
                         </button>
                       ))}
                     </div>
-
                   </div>
-                </div>
-
-                {/* LAYER 2: Branch page — slides in from right */}
-                <div style={{
-                  position: "absolute", inset: 0,
-                  transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
-                  transform: branchTransitionPhase === "page-entering" ? "translateX(30%)" : branchTransitionPhase === "page-leaving" ? "translateX(30%)" : "translateX(0)",
-                  filter: branchTransitionPhase === "page-entering" || branchTransitionPhase === "page-leaving" ? "blur(6px)" : "blur(0px)",
-                  opacity: branchTransitionPhase === "at-page" ? 1 : 0,
-                  pointerEvents: branchTransitionPhase === "at-page" ? "auto" : "none",
-                }}>
-                                    {activeBranch === "office"   && <OfficeSimple   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "boudoir"  && <BoudoirSimpleNew   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "chic"     && <ChicSimpleNew     onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "nuryadi"  && <NurYadiSimpleNew  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                 </div>
 
               </div>

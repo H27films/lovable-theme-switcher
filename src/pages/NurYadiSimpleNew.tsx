@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { nuryadiConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
@@ -25,6 +26,7 @@ interface NurYadiSimpleNewProps {
 }
 
 const NurYadiSimpleNew = ({ onBack, onBackToMain, products: propProducts }: NurYadiSimpleNewProps) => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
   const [productLog, setProductLog] = useState<LogRow[]>([]);
@@ -178,7 +180,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
       setSelectedProduct(null);
       setShowDropdown(false);
     } else {
-      onBack?.();
+      navigate("/simple/office");
     }
   };
 
