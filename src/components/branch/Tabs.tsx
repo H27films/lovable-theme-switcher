@@ -56,16 +56,18 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
         background: "none",
         border: "none",
         cursor: "pointer",
+        padding: "0 0 8px 0",
+        fontSize: 0, // reset font size to avoid extra space
+        color: "hsl(var(--foreground))",
+        opacity: isSearchActive ? 1 : 0.28,
+        borderBottom: "2px solid transparent",
+        marginBottom: "-1px",
+        transition: "opacity 0.2s ease, border-color 0.2s ease",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
-        padding: "12px",
-        color: isSearchActive 
-          ? "hsl(var(--foreground))" 
-          : "hsl(var(--muted-foreground))",
       }}
     >
-      {isSearchActive ? <X size={20} /> : <SearchIcon size={20} />}
+      {isSearchActive ? <X size={24} /> : <SearchIcon size={24} />}
     </button>
   </div>
 );
