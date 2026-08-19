@@ -6,6 +6,7 @@ import BranchesPage from "./BranchesPage";
 import OrderSimple from "./OrderSimple";
 import OfficeSimple from "./OfficeSimple";
 import BranchSimple from "@/components/branch-simple/BranchSimple";
+import BoudoirSimpleNew from "@/pages/BoudoirSimpleNew";
 import { X, Search, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
 
 const hdrStyle: React.CSSProperties = {
@@ -793,7 +794,7 @@ const SubLandingSimple = () => {
                   pointerEvents: branchTransitionPhase === "at-page" ? "auto" : "none",
                 }}>
                                     {activeBranch === "office"   && <OfficeSimple   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "boudoir"  && <BranchSimple   branch="boudoir"  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "boudoir"  && <BoudoirSimpleNew   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                   {activeBranch === "chic"     && <BranchSimple   branch="chic"     onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                   {activeBranch === "nuryadi"  && <BranchSimple   branch="nuryadi"  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                 </div>

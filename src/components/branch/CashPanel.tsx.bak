@@ -1,0 +1,650 @@
+import { createPortal } from "react-dom";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { X, Check, Search, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
+import { BranchConfig, CashRow, CashEntryState } from "@/lib/branchSimple";
+
+interface CashPanelProps {
+  config: BranchConfig;
+  cashLog: CashRow[];
+  setCashLog: React.Dispatch<React.SetStateAction<CashRow[]>>;
+  refreshCashLog: () => void | Promise<void>;
+  onBack: () => void;
+}
+
+const CashPanel = ({ config, cashLog, setCashLog, refreshCashLog, onBack }: CashPanelProps) => {
+  // Cash panel state
+  const [cashEntries, setCashEntries] = useState<CashEntryState[]>([]);
+  const [cashView, setCashView] = useState<"recent" | "month" | "deposit">("recent");
+  const [cashSubmitting, setCashSubmitting] = useState(false);
+  const [cashSuccess, setCashSuccess] = useState(false);
+  const [cashError, setCashError] = useState<string | null>(null);
+  const [editingLogCell, setEditingLogCell] = useState<{id: number, col: string} | null>(null);
+  const [editingLogValue, setEditingLogValue] = useState("");
+
+  // Deposit tab state
+  const [depStart, setDepStart] = useState<string>("");
+  const [depEnd, setDepEnd] = useState<string>("");
+  const [depCashTotal, setDepCashTotal] = useState<number | null>(null);
+  const [denomCounts, setDenomCounts] = useState<Record<string,string>>({
+    "100": "", "50": "", "20": "", "10": "", "5": "", "1": "", "coins": ""
+  });
+
+  // Compute derived values from cashLog
+  const monthGSTTotal = useMemo(() => {
+    const now = new Date();
+    return cashLog
+      .filter(r => { 
+        const d = new Date(r.Date + "T00:00:00"); 
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); 
+      })
+      .reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
+  }, [cashLog]);
+
+  const currentMonthName = new Date().toLocaleString("en-US", { month: "long" });
+
+  const currentMonthDates = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const days: string[] = [];
+    for (let d = 1; d <= today.getDate(); d++) {
+      days.push(`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+    }
+    return days.reverse(); // newest first
+  }, []);
+
+  const recentGSTTotal = useMemo(() => {
+    // Sum entries from Monday of current week through today
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ...6=Sat
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysFromMonday);
+    monday.setHours(0, 0, 0, 0);
+    const mondayStr = monday.toISOString().split("T")[0];
+    const todayStr = today.toISOString().split("T")[0];
+    return cashLog
+      .filter(r => r.Date >= mondayStr && r.Date <= todayStr)
+      .reduce((sum, r) => sum + (Number(r["Total GST"]) || 0), 0);
+  }, [cashLog]);
+
+  // Deposit: compute cash total from cashLog when date range changes
+  useEffect(() => {
+    if (!depStart || !depEnd) { 
+      setDepCashTotal(null); 
+      return; 
+    }
+    const start = depStart <= depEnd ? depStart : depEnd;
+    const end = depStart <= depEnd ? depEnd : depStart;
+    const total = cashLog
+      .filter(r => r.Date >= start && r.Date <= end)
+      .reduce((sum, r) => sum + (Number(r["Cash"]) || 0), 0);
+    setDepCashTotal(total);
+  }, [depStart, depEnd, cashLog]);
+
+  const denominations: Array<{key: string, label: string, value: number}> = [
+    { key: "100", label: "RM 100", value: 100 },
+    { key: "50",  label: "RM 50",  value: 50  },
+    { key: "20",  label: "RM 20",  value: 20  },
+    { key: "10",  label: "RM 10",  value: 10  },
+    { key: "5",   label: "RM 5",   value: 5   },
+    { key: "1",   label: "RM 1",   value: 1   },
+    { key: "coins", label: "Coins", value: 1  },
+  ];
+  const denomTotal = denominations.reduce((sum, d) => {
+    if (d.key === "coins") return sum + (parseFloat(denomCounts["coins"]) || 0);
+    return sum + (parseInt(denomCounts[d.key] || "0") || 0) * d.value;
+  }, 0);
+  const denomDiff = depCashTotal !== null ? denomTotal - depCashTotal : null;
+
+  // Fetch cash log on mount and when refreshCashLog is called
+  useEffect(() => {
+    const fetchCashData = async () => {
+      // We don't set loading state here because the parent may handle it via refreshCashLog
+      // But we can set a local loading state for UI feedback if needed.
+      // For simplicity, we'll rely on the parent's loading state if any.
+      refreshCashLog();
+    };
+    fetchCashData();
+  }, [refreshCashLog]); // This will run when refreshCashLog changes (if it's a new function reference). 
+  // Better to have a separate effect for mount and call refreshCashLog prop in an event handler.
+  // Let's change: we'll call refreshCashLog prop in a useEffect that runs on mount and when we need to refresh.
+  // We'll have a state variable for triggering refresh? Actually, we can just call the prop in an effect that runs on mount and when a refresh flag changes.
+  // We'll keep it simple: call refreshCashLog on mount and also in handleCashSubmit after success.
+  // We'll remove the dependency on refreshCashLog and instead call it in useEffect with empty deps for mount, and then call it again in submit.
+  // But we must avoid infinite loop. We'll do:
+
+  useEffect(() => {
+    refreshCashLog();
+  }, []); // Fetch on mount
+
+  // When cashLog updates, we may want to reset cashEntries for today if needed.
+  useEffect(() => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const todayExists = cashLog.some(r => r.Date === todayStr);
+    if (!todayExists) {
+      setCashEntries([{ 
+        date: todayStr, 
+        totalGST: "", 
+        credit: "", 
+        qr: "", 
+        cashOverride: "", 
+        error: "", 
+        errorNote: "", 
+        expanded: false, 
+        existingId: undefined 
+      }]);
+    } else {
+      // If today exists, we might want to show it as an editable row? 
+      // The original logic: after submit, if today exists, reset cashEntries to empty; else show today row.
+      // We'll keep cashEntries as is; the parent may reset it after submit via refresh.
+      // For now, we'll leave it.
+    }
+  }, [cashLog]);
+
+  const handleDeleteCashEntry = (entry: CashEntryState, idx: number) => {
+    if (idx === 0) return; // cannot delete today
+    setCashEntries(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleLogCellSave = async (rowId: number, col: string, value: string) => {
+    const numVal = parseFloat(value);
+    const parsed: number | string = isNaN(numVal) ? value : numVal;
+    try {
+      await (supabase as any).from("Cash").update({ [col]: parsed }).eq("id", rowId);
+      // Note: We don't update cashLog here because we rely on parent's refreshCashLog to update the list.
+      // However, for immediate UI feedback, we could optimistically update.
+      // We'll leave it to the parent to refresh after submit; but for editing a cell, we want immediate update.
+      // Let's update cashLog optimistically.
+      setCashLog(prev => prev.map(r => r.id === rowId ? { ...r, [col]: parsed } : r));
+    } catch (_) {
+      // If optimistic update fails, we could revert, but we'll rely on the parent's error handling.
+    }
+    setEditingLogCell(null);
+    setEditingLogValue("");
+  };
+
+  const handleCashSubmit = async () => {
+    const toSubmit = cashEntries.filter(e => e.totalGST !== "" || e.credit !== "" || e.qr !== "");
+    if (!toSubmit.length) return;
+    setCashSubmitting(true);
+    setCashError(null);
+    try {
+      for (const entry of toSubmit) {
+        const total = parseFloat(entry.totalGST) || 0;
+        const credit = parseFloat(entry.credit) || 0;
+        const qr = parseFloat(entry.qr) || 0;
+        const err = parseFloat(entry.error) || 0;
+        const cash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
+        const errVal = parseFloat(entry.error) || null;
+        const basePayload = { 
+          Branch: config.cashBranchName, 
+          Date: entry.date, 
+          "Total GST": total, 
+          Credit: credit, 
+          QR: qr, 
+          Cash: cash, 
+          Error: errVal || null, 
+          Explanation: entry.errorNote || null 
+        };
+        // Always check Supabase for existing row by Branch+Date
+        const { data: existingRows } = await (supabase as any)
+          .from("Cash")
+          .select("id")
+          .eq("Branch", config.cashBranchName)
+          .eq("Date", entry.date);
+        const existingId = existingRows && existingRows.length > 0 ? existingRows[0].id : null;
+        if (existingId) {
+          const { error: uErr } = await (supabase as any)
+            .from("Cash")
+            .update(basePayload)
+            .eq("id", existingId);
+          if (uErr) { setCashError(uErr.message || "Update failed"); break; }
+        } else {
+          // Get max id to avoid sequence conflicts
+          const { data: maxRows } = await (supabase as any)
+            .from("Cash")
+            .select("id")
+            .order("id", { ascending: false })
+            .limit(1);
+          const newId = maxRows && maxRows.length > 0 ? maxRows[0].id + 1 : 1;
+          const { error: iErr } = await (supabase as any)
+            .from("Cash")
+            .insert({ id: newId, ...basePayload });
+          if (iErr) { setCashError(iErr.message || "Insert failed"); break; }
+        }
+      }
+      if (!cashError) {
+        setCashSuccess(true);
+        setTimeout(() => setCashSuccess(false), 3000);
+        // After submit: reset entry area — show today row only if today has no Supabase entry
+        const todayStr = new Date().toISOString().split("T")[0];
+        const { data: todayCheck } = await (supabase as any)
+          .from("Cash")
+          .select("id")
+          .eq("Branch", config.cashBranchName)
+          .eq("Date", todayStr);
+        const todayExists = todayCheck && todayCheck.length > 0;
+        if (todayExists) {
+          setCashEntries([]);
+        } else {
+          setCashEntries([{ 
+            date: todayStr, 
+            totalGST: "", 
+            credit: "", 
+            qr: "", 
+            cashOverride: "", 
+            error: "", 
+            errorNote: "", 
+            expanded: false, 
+            existingId: undefined 
+          }]);
+        }
+        // Refresh cashLog via parent
+        await refreshCashLog();
+      }
+    } catch (err: any) {
+      setCashError(err?.message || "Unknown error");
+    }
+    setCashSubmitting(false);
+  };
+
+  const handleAddCashRow = () => {
+    setCashEntries(prev => {
+      const last = prev[prev.length - 1];
+      const [ly, lm, ld] = last.date.split("-").map(Number);
+      const lastDate = new Date(ly, lm - 1, ld);
+      lastDate.setDate(lastDate.getDate() - 1);
+      const newDate = `${lastDate.getFullYear()}-${String(lastDate.getMonth()+1).padStart(2,"0")}-${String(lastDate.getDate()).padStart(2,"0")}`;
+      const existing = cashLog.find(r => r.Date === newDate);
+      return [...prev, {
+        date: newDate,
+        totalGST: existing ? String(existing["Total GST"] ?? "") : "",
+        credit: existing ? String(existing["Credit"] ?? "") : "",
+        qr: existing ? String(existing["QR"] ?? "") : "",
+        cashOverride: "",
+        error: existing ? String(existing["Error"] ?? "") : "",
+        errorNote: existing ? String(existing["Explanation"] ?? "") : "",
+        expanded: !!(existing?.Error),
+        existingId: existing?.id,
+      }];
+    });
+  };
+
+  const openPanel = (panel: "USAGE" | "ORDER" | "CASH") => {
+    // This is internal to the page; CashPanel doesn't handle panel switching.
+    // We'll leave it unused.
+  };
+
+  const closePanel = () => {
+    onBack();
+  };
+
+  const cashLogFiltered = useMemo(() => {
+    if (cashView === "recent") {
+      return [...cashLog].sort((a, b) => b.Date.localeCompare(a.Date)).slice(0, 7);
+    } else {
+      const now = new Date();
+      return cashLog.filter(r => { 
+        const d = new Date(r.Date + "T00:00:00"); 
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); 
+      });
+    }
+  }, [cashLog, cashView]);
+
+  return createPortal(
+    <div style={{
+      position: "fixed", top: 0, left: 0,
+      width: "100vw", height: "100dvh",
+      background: "hsl(var(--background))",
+      zIndex: 200,
+      display: "flex", flexDirection: "column",
+      overflow: "hidden",
+    }}>
+      {/* Header */}
+      <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+            <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>CASH</span>
+            <span style={{ fontSize: "14px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Month Total: RM {monthGSTTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+          <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
+            <X size={18} />
+          </button>
+        </div>
+        {/* Column headers */}
+        <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "8px" }}>
+          {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
+            <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+          ))}
+          <div />
+        </div>
+      </div>
+
+{/* Scrollable body */}
+       <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 24px), 24px)" }}>
+
+       {/* 7-day entry rows */}
+        {cashEntries.map((entry, idx) => {
+          const total = parseFloat(entry.totalGST) || 0;
+          const credit = parseFloat(entry.credit) || 0;
+          const qr = parseFloat(entry.qr) || 0;
+          const err = parseFloat(entry.error) || 0;
+          const computedCash = entry.cashOverride !== "" ? (parseFloat(entry.cashOverride) || 0) : total - credit - qr - err;
+          const hasData = entry.totalGST !== "" || entry.credit !== "" || entry.qr !== "";
+          const dateObj = new Date(entry.date + "T00:00:00");
+          const dateLabel = dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+          const isToday = idx === 0;
+          const inputStyle: React.CSSProperties = { width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0", boxSizing: "border-box" };
+          return (
+            <div key={entry.date} style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", alignItems: "center", padding: "9px 0" }}>
+                <div style={{ fontSize: "11px", fontWeight: hasData ? 700 : 300, fontFamily: "Raleway, inherit", color: hasData ? "#000" : "hsl(var(--muted-foreground))", letterSpacing: "0.02em" }}>{dateLabel}</div>
+                <input type="number" inputMode="decimal" value={entry.totalGST} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, totalGST: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                <input type="number" inputMode="decimal" value={entry.credit} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, credit: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                <input type="number" inputMode="decimal" value={entry.qr} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, qr: e.target.value, cashOverride: "" }))} placeholder="0" style={inputStyle} />
+                <input
+                  type="number" inputMode="decimal"
+                  value={hasData || entry.cashOverride !== "" ? (entry.cashOverride !== "" ? entry.cashOverride : String(computedCash)) : ""}
+                  onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, cashOverride: e.target.value }))}
+                  placeholder="0"
+                  style={{ ...inputStyle, color: hasData ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                />
+                <button
+                  onClick={() => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, expanded: !en.expanded }))}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: entry.expanded || entry.error !== "" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  {entry.expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+              </div>
+              {entry.expanded && (
+                <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px 20px", gap: "4px", paddingBottom: "10px", alignItems: "flex-end" }}>
+                  <div style={{ gridColumn: "1" }} />
+                  <div style={{ gridColumn: "2", display: "flex", flexDirection: "column", gap: "3px", alignItems: "center" }}>
+                    <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>Error</div>
+                    <input type="number" inputMode="decimal" value={entry.error} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, error: e.target.value, cashOverride: "" }))} placeholder="0" style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "2px 0" }} />
+                  </div>
+                  <div style={{ gridColumn: "3 / 6", display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-start" }}>
+                    <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Note</div>
+                    <input type="text" value={entry.errorNote} onChange={e => setCashEntries(prev => prev.map((en, i) => i !== idx ? en : { ...en, errorNote: e.target.value }))} placeholder="Explanation..." style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", padding: "2px 0", textAlign: "left" }} />
+                  </div>
+                  <div style={{ gridColumn: "6", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                    {idx !== 0 && (
+                      <button onClick={() => handleDeleteCashEntry(entry, idx)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ); // End of map function
+}
+
+        {/* Add row button */}
+        <div style={{ paddingTop: "8px", paddingBottom: "4px" }}>
+          <button
+            onClick={handleAddCashRow}
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", padding: "4px 0" }}
+          >
+            Add +
+          </button>
+        </div>
+
+        {/* Submit */}
+        <div style={{ paddingTop: "20px", paddingBottom: "24px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+          <button
+            onClick={handleCashSubmit}
+            disabled={cashSubmitting}
+            style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: cashSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: cashSubmitting ? 0.5 : 1 }}
+          >
+            {cashSubmitting ? "Saving..." : "Submit"}
+          </button>
+          {cashSuccess && <span style={{ marginLeft: "16px", fontSize: "11px", color: "hsl(120 60% 40%)", letterSpacing: "0.06em" }}>✓ Saved</span>}
+          {cashError && <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {cashError}</div>}
+        </div>
+
+        {/* Recent / Month / Deposit toggle */}
+        <div style={{ paddingTop: "20px" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "14px" }}>
+            <div style={{ display: "flex", gap: "24px" }}>
+              <button
+                onClick={() => setCashView("recent")}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "recent" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "recent" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+              >
+                Recent
+              </button>
+              <button
+                onClick={() => setCashView("month")}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "month" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "month" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+              >
+                {currentMonthName}
+              </button>
+              <button
+                onClick={() => setCashView("deposit")}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 6px 0", fontSize: "13px", fontWeight: cashView === "deposit" ? 700 : 300, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", borderBottom: cashView === "deposit" ? "1.5px solid hsl(var(--foreground))" : "1.5px solid transparent" }}
+              >
+                Deposit
+              </button>
+            </div>
+            {cashView !== "deposit" && (
+              <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", paddingBottom: "6px" }}>
+                {cashView === "recent" ? "This Week" : "Total"}: RM {(cashView === "recent" ? recentGSTTotal : monthGSTTotal).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            )}
+            {cashView === "deposit" && (
+              <button
+                onClick={() => {
+                  // Export deposit CSV
+                  const s = depStart <= depEnd ? depStart : depEnd;
+                  const e2 = start <= end ? end : start;
+                  const rows = cashLog
+                    .filter(r => r.Branch === config.cashBranchName && r.Date >= s && r.Date <= e2)
+                    .sort((a, b) => a.Date.localeCompare(b.Date));
+                  const headers = ["Date", "Total GST", "Credit", "QR", "Cash", "Error", "Explanation"];
+                  const csvRows = [
+                    headers.join(","),
+                    ...rows.map(r => [
+                      r.Date,
+                      r["Total GST"] ?? "",
+                      r.Credit ?? "",
+                      r.QR ?? "",
+                      r.Cash ?? "",
+                      r.Error ?? "",
+                      `"${(r.Explanation ?? "").replace(/"/g, '""')}"`
+                    ].join(","))
+                  ];
+                  // 2 blank rows then denomination section
+                  csvRows.push("", "");
+                  csvRows.push("Denomination,Count,Amount");
+                  const denomList = [
+                    { label: "RM 100", key: "100", value: 100 },
+                    { label: "RM 50",  key: "50",  value: 50  },
+                    { label: "RM 20",  key: "20",  value: 20  },
+                    { label: "RM 10",  key: "10",  value: 10  },
+                    { label: "RM 5",   key: "5",   value: 5   },
+                    { label: "RM 1",   key: "1",   value: 1   },
+                  ];
+                  denomList.forEach(d => {
+                    const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+                    const amt = cnt * d.value;
+                    csvRows.push(`${d.label},${cnt},${amt.toFixed(2)}`);
+                  });
+                  const coinsAmt = parseFloat(denomCounts["coins"] || "0") || 0;
+                  csvRows.push(`Coins,,${coinsAmt.toFixed(2)}`);
+                  const totalAmt = denomList.reduce((sum, d) => {
+                    const cnt = parseInt(denomCounts[d.key] || "0") || 0;
+                    return sum + cnt * d.value;
+                  }, 0) + coinsAmt;
+                  csvRows.push(`Counted Total,,${totalAmt.toFixed(2)}`);
+                  const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = config.cashExportFilename;
+                  a.click();
+                  URL.revokeObjectURL(url);
+}}
+  title="Export to Excel"
+  disabled={!depStart || !depEnd}
+  style={{ background: "none", border: "none", cursor: depStart && depEnd ? "pointer" : "not-allowed", padding: "0 0 6px 0", color: depStart && depEnd ? "hsl(var(--foreground))" : "hsl(var(--foreground) / 0.3)", display: "flex", alignItems: "center", opacity: depStart && depEnd ? 1 : 0.4 }}
+>
+  <Download size={15} />
+</button>
+            )}
+          </div>
+          {/* Log table header */}
+          {cashView !== "deposit" && (
+            <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+              {(["Date","GST","Credit","QR","Cash"] as const).map((lbl, i) => (
+                <div key={lbl} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", letterSpacing: "0.08em", textAlign: i === 0 ? "left" : "center" }}>{lbl}</div>
+              ))}
+            </div>
+          )}
+          {cashView !== "deposit" && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>Loading...</div>}
+          {cashView !== "deposit" && cashLogFiltered.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0", fontFamily: "Raleway, inherit" }}>No entries</div>}
+          {cashView !== "deposit" && cashLogFiltered.map(row => {
+            const editableCols: Array<{key: string, align: "center"|"left"}> = [
+              { key: "Total GST", align: "center" },
+              { key: "Credit", align: "center" },
+              { key: "QR", align: "center" },
+              { key: "Cash", align: "center" },
+            ];
+            return (
+              <div key={row.id} style={{ display: "grid", gridTemplateColumns: "44px 1fr 1fr 48px 58px", gap: "4px", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{new Date(row.Date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+                {editableCols.map(({ key, align }) => {
+                  const isEditing = editingLogCell?.id === row.id && editingLogCell?.col === key;
+                  return (
+                    <div key={key} style={{ textAlign: align }}>
+                      {isEditing ? (
+                        <input
+                          autoFocus
+                          type="number"
+                          inputMode="decimal"
+                          value={editingLogValue}
+                          onChange={e => setEditingLogValue(e.target.value)}
+                          onBlur={() => handleLogCellSave(row.id, key, editingLogValue)}
+                          onKeyDown={e => { if (e.key === "Enter") handleLogCellSave(row.id, key, editingLogValue); if (e.key === "Escape") setEditingLogCell(null); }}
+                          style={{ width: "100%", background: "none", border: "none", borderBottom: "0.5px solid hsl(var(--foreground))", outline: "none", fontSize: "11px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: align, padding: "1px 0" }}
+                        />
+                      ) : (
+                        <div
+                          onClick={() => { setEditingLogCell({ id: row.id, col: key }); setEditingLogValue(String(row[key] ?? "")); }}
+                          style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", cursor: "text", minHeight: "16px" }}
+                        >
+                          {row[key] ?? "—"}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+
+          {/* ── Deposit tab ── */}
+          {cashView === "deposit" && (
+            <div style={{ paddingTop: "8px" }}>
+              {/* Date range + cash total */}
+              <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "20px" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "6px" }}>From</div>
+                  <select
+                    value={depStart}
+                    onChange={e => setDepStart(e.target.value)}
+                    style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                  >
+                    <option value="">Select date</option>
+                    {currentMonthDates.map(d => (
+                      <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "6px" }}>To</div>
+                  <select
+                    value={depEnd}
+                    onChange={e => setDepEnd(e.target.value)}
+                    style={{ width: "100%", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                  >
+                    <option value="">Select date</option>
+                    {currentMonthDates.map(d => (
+                      <option key={d} value={d}>{new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", marginBottom: "4px" }}>Total Cash</div>
+                  <div style={{ fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                    {depCashTotal !== null ? `RM ${depCashTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Denomination table */}
+              <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "12px" }}>
+                {/* Header */}
+                <div style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>Denomination</div>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", textAlign: "center" }}>Count</div>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", textAlign: "right" }}>Amount</div>
+                </div>
+                {denominations.map(({ key, label, value }) => {
+                  const count = denomCounts[key] || "";
+                  const amount = key === "coins"
+                    ? (parseFloat(count) || 0)
+                    : (parseInt(count) || 0) * value;
+                  return (
+                    <div key={key} style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
+                      <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{label}</div>
+                      <div style={{ textAlign: "center" }}>
+                        <input
+                          type={key === "coins" ? "number" : "number"}
+                          inputMode="decimal"
+                          value={count}
+                          onChange={e => setDenomCounts(prev => ({ ...prev, [key]: e.target.value }))}
+                          placeholder="0"
+                          style={{ width: "48px", background: "none", border: "none", outline: "none", fontSize: "12px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", textAlign: "center", padding: "0" }}
+                        />
+                      </div>
+                      <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "right" }}>
+                        {amount > 0 ? `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                      </div>
+                    </div>
+                  ); 
+                })}
+
+                {/* Totals row */}
+                <div style={{ display: "grid", gridTemplateColumns: "80px 60px 1fr", gap: "0", alignItems: "center", padding: "10px 0 4px 0" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000" }}>Counted</div>
+                  <div />
+                  <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000", textAlign: "right" }}>
+                    RM {denomTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+
+                {/* Match indicator */}
+                {denomDiff !== null && (
+                  <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", paddingTop: "6px" }}>
+                    {denomDiff === 0 ? (
+                      <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(120 50% 35%)" }}>✓ Matched</span>
+                    ) : (
+                      <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit", color: denomDiff > 0 ? "hsl(120 50% 35%)" : "hsl(0 65% 50%)" }}>
+                        {denomDiff > 0 ? "+" : ""}RM {Math.abs(denomDiff).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {denomDiff > 0 ? "over" : "under"}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+export default CashPanel;
