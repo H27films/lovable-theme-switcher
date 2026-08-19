@@ -294,7 +294,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
             <div style={{ flex: 1, overflowX: "hidden", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
                 {selectedProduct ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "55px 28px 32px 1fr 18px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "50px 44px 52px 90px 18px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                     <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Date</div>
                     <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
                     <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
@@ -322,7 +322,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
                     const isReversing = reversing === row.id;
                     return selectedProduct ? (
                       <div key={row.id} style={{
-                        display: "grid", gridTemplateColumns: "55px 28px 32px 1fr 18px", gap: "4px",
+                        display: "grid", gridTemplateColumns: "50px 44px 52px 90px 18px", gap: "4px",
                         padding: "8px 0",
                         borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
