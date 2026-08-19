@@ -7,6 +7,8 @@ import OrderSimple from "./OrderSimple";
 import OfficeSimple from "./OfficeSimple";
 import BranchSimple from "@/components/branch-simple/BranchSimple";
 import BoudoirSimpleNew from "@/pages/BoudoirSimpleNew";
+import ChicSimpleNew from "@/pages/ChicSimpleNew";
+import NurYadiSimpleNew from "@/pages/NurYadiSimpleNew";
 import { X, Search, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
 
 const hdrStyle: React.CSSProperties = {
@@ -795,8 +797,8 @@ const SubLandingSimple = () => {
                 }}>
                                     {activeBranch === "office"   && <OfficeSimple   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                   {activeBranch === "boudoir"  && <BoudoirSimpleNew   onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "chic"     && <BranchSimple   branch="chic"     onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
-                  {activeBranch === "nuryadi"  && <BranchSimple   branch="nuryadi"  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "chic"     && <ChicSimpleNew     onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
+                  {activeBranch === "nuryadi"  && <NurYadiSimpleNew  onBack={navigateBackToBranches} onBackToMain={navigateBackToMain} products={products} />}
                 </div>
 
               </div>
