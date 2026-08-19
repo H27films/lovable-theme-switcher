@@ -5,7 +5,6 @@ import SearchSimple from "./SearchSimple";
 import BranchesPage from "./BranchesPage";
 import OrderSimple from "./OrderSimple";
 import OfficeSimple from "./OfficeSimple";
-import BranchSimple from "@/components/branch-simple/BranchSimple";
 import BoudoirSimpleNew from "@/pages/BoudoirSimpleNew";
 import ChicSimpleNew from "@/pages/ChicSimpleNew";
 import NurYadiSimpleNew from "@/pages/NurYadiSimpleNew";

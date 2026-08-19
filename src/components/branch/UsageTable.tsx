@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import React, { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "lucide-react";
-import { USAGE_TYPES, THERAPISTS, makeIsFavourite, UsageType, isYes } from "@/lib/branchSimpleUtils";
+import { USAGE_TYPES, THERAPISTS, makeIsFavourite, UsageType, isYes, typeColumnValue, usagePillValue, therapistValue } from "@/lib/branchSimpleUtils";
 import { type BranchConfig, type OfficeProduct, type EntryLine } from "@/lib/branchSimple";
 
 interface UsageTableProps {
@@ -44,7 +44,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
         id: Date.now(),
         productName: p["PRODUCT NAME"],
         type: "Salon Use",
-        qty: 1,
+        qty: -1,
         therapist: "THERAPIST",
         note: "",
         noteOpen: false,
@@ -88,7 +88,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
   };
 
   const handleUsageSubmit = async () => {
-    const valid = usageEntries.filter(e => e.productName && e.qty > 0);
+    const valid = usageEntries.filter(e => e.productName);
     if (!valid.length) return;
     setUsageError(null);
     setUsageSubmitting(true);
@@ -97,15 +97,18 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
         const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
-        const endingBalance = currentBalance - entry.qty;
+        const endingBalance = currentBalance + entry.qty;
         const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": today,
           "PRODUCT NAME": entry.productName,
           "BRANCH": config.logBranchName,
           "SUPPLIER": null,
-          "TYPE": entry.type === "FOC" ? "Salon Use" : entry.type,
+          "TYPE": typeColumnValue(entry.type),
+          "USAGE PILL": usagePillValue(entry.type),
+          "Therapist": therapistValue(entry.therapist),
+          "NOTES": entry.note,
           "STARTING BALANCE": currentBalance,
-          "QTY": -entry.qty,
+          "QTY": entry.qty,
           "ENDING BALANCE": endingBalance,
           "GRN": null,
           "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
@@ -127,7 +130,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
           const entry = valid.find(e => e.productName === p["PRODUCT NAME"]);
           if (!entry) return p;
           const cur = Number((p as any)?.[BALANCE_KEY] ?? 0);
-          return { ...p, [BALANCE_KEY]: cur - entry.qty };
+          return { ...p, [BALANCE_KEY]: cur + entry.qty };
         }));
         if (selectedProduct) {
           const entry = valid.find(e => e.productName === selectedProduct["PRODUCT NAME"]);
@@ -235,19 +238,19 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
         {usageEntries.map(entry => {
           const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
           const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
-          const projectedBalance = currentBalance - entry.qty;
+          const projectedBalance = currentBalance + entry.qty;
           return (
             <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
                 <span style={{ display: "flex", alignItems: "baseline", gap: "10px", flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{entry.productName}</span>
+                  <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", maxWidth: "60%" }}>{entry.productName}</span>
                   <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: projectedBalance <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--green, 120 60% 40%))", flexShrink: 0 }}>{projectedBalance}</span>
                 </span>
                 <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
-                  <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}>
+                  <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty - 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}>
                     <ChevronLeft size={18} />
                   </button>
-                  <span style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", minWidth: "30px", textAlign: "center" }}>{entry.qty}</span>
+                  <span style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", minWidth: "34px", textAlign: "center" }}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
                   <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}>
                     <ChevronRight size={18} />
                   </button>
@@ -259,7 +262,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
                   <button onClick={() => cycleTherapist(entry.id)} style={{ background: entry.therapist !== "THERAPIST" ? "#ffffff" : "none", color: entry.therapist !== "THERAPIST" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.therapist}</button>
                   <button onClick={() => toggleNote(entry.id)} style={{ background: entry.noteOpen || entry.note.trim().length > 0 ? "hsl(24 35% 28%)" : "none", color: entry.noteOpen || entry.note.trim().length > 0 ? "#ffffff" : "hsl(var(--muted-foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>+NOTE</button>
                 </div>
-                <button onClick={() => setUsageEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(0 60% 35%)", flexShrink: 0 }}>
+                <button onClick={() => setUsageEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "#ffffff", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(0 60% 35%)", flexShrink: 0, width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <X size={16} />
                 </button>
               </div>
@@ -281,8 +284,13 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
 
       {usageEntries.length > 0 && (
         <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))" }}>
-          <button onClick={handleUsageSubmit} disabled={usageSubmitting} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1, borderRadius: "999px" }}>{usageSubmitting ? "Saving..." : "Submit"}</button>
-          {usageSuccess && <span style={{ marginLeft: "16px", fontSize: "11px", color: "hsl(var(--green, 120 60% 40%))", letterSpacing: "0.06em" }}>✓ Saved</span>}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <button onClick={handleUsageSubmit} disabled={usageSubmitting} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1, borderRadius: "999px" }}>{usageSubmitting ? "Saving..." : "Submit"}</button>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              {usageSuccess && <span style={{ fontSize: "11px", color: "hsl(var(--green, 120 60% 40%))", letterSpacing: "0.06em" }}>✓ Saved</span>}
+              <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{usageEntries.length} {usageEntries.length === 1 ? "Product" : "Products"}</span>
+            </div>
+          </div>
           {usageError && <div style={{ marginTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em" }}>✗ {usageError}</div>}
         </div>
       )}
