@@ -288,11 +288,7 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
 
       {!showAllOrders && (
         <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => { setShowOrderDropdown(false); setShowAllOrders(false); }}>
-        {orderEntries.length === 0 && !pendingOrder && !confirmSuccess && (
-          <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
-            Select a product above to add it
-          </div>
-        )}
+        {orderEntries.length === 0 && !pendingOrder && !confirmSuccess && null}
         {confirmSuccess && lastConfirmedEntries && (() => {
           const d = new Date();
           const dd = String(d.getDate()).padStart(2,"0");
