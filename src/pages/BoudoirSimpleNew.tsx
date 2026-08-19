@@ -60,6 +60,11 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      setSearchMode("idle");
    };
 
+   const goToDefaultView = () => {
+     resetSearchState();
+     setSearchActive(false);
+   };
+
   // Sort log: DATE desc, within same date Order rows first (logged last at night)
   const sortLog = (rows: LogRow[]) => [...rows].sort((a, b) => {
     const dateDiff = b.DATE.localeCompare(a.DATE);
@@ -231,6 +236,32 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     }}>
 {/* Header */}
        <Header branch={boudoirConfig.displayName} onBack={handleHeaderBack} />
+
+       {/* Top-right back button (visible when a product is selected) */}
+       {selectedProduct && (
+         <button
+           onClick={goToDefaultView}
+           aria-label="Back to recent"
+           title="Back to recent"
+           style={{
+             position: "absolute",
+             top: "24px",
+             right: "20px",
+             zIndex: 50,
+             background: "none",
+             border: "none",
+             cursor: "pointer",
+             color: "hsl(var(--muted-foreground))",
+             padding: "4px",
+             display: "flex",
+             alignItems: "center",
+           }}
+           onMouseEnter={(e) => { e.currentTarget.style.color = "hsl(var(--foreground))"; }}
+           onMouseLeave={(e) => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+         >
+           <ChevronLeft size={22} />
+         </button>
+       )}
 
        {/* Tabs with search icon */}
         <Tabs 
