@@ -164,6 +164,19 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
 
         <div style={{ display: "flex", gap: "48px", marginBottom: "20px" }}>
           <div>
+            <div style={labelStyle}>Therapist</div>
+            <button 
+              onClick={cycleTherapist} 
+              style={{
+                ...pillButtonStyle,
+                background: therapist ? "#ffffff" : "none",
+                color: therapist ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+              }}
+            >
+              {therapist ? therapist : "NONE"}
+            </button>
+          </div>
+          <div style={{ textAlign: "center" }}>
             <div style={labelStyle}>Type</div>
             <button 
               onClick={() => setType(prev => {
@@ -177,19 +190,6 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
               }}
             >
               {type}
-            </button>
-          </div>
-          <div>
-            <div style={labelStyle}>Therapist</div>
-            <button 
-              onClick={cycleTherapist} 
-              style={{
-                ...pillButtonStyle,
-                background: therapist ? "#ffffff" : "none",
-                color: therapist ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-              }}
-            >
-              {therapist ? therapist : "NONE"}
             </button>
           </div>
         </div>
