@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Check, Search as SearchIcon, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
+import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
@@ -58,11 +58,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      setSearchActive(false);
      setShowDropdown(false);
      setSearchMode("idle");
-   };
-
-   const goToDefaultView = () => {
-     resetSearchState();
-     setSearchActive(false);
    };
 
   // Sort log: DATE desc, within same date Order rows first (logged last at night)
@@ -236,32 +231,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     }}>
 {/* Header */}
        <Header branch={boudoirConfig.displayName} onBack={handleHeaderBack} />
-
-       {/* Top-right back button (visible when a product is selected) */}
-       {selectedProduct && (
-         <button
-           onClick={goToDefaultView}
-           aria-label="Back to recent"
-           title="Back to recent"
-           style={{
-             position: "absolute",
-             top: "24px",
-             right: "20px",
-             zIndex: 50,
-             background: "none",
-             border: "none",
-             cursor: "pointer",
-             color: "hsl(var(--muted-foreground))",
-             padding: "4px",
-             display: "flex",
-             alignItems: "center",
-           }}
-           onMouseEnter={(e) => { e.currentTarget.style.color = "hsl(var(--foreground))"; }}
-           onMouseLeave={(e) => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-         >
-           <ChevronLeft size={22} />
-         </button>
-       )}
 
        {/* Tabs with search icon */}
         <Tabs 
