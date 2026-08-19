@@ -324,7 +324,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
                       <div key={row.id} style={{
                         display: "grid", gridTemplateColumns: "50px 44px 52px 90px 18px", gap: "4px",
                         padding: "8px 0",
-                        borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.75)" : "none",
+                        borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.95)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
                         alignItems: "center",
                       }}>
@@ -348,7 +348,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
                       <div key={row.id} style={{
                         display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 70px 18px", gap: "4px",
                         padding: "8px 0",
-                        borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.75)" : "none",
+                        borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.95)" : "none",
                         marginTop: dateSeparator ? "4px" : "0",
                         alignItems: "center",
                       }}>
