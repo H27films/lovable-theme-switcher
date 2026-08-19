@@ -36,6 +36,7 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
   const [editingPendingQty, setEditingPendingQty] = useState("");
   const [grnNotes, setGrnNotes] = useState("");
   const [lastConfirmedEntries, setLastConfirmedEntries] = useState<Array<{productName: string; starting: number; qty: number; ending: number}> | null>(null);
+  const [showAllOrders, setShowAllOrders] = useState(false);
 
   const orderFiltered = orderSearch.length > 0
     ? products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(orderSearch.toLowerCase()))
@@ -191,14 +192,14 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
         </div>
         <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "12px", marginBottom: "0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <input
-              ref={orderInputRef}
-              type="text"
-              inputMode="search"
-              value={orderSearch}
-              onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); }}
-              onFocus={() => setShowOrderDropdown(true)}
-              placeholder="Select product..."
+             <input
+               ref={orderInputRef}
+               type="text"
+               inputMode="search"
+               value={orderSearch}
+               onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); }}
+               onFocus={() => { setShowOrderDropdown(true); setShowAllOrders(false); }}
+               placeholder="Select product..."
               style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))" }}
             />
             <button
@@ -247,7 +248,46 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
         </div>
       )}
 
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => setShowOrderDropdown(false)}>
+      {showAllOrders && allOrderGroups.length > 0 && (
+        <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background))", paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "12px", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <div>
+              <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em", marginBottom: "4px" }}>Past Orders</div>
+              <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>By date · Tap to collapse</div>
+            </div>
+            <button onClick={() => setShowAllOrders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}>
+              <ChevronDown size={14} />
+            </button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Date</div>
+            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>GRN</div>
+            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Items</div>
+            {expandedGRNs.size > 0 ? <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Bal</div> : <div />}
+          </div>
+          {allOrderGroups.map(group => (
+            <React.Fragment key={group.key}>
+              <div onClick={() => toggleGRN(group.key)} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0", alignItems: "center", cursor: "pointer" }}>
+                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{new Date(group.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{group.grn}</div>
+                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
+                <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textAlign: "center", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)", display: "flex", alignItems: "center", justifyContent: "center" }}>▾</div>
+              </div>
+              {expandedGRNs.has(group.key) && group.rows.map(row => (
+                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card))" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", paddingLeft: "8px" }}>—</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["PRODUCT NAME"]}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", textAlign: "center" }}>+{row.QTY}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["ENDING BALANCE"]}</div>
+                </div>
+              ))}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+
+      {!showAllOrders && (
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => { setShowOrderDropdown(false); setShowAllOrders(false); }}>
         {orderEntries.length === 0 && !pendingOrder && !confirmSuccess && (
           <div style={{ paddingTop: "24px", fontSize: "13px", fontWeight: 300, color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>
             Select a product above to add it
@@ -374,39 +414,16 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
           </div>
         )}
 
-        {allOrderGroups.length > 0 && (
-          <div style={{ marginTop: "40px", paddingBottom: "max(env(safe-area-inset-bottom, 24px), 24px)" }}>
-            <div style={{ borderTop: "0.5px solid hsl(var(--border))", paddingTop: "24px", marginBottom: "16px" }}>
-              <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em", marginBottom: "4px" }}>All Orders</div>
-              <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>By date · Tap to expand</div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Date</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>GRN</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Items</div>
-              {expandedGRNs.size > 0 ? <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Bal</div> : <div />}
-            </div>
-            {allOrderGroups.map(group => (
-              <React.Fragment key={group.key}>
-                <div onClick={() => toggleGRN(group.key)} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0", alignItems: "center", cursor: "pointer" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{new Date(group.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
-                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{group.grn}</div>
-                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
-                  <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textAlign: "center", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)", display: "flex", alignItems: "center", justifyContent: "center" }}>▾</div>
-                </div>
-                {expandedGRNs.has(group.key) && group.rows.map(row => (
-                  <div key={row.id} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card))" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", paddingLeft: "8px" }}>—</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["PRODUCT NAME"]}</div>
-                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", textAlign: "center" }}>+{row.QTY}</div>
-                    <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["ENDING BALANCE"]}</div>
-                  </div>
-                ))}
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-      </div>
+       </div>
+      )}
+      {!showAllOrders && allOrderGroups.length > 0 && (
+        <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 24px), 24px)", paddingTop: "12px", borderTop: "0.5px solid hsl(var(--border))" }} onClick={e => e.stopPropagation()}>
+          <button onClick={() => setShowAllOrders(true)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "10px 0", fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span>Past Orders</span>
+            <ChevronUp size={14} />
+          </button>
+        </div>
+      )}
     </div>,
     document.body
   );
