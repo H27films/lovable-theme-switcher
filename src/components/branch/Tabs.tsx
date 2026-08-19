@@ -17,7 +17,6 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
       borderBottom: "0.5px solid hsl(var(--border))",
       marginBottom: "8px",
       padding: "0 12px",
-      boxShadow: "0 4px 4px -4px rgba(0,0,0,0.8)",
     }}
   >
     <div style={{ display: "flex", gap: "28px" }}>
@@ -31,12 +30,12 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
             cursor: "pointer",
             padding: "0 0 12px 0",
             fontSize: "clamp(16px, 4.5vw, 24px)",
-            fontWeight: 600,
+            fontWeight: 300,
             letterSpacing: "0.08em",
             fontFamily: "Raleway, inherit",
-            color: "#000000",
+            color: "hsl(var(--foreground))",
             opacity: activePanel === btn ? 1 : 0.28,
-            borderBottom: activePanel === btn ? "2px solid #000000" : "2px solid transparent",
+            borderBottom: "2px solid transparent",
             marginBottom: "-1px",
             transition: "opacity 0.2s ease, border-color 0.2s ease",
           }}
@@ -59,7 +58,7 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
         cursor: "pointer",
         padding: "0 0 8px 0",
         fontSize: 0, // reset font size to avoid extra space
-        color: "#000000",
+        color: "hsl(var(--foreground))",
         opacity: isSearchActive ? 1 : 0.28,
         borderBottom: "2px solid transparent",
         marginBottom: "-1px",
