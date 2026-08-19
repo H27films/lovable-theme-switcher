@@ -251,11 +251,8 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
       {showAllOrders && allOrderGroups.length > 0 && (
         <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background))", paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "12px", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-            <div>
-              <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em", marginBottom: "4px" }}>Past Orders</div>
-              <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>By date · Tap to collapse</div>
-            </div>
-            <button onClick={() => setShowAllOrders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}>
+            <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Past Orders</div>
+            <button onClick={() => setShowAllOrders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", marginLeft: "auto" }}>
               <ChevronDown size={14} />
             </button>
           </div>
