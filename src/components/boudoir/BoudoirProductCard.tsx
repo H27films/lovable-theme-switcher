@@ -18,16 +18,10 @@ export const BoudoirProductCard = ({ selectedProduct, balanceKey, favouriteKey, 
 
   return (
     <div style={{ flexShrink: 0, marginBottom: "24px", paddingBottom: "20px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
         <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
           {selectedProduct["PRODUCT NAME"]}
         </div>
-        {(selectedProduct as any)[balanceKey] != null && (
-          <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-            {(selectedProduct as any)[balanceKey]}
-          </div>
-        )}
-
         <button
           onClick={() => onToggleFav(selectedProduct)}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}
@@ -36,7 +30,16 @@ export const BoudoirProductCard = ({ selectedProduct, balanceKey, favouriteKey, 
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+      {(selectedProduct as any)[balanceKey] != null && (
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Balance</div>
+          <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+            {(selectedProduct as any)[balanceKey]}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
         <div>
           <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Staff</div>
           <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
