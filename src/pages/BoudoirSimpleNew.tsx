@@ -37,6 +37,25 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
    const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
    const [confirmPos, setConfirmPos] = useState<{ top: number; right: number } | null>(null);
 
+   const resetSearchState = () => {
+     setSearch("");
+     setSelectedProduct(null);
+     setShowDropdown(false);
+     setSearchMode("idle");
+   };
+
+   const toggleSearch = () => {
+     setSearchActive(!searchActive);
+     if (!searchActive) { // closing the search
+       resetSearchState();
+     }
+   };
+
+   const closeSearch = () => {
+     setSearchActive(false);
+     // Do not reset state - used when selecting a product
+   };
+
   // Sort log: DATE desc, within same date Order rows first (logged last at night)
   const sortLog = (rows: LogRow[]) => [...rows].sort((a, b) => {
     const dateDiff = b.DATE.localeCompare(a.DATE);
@@ -229,6 +248,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
             showDropdown={showDropdown}
             setShowDropdown={setShowDropdown}
             autoFocus={true}
+            closeSearch={closeSearch}
           />
         )}
 
@@ -247,6 +267,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
               setSearch(p["PRODUCT NAME"]);
               setShowDropdown(false);
               setSearchMode("result");
+              closeSearch();
             }}
             alreadyAdded={alreadyAdded}
           />

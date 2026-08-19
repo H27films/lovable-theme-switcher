@@ -11,6 +11,7 @@ interface SearchProps {
   showDropdown: boolean;
   setShowDropdown: React.Dispatch<React.SetStateAction<boolean>>;
   autoFocus: boolean;
+  closeSearch: () => void;
 }
 
 export const Search = ({
@@ -23,6 +24,7 @@ export const Search = ({
   showDropdown,
   setShowDropdown,
   autoFocus,
+  closeSearch,
 }: SearchProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +48,7 @@ export const Search = ({
           setSearchMode("active");
           setShowDropdown(val.length > 0);
         }}
+        onFocus={() => setShowDropdown(true)}
         placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Enter Product"}
         style={{
           flex: 1,
@@ -66,6 +69,7 @@ export const Search = ({
             setSelectedProduct(null);
             setShowDropdown(false);
             setSearchMode("idle");
+            closeSearch();
           }}
           style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
         >
