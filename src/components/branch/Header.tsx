@@ -18,7 +18,7 @@ export const Header = ({ branch, onBack }: HeaderProps) => (
       border: "none",
       cursor: "pointer",
       textAlign: "left",
-      padding: "0 12px",
+      padding: "12px 12px 0px 12px",
       width: "100%",
       marginBottom: "8px",
     }}
