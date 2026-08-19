@@ -286,7 +286,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
                 onToggleFav={toggleFavourite} 
               />
             )}
-            {!selectedProduct && <div style={{ flexShrink: 0, height: "4vh" }} />}
             {!selectedProduct && (
               <div style={{ flexShrink: 0, fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
                 Recent
