@@ -6,7 +6,7 @@ import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, Chevro
 import { nuryadiConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
-import { Header } from "@/components/branch/Header";
+import { BranchHeader } from "@/components/branch/BranchHeader";
 import { Tabs } from "@/components/branch/Tabs";
 import { Search } from "@/components/branch/Search";
 import { ProductCard } from "@/components/branch/ProductCard";
@@ -253,7 +253,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
       overflow: "hidden",
     }}>
 {/* Header */}
-       <Header branch={nuryadiConfig.displayName} onBack={handleHeaderBack} />
+        <BranchHeader branch={nuryadiConfig.displayName} onBack={handleHeaderBack} />
 
        {/* Tabs with search icon */}
         <Tabs 
