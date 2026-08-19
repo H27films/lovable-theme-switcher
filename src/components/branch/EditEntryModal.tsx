@@ -162,7 +162,7 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
         </div>
 
         <div style={{ display: "flex", gap: "48px", marginBottom: "20px" }}>
-          <div style={{ textAlign: "center" }}>
+          <div>
             <div style={labelStyle}>Type</div>
             <button 
               onClick={() => setType(prev => {
