@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
-import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes, type UsageType } from "@/lib/branchSimpleUtils";
+import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { Header } from "@/components/branch/Header";
 import { Tabs } from "@/components/branch/Tabs";
@@ -173,6 +173,31 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     }
   };
 
+  const updateLogRow = async (row: LogRow, updates: { qty: number; therapist: string | null; type: UsageType; notes: string }) => {
+    try {
+      await (supabase as any).from("AllFileLog")
+        .update({
+          QTY: updates.qty,
+          Therapist: updates.therapist,
+          TYPE: typeColumnValue(updates.type),
+          "USAGE PILL": usagePillValue(updates.type),
+          NOTES: updates.notes,
+        })
+        .eq("id", row.id);
+      if (selectedProduct && selectedProduct["PRODUCT NAME"] === row["PRODUCT NAME"]) {
+        const { data: freshPLog } = await (supabase as any)
+          .from("AllFileLog").select("*")
+          .eq("PRODUCT NAME", row["PRODUCT NAME"])
+          .eq("BRANCH", BRANCH_LOG_NAME)
+          .order("DATE", { ascending: false }).limit(50);
+        setProductLog(sortLog(freshPLog || []));
+      }
+      await refreshBranchLog();
+    } catch (err) {
+      console.error("Update row error:", err);
+    }
+  };
+
   const handleHeaderBack = () => {
     if (searchMode !== "idle") {
       setSearchMode("idle");
@@ -289,7 +314,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
                 Recent
               </div>
             )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} />
+            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} />
           </div>
         )}
       </div>
