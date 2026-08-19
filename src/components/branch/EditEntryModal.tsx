@@ -99,6 +99,7 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
 
   return createPortal(
     <div
+      onClick={onClose}
       style={{
         position: "fixed",
         top: 0,
@@ -114,7 +115,7 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
         justifyContent: "center",
       }}
     >
-      <div style={{ width: "100%", maxWidth: "520px", margin: "0 12px 0", background: "hsl(var(--background))", borderRadius: "20px", boxShadow: "0 -4px 30px rgba(0,0,0,0.2)", padding: "20px 16px 16px" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "520px", margin: "0 12px 0", background: "hsl(var(--background))", borderRadius: "20px", boxShadow: "0 -4px 30px rgba(0,0,0,0.2)", padding: "20px 16px 16px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
           <div>
             <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "0.04em", fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px" }}>

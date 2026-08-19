@@ -178,7 +178,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate }: LogTabl
       {editRow && onUpdate && (
         <EditEntryModal
           row={editRow}
-          onClose={() => setEditRow(null)}
+          onClose={() => { setEditRow(null); setExpandedId(null); }}
           onSave={(updates) => onUpdate(editRow, updates)}
         />
       )}
