@@ -5,6 +5,7 @@ import { X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, FileText, Downloa
 import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes } from "@/lib/branchSimpleUtils";
 import { type BranchConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { generateGRNPdf, exportToExcel } from "@/lib/grn";
+import { OrderSubmitFooter } from "./OrderSubmitFooter";
 
 interface OrderPanelProps {
   config: BranchConfig;
@@ -175,8 +176,11 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
           <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>ORDER</span>
-          <button onClick={closePanel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
-            <X size={18} />
+          <button onClick={closePanel} aria-label="Back to menu" title="Back" style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}>
+            <svg width="30" height="20" viewBox="0 0 30 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M27 10H6" />
+              <path d="M13 3l-7 7 7 7" />
+            </svg>
           </button>
         </div>
         <div
@@ -332,12 +336,6 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
           );
         })}
 
-        {orderEntries.length > 0 && (
-          <div style={{ marginTop: "20px", marginBottom: "8px" }}>
-            <button onClick={handleOrderSubmit} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit" }}>Submit Order</button>
-          </div>
-        )}
-
         {pendingOrder && (
           <div style={{ marginTop: "32px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "20px", paddingBottom: "8px" }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px" }}>
@@ -409,9 +407,12 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
 
        </div>
       )}
-      {!showAllOrders && allOrderGroups.length > 0 && (
-        <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 24px), 24px)", paddingTop: "12px", borderTop: "0.5px solid hsl(var(--border))" }} onClick={e => e.stopPropagation()}>
-          <button onClick={() => setShowAllOrders(true)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "10px 0", fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {!showAllOrders && orderEntries.length > 0 && (
+        <OrderSubmitFooter count={orderEntries.length} onSubmit={handleOrderSubmit} />
+      )}
+      {!showAllOrders && allOrderGroups.length > 0 && orderEntries.length === 0 && (
+        <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", paddingTop: "6px", borderTop: "0.5px solid hsl(var(--border))" }} onClick={e => e.stopPropagation()}>
+          <button onClick={() => setShowAllOrders(true)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "5px 0", fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span>Past Orders</span>
             <ChevronUp size={14} />
           </button>
