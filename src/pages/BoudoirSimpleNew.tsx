@@ -272,7 +272,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
             alreadyAdded={alreadyAdded}
           />
         )}
-        {!showDropdown && !searchActive && (
+        {!searchActive && (
           <div style={{ paddingTop: "16px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
             {selectedProduct && (
               <ProductCard 
