@@ -30,21 +30,21 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
             cursor: "pointer",
             padding: "0 0 12px 0",
             fontSize: "clamp(16px, 4.5vw, 24px)",
-            fontWeight: 500,
+            fontWeight: 350,
             letterSpacing: "0.08em",
             fontFamily: "Raleway, inherit",
             color: "hsl(0 0% 20%)",
-            opacity: activePanel === btn ? 1 : 0.5,
+            opacity: activePanel === btn ? 1 : 0.8,
             borderBottom: activePanel === btn ? "2px solid hsl(0 0% 20%)" : "2px solid transparent",
             marginBottom: "-1px",
             transition: "opacity 0.2s ease, border-color 0.2s ease",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "0.7";
+            e.currentTarget.style.opacity = "0.9";
             e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = activePanel === btn ? "1" : "0.5";
+            e.currentTarget.style.opacity = activePanel === btn ? "1" : "0.8";
             e.currentTarget.style.borderBottom = activePanel === btn ? "2px solid hsl(0 0% 20%)" : "2px solid transparent";
           }}
         >
