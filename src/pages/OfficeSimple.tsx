@@ -583,6 +583,12 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
     setLocalProducts(allData);
   };
 
+  // Standalone route: no products prop provided → load them here
+  useEffect(() => {
+    if (!products || products.length === 0) refreshLocalProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Recent log state ─────────────────────────────────────────
   const [logRows, setLogRows] = useState<LogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(true);
