@@ -7,7 +7,7 @@ import { nuryadiConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimp
 import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { BranchHeader } from "@/components/branch/BranchHeader";
-import { Tabs } from "@/components/branch/Tabs";
+import { BottomNav } from "@/components/branch/BottomNav";
 import { Search } from "@/components/branch/Search";
 import { ProductCard } from "@/components/branch/ProductCard";
 import { ProductList } from "@/components/branch/ProductList";
@@ -260,6 +260,13 @@ const handleHeaderBack = () => {
     }
 };
 
+const goHome = () => {
+    setActivePanel(null);
+    resetSearchState();
+    setSearchActive(false);
+    setLogView("all");
+};
+
 const setLogViewToAll = () => {
     setLogView("all");
 };
@@ -314,14 +321,7 @@ const setLogViewToWeek = () => {
 {/* Header */}
         <BranchHeader branch={nuryadiConfig.displayName} onBack={handleHeaderBack} />
 
-       {/* Tabs with search icon */}
-        <Tabs 
-          activePanel={activePanel} 
-          setActivePanel={setActivePanel}
-          isSearchActive={searchActive || !!selectedProduct}
-          toggleSearch={toggleSearch}
-        />
-
+       
 {/* Search input - only show when search is active */}
         {searchActive && (
           <Search
@@ -339,7 +339,7 @@ const setLogViewToWeek = () => {
         )}
 
       {/* MIDDLE SCROLLABLE */}
-       <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "0px" }}>
+       <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
@@ -495,6 +495,15 @@ const setLogViewToWeek = () => {
           </div>
         )}
       </div>
+
+      <BottomNav
+        activePanel={activePanel}
+        setActivePanel={setActivePanel}
+        isSearchActive={searchActive || !!selectedProduct}
+        toggleSearch={toggleSearch}
+        goHome={goHome}
+        isHome={!activePanel && !searchActive && !selectedProduct}
+      />
 
       {/* USAGE Panel */}
       {activePanel === "USAGE" && createPortal(
