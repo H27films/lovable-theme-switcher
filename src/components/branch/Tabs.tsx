@@ -55,8 +55,6 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
       ))}
       <button
         onClick={toggleSearch}
-        onMouseEnter={() => setIsSearchHovered(true)}
-        onMouseLeave={() => setIsSearchHovered(false)}
         style={{
           background: "none",
           border: "none",
@@ -72,12 +70,14 @@ export const Tabs = ({ activePanel, setActivePanel, isSearchActive, toggleSearch
           alignItems: "center",
         }}
         onMouseEnter={(e) => {
+          setIsSearchHovered(true);
           e.currentTarget.style.transform = "scale(1.1)";
           if (!isSearchActive) {
             e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
           }
         }}
         onMouseLeave={(e) => {
+          setIsSearchHovered(false);
           e.currentTarget.style.transform = "scale(1)";
           if (!isSearchActive) {
             e.currentTarget.style.borderBottom = "2px solid transparent";

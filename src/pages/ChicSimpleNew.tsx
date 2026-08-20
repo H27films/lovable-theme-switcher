@@ -265,7 +265,7 @@ const setLogViewToAll = () => {
 };
 
 const setLogViewToWeek = () => {
-    setLogView("week";
+    setLogView("week");
 };
 
   const activeLog = selectedProduct ? productLog : branchLog;
