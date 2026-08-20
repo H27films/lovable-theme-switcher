@@ -339,7 +339,7 @@ const setLogViewToWeek = () => {
         )}
 
       {/* MIDDLE SCROLLABLE */}
-       <div style={{ flex: 1, overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}>
+       <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", scrollPaddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}

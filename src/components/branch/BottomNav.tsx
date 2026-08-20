@@ -43,23 +43,23 @@ export const BottomNav = ({
 
   return createPortal(
     <nav
-      style={{
-        position: "fixed",
-        left: "50%",
-        transform: "translateX(-50%)",
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
-        zIndex: 99999,
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "8px 14px",
-        borderRadius: "999px",
-        background: "hsl(var(--background) / 0.92)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        border: "0.5px solid hsl(var(--border))",
-        boxShadow: "0 8px 24px hsl(0 0% 0% / 0.18)",
-      }}
+style={{
+         position: "fixed",
+         left: "50%",
+         transform: "translateX(-50%)",
+         bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+         zIndex: 99999,
+         display: "flex",
+         alignItems: "center",
+         gap: "8px",
+         padding: "8px 14px",
+         borderRadius: "999px",
+         background: "hsl(var(--background) / 0.8)",
+         backdropFilter: "blur(12px)",
+         WebkitBackdropFilter: "blur(12px)",
+         border: "0.5px solid hsl(var(--border))",
+         boxShadow: "0 8px 24px hsl(0 0% 0% / 0.18)",
+       }}
     >
       {items.map(({ key, Icon, label }) => {
         const active = isActive(key);
