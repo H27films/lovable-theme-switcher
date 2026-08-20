@@ -21,12 +21,15 @@ export type Database = {
           "ENDING BALANCE": number | null
           GRN: string | null
           id: number
+          NOTES: string | null
           "OFFICE BALANCE": number | null
           "PRODUCT NAME": string | null
           QTY: number | null
           "STARTING BALANCE": number | null
           SUPPLIER: string | null
+          THERAPIST: string | null
           TYPE: string | null
+          "USAGE PILL": string | null
         }
         Insert: {
           BRANCH?: string | null
@@ -34,12 +37,15 @@ export type Database = {
           "ENDING BALANCE"?: number | null
           GRN?: string | null
           id?: number
+          NOTES?: string | null
           "OFFICE BALANCE"?: number | null
           "PRODUCT NAME"?: string | null
           QTY?: number | null
           "STARTING BALANCE"?: number | null
           SUPPLIER?: string | null
+          THERAPIST?: string | null
           TYPE?: string | null
+          "USAGE PILL"?: string | null
         }
         Update: {
           BRANCH?: string | null
@@ -47,12 +53,15 @@ export type Database = {
           "ENDING BALANCE"?: number | null
           GRN?: string | null
           id?: number
+          NOTES?: string | null
           "OFFICE BALANCE"?: number | null
           "PRODUCT NAME"?: string | null
           QTY?: number | null
           "STARTING BALANCE"?: number | null
           SUPPLIER?: string | null
+          THERAPIST?: string | null
           TYPE?: string | null
+          "USAGE PILL"?: string | null
         }
         Relationships: []
       }
@@ -77,6 +86,7 @@ export type Database = {
           SUPPLIER: string | null
           "SUPPLIER PRICE": number | null
           "UNITS/ORDER": number | null
+          UOM: string | null
         }
         Insert: {
           "BOUDOIR BALANCE"?: number | null
@@ -98,6 +108,7 @@ export type Database = {
           SUPPLIER?: string | null
           "SUPPLIER PRICE"?: number | null
           "UNITS/ORDER"?: number | null
+          UOM?: string | null
         }
         Update: {
           "BOUDOIR BALANCE"?: number | null
@@ -119,6 +130,37 @@ export type Database = {
           SUPPLIER?: string | null
           "SUPPLIER PRICE"?: number | null
           "UNITS/ORDER"?: number | null
+          UOM?: string | null
+        }
+        Relationships: []
+      }
+      app_users: {
+        Row: {
+          assigned_branch: string | null
+          created_at: string | null
+          id: string
+          last_login: string | null
+          name: string
+          password_hash: string
+          role: string | null
+        }
+        Insert: {
+          assigned_branch?: string | null
+          created_at?: string | null
+          id?: string
+          last_login?: string | null
+          name: string
+          password_hash: string
+          role?: string | null
+        }
+        Update: {
+          assigned_branch?: string | null
+          created_at?: string | null
+          id?: string
+          last_login?: string | null
+          name?: string
+          password_hash?: string
+          role?: string | null
         }
         Relationships: []
       }
