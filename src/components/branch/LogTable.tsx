@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Check } from "lucide-react";
-import { type LogRow } from "@/lib/branchSimple";
+import { type LogRow, type OfficeProduct, BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
+import { supabase } from "@/integrations/supabase/client";
 import { EditEntryModal, type EditEntryUpdates } from "./EditEntryModal";
 
 interface LogTableProps {
@@ -39,6 +40,53 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     setExpandedId(null);
     try {
       await onReverse(r);
+
+      // --- Start of new Supabase update logic ---
+      const productName = r["PRODUCT NAME"];
+      const quantity = r.QTY; // This is the quantity that was REVERSED (added back)
+      const branchName = r.BRANCH; // e.g., "Boudoir"
+
+      // Find the correct balance key from BRANCH_CONFIGS based on the branch name
+      let balanceKey: keyof OfficeProduct | null = null;
+      for (const key in BRANCH_CONFIGS) {
+        if (BRANCH_CONFIGS[key as keyof typeof BRANCH_CONFIGS].logBranchName === branchName) {
+          balanceKey = BRANCH_CONFIGS[key as keyof typeof BRANCH_CONFIGS].balanceKey;
+          break;
+        }
+      }
+
+      if (balanceKey) {
+        // Fetch the current product record from AllFileProducts for the specific branch
+        const { data, error } = await supabase
+          .from("AllFileProducts")
+          .select(`${balanceKey}, "PRODUCT NAME"`)
+          .eq("PRODUCT NAME", productName)
+          .single(); // Assuming PRODUCT NAME is unique for each product. No need to filter by branch here as balanceKey implies the branch.
+
+        if (error) {
+          console.error("Error fetching product for balance update:", error);
+        } else if (data) {
+          // Calculate the new balance
+          const currentBalance = data[balanceKey] ?? 0;
+          const newBalance = (currentBalance as number) + quantity; // Type assertion to number
+
+          // Update the balance in AllFileProducts
+          const { error: updateError } = await supabase
+            .from("AllFileProducts")
+            .update({ [balanceKey]: newBalance })
+            .eq("PRODUCT NAME", productName); // Update by product name
+
+          if (updateError) {
+            console.error("Error updating product balance:", updateError);
+          } else {
+            console.log(`Product balance for ${productName} in ${branchName} updated successfully. New balance: ${newBalance}`);
+          }
+        }
+      } else {
+        console.warn(`Could not find balanceKey for branch: ${branchName}`);
+      }
+      // --- End of new Supabase update logic ---
+
     } finally {
       setReversing(null);
     }
