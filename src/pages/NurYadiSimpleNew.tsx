@@ -496,14 +496,16 @@ const setLogViewToWeek = () => {
         )}
       </div>
 
-      <BottomNav
-        activePanel={activePanel}
-        setActivePanel={setActivePanel}
-        isSearchActive={searchActive || !!selectedProduct}
-        toggleSearch={toggleSearch}
-        goHome={goHome}
-        isHome={!activePanel && !searchActive && !selectedProduct}
-      />
+      {!selectedProduct && (
+        <BottomNav
+          activePanel={activePanel}
+          setActivePanel={setActivePanel}
+          isSearchActive={searchActive || !!selectedProduct}
+          toggleSearch={toggleSearch}
+          goHome={goHome}
+          isHome={!activePanel && !searchActive && !selectedProduct}
+        />
+      )}
 
       {/* USAGE Panel */}
       {activePanel === "USAGE" && createPortal(
