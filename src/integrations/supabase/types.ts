@@ -277,34 +277,34 @@ export type Database = {
       }
       OrderSubmit: {
         Row: {
-          id: number
           BRANCH: string
-          "PRODUCT NAME": string
-          QTY: number
+          created_at: string
           DATE: string
           GRN: string | null
+          id: number
           NOTES: string | null
-          created_at: string | null
+          "PRODUCT NAME": string
+          QTY: number
         }
         Insert: {
-          id?: number
           BRANCH: string
+          created_at?: string
+          DATE: string
+          GRN?: string | null
+          id?: number
+          NOTES?: string | null
           "PRODUCT NAME": string
           QTY?: number
-          DATE?: string
-          GRN?: string | null
-          NOTES?: string | null
-          created_at?: string | null
         }
         Update: {
-          id?: number
           BRANCH?: string
-          "PRODUCT NAME"?: string
-          QTY?: number
+          created_at?: string
           DATE?: string
           GRN?: string | null
+          id?: number
           NOTES?: string | null
-          created_at?: string | null
+          "PRODUCT NAME"?: string
+          QTY?: number
         }
         Relationships: []
       }
