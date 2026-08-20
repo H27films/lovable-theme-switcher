@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "lucide-react";
 import { USAGE_TYPES, THERAPISTS, makeIsFavourite, UsageType, isYes, typeColumnValue, usagePillValue, therapistValue } from "@/lib/branchSimpleUtils";
@@ -13,9 +13,10 @@ interface UsageTableProps {
   selectedProduct: OfficeProduct | null;
   setSelectedProduct: React.Dispatch<React.SetStateAction<OfficeProduct | null>>;
   onBack: () => void;
+  onUsageEntriesChange: (count: number) => void;
 }
 
-export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack }: UsageTableProps) => {
+export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack, onUsageEntriesChange }: UsageTableProps) => {
   const isFav = makeIsFavourite(config.favouriteKey);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
 
@@ -26,6 +27,10 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   const [usageSuccess, setUsageSuccess] = useState(false);
   const [usageError, setUsageError] = useState<string | null>(null);
   const usageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    onUsageEntriesChange(usageEntries.length);
+  }, [usageEntries, onUsageEntriesChange]);
 
   const usageFiltered = usageSearch.length > 0
     ? products.filter(p =>

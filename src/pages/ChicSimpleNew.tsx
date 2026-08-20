@@ -37,6 +37,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     const [searchActive, setSearchActive] = useState(false);
     const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | null>(null);
     const [logView, setLogView] = useState<"all" | "week">("all");
+    const [usageEntriesCount, setUsageEntriesCount] = useState(0);
 
    const resetSearchState = () => {
      setSearch("");
@@ -496,7 +497,7 @@ const setLogViewToWeek = () => {
         )}
       </div>
 
-      {!selectedProduct && (
+      {!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0) && (
         <BottomNav
           activePanel={activePanel}
           setActivePanel={setActivePanel}
@@ -516,7 +517,8 @@ const setLogViewToWeek = () => {
           refreshBranchLog={refreshBranchLog} 
           selectedProduct={selectedProduct} 
           setSelectedProduct={setSelectedProduct} 
-          onBack={() => setActivePanel(null)} 
+          onBack={() => setActivePanel(null)}
+          onUsageEntriesChange={setUsageEntriesCount}
         />,
         document.body
       )}
