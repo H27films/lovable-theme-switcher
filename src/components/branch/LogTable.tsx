@@ -60,7 +60,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
   }, [expandedId]);
 
   return (
-    <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {selectedProduct ? (
           <div style={{ display: "grid", gridTemplateColumns: "50px 44px 52px 90px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>

@@ -76,7 +76,7 @@ export const ProductList = ({
   const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
   return (
-    <div style={{ flex: 1, overflowY: "auto" }}>
+    <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px" }}>
       {favourites.length > 0 && (
         <>
           <SectionHeader label={favouritesLabel} />

@@ -505,7 +505,7 @@ return createPortal(
         <OrderSubmitFooter count={orderEntries.length} onSubmit={handleOrderSubmit} />
       )}
       {!showAllOrders && allOrderGroups.length > 0 && orderEntries.length === 0 && (
-        <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", paddingTop: "6px", borderTop: "0.5px solid hsl(var(--border))" }} onClick={e => e.stopPropagation()}>
+        <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", paddingTop: "6px", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto", paddingBottom: "90px" }} onClick={e => e.stopPropagation()}>
           <button onClick={() => setShowAllOrders(true)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "5px 0", fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span>Past Orders</span>
             <ChevronUp size={14} />
