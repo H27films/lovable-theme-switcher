@@ -38,6 +38,18 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | null>(null);
     const [logView, setLogView] = useState<"all" | "week">("all");
     const [usageEntriesCount, setUsageEntriesCount] = useState(0);
+    const [pastOrdersExpanded, setPastOrdersExpanded] = useState(false);
+    const [isSearchProduct, setIsSearchProduct] = useState(false);
+
+   // Reset Past Orders expanded flag whenever we leave the Order panel
+   useEffect(() => {
+     if (activePanel !== "ORDER") setPastOrdersExpanded(false);
+   }, [activePanel]);
+
+   // Clear the search-product flag when the selected product is cleared
+   useEffect(() => {
+     if (!selectedProduct) setIsSearchProduct(false);
+   }, [selectedProduct]);
 
    const resetSearchState = () => {
      setSearch("");
@@ -340,7 +352,7 @@ const setLogViewToWeek = () => {
         )}
 
       {/* MIDDLE SCROLLABLE */}
-       <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", scrollPaddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}>
+       <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
@@ -353,7 +365,7 @@ const setLogViewToWeek = () => {
               setSelectedProduct(p);
               setSearch(p["PRODUCT NAME"]);
               setShowDropdown(false);
-              setSearchMode("result");
+              setIsSearchProduct(true);
               closeSearch();
             }}
             alreadyAdded={alreadyAdded}
@@ -497,7 +509,7 @@ const setLogViewToWeek = () => {
         )}
       </div>
 
-      {!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0) && (
+      {(activePanel !== "ORDER" && !isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0)))) && (
         <BottomNav
           activePanel={activePanel}
           setActivePanel={setActivePanel}
@@ -505,6 +517,18 @@ const setLogViewToWeek = () => {
           toggleSearch={toggleSearch}
           goHome={goHome}
           isHome={!activePanel && !searchActive && !selectedProduct}
+        />
+      )}
+
+      {((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct)) && (
+        <BottomNav
+          activePanel={activePanel}
+          setActivePanel={setActivePanel}
+          isSearchActive={searchActive || !!selectedProduct}
+          toggleSearch={toggleSearch}
+          goHome={goHome}
+          isHome={!activePanel && !searchActive && !selectedProduct}
+          compact
         />
       )}
 
@@ -531,7 +555,8 @@ const setLogViewToWeek = () => {
           setProducts={setProducts} 
           branchLog={branchLog} 
           refreshBranchLog={refreshBranchLog} 
-          onBack={() => setActivePanel(null)} 
+          onBack={() => setActivePanel(null)}
+          onPastOrdersChange={setPastOrdersExpanded}
         />,
         document.body
       )}

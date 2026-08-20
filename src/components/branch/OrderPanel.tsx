@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, FileText, Download, Star } from "lucide-react";
 import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes } from "@/lib/branchSimpleUtils";
@@ -14,9 +14,10 @@ interface OrderPanelProps {
   branchLog: LogRow[];
   refreshBranchLog: () => void | Promise<void>;
   onBack: () => void;
+  onPastOrdersChange?: (expanded: boolean) => void;
 }
 
-export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBranchLog, onBack }: OrderPanelProps) => {
+export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBranchLog, onBack, onPastOrdersChange }: OrderPanelProps) => {
   const isFav = makeIsFavourite(config.favouriteKey);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
 
@@ -38,6 +39,10 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
   const [grnNotes, setGrnNotes] = useState("");
   const [lastConfirmedEntries, setLastConfirmedEntries] = useState<Array<{productName: string; starting: number; qty: number; ending: number}> | null>(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
+
+  useEffect(() => {
+    onPastOrdersChange?.(showAllOrders);
+  }, [showAllOrders, onPastOrdersChange]);
 
   const orderFiltered = orderSearch.length > 0
     ? products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(orderSearch.toLowerCase()))
@@ -253,7 +258,7 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
       )}
 
       {showAllOrders && allOrderGroups.length > 0 && (
-        <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background))", paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "12px", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+        <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background))", paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px",         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
             <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Past Orders</div>
             <button onClick={() => setShowAllOrders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", marginLeft: "auto" }}>
