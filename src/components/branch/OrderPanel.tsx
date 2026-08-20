@@ -81,13 +81,14 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
   // shared database, and remove it once the order is confirmed or reset (cancelled).
   useEffect(() => {
     if (!pendingLoaded) return;
-    if (pendingOrder && pendingOrder.entries.length > 0) {
-      (supabase as any)
-        .from("OrderSubmit")
-        .delete()
-        .eq("BRANCH", config.logBranchName)
-        .then(() =>
-          (supabase as any).from("OrderSubmit").insert(
+    (async () => {
+      try {
+        await (supabase as any)
+          .from("OrderSubmit")
+          .delete()
+          .eq("BRANCH", config.logBranchName);
+        if (pendingOrder && pendingOrder.entries.length > 0) {
+          await (supabase as any).from("OrderSubmit").insert(
             pendingOrder.entries.map(e => ({
               BRANCH: config.logBranchName,
               "PRODUCT NAME": e.productName,
@@ -96,16 +97,12 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
               GRN: pendingOrder.grn,
               NOTES: grnNotes,
             }))
-          )
-        )
-        .catch(() => {});
-    } else {
-      (supabase as any)
-        .from("OrderSubmit")
-        .delete()
-        .eq("BRANCH", config.logBranchName)
-        .catch(() => {});
-    }
+          );
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
   }, [pendingLoaded, pendingOrder, grnNotes, config.logBranchName]);
 
 const orderFiltered = orderSearch.length > 0
