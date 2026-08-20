@@ -19,7 +19,7 @@ export const typeColumnValue = (type: string): string =>
   : type === "Transfer" ? "Transfer"
   : "Salon Use";
 
-// Value saved to the AllFileLog "Therapist" column; blank when the placeholder is still selected
+// Value saved to the AllFileLog "THERAPIST" column; blank when the placeholder is still selected
 export const therapistValue = (therapist: string): string | null =>
   therapist === "THERAPIST" ? null : toTitleCase(therapist);
 

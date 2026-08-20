@@ -74,7 +74,7 @@ const pillButtonStyle: React.CSSProperties = {
 
 export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) => {
   const [qty, setQty] = useState(String(row.QTY ?? 0));
-  const [therapist, setTherapist] = useState<string | null>((row as any)["Therapist"] || null);
+  const [therapist, setTherapist] = useState<string | null>((row as any)["THERAPIST"] || null);
   const [type, setType] = useState<UsageType>(pillFromRow(row));
   const [notes, setNotes] = useState<string>((row as any)["NOTES"] || "");
   const [saving, setSaving] = useState(false);

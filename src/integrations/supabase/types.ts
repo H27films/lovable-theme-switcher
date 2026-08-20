@@ -275,6 +275,39 @@ export type Database = {
         }
         Relationships: []
       }
+      OrderSubmit: {
+        Row: {
+          id: number
+          BRANCH: string
+          "PRODUCT NAME": string
+          QTY: number
+          DATE: string
+          GRN: string | null
+          NOTES: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          BRANCH: string
+          "PRODUCT NAME": string
+          QTY?: number
+          DATE?: string
+          GRN?: string | null
+          NOTES?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          BRANCH?: string
+          "PRODUCT NAME"?: string
+          QTY?: number
+          DATE?: string
+          GRN?: string | null
+          NOTES?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

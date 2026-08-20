@@ -236,7 +236,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
       await (supabase as any).from("AllFileLog")
         .update({
           QTY: updates.qty,
-          Therapist: updates.therapist,
+          THERAPIST: updates.therapist,
           TYPE: typeColumnValue(updates.type),
           "USAGE PILL": usagePillValue(updates.type),
           NOTES: updates.notes,

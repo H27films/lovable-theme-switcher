@@ -15,7 +15,7 @@ interface LogTableProps {
 export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all" }: LogTableProps) => {
   const [reversing, setReversing] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
-  const [confirmPos, setConfirmPos] = useState<{ top: number; right: number } | null>(null);
+  const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editRow, setEditRow] = useState<LogRow | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -113,11 +113,11 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                      </>
                    )}
                  </div>
-{(row as any)["Therapist"] || (row as any)["NOTES"] ? (
+{(row as any)["THERAPIST"] || (row as any)["NOTES"] ? (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "1px 0 3px", alignItems: "center" }}>
-                      {(row as any)["Therapist"] && (
+                      {(row as any)["THERAPIST"] && (
                         <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
-                          Therapist: {(row as any)["Therapist"]}
+                          Therapist: {(row as any)["THERAPIST"]}
                         </span>
                       )}
                       {(row as any)["NOTES"] && (
@@ -131,7 +131,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                    <div style={{ display: "flex", gap: "8px", paddingBottom: "8px", paddingTop: "2px", paddingLeft: selectedProduct ? "42px" : "34px" }} onClick={(e) => e.stopPropagation()}>
                      {withinCutoff && !isReversing && (
                        <button
-                         onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); setConfirmPos({ top: rect.top + rect.height / 2, right: window.innerWidth - rect.left + 6 }); setConfirmRow(row); }}
+                         onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); const popWidth = 220; let left = rect.right + 8; if (left + popWidth > window.innerWidth) left = window.innerWidth - popWidth - 8; setConfirmPos({ top: rect.top + rect.height / 2, left: Math.max(8, left) }); setConfirmRow(row); }}
                          style={{ background: "#ffffff", border: "0.5px solid hsl(0 70% 50%)", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase", color: "hsl(0 70% 50%)" }}
                        >
                          Delete
@@ -165,7 +165,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             style={{
               position: "fixed",
               top: confirmPos.top,
-              right: confirmPos.right,
+              left: confirmPos.left,
               transform: "translateY(-50%)",
               zIndex: 500,
               background: "hsl(var(--background))",

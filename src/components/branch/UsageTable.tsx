@@ -99,6 +99,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
     if (!valid.length) return;
     setUsageError(null);
     setUsageSubmitting(true);
+    let hadError = false;
     try {
       const today = new Date().toISOString().split("T")[0];
       for (const entry of valid) {
@@ -112,7 +113,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
           "SUPPLIER": null,
           "TYPE": typeColumnValue(entry.type),
           "USAGE PILL": usagePillValue(entry.type),
-          "Therapist": therapistValue(entry.therapist),
+          "THERAPIST": therapistValue(entry.therapist),
           "NOTES": entry.note,
           "STARTING BALANCE": currentBalance,
           "QTY": entry.qty,
@@ -120,12 +121,12 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
           "GRN": null,
           "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
         });
-        if (logErr) { setUsageError(logErr.message || "Write failed"); break; }
+        if (logErr) { setUsageError(logErr.message || "Write failed"); hadError = true; break; }
         await (supabase as any).from("AllFileProducts")
           .update({ [BALANCE_KEY]: endingBalance })
           .eq("PRODUCT NAME", entry.productName);
       }
-      if (!usageError) {
+      if (!hadError) {
         setUsageEntries([]);
         setUsageSuccess(true);
         setTimeout(() => setUsageSuccess(false), 3000);

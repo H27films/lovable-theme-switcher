@@ -8,6 +8,13 @@ import { generateGRNPdf, exportToExcel } from "@/lib/grn";
 import { OrderSubmitFooter } from "./OrderSubmitFooter";
 import { useTabletMode } from "@/hooks/useTabletMode";
 
+type PersistedPendingOrder = {
+  grn: string;
+  date: string;
+  entries: { id: number; productName: string; starting: number; qty: number; ending: number }[];
+  notes?: string;
+};
+
 interface OrderPanelProps {
   config: BranchConfig;
   products: OfficeProduct[];
@@ -29,10 +36,8 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
   const [orderError, setOrderError] = useState<string | null>(null);
   const orderInputRef = useRef<HTMLInputElement>(null);
 
-  const [pendingOrder, setPendingOrder] = useState<{
-    grn: string; date: string;
-    entries: { id: number; productName: string; starting: number; qty: number; ending: number }[];
-  } | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<PersistedPendingOrder | null>(null);
+  const [pendingLoaded, setPendingLoaded] = useState(false);
   const [orderConfirming, setOrderConfirming] = useState(false);
   const [confirmSuccess, setConfirmSuccess] = useState(false);
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
@@ -45,6 +50,63 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
   useEffect(() => {
     onPastOrdersChange?.(showAllOrders);
   }, [showAllOrders, onPastOrdersChange]);
+
+  // Load the submitted-but-unconfirmed order lines for this branch so they're visible
+  // across devices (one shared submit per branch, one row per product line).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("OrderSubmit")
+        .select("*")
+        .eq("BRANCH", config.logBranchName)
+        .order("created_at", { ascending: true });
+      if (cancelled) return;
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const entries = data.map(r => {
+          const product = products.find(p => p["PRODUCT NAME"] === r["PRODUCT NAME"]);
+          const starting = Number((product as any)?.[BALANCE_KEY] ?? 0);
+          const qty = Number(r.QTY) || 0;
+          return { id: r.id, productName: r["PRODUCT NAME"], starting, qty, ending: starting + qty };
+        });
+        setPendingOrder({ grn: data[0].GRN || "", date: data[0].DATE || "", entries });
+        setGrnNotes(data[0].NOTES || "");
+      }
+      setPendingLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [config.logBranchName]);
+
+  // Persist the submitted-but-unconfirmed order as one row per product line in the
+  // shared database, and remove it once the order is confirmed or reset (cancelled).
+  useEffect(() => {
+    if (!pendingLoaded) return;
+    if (pendingOrder && pendingOrder.entries.length > 0) {
+      (supabase as any)
+        .from("OrderSubmit")
+        .delete()
+        .eq("BRANCH", config.logBranchName)
+        .then(() =>
+          (supabase as any).from("OrderSubmit").insert(
+            pendingOrder.entries.map(e => ({
+              BRANCH: config.logBranchName,
+              "PRODUCT NAME": e.productName,
+              QTY: e.qty,
+              DATE: pendingOrder.date,
+              GRN: pendingOrder.grn,
+              NOTES: grnNotes,
+            }))
+          )
+        )
+        .catch(() => {});
+    } else {
+      (supabase as any)
+        .from("OrderSubmit")
+        .delete()
+        .eq("BRANCH", config.logBranchName)
+        .catch(() => {});
+    }
+  }, [pendingLoaded, pendingOrder, grnNotes, config.logBranchName]);
 
   const orderFiltered = orderSearch.length > 0
     ? products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(orderSearch.toLowerCase()))
@@ -84,12 +146,29 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
     const yy = String(today.getFullYear()).slice(-2);
     const grn = `${config.grnPrefix} ${dd}${mm}${yy}`;
     const dateStr = today.toISOString().split("T")[0];
-    const entries = valid.map(entry => {
+    // Merge the newly added items into any existing submitted order instead of overwriting it.
+    const merged = new Map<string, PersistedPendingOrder["entries"][number]>(
+      (pendingOrder?.entries ?? []).map(e => [e.productName, { ...e }])
+    );
+    for (const entry of valid) {
       const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
       const starting = Number((product as any)?.[BALANCE_KEY] ?? 0);
-      return { id: entry.id, productName: entry.productName, starting, qty: entry.qty, ending: starting + entry.qty };
-    });
-    setPendingOrder({ grn, date: dateStr, entries });
+      const existing = merged.get(entry.productName);
+      if (existing) {
+        existing.qty += entry.qty;
+        existing.ending = existing.starting + existing.qty;
+      } else {
+        merged.set(entry.productName, {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          productName: entry.productName,
+          starting,
+          qty: entry.qty,
+          ending: starting + entry.qty,
+        });
+      }
+    }
+    setPendingOrder({ grn, date: dateStr, entries: Array.from(merged.values()) });
+    setOrderEntries([]);
     setOrderError(null);
   };
 
