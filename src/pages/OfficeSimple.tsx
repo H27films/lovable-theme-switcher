@@ -175,7 +175,7 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
   );
 };
 
-const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => {
+const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps) => {
   const { theme, setTheme } = useTheme();
   const toggleTheme = () => setTheme(theme === "sand" ? "light" : "sand");
   const [showOrderPanel, setShowOrderPanel] = useState(false);
@@ -567,7 +567,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products }: OfficeSimpleProps) => 
 
   // ── Local products (synced from prop, refreshed after order) ─
   const [localProducts, setLocalProducts] = useState<OfficeProduct[]>(products);
-  useEffect(() => { setLocalProducts(products); }, [products]);
+  useEffect(() => { setLocalProducts(products ?? []); }, [products]);
 
   const refreshLocalProducts = async () => {
     let allData: any[] = [];
