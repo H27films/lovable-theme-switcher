@@ -108,12 +108,12 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
     }
   }, [pendingLoaded, pendingOrder, grnNotes, config.logBranchName]);
 
-  const orderFiltered = orderSearch.length > 0
-    ? products.filter(p => p["PRODUCT NAME"].toLowerCase().includes(orderSearch.toLowerCase()))
-    : products;
-  const orderFavs    = orderFiltered.filter(p =>  isFav(p));
-const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
-   const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
+const orderFiltered = orderSearch.length > 0
+  ? products.filter(p => (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(orderSearch.toLowerCase()))
+  : products;
+  const orderFavs    = orderFiltered.filter(p => isFav(p));
+  const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
+  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
 
   const handleAddOrderProduct = (p: OfficeProduct) => {
     const existing = orderEntries.find(e => e.productName === p["PRODUCT NAME"]);
@@ -253,15 +253,15 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
     return groups.sort((a, b) => b.date.localeCompare(a.date));
   }, [branchLog]);
 
-  return createPortal(
-    <div style={{
-      position: "fixed", top: 0, left: 0,
-      width: tablet ? "76.92308vw" : "100vw",
-      height: tablet ? "76.92308dvh" : "100dvh",
-      background: "hsl(var(--background))", zIndex: 200,
-      zoom: tablet ? 1.3 : 1,
-      display: "flex", flexDirection: "column", overflow: "hidden",
-    }}>
+return createPortal(
+  <div style={{
+    position: "fixed", top: 0, left: 0,
+    width: tablet ? "76.92308vw" : "100vw",
+    height: tablet ? "76.92308dvh" : "100dvh",
+    background: "hsl(var(--background, 0 0% 0%))", zIndex: 200,
+    zoom: tablet ? 1.3 : 1,
+    display: "flex", flexDirection: "column", overflow: "hidden",
+  }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
           <span style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit" }}>ORDER</span>
@@ -274,44 +274,52 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
         </div>
         <div
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", cursor: showOrderDropdown ? "pointer" : "default" }}
-          onClick={() => { if (showOrderDropdown) dismissOrderDropdown(); }}
+          onClick={() => { 
+            if (showOrderDropdown) {
+              dismissOrderDropdown();
+            } else {
+              setShowOrderDropdown(true);
+              orderInputRef.current?.focus();
+            }
+          }}
         >
-          <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "uppercase" }}>
-            Enter Today's Order
-          </span>
-          <span style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
-            {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
-          </span>
+<span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", textTransform: "uppercase" }}>
+      Enter Today's Order
+    </span>
+<span style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textTransform: "uppercase" }}>
+      {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
+    </span>
         </div>
-        <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "12px", marginBottom: "0" }}>
+        <div style={{ borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingBottom: "12px", marginBottom: "0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-             <input
-               ref={orderInputRef}
-               type="text"
-               inputMode="search"
-               value={orderSearch}
-               onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); }}
-               onFocus={() => { setShowOrderDropdown(true); setShowAllOrders(false); }}
-               placeholder="Select product..."
-              style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))" }}
-            />
-            <button
-              onMouseDown={e => { e.preventDefault(); if (showOrderDropdown) dismissOrderDropdown(); else { setShowOrderDropdown(true); orderInputRef.current?.focus(); } }}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", flexShrink: 0, display: "flex", alignItems: "center" }}
-            >
-              {showOrderDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-            {orderSearch.length > 0 && (
-              <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}>
-                <X size={13} />
+<input
+                ref={orderInputRef}
+                type="text"
+                inputMode="search"
+                value={orderSearch}
+                onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); }}
+                onFocus={() => { setShowOrderDropdown(true); setShowAllOrders(false); }}
+                onClick={e => e.stopPropagation()}
+                placeholder="Select product..."
+                style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground, 0 0% 100%))", caretColor: "hsl(var(--foreground, 0 0% 100%))" }}
+              />
+<button
+                onMouseDown={e => { e.preventDefault(); e.stopPropagation(); if (showOrderDropdown) dismissOrderDropdown(); else { setShowOrderDropdown(true); orderInputRef.current?.focus(); } }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground, 0 0% 50%))", flexShrink: 0, display: "flex", alignItems: "center" }}
+              >
+                {showOrderDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
-            )}
+{orderSearch.length > 0 && (
+                <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground, 0 0% 50%))" }}>
+                  <X size={13} />
+                </button>
+              )}
           </div>
         </div>
       </div>
 
       {showOrderDropdown && (
-        <div style={{ flexShrink: 0, background: "hsl(var(--background))", maxHeight: "55vh", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px" }}>
+        <div style={{ flexShrink: 0, background: "hsl(var(--background, 0 0% 0%))", maxHeight: "55vh", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px" }}>
           {(() => {
             const sectionLabel = (label: string) => (
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
@@ -342,33 +350,33 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
       )}
 
       {showAllOrders && allOrderGroups.length > 0 && (
-        <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background))", paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px",         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+        <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background, 0 0% 0%))", paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px",         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)", borderTop: "0.5px solid hsl(var(--border, 0 0% 50%))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
             <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Past Orders</div>
-            <button onClick={() => setShowAllOrders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", marginLeft: "auto" }}>
+            <button onClick={() => setShowAllOrders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground, 0 0% 50%))", display: "flex", alignItems: "center", marginLeft: "auto" }}>
               <ChevronDown size={14} />
             </button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Date</div>
-            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>GRN</div>
-            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Items</div>
-            {expandedGRNs.size > 0 ? <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Bal</div> : <div />}
+          <div style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingBottom: "8px", marginBottom: "4px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em" }}>Date</div>
+            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em", textAlign: "center" }}>GRN</div>
+            <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em", textAlign: "center" }}>Items</div>
+            {expandedGRNs.size > 0 ? <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em", textAlign: "center" }}>Bal</div> : <div />}
           </div>
           {allOrderGroups.map(group => (
             <React.Fragment key={group.key}>
-              <div onClick={() => toggleGRN(group.key)} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0", alignItems: "center", cursor: "pointer" }}>
-                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{new Date(group.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
-                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{group.grn}</div>
-                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
-                <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", textAlign: "center", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)", display: "flex", alignItems: "center", justifyContent: "center" }}>▾</div>
+              <div onClick={() => toggleGRN(group.key)} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", padding: "10px 0", alignItems: "center", cursor: "pointer" }}>
+                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))" }}>{new Date(group.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", textAlign: "center" }}>{group.grn}</div>
+                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textAlign: "center" }}>{group.rows.length}</div>
+                <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground, 0 0% 50%))", textAlign: "center", transition: "transform 0.15s", transform: expandedGRNs.has(group.key) ? "rotate(180deg)" : "rotate(0deg)", display: "flex", alignItems: "center", justifyContent: "center" }}>▾</div>
               </div>
               {expandedGRNs.has(group.key) && group.rows.map(row => (
-                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card))" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", paddingLeft: "8px" }}>—</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["PRODUCT NAME"]}</div>
+                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card, 0 0% 10%))" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", paddingLeft: "8px" }}>—</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", textAlign: "center" }}>{row["PRODUCT NAME"]}</div>
                   <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", textAlign: "center" }}>+{row.QTY}</div>
-                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["ENDING BALANCE"]}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textAlign: "center" }}>{row["ENDING BALANCE"]}</div>
                 </div>
               ))}
             </React.Fragment>
@@ -388,111 +396,111 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
           return (
             <div style={{ paddingTop: "24px" }}>
               <div style={{ fontSize: "13px", fontWeight: 300, color: "hsl(120 60% 40%)", fontFamily: "Raleway, inherit", marginBottom: "12px" }}>✓ Order confirmed</div>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <button onClick={handleResetOrder} style={{ background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Reset</button>
-              </div>
-              <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-                <button onClick={() => generateGRNPdf(lastConfirmedEntries, confirmedGrn, config, grnNotes)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}><FileText size={10} />GRN PDF</button>
-                <button onClick={() => exportToExcel(lastConfirmedEntries, confirmedGrn)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}><Download size={10} />Export</button>
-              </div>
+<div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button onClick={handleResetOrder} style={{ background: "none", border: "0.5px solid hsl(var(--border, 0 0% 50%))", cursor: "pointer", padding: "8px 14px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}>Reset</button>
+                </div>
+<div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
+                  <button onClick={() => generateGRNPdf(lastConfirmedEntries, confirmedGrn, config, grnNotes)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><FileText size={10} />GRN PDF</button>
+                  <button onClick={() => exportToExcel(lastConfirmedEntries, confirmedGrn)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><Download size={10} />Export</button>
+                </div>
             </div>
           );
         })()}
 
-        {orderEntries.map(entry => {
-          const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-          const balance = product ? (product as any)[BALANCE_KEY] : null;
-          return (
-            <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1 }}>{entry.productName}</span>
-                <button onClick={() => setOrderEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-                  <X size={13} />
-                </button>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>Balance</span>
-                  <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{balance ?? "—"}</span>
+{orderEntries.map(entry => {
+            const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
+            const balance = product ? (product as any)[BALANCE_KEY] : null;
+            return (
+              <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", flex: 1 }}>{entry.productName}</span>
+                  <button onClick={() => setOrderEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground, 0 0% 50%))", flexShrink: 0 }}>
+                    <X size={13} />
+                  </button>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-                  <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}><ChevronLeft size={14} /></button>
-                  <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", minWidth: "28px", textAlign: "center" }}>{entry.qty}</span>
-                  <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}><ChevronRight size={14} /></button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {pendingOrder && (
-          <div style={{ marginTop: "32px", borderTop: "0.5px solid hsl(var(--border))", paddingTop: "20px", paddingBottom: "8px" }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px" }}>
-              <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
-              <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em" }}>{pendingOrder.grn}</div>
-            </div>
-            <div style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", marginBottom: "16px" }}>
-              Pending · Tap qty to edit · Click × to remove
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "8px", marginBottom: "4px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>Product</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Cur Bal</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>Qty</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", textAlign: "center" }}>End Bal</div>
-              <div />
-            </div>
-            {pendingOrder.entries.map((entry, idx) => {
-              const isEditing = editingPendingIdx === idx;
-              const parsedEdit = parseInt(editingPendingQty);
-              const displayQty = isEditing && !isNaN(parsedEdit) && parsedEdit > 0 ? parsedEdit : entry.qty;
-              return (
-                <div key={entry.id} style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border))", padding: "8px 0", alignItems: "center" }}>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", wordBreak: "break-word" }}>{entry.productName}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{entry.starting}</div>
-                  <div style={{ textAlign: "center" }}>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={editingPendingQty}
-                        onChange={e => setEditingPendingQty(e.target.value)}
-                        onBlur={() => {
-                          if (!isNaN(parsedEdit) && parsedEdit > 0) {
-                            setPendingOrder(prev => {
-                              if (!prev) return prev;
-                              const entries = prev.entries.map((e, i) => i === idx ? { ...e, qty: parsedEdit, ending: e.starting + parsedEdit } : e);
-                              return { ...prev, entries };
-                            });
-                          }
-                          setEditingPendingIdx(null);
-                          setEditingPendingQty("");
-                        }}
-                        onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); if (e.key === "Escape") { setEditingPendingIdx(null); setEditingPendingQty(""); } }}
-                        autoFocus
-                        style={{ width: "44px", textAlign: "center", fontSize: "13px", fontFamily: "Raleway, inherit", fontWeight: 300, background: "none", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "2px", outline: "none" }}
-                      />
-                    ) : (
-                      <span onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }} style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", cursor: "pointer", display: "inline-block", minWidth: "32px" }}>+{entry.qty}</span>
-                    )}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textTransform: "uppercase" }}>Balance</span>
+                    <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))" }}>{balance ?? "—"}</span>
                   </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{entry.starting + displayQty}</div>
-                  <button onClick={() => { setPendingOrder(prev => { if (!prev) return prev; const entries = prev.entries.filter((_, i) => i !== idx); return entries.length === 0 ? null : { ...prev, entries }; }); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center" }} onMouseEnter={e => (e.currentTarget.style.color = "hsl(0 70% 50%)")} onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground))")}><X size={11} /></button>
+                  <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                    <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><ChevronLeft size={14} /></button>
+                    <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", minWidth: "28px", textAlign: "center" }}>{entry.qty}</span>
+                    <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><ChevronRight size={14} /></button>
+                  </div>
                 </div>
-              );
-            })}
-            <div style={{ marginTop: "16px", marginBottom: "16px" }}>
-              <textarea value={grnNotes} onChange={e => setGrnNotes(e.target.value)} placeholder="Add notes (optional)" rows={2} style={{ width: "100%", background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit", fontWeight: 300, padding: "8px", resize: "none", outline: "none", boxSizing: "border-box" }} />
+              </div>
+            );
+          })}
+
+{pendingOrder && (
+            <div style={{ marginTop: "32px", borderTop: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingTop: "20px", paddingBottom: "8px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px" }}>
+                <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
+                <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", letterSpacing: "0.08em" }}>{pendingOrder.grn}</div>
+              </div>
+              <div style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textTransform: "uppercase", marginBottom: "16px" }}>
+                Pending · Tap qty to edit · Click × to remove
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingBottom: "8px", marginBottom: "4px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em" }}>Product</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em", textAlign: "center" }}>Cur Bal</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em", textAlign: "center" }}>Qty</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em", textAlign: "center" }}>End Bal</div>
+                <div />
+              </div>
+              {pendingOrder.entries.map((entry, idx) => {
+                const isEditing = editingPendingIdx === idx;
+                const parsedEdit = parseInt(editingPendingQty);
+                const displayQty = isEditing && !isNaN(parsedEdit) && parsedEdit > 0 ? parsedEdit : entry.qty;
+                return (
+                  <div key={entry.id} style={{ display: "grid", gridTemplateColumns: "1fr 48px 56px 48px 20px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", padding: "8px 0", alignItems: "center" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", wordBreak: "break-word" }}>{entry.productName}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textAlign: "center" }}>{entry.starting}</div>
+                    <div style={{ textAlign: "center" }}>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editingPendingQty}
+                          onChange={e => setEditingPendingQty(e.target.value)}
+                          onBlur={() => {
+                            if (!isNaN(parsedEdit) && parsedEdit > 0) {
+                              setPendingOrder(prev => {
+                                if (!prev) return prev;
+                                const entries = prev.entries.map((e, i) => i === idx ? { ...e, qty: parsedEdit, ending: e.starting + parsedEdit } : e);
+                                return { ...prev, entries };
+                              });
+                            }
+                            setEditingPendingIdx(null);
+                            setEditingPendingQty("");
+                          }}
+                          onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); if (e.key === "Escape") { setEditingPendingIdx(null); setEditingPendingQty(""); } }}
+                          autoFocus
+                          style={{ width: "44px", textAlign: "center", fontSize: "13px", fontFamily: "Raleway, inherit", fontWeight: 300, background: "none", border: "0.5px solid hsl(var(--border, 0 0% 50%))", color: "hsl(var(--foreground, 0 0% 100%))", padding: "2px", outline: "none" }}
+                        />
+                      ) : (
+                        <span onClick={() => { setEditingPendingIdx(idx); setEditingPendingQty(String(entry.qty)); }} style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", cursor: "pointer", display: "inline-block", minWidth: "32px" }}>+{entry.qty}</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", textAlign: "center" }}>{entry.starting + displayQty}</div>
+                    <button onClick={() => { setPendingOrder(prev => { if (!prev) return prev; const entries = prev.entries.filter((_, i) => i !== idx); return entries.length === 0 ? null : { ...prev, entries }; }); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground, 0 0% 50%))", display: "flex", alignItems: "center", justifyContent: "center" }} onMouseEnter={e => (e.currentTarget.style.color = "hsl(0 70% 50%)")} onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--muted-foreground, 0 0% 50%))")}><X size={11} /></button>
+                  </div>
+                );
+              })}
+              <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+                <textarea value={grnNotes} onChange={e => setGrnNotes(e.target.value)} placeholder="Add notes (optional)" rows={2} style={{ width: "100%", background: "hsl(var(--card, 0 0% 10%))", border: "0.5px solid hsl(var(--border, 0 0% 50%))", color: "hsl(var(--foreground, 0 0% 100%))", fontSize: "13px", fontFamily: "Raleway, inherit", fontWeight: 300, padding: "8px", resize: "none", outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", marginBottom: "8px" }}>
+                <button onClick={handleConfirmOrder} disabled={orderConfirming} style={{ background: "hsl(var(--foreground, 0 0% 100%))", color: "hsl(var(--background, 0 0% 0%))", border: "none", cursor: orderConfirming ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: orderConfirming ? 0.5 : 1 }}>{orderConfirming ? "Saving..." : "Confirm Order"}</button>
+                <button onClick={handleResetOrder} style={{ background: "none", border: "0.5px solid hsl(var(--border, 0 0% 50%))", cursor: "pointer", padding: "10px 20px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}>Reset</button>
+              </div>
+              <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
+                <button onClick={() => generateGRNPdf(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn, config, grnNotes)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><FileText size={10} />GRN PDF</button>
+                <button onClick={() => exportToExcel(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><Download size={10} />Export</button>
+              </div>
+              {orderError && <div style={{ fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", marginBottom: "8px" }}>✗ {orderError}</div>}
             </div>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", marginBottom: "8px" }}>
-              <button onClick={handleConfirmOrder} disabled={orderConfirming} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: orderConfirming ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: orderConfirming ? 0.5 : 1 }}>{orderConfirming ? "Saving..." : "Confirm Order"}</button>
-              <button onClick={handleResetOrder} style={{ background: "none", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "10px 20px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Reset</button>
-            </div>
-            <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-              <button onClick={() => generateGRNPdf(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn, config, grnNotes)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}><FileText size={10} />GRN PDF</button>
-              <button onClick={() => exportToExcel(pendingOrder.entries.map(e => ({ productName: e.productName, starting: e.starting, qty: e.qty, ending: e.starting + e.qty })), pendingOrder.grn)} style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}><Download size={10} />Export</button>
-            </div>
-            {orderError && <div style={{ fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", marginBottom: "8px" }}>✗ {orderError}</div>}
-          </div>
-        )}
+          )}
 
        </div>
       )}

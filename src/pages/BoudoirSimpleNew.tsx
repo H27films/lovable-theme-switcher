@@ -288,7 +288,7 @@ const setLogViewToWeek = () => {
   const usageFiltered = useMemo(() => {
     if (searchMode === "active" || searchMode === "result") {
       return products.filter(p =>
-        p["PRODUCT NAME"].toLowerCase().includes(search.toLowerCase()) &&
+        (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(search.toLowerCase()) &&
         (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
       );
     }
@@ -298,7 +298,7 @@ const setLogViewToWeek = () => {
   const orderFiltered = useMemo(() => {
     if (searchMode === "active" || searchMode === "result") {
       return products.filter(p => 
-        p["PRODUCT NAME"].toLowerCase().includes(search.toLowerCase())
+        (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(search.toLowerCase())
       );
     }
     return products;
