@@ -122,22 +122,19 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      if (logView === "week") {
        const today = new Date();
        today.setHours(0, 0, 0, 0);
-       // Get Monday of this week
-       const day = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-       const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-       const monday = new Date(today);
-       monday.setDate(diff);
-       monday.setHours(0, 0, 0, 0);
+       // Last 7 days: start from the most recent day and go back 6 days
+       const cutoff = new Date(today);
+       cutoff.setDate(today.getDate() - 6);
        
        fetchedLog = fetchedLog.filter(row => {
          const rowDate = new Date(row.DATE);
          rowDate.setHours(0, 0, 0, 0);
-         return rowDate >= monday;
+         return rowDate >= cutoff;
        });
        
-       // Sort chronologically (Monday first) for week view
+       // Sort most recent day first (last 7 days)
        fetchedLog = [...fetchedLog].sort((a, b) => 
-         new Date(a.DATE).getTime() - new Date(b.DATE).getTime()
+         new Date(b.DATE).getTime() - new Date(a.DATE).getTime()
        );
      }
      
@@ -164,22 +161,19 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
        if (logView === "week") {
          const today = new Date();
          today.setHours(0, 0, 0, 0);
-         // Get Monday of this week
-         const day = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-         const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-         const monday = new Date(today);
-         monday.setDate(diff);
-         monday.setHours(0, 0, 0, 0);
+         // Last 7 days: start from the most recent day and go back 6 days
+         const cutoff = new Date(today);
+         cutoff.setDate(today.getDate() - 6);
          
          fetchedLog = fetchedLog.filter(row => {
            const rowDate = new Date(row.DATE);
            rowDate.setHours(0, 0, 0, 0);
-           return rowDate >= monday;
+           return rowDate >= cutoff;
          });
          
-         // Sort chronologically (Monday first) for week view
+         // Sort most recent day first (last 7 days)
          fetchedLog = [...fetchedLog].sort((a, b) => 
-           new Date(a.DATE).getTime() - new Date(b.DATE).getTime()
+           new Date(b.DATE).getTime() - new Date(a.DATE).getTime()
          );
        }
        
@@ -439,7 +433,7 @@ const setLogViewToWeek = () => {
             e.currentTarget.style.borderBottom = "2px solid transparent";
           }}
         >
-          Week
+          7 Days
         </button>
       </>
     ) : (
@@ -470,7 +464,7 @@ const setLogViewToWeek = () => {
             e.currentTarget.style.borderBottom = "2px solid transparent";
           }}
         >
-          Week
+          7 Days
         </button>
         <button
           onClick={setLogViewToAll}

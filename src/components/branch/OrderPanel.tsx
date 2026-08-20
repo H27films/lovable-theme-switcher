@@ -6,6 +6,7 @@ import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes } from "@/lib/branchSim
 import { type BranchConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { generateGRNPdf, exportToExcel } from "@/lib/grn";
 import { OrderSubmitFooter } from "./OrderSubmitFooter";
+import { useTabletMode } from "@/hooks/useTabletMode";
 
 interface OrderPanelProps {
   config: BranchConfig;
@@ -20,6 +21,7 @@ interface OrderPanelProps {
 export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBranchLog, onBack, onPastOrdersChange }: OrderPanelProps) => {
   const isFav = makeIsFavourite(config.favouriteKey);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
+  const { tablet } = useTabletMode();
 
   const [orderEntries, setOrderEntries] = useState<{ id: number; productName: string; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
@@ -174,8 +176,11 @@ const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
 
   return createPortal(
     <div style={{
-      position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh",
+      position: "fixed", top: 0, left: 0,
+      width: tablet ? "76.92308vw" : "100vw",
+      height: tablet ? "76.92308dvh" : "100dvh",
       background: "hsl(var(--background))", zIndex: 200,
+      zoom: tablet ? 1.3 : 1,
       display: "flex", flexDirection: "column", overflow: "hidden",
     }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>

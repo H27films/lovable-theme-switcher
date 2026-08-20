@@ -113,6 +113,20 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                      </>
                    )}
                  </div>
+{(row as any)["Therapist"] || (row as any)["NOTES"] ? (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "1px 0 3px", alignItems: "center" }}>
+                      {(row as any)["Therapist"] && (
+                        <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+                          Therapist: {(row as any)["Therapist"]}
+                        </span>
+                      )}
+                      {(row as any)["NOTES"] && (
+                        <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", lineHeight: 1.3, whiteSpace: "normal", wordBreak: "break-word" }}>
+                          Note: {(row as any)["NOTES"]}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
                  {expanded && (
                    <div style={{ display: "flex", gap: "8px", paddingBottom: "8px", paddingTop: "2px", paddingLeft: selectedProduct ? "42px" : "34px" }} onClick={(e) => e.stopPropagation()}>
                      {withinCutoff && !isReversing && (

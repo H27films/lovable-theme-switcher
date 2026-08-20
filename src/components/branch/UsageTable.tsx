@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "lucide-react";
 import { USAGE_TYPES, THERAPISTS, makeIsFavourite, UsageType, isYes, typeColumnValue, usagePillValue, therapistValue } from "@/lib/branchSimpleUtils";
 import { type BranchConfig, type OfficeProduct, type EntryLine } from "@/lib/branchSimple";
+import { useTabletMode } from "@/hooks/useTabletMode";
 
 interface UsageTableProps {
   config: BranchConfig;
@@ -19,6 +20,7 @@ interface UsageTableProps {
 export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack, onUsageEntriesChange }: UsageTableProps) => {
   const isFav = makeIsFavourite(config.favouriteKey);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
+  const { tablet } = useTabletMode();
 
   const [usageEntries, setUsageEntries] = useState<EntryLine[]>([]);
   const [usageSearch, setUsageSearch] = useState("");
@@ -154,8 +156,11 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
 
   return createPortal(
     <div style={{
-      position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh",
+      position: "fixed", top: 0, left: 0,
+      width: tablet ? "76.92308vw" : "100vw",
+      height: tablet ? "76.92308dvh" : "100dvh",
       background: "hsl(var(--background))", zIndex: 200,
+      zoom: tablet ? 1.3 : 1,
       display: "flex", flexDirection: "column", overflow: "hidden",
     }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
