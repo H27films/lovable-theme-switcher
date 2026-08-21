@@ -41,9 +41,9 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
       )
     : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
-  const usageFavs    = usageFiltered.filter(p =>  isFav(p));
-const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
-   const usageRegular = usageFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
+  const usageFavs    = usageFiltered.filter(p =>  isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const usageRegular = usageFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
 
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);
