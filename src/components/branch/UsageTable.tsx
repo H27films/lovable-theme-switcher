@@ -14,10 +14,11 @@ interface UsageTableProps {
   selectedProduct: OfficeProduct | null;
   setSelectedProduct: React.Dispatch<React.SetStateAction<OfficeProduct | null>>;
   onBack: () => void;
+  onSuccess?: () => void;
   onUsageEntriesChange: (count: number) => void;
 }
 
-export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack, onUsageEntriesChange }: UsageTableProps) => {
+export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack, onSuccess, onUsageEntriesChange }: UsageTableProps) => {
   const isFav = makeIsFavourite(config.favouriteKey);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const { tablet } = useTabletMode();
@@ -148,6 +149,11 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
           }
         }
         refreshBranchLog();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          onBack();
+        }
       }
     } catch (err: any) {
       setUsageError(err?.message || "Unknown error");

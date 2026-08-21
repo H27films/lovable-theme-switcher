@@ -536,6 +536,7 @@ const setLogViewToWeek = () => {
           selectedProduct={selectedProduct} 
           setSelectedProduct={setSelectedProduct} 
           onBack={() => setActivePanel(null)}
+          onSuccess={goHome}
           onUsageEntriesChange={setUsageEntriesCount}
         />,
         document.body
