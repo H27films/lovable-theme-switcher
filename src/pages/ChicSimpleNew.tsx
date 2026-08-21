@@ -46,6 +46,13 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      if (activePanel !== "ORDER") setPastOrdersExpanded(false);
    }, [activePanel]);
 
+\
+    // Filter out products with UOM = "BUNDLE" for this branch
+    const filteredProducts = useMemo(() => {
+      if (!products) return [];
+      return products.filter((product) => product.UOM !== "BUNDLE");
+    }, [products]);
+
    // Clear the search-product flag when the selected product is cleared
    useEffect(() => {
      if (!selectedProduct) setIsSearchProduct(false);
@@ -128,6 +135,8 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      const fetchProductLog = async () => {
        const { data } = await (supabase as any)
          .from("AllFileLog")
+        products={filteredProducts}
+        products={filteredProducts}
          .select("*")
          .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
          .eq("BRANCH", BRANCH_LOG_NAME)
