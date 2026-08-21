@@ -23,7 +23,7 @@ interface NurYadiSimpleNewProps {
 
 const NurYadiSimpleNew = ({ onBack, onBackToMain, products: propProducts }: NurYadiSimpleNewProps) => {
   const [favs, setFavs] = useState<any[]>([]);
-  const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[nuryadiConfig.favouriteKey] === "TRUE");
+  const isFav = (p: any) => isYes(p[nuryadiConfig.favouriteKey]);
   const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;
 
@@ -175,7 +175,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
 
   const toggleFavourite = async (product: OfficeProduct) => {
     const currentlyFav = isFav(product);
-    const newVal = !currentlyFav;
+    const newVal = !currentlyFav ? "TRUE" : null;
     await (supabase as any)
       .from("AllFileProducts")
       .update({ [nuryadiConfig.favouriteKey]: newVal })

@@ -23,7 +23,7 @@ interface ChicSimpleNewProps {
 
 const ChicSimpleNew = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleNewProps) => {
   const [favs, setFavs] = useState<any[]>([]);
-  const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[chicConfig.favouriteKey] === "TRUE");
+  const isFav = (p: any) => isYes(p[chicConfig.favouriteKey]);
   const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = chicConfig.logBranchName;
 
@@ -175,7 +175,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
 
   const toggleFavourite = async (product: OfficeProduct) => {
     const currentlyFav = isFav(product);
-    const newVal = !currentlyFav;
+    const newVal = !currentlyFav ? "TRUE" : null;
     await (supabase as any)
       .from("AllFileProducts")
       .update({ [chicConfig.favouriteKey]: newVal })
