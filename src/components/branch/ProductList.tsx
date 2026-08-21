@@ -80,6 +80,17 @@ export const ProductList = ({
       {favourites.length > 0 && (
         <>
           <SectionHeader label={favouritesLabel} />
+          {favourites.length > 0 && (
+            <>
+              <SectionHeader label={favouritesLabel} />
+              {favourites.sort((a, b) => {
+                const nameA = a["PRODUCT NAME"] || "";
+                const nameB = b["PRODUCT NAME"] || "";
+                return nameA.localeCompare(nameB);
+              }).map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} />)}
+            </>
+          )}
+          {favourites.sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"])).map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} />)}
           {favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} />)}
         </>
       )}
