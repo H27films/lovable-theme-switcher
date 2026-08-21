@@ -171,6 +171,11 @@ const orderFiltered = orderSearch.length > 0
 
   const handleConfirmOrder = async () => {
     if (!pendingOrder) return;
+    const pwd = window.prompt("Enter password to confirm order:");
+    if (pwd !== "128128") {
+      if (pwd !== null) alert("Incorrect password");
+      return;
+    }
     setOrderConfirming(true);
     setOrderError(null);
     let hasError = false;
