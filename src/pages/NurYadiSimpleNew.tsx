@@ -182,19 +182,31 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
 
   const reverseRow = async (row: LogRow) => {
     try {
-      await (supabase as any).from("AllFileProducts")
-        .update({ [BALANCE_KEY]: row["STARTING BALANCE"] })
-        .eq("PRODUCT NAME", row["PRODUCT NAME"]);
+      // The deletion and product balance restoration is now handled inside LogTable.tsx's handleConfirm
+      // to ensure multi-column resync (like Office Balance).
+      // We only need to delete the log row here if handleConfirm didn't do it, 
+      // but usually onReverse is called FIRST.
       await (supabase as any).from("AllFileLog").delete().eq("id", row.id);
-      // Update product balance in local state
-      setProducts(prev => prev.map(p =>
-        p["PRODUCT NAME"] === row["PRODUCT NAME"]
-          ? { ...p, [BALANCE_KEY]: row["STARTING BALANCE"] }
-          : p
-      ));
+      
+      // We don't perform the balance update here anymore because handleConfirm in LogTable.tsx
+      // does a more comprehensive update (handling both Branch and Office balances).
+      
+      // Refresh branch log to reflect deletion
+      await refreshBranchLog();
+      
+      // If a product is selected, refresh its specific log and state
       if (selectedProduct && selectedProduct["PRODUCT NAME"] === row["PRODUCT NAME"]) {
-        setSelectedProduct(prev => prev ? { ...prev, [BALANCE_KEY]: row["STARTING BALANCE"] } : prev);
-        // Refresh product log
+        const { data: freshProd } = await supabase
+          .from("AllFileProducts")
+          .select("*")
+          .eq("PRODUCT NAME", row["PRODUCT NAME"])
+          .single();
+        
+        if (freshProd) {
+          setProducts(prev => prev.map(p => p["PRODUCT NAME"] === row["PRODUCT NAME"] ? freshProd : p));
+          setSelectedProduct(freshProd);
+        }
+
         const { data: freshPLog } = await (supabase as any)
           .from("AllFileLog").select("*")
           .eq("PRODUCT NAME", row["PRODUCT NAME"])
@@ -202,8 +214,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
           .order("DATE", { ascending: false }).limit(50);
         setProductLog(sortLog(freshPLog || []));
       }
-      // Refresh branch log
-      await refreshBranchLog();
     } catch (err) {
       console.error("Reverse row error:", err);
     }
