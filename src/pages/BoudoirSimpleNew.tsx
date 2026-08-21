@@ -296,22 +296,22 @@ const setLogViewToWeek = () => {
   // Usage and Order filtered lists (for search in dropdowns)
   const usageFiltered = useMemo(() => {
     if (searchMode === "active" || searchMode === "result") {
-      return products.filter(p =>
+      return filteredProducts.filter(p =>
         (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(search.toLowerCase()) &&
         (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
       );
     }
-    return products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
-  }, [search, searchMode, products]);
+    return filteredProducts.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
+  }, [search, searchMode, filteredProducts]);
 
   const orderFiltered = useMemo(() => {
     if (searchMode === "active" || searchMode === "result") {
-      return products.filter(p => 
+      return filteredProducts.filter(p => 
         (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(search.toLowerCase())
       );
     }
-    return products;
-  }, [search, searchMode, products]);
+    return filteredProducts;
+  }, [search, searchMode, filteredProducts]);
 
   const usageFavs    = usageFiltered.filter(p => isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
   const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
