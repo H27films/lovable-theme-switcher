@@ -210,8 +210,8 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
           .single();
         
         if (freshProd) {
-          setProducts(prev => prev.map(p => p["PRODUCT NAME"] === row["PRODUCT NAME"] ? freshProd : p));
-          setSelectedProduct(freshProd);
+          setProducts(prev => prev.map(p => p["PRODUCT NAME"] === row["PRODUCT NAME"] ? (freshProd as unknown as OfficeProduct) : p));
+          setSelectedProduct(freshProd as unknown as OfficeProduct);
         }
 
         const { data: freshPLog } = await (supabase as any)
