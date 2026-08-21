@@ -300,7 +300,7 @@ const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
       </div>
 
       {usageEntries.length > 0 && (
-        <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto", paddingBottom: "90px" }}>
+        <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 20px), 20px)", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <button onClick={handleUsageSubmit} disabled={usageSubmitting} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "10px 24px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1, borderRadius: "999px" }}>{usageSubmitting ? "Saving..." : "Submit"}</button>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
