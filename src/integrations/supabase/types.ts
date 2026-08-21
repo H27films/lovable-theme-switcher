@@ -203,6 +203,39 @@ export type Database = {
         }
         Relationships: []
       }
+      Favourites: {
+        Row: {
+          "BOUDOIR FAVOURITE": string | null
+          "CHIC NAILSPA FAVOURITE": string | null
+          COLOUR: string | null
+          id: number
+          "NUR YADI FAVOURITE": string | null
+          "OFFICE FAVOURITE": string | null
+          "PRODUCT NAME": string | null
+          "SOURCE ID": number | null
+        }
+        Insert: {
+          "BOUDOIR FAVOURITE"?: string | null
+          "CHIC NAILSPA FAVOURITE"?: string | null
+          COLOUR?: string | null
+          id?: number
+          "NUR YADI FAVOURITE"?: string | null
+          "OFFICE FAVOURITE"?: string | null
+          "PRODUCT NAME"?: string | null
+          "SOURCE ID"?: number | null
+        }
+        Update: {
+          "BOUDOIR FAVOURITE"?: string | null
+          "CHIC NAILSPA FAVOURITE"?: string | null
+          COLOUR?: string | null
+          id?: number
+          "NUR YADI FAVOURITE"?: string | null
+          "OFFICE FAVOURITE"?: string | null
+          "PRODUCT NAME"?: string | null
+          "SOURCE ID"?: number | null
+        }
+        Relationships: []
+      }
       InputFullTable: {
         Row: {
           "China Price (CNY)": number | null
@@ -310,7 +343,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      "Favourites Sorted": {
+        Row: {
+          "BOUDOIR FAVOURITE": string | null
+          "CHIC NAILSPA FAVOURITE": string | null
+          COLOUR: string | null
+          id: number | null
+          "NUR YADI FAVOURITE": string | null
+          "OFFICE FAVOURITE": string | null
+          "PRODUCT NAME": string | null
+          "SOURCE ID": number | null
+        }
+        Insert: {
+          "BOUDOIR FAVOURITE"?: string | null
+          "CHIC NAILSPA FAVOURITE"?: string | null
+          COLOUR?: string | null
+          id?: number | null
+          "NUR YADI FAVOURITE"?: string | null
+          "OFFICE FAVOURITE"?: string | null
+          "PRODUCT NAME"?: string | null
+          "SOURCE ID"?: number | null
+        }
+        Update: {
+          "BOUDOIR FAVOURITE"?: string | null
+          "CHIC NAILSPA FAVOURITE"?: string | null
+          COLOUR?: string | null
+          id?: number | null
+          "NUR YADI FAVOURITE"?: string | null
+          "OFFICE FAVOURITE"?: string | null
+          "PRODUCT NAME"?: string | null
+          "SOURCE ID"?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
