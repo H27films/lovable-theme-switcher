@@ -46,83 +46,11 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      if (activePanel !== "ORDER") setPastOrdersExpanded(false);
    }, [activePanel]);
 
-\
+
     // Filter out products with UOM = "BUNDLE" for this branch
     const filteredProducts = useMemo(() => {
       if (!products) return [];
       return products.filter((product) => product.UOM !== "BUNDLE");
-
-    const { data: favData, error: favError } = await supabase
-      .from('Favourites')
-      .select('*');
-
-    if (favError) {
-      console.error('Error fetching favourites:', favError);
-      // Decide how to handle this error: maybe set products to empty or continue without favorites
-    }
-
-    // Merge products with favourite data, ensuring 'TRUE' is uppercase
-    const mergedProducts = allData.map((product) => {
-      const favourites = favData?.find(fav => fav.SOURCE_ID === product.id); // Corrected common key
-      return {
-        ...product,
-        'BOUDOIR FAVOURITE': favourites?.['BOUDOIR FAVOURITE'] ? String(favourites['BOUDOIR FAVOURITE']).toUpperCase() : (product['BOUDOIR FAVOURITE'] ? String(product['BOUDOIR FAVOURITE']).toUpperCase() : undefined),
-        'CHIC NAILSPA FAVOURITE': favourites?.['CHIC NAILSPA FAVOURITE'] ? String(favourites['CHIC NAILSPA FAVOURITE']).toUpperCase() : (product['CHIC NAILSPA FAVOURITE'] ? String(product['CHIC NAILSPA FAVOURITE']).toUpperCase() : undefined),
-        'NUR YADI FAVOURITE': favourites?.['NUR YADI FAVOURITE'] ? String(favourites['NUR YADI FAVOURITE']).toUpperCase() : (product['NUR YADI FAVOURITE'] ? String(product['NUR YADI FAVOURITE']).toUpperCase() : undefined),
-        // Add other favorite columns if they exist and need merging
-      };
-    });
-
-    setProducts(mergedProducts);
-    
-
-    const { data: favData, error: favError } = await supabase
-      .from('Favourites')
-      .select('*');
-
-    if (favError) {
-      console.error('Error fetching favourites:', favError);
-      // Decide how to handle this error: maybe set products to empty or continue without favorites
-    }
-
-    // Merge products with favourite data
-    const mergedProducts = allData.map((product) => {
-      const favourites = favData?.find(fav => fav.SOURCE_ID === product.id); // Corrected common key
-      return {
-        ...product,
-        'BOUDOIR FAVOURITE': favourites?.['BOUDOIR FAVOURITE'] ?? product['BOUDOIR FAVOURITE'],
-        'CHIC NAILSPA FAVOURITE': favourites?.['CHIC NAILSPA FAVOURITE'] ?? product['CHIC NAILSPA FAVOURITE'],
-        'NUR YADI FAVOURITE': favourites?.['NUR YADI FAVOURITE'] ?? product['NUR YADI FAVOURITE'],
-        // Add other favorite columns if they exist and need merging
-      };
-    });
-
-    setProducts(mergedProducts);
-    
-
-    const { data: favData, error: favError } = await supabase
-      .from('Favourites')
-      .select('*');
-
-    if (favError) {
-      console.error('Error fetching favourites:', favError);
-      // Decide how to handle this error: maybe set products to empty or continue without favorites
-    }
-
-    // Merge products with favourite data
-    const mergedProducts = allData.map((product) => {
-      const favourites = favData?.find(fav => fav.product_id === product.id); // Assuming 'product_id' is the common key
-      return {
-        ...product,
-        'BOUDOIR FAVOURITE': favourites?.['BOUDOIR FAVOURITE'] ?? product['BOUDOIR FAVOURITE'],
-        'CHIC NAILSPA FAVOURITE': favourites?.['CHIC NAILSPA FAVOURITE'] ?? product['CHIC NAILSPA FAVOURITE'],
-        'NUR YADI FAVOURITE': favourites?.['NUR YADI FAVOURITE'] ?? product['NUR YADI FAVOURITE'],
-        // Add other favorite columns if they exist and need merging
-      };
-    });
-
-    setProducts(mergedProducts);
-    
     }, [products]);
 
    // Clear the search-product flag when the selected product is cleared
@@ -207,8 +135,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      const fetchProductLog = async () => {
        const { data } = await (supabase as any)
          .from("AllFileLog")
-        products={filteredProducts}
-        products={filteredProducts}
          .select("*")
          .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
          .eq("BRANCH", BRANCH_LOG_NAME)
