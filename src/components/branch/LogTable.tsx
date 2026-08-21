@@ -14,7 +14,7 @@ interface LogTableProps {
 }
 
 export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all" }: LogTableProps) => {
-  const [reversing, setReversing] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -36,7 +36,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     const r = row;
     setConfirmRow(null);
     setConfirmPos(null);
-    setReversing(row.id);
+    setDeleting(row.id);
     setExpandedId(null);
     try {
       await onReverse(r);
@@ -89,7 +89,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
       // --- End of new Supabase update logic ---
 
     } finally {
-      setReversing(null);
+      setDeleting(null);
     }
   };
 
@@ -135,7 +135,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             const prevDateStr = idx > 0 ? formatDate(rows[idx - 1].DATE) : null;
             const showDate = dateStr !== prevDateStr;
             const dateSeparator = showDate && idx > 0;
-            const isReversing = reversing === row.id;
+            const isDeleting = deleting === row.id;
             const expanded = expandedId === row.id;
             const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
             const gridCols = selectedProduct ? "50px 44px 52px 90px" : "42px 1fr 28px 32px 70px";
@@ -207,7 +207,14 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                   )}
                 </div>
                 {expanded && (
-                  <div style={{ padding: "8px 0 16px", borderBottom: "0.5px solid hsl(var(--border) / 0.5)", display: "flex", gap: "10px", alignItems: "center" }}>
+                  <div style={{ 
+                    padding: "8px 0 16px", 
+                    paddingLeft: selectedProduct ? "54px" : "46px",
+                    borderBottom: "0.5px solid hsl(var(--border) / 0.5)", 
+                    display: "flex", 
+                    gap: "10px", 
+                    alignItems: "center" 
+                  }}>
                     {onUpdate && withinCutoff && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setEditRow(row); }}
@@ -224,10 +231,10 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                           setConfirmPos({ top: rect.top, left: rect.left });
                           setConfirmRow(row);
                         }}
-                        disabled={isReversing}
-                        style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isReversing ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isReversing ? 0.5 : 1 }}
+                        disabled={isDeleting}
+                        style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}
                       >
-                        {isReversing ? "Reversing..." : "Reverse"}
+                        {isDeleting ? "Deleting..." : "Delete"}
                       </button>
                     )}
                   </div>
