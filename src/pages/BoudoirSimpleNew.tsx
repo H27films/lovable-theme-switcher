@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
-import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
+import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { BranchHeader } from "@/components/branch/BranchHeader";
 import { BottomNav } from "@/components/branch/BottomNav";
@@ -15,9 +15,12 @@ import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
 
-const isFav = makeIsFavourite(boudoirConfig.favouriteKey);
+const [favs, setFavs] = useState<any[]>([]);
+const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[boudoirConfig.favouriteKey] === "TRUE");
+
 const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
 const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
+
 
 interface BoudoirSimpleNewProps {
   onBack?: () => void;
@@ -50,7 +53,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     // Filter out products with UOM = "BUNDLE" for this branch
     const filteredProducts = useMemo(() => {
       if (!products) return [];
-      return products.filter((product) => product.UOM !== "BUNDLE");
+      return products.filter((product) => product.UOM !== "BUNDLE" && product.UOM !== null);
     }, [products]);
 
    // Clear the search-product flag when the selected product is cleared
