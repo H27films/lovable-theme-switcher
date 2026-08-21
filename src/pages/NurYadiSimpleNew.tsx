@@ -22,7 +22,6 @@ interface NurYadiSimpleNewProps {
 }
 
 const NurYadiSimpleNew = ({ onBack, onBackToMain, products: propProducts }: NurYadiSimpleNewProps) => {
-  const [favs, setFavs] = useState<any[]>([]);
   const isFav = (p: any) => isYes(p[nuryadiConfig.favouriteKey]);
   const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;

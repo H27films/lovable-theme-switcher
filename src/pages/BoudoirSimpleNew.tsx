@@ -22,7 +22,6 @@ interface BoudoirSimpleNewProps {
 }
 
 const BoudoirSimpleNew = ({ onBack, onBackToMain, products: propProducts }: BoudoirSimpleNewProps) => {
-  const [favs, setFavs] = useState<any[]>([]);
   const isFav = (p: any) => isYes(p[boudoirConfig.favouriteKey]);
   const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = boudoirConfig.logBranchName;

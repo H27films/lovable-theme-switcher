@@ -22,7 +22,6 @@ interface ChicSimpleNewProps {
 }
 
 const ChicSimpleNew = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleNewProps) => {
-  const [favs, setFavs] = useState<any[]>([]);
   const isFav = (p: any) => isYes(p[chicConfig.favouriteKey]);
   const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = chicConfig.logBranchName;

@@ -477,11 +477,43 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
             cell.t = "n"; cell.z = "dd/mm/yyyy";
           }
         }
+      } else if (exportType === "order") {
+        // ── ORDER SUBMIT EXPORT ──────────────────────────────────────────────
+        const { data, error } = await (supabase as any).from("OrderSubmit").select("*").order("DATE", { ascending: true });
+        if (error) { setExportError(error.message); setExportLoading(false); return; }
+        if (!data || data.length === 0) { setExportError("No order submissions found."); setExportLoading(false); return; }
+
+        const toExcelDate = (dateStr: string) => {
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return dateStr;
+          const epoch = new Date(Date.UTC(1899, 11, 30));
+          return Math.floor((d.getTime() - epoch.getTime()) / 86400000);
+        };
+
+        const transformedData = data.map((row: any) => ({
+          "PRODUCT NAME": row["PRODUCT NAME"],
+          "DATE": toExcelDate(row["DATE"]),
+          "BRANCH": row["BRANCH"],
+          "QTY": row["QTY"],
+          "GRN": row["GRN"],
+          "NOTES": row["NOTES"],
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(transformedData);
+        // Format DATE column
+        const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+        for (let R = range.s.r + 1; R <= range.e.r; R++) {
+          const cell = ws[XLSX.utils.encode_cell({ r: R, c: 1 })];
+          if (cell && typeof cell.v === "number") {
+            cell.t = "n"; cell.z = "dd/mm/yyyy";
+          }
+        }
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Log");
-        const from = exportDateFrom || "start";
-        const to   = exportDateTo   || "end";
-        XLSX.writeFile(wb, `log_export_${from}_to_${to}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Orders");
+        XLSX.writeFile(wb, `order_forms_export.xlsx`);
+        setExportLoading(false);
+        setShowExportPanel(false);
+        return;
 
       } else {
         // ── CASH EXPORT ─────────────────────────────────────────────
@@ -2244,7 +2276,10 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
                   {([
                     { key: "log",  label: "Log",  desc: "Export entries from AllFileLog (orders, usage, etc.)" },
                     { key: "cash", label: "Cash", desc: "Export entries from the Cash table" },
-                  ] as { key: "log" | "cash"; label: string; desc: string }[]).map(opt => (
+                    { key: "order", label: "Order Forms", desc: "Export entries from the Order Submit table" },
+                  ] as { key: "log" | "cash" | "order"; label: string; desc: string }[]).map(opt => (
+                    { key: "order", label: "Order Forms", desc: "Export entries from the Order Submit table" },
+
                     <button
                       key={opt.key}
                       onClick={() => { setExportType(opt.key); setExportError(null); }}
@@ -2337,7 +2372,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
                       opacity: exportLoading ? 0.5 : 1,
                     }}
                   >
-                    {exportLoading ? "Exporting…" : `Export ${exportType === "log" ? "Log" : "Cash"} as Excel`}
+                    {exportLoading ? "Exporting…" : `Export ${exportType === "log" ? "Log" : exportType === "cash" ? "Cash" : "Order Forms"} as Excel`}
                   </button>
                 </div>
               )}
