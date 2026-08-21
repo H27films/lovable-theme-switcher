@@ -24,6 +24,9 @@ export interface OfficeProduct {
   "BOUDOIR FAVOURITE": string | boolean | null;
   "CHIC NAILSPA FAVOURITE": string | boolean | null;
   "NUR YADI FAVOURITE": string | boolean | null;
+  "UOM"?: string | null;
+  "PAR"?: number | null;
+  "OFFICE FAVOURITE"?: string | boolean | null;
 }
 
 export interface LogRow {
