@@ -15,11 +15,6 @@ import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
 
-const [favs, setFavs] = useState<any[]>([]);
-const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[nuryadiConfig.favouriteKey] === "TRUE");
-const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
-const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;
-
 interface NurYadiSimpleNewProps {
   onBack?: () => void;
   onBackToMain?: () => void;
@@ -27,6 +22,11 @@ interface NurYadiSimpleNewProps {
 }
 
 const NurYadiSimpleNew = ({ onBack, onBackToMain, products: propProducts }: NurYadiSimpleNewProps) => {
+  const [favs, setFavs] = useState<any[]>([]);
+  const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[nuryadiConfig.favouriteKey] === "TRUE");
+  const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;
+
   const navigate = useNavigate();
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);

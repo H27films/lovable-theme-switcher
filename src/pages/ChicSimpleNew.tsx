@@ -15,11 +15,6 @@ import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
 
-const [favs, setFavs] = useState<any[]>([]);
-const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[chicConfig.favouriteKey] === "TRUE");
-const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
-const BRANCH_LOG_NAME = chicConfig.logBranchName;
-
 interface ChicSimpleNewProps {
   onBack?: () => void;
   onBackToMain?: () => void;
@@ -27,6 +22,11 @@ interface ChicSimpleNewProps {
 }
 
 const ChicSimpleNew = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleNewProps) => {
+  const [favs, setFavs] = useState<any[]>([]);
+  const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[chicConfig.favouriteKey] === "TRUE");
+  const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = chicConfig.logBranchName;
+
   const navigate = useNavigate();
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);

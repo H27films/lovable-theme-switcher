@@ -15,13 +15,6 @@ import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
 
-const [favs, setFavs] = useState<any[]>([]);
-const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[boudoirConfig.favouriteKey] === "TRUE");
-
-const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
-const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
-
-
 interface BoudoirSimpleNewProps {
   onBack?: () => void;
   onBackToMain?: () => void;
@@ -29,6 +22,11 @@ interface BoudoirSimpleNewProps {
 }
 
 const BoudoirSimpleNew = ({ onBack, onBackToMain, products: propProducts }: BoudoirSimpleNewProps) => {
+  const [favs, setFavs] = useState<any[]>([]);
+  const isFav = (p: any) => favs.some(f => f["SOURCE ID"] === p.id && f[boudoirConfig.favouriteKey] === "TRUE");
+  const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
+
   const navigate = useNavigate();
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
