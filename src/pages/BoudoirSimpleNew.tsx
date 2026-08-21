@@ -116,29 +116,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
        .eq("BRANCH", BRANCH_LOG_NAME)
        .order("DATE", { ascending: false })
        .limit(200);
-     let fetchedLog = sortLog(data || []);
-     
-     // Filter based on logView
-     if (logView === "week") {
-       const today = new Date();
-       today.setHours(0, 0, 0, 0);
-       // Last 7 days: start from the most recent day and go back 6 days
-       const cutoff = new Date(today);
-       cutoff.setDate(today.getDate() - 6);
-       
-       fetchedLog = fetchedLog.filter(row => {
-         const rowDate = new Date(row.DATE);
-         rowDate.setHours(0, 0, 0, 0);
-         return rowDate >= cutoff;
-       });
-       
-       // Sort most recent day first (last 7 days)
-       fetchedLog = [...fetchedLog].sort((a, b) => 
-         new Date(b.DATE).getTime() - new Date(a.DATE).getTime()
-       );
-     }
-     
-     setBranchLog(fetchedLog);
+     setBranchLog(sortLog(data || []));
    };
 
 // Product log fetch
@@ -282,7 +260,21 @@ const setLogViewToWeek = () => {
     setLogView("week");
 };
 
-  const activeLog = selectedProduct ? productLog : branchLog;
+  const activeLog = useMemo(() => {
+    const base = selectedProduct ? productLog : branchLog;
+    if (logView === "week") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const cutoff = new Date(today);
+      cutoff.setDate(today.getDate() - 6);
+      return base.filter(row => {
+        const rowDate = new Date(row.DATE);
+        rowDate.setHours(0, 0, 0, 0);
+        return rowDate >= cutoff;
+      });
+    }
+    return base;
+  }, [selectedProduct, productLog, branchLog, logView]);
 
   // Usage and Order filtered lists (for search in dropdowns)
   const usageFiltered = useMemo(() => {
