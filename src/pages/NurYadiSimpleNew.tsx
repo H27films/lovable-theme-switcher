@@ -46,7 +46,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      if (activePanel !== "ORDER") setPastOrdersExpanded(false);
    }, [activePanel]);
 
-\
+
     // Filter out products with UOM = "BUNDLE" for this branch
     const filteredProducts = useMemo(() => {
       if (!products) return [];
