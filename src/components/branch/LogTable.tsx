@@ -47,40 +47,54 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
       const branchName = r.BRANCH;
 
       let balanceKey: keyof OfficeProduct | null = null;
-      for (const key in BRANCH_CONFIGS) {
-        if (BRANCH_CONFIGS[key as keyof typeof BRANCH_CONFIGS].logBranchName === branchName) {
-          balanceKey = BRANCH_CONFIGS[key as keyof typeof BRANCH_CONFIGS].balanceKey;
-          break;
+      if (branchName === "Office") {
+        balanceKey = "OFFICE BALANCE";
+      } else {
+        for (const key in BRANCH_CONFIGS) {
+          if (BRANCH_CONFIGS[key as keyof typeof BRANCH_CONFIGS].logBranchName === branchName) {
+            balanceKey = BRANCH_CONFIGS[key as keyof typeof BRANCH_CONFIGS].balanceKey;
+            break;
+          }
         }
       }
 
       if (balanceKey) {
-        // Fetch the current product record from AllFileProducts for the specific branch
+        const isOrder = r.TYPE === "Order";
+        const needsOfficeUpdate = isOrder && balanceKey !== "OFFICE BALANCE";
+        const selectFields = needsOfficeUpdate 
+          ? `"${balanceKey}", "PRODUCT NAME", "OFFICE BALANCE"` 
+          : `"${balanceKey}", "PRODUCT NAME"`;
+
+        // Fetch the current product record from AllFileProducts
         const { data, error } = await supabase
           .from("AllFileProducts")
-          .select(`${balanceKey}, "PRODUCT NAME"`)
+          .select(selectFields)
           .eq("PRODUCT NAME", productName)
           .single();
 
         if (error) {
           console.error("Error fetching product for balance update:", error);
         } else if (data) {
-          // Reversing a usage (negative QTY) means adding back the amount.
-          // Reversing an addition (positive QTY) means subtracting the amount.
-          // Note: If onReverse already updated the balance to STARTING BALANCE, 
-          // this additional update might be redundant or could lead to incorrect results.
           const currentBalance = data[balanceKey] ?? 0;
           const newBalance = (currentBalance as number) - quantity;
+          
+          const updates: any = { [balanceKey]: newBalance };
+
+          if (needsOfficeUpdate) {
+            const currentOfficeBalance = data["OFFICE BALANCE"] ?? 0;
+            const newOfficeBalance = (currentOfficeBalance as number) + quantity;
+            updates["OFFICE BALANCE"] = newOfficeBalance;
+          }
 
           const { error: updateError } = await (supabase as any)
             .from("AllFileProducts")
-            .update({ [balanceKey]: newBalance })
+            .update(updates)
             .eq("PRODUCT NAME", productName);
 
           if (updateError) {
             console.error("Error updating product balance:", updateError);
           } else {
-            console.log(`Product balance for ${productName} updated successfully.`);
+            console.log(`Product balances for ${productName} updated successfully.`);
           }
         }
       } else {
