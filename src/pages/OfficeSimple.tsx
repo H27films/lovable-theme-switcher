@@ -794,6 +794,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
             "BRANCH": "Office",
             "SUPPLIER": chosenProduct["SUPPLIER"] ?? null,
             "TYPE": "Order",
+            "THERAPIST": "Hamza",
             "STARTING BALANCE": currentBalance,
             "QTY": actualQty,
             "ENDING BALANCE": endingBalance,

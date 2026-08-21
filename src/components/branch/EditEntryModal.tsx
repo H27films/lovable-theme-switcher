@@ -74,12 +74,14 @@ const pillButtonStyle: React.CSSProperties = {
 
 export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) => {
   const [qty, setQty] = useState(String(row.QTY ?? 0));
-  const [therapist, setTherapist] = useState<string | null>((row as any)["THERAPIST"] || null);
+  const isOrder = row.TYPE === "Order";
+  const [therapist, setTherapist] = useState<string | null>(isOrder ? "Hamza" : ((row as any)["THERAPIST"] || null));
   const [type, setType] = useState<UsageType>(pillFromRow(row));
   const [notes, setNotes] = useState<string>((row as any)["NOTES"] || "");
   const [saving, setSaving] = useState(false);
 
   const cycleTherapist = () => {
+    if (isOrder) return;
     const order: (string | null)[] = [null, ...THERAPISTS];
     const idx = order.indexOf(therapist);
     setTherapist(order[(idx + 1) % order.length]);
@@ -171,6 +173,7 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
                 ...pillButtonStyle,
                 background: therapist ? "#ffffff" : "none",
                 color: therapist ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                cursor: isOrder ? "default" : "pointer",
               }}
             >
               {therapist ? therapist : "NONE"}

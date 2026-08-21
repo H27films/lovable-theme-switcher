@@ -201,6 +201,7 @@ const orderFiltered = orderSearch.length > 0
           "BRANCH": config.logBranchName,
           "SUPPLIER": "Office",
           "TYPE": "Order",
+          "THERAPIST": "Hamza",
           "STARTING BALANCE": entry.starting,
           "QTY": entry.qty,
           "ENDING BALANCE": entry.ending,
