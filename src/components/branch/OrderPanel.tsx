@@ -46,6 +46,10 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
   const [grnNotes, setGrnNotes] = useState("");
   const [lastConfirmedEntries, setLastConfirmedEntries] = useState<Array<{productName: string; starting: number; qty: number; ending: number}> | null>(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
+  const [showPwdModal, setShowPwdModal] = useState(false);
+  const [pwdValue, setPwdValue] = useState("");
+  const [pwdError, setPwdError] = useState(false);
+
 
   useEffect(() => {
     onPastOrdersChange?.(showAllOrders);
@@ -169,13 +173,19 @@ const orderFiltered = orderSearch.length > 0
     setOrderError(null);
   };
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = () => {
     if (!pendingOrder) return;
-    const pwd = window.prompt("Enter password to confirm order:");
-    if (pwd !== "128128") {
-      if (pwd !== null) alert("Incorrect password");
+    setShowPwdModal(true);
+    setPwdValue("");
+    setPwdError(false);
+  };
+
+  const executeConfirmOrder = async () => {
+    if (pwdValue !== "128128") {
+      setPwdError(true);
       return;
     }
+    setShowPwdModal(false);
     setOrderConfirming(true);
     setOrderError(null);
     let hasError = false;
@@ -511,6 +521,45 @@ return createPortal(
       )}
       {!showAllOrders && allOrderGroups.length > 0 && orderEntries.length === 0 && (
         <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", paddingTop: "6px", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+      {showPwdModal && createPortal(
+        <div 
+          onClick={() => setShowPwdModal(false)}
+          style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", zIndex: 1000, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            style={{ background: "hsl(var(--background))", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "320px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)", border: "1px solid hsl(var(--border))" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.1em", textTransform: "uppercase" }}>Enter Password</span>
+              <button onClick={() => setShowPwdModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <input 
+              type="password" 
+              autoFocus
+              value={pwdValue}
+              onChange={e => { setPwdValue(e.target.value); setPwdError(false); }}
+              onKeyDown={e => { if (e.key === "Enter") executeConfirmOrder(); }}
+              placeholder="••••••"
+              style={{ width: "100%", background: "hsl(var(--card))", border: pwdError ? "1px solid hsl(0 70% 50%)" : "1px solid hsl(var(--border))", borderRadius: "10px", padding: "12px", fontSize: "18px", textAlign: "center", letterSpacing: "0.3em", marginBottom: "12px", outline: "none", color: "hsl(var(--foreground))" }}
+            />
+            
+            {pwdError && <div style={{ color: "hsl(0 70% 50%)", fontSize: "12px", textAlign: "center", marginBottom: "12px" }}>Incorrect password</div>}
+            
+            <button 
+              onClick={executeConfirmOrder}
+              style={{ width: "100%", background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "999px", padding: "12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}
+            >
+              Confirm
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
           <button onClick={() => setShowAllOrders(true)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "5px 0", fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span>Past Orders</span>
             <ChevronUp size={14} />
