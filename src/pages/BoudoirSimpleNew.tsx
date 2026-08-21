@@ -543,6 +543,7 @@ const setLogViewToWeek = () => {
           branchLog={branchLog} 
           refreshBranchLog={refreshBranchLog} 
           onBack={() => setActivePanel(null)}
+          onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
         />,
         document.body

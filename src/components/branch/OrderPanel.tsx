@@ -22,10 +22,11 @@ interface OrderPanelProps {
   branchLog: LogRow[];
   refreshBranchLog: () => void | Promise<void>;
   onBack: () => void;
+  onSuccess?: () => void;
   onPastOrdersChange?: (expanded: boolean) => void;
 }
 
-export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBranchLog, onBack, onPastOrdersChange }: OrderPanelProps) => {
+export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBranchLog, onBack, onSuccess, onPastOrdersChange }: OrderPanelProps) => {
   const isFav = makeIsFavourite(config.favouriteKey);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const { tablet } = useTabletMode();
@@ -227,6 +228,9 @@ const orderFiltered = orderSearch.length > 0
         setLastConfirmedEntries(pendingOrder.entries);
         setTimeout(() => setConfirmSuccess(false), 3000);
         await refreshBranchLog();
+        if (onSuccess) {
+          onSuccess();
+        }
       }
     } catch (err: any) {
       setOrderError(err?.message || "Unknown error");
