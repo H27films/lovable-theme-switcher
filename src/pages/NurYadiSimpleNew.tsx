@@ -135,8 +135,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      const fetchProductLog = async () => {
        const { data } = await (supabase as any)
          .from("AllFileLog")
-        products={filteredProducts}
-        products={filteredProducts}
          .select("*")
          .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
          .eq("BRANCH", BRANCH_LOG_NAME)
