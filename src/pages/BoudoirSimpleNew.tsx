@@ -313,13 +313,13 @@ const setLogViewToWeek = () => {
     return products;
   }, [search, searchMode, products]);
 
-  const usageFavs = usageFiltered.filter(p => isFav(p));
-  const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
-  const usageRegular = usageFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
+  const usageFavs    = usageFiltered.filter(p => isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const usageRegular = usageFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
 
-  const orderFavs = orderFiltered.filter(p => isFav(p));
-  const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
-  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
+  const orderFavs    = orderFiltered.filter(p => isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
 
   // Product list already added state (for grey-out) - not used in thin version
   const alreadyAdded = undefined;

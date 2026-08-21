@@ -113,9 +113,9 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
 const orderFiltered = orderSearch.length > 0
   ? products.filter(p => (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(orderSearch.toLowerCase()))
   : products;
-  const orderFavs    = orderFiltered.filter(p => isFav(p));
-  const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"]));
-  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"]));
+  const orderFavs    = orderFiltered.filter(p => isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
 
   const handleAddOrderProduct = (p: OfficeProduct) => {
     const existing = orderEntries.find(e => e.productName === p["PRODUCT NAME"]);
