@@ -72,9 +72,9 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
           const currentBalance = data[balanceKey] ?? 0;
           const newBalance = (currentBalance as number) - quantity;
 
-          const { error: updateError } = await supabase
+          const { error: updateError } = await (supabase as any)
             .from("AllFileProducts")
-            .update({ [balanceKey as string]: newBalance })
+            .update({ [balanceKey]: newBalance })
             .eq("PRODUCT NAME", productName);
 
           if (updateError) {
