@@ -501,16 +501,24 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
           return Math.floor((d.getTime() - epoch.getTime()) / 86400000);
         };
 
-        const transformedData = data.map((row: any) => ({
-          "PRODUCT NAME": row["PRODUCT NAME"],
-          "DATE": toExcelDate(row["DATE"]),
-          "BRANCH": row["BRANCH"],
-          "QTY": row["QTY"],
-          "GRN": row["GRN"],
-          "NOTES": row["NOTES"],
-        }));
+        const branchMap: Record<string, string> = {
+          "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC", "Nur Yadi": "NUR YADI", "Office": "OFFICE",
+        };
 
-        const ws = XLSX.utils.json_to_sheet(transformedData);
+        const transformedData = data.map((row: any) => {
+          const branch = branchMap[row["BRANCH"]] || row["BRANCH"];
+          return {
+            "PRODUCT NAME": row["PRODUCT NAME"],
+            "DATE": toExcelDate(row["DATE"]),
+            "BRANCH": branch,
+            "TYPE": "ORDER",
+            "QTY": row["QTY"],
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(transformedData, {
+          header: ["PRODUCT NAME", "DATE", "BRANCH", "TYPE", "QTY"],
+        });
         // Format DATE column
         const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
         for (let R = range.s.r + 1; R <= range.e.r; R++) {
