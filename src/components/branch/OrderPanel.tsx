@@ -462,22 +462,20 @@ return createPortal(
             );
           })}
 
-{pendingOrder && (
-              <OrderSummary
-                pendingOrder={pendingOrder}
-                setPendingOrder={setPendingOrder}
-                grnNotes={grnNotes}
-                setGrnNotes={setGrnNotes}
-                orderConfirming={orderConfirming}
-                orderError={orderError}
-                config={config}
-                onConfirm={handleConfirmOrder}
-                onReset={handleResetOrder}
-              />
-            )}
-
-
        </div>
+      )}
+      {!showAllOrders && pendingOrder && (
+        <OrderSummary
+          pendingOrder={pendingOrder}
+          setPendingOrder={setPendingOrder}
+          grnNotes={grnNotes}
+          setGrnNotes={setGrnNotes}
+          orderConfirming={orderConfirming}
+          orderError={orderError}
+          config={config}
+          onConfirm={handleConfirmOrder}
+          onReset={handleResetOrder}
+        />
       )}
       {!showAllOrders && orderEntries.length > 0 && (
         <OrderSubmitFooter count={orderEntries.length} onSubmit={handleOrderSubmit} />
