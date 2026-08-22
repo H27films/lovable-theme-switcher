@@ -352,125 +352,50 @@ const setLogViewToWeek = () => {
             )}
 {!selectedProduct && (
   <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-    {logView === "all" ? (
-      <>
-        <button
-          onClick={setLogViewToAll}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: "0 0 12px 0",
-            fontSize: "16px",
-            fontWeight: 400,
-            letterSpacing: "0.06em",
-            fontFamily: "Raleway, inherit",
-            color: "hsl(var(--foreground))",
-            opacity: 1,
-            borderBottom: "2px solid transparent",
-            marginBottom: "-1px",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "0.9";
-            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = "1";
-            e.currentTarget.style.borderBottom = "2px solid transparent";
-          }}
-        >
-          All Data
-        </button>
-        <button
-          onClick={setLogViewToWeek}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: "0 0 12px 0",
-            fontSize: "14px",
-            fontWeight: 300,
-            letterSpacing: "0.06em",
-            fontFamily: "Raleway, inherit",
-            color: "hsl(var(--foreground))",
-            opacity: 0.6,
-            borderBottom: "2px solid transparent",
-            marginBottom: "-1px",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "0.8";
-            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = "0.6";
-            e.currentTarget.style.borderBottom = "2px solid transparent";
-          }}
-        >
-          7 Days
-        </button>
-      </>
-    ) : (
-      <>
-        <button
-          onClick={setLogViewToWeek}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: "0 0 12px 0",
-            fontSize: "16px",
-            fontWeight: 400,
-            letterSpacing: "0.06em",
-            fontFamily: "Raleway, inherit",
-            color: "hsl(var(--foreground))",
-            opacity: 1,
-            borderBottom: "2px solid transparent",
-            marginBottom: "-1px",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "0.9";
-            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = "1";
-            e.currentTarget.style.borderBottom = "2px solid transparent";
-          }}
-        >
-          7 Days
-        </button>
-        <button
-          onClick={setLogViewToAll}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: "0 0 12px 0",
-            fontSize: "14px",
-            fontWeight: 300,
-            letterSpacing: "0.06em",
-            fontFamily: "Raleway, inherit",
-            color: "hsl(var(--foreground))",
-            opacity: 0.6,
-            borderBottom: "2px solid transparent",
-            marginBottom: "-1px",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "0.8";
-            e.currentTarget.style.borderBottom = "2px solid hsl(0 0% 20%)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = "0.6";
-            e.currentTarget.style.borderBottom = "2px solid transparent";
-          }}
-        >
-          All Data
-        </button>
-      </>
-    )}
+    <button
+      onClick={setLogViewToAll}
+      style={{
+        background: "none",
+        border: "none",
+        borderBottom: `2px solid ${logView === "all" ? "hsl(var(--foreground))" : "transparent"}`,
+        cursor: "pointer",
+        padding: "0 0 12px 0",
+        fontSize: logView === "all" ? "16px" : "14px",
+        fontWeight: logView === "all" ? 400 : 300,
+        letterSpacing: "0.06em",
+        fontFamily: "Raleway, inherit",
+        color: "hsl(var(--foreground))",
+        opacity: logView === "all" ? 1 : 0.6,
+        marginBottom: "-1px",
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => { if (logView !== "all") e.currentTarget.style.opacity = "0.8"; }}
+      onMouseLeave={(e) => { if (logView !== "all") e.currentTarget.style.opacity = "0.6"; }}
+    >
+      All Data
+    </button>
+    <button
+      onClick={() => setLogViewToWeek()}
+      style={{
+        background: "none",
+        border: "none",
+        borderBottom: `2px solid ${logView === "week" ? "hsl(var(--foreground))" : "transparent"}`,
+        cursor: "pointer",
+        padding: "0 0 12px 0",
+        fontSize: logView === "week" ? "16px" : "14px",
+        fontWeight: logView === "week" ? 400 : 300,
+        letterSpacing: "0.06em",
+        fontFamily: "Raleway, inherit",
+        color: "hsl(var(--foreground))",
+        opacity: logView === "week" ? 1 : 0.6,
+        marginBottom: "-1px",
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => { if (logView !== "week") e.currentTarget.style.opacity = "0.8"; }}
+      onMouseLeave={(e) => { if (logView !== "week") e.currentTarget.style.opacity = "0.6"; }}
+    >
+      7 Days
+    </button>
   </div>
 )}
             <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} />

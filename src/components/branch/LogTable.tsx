@@ -136,7 +136,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             <div />
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 70px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "45px 1fr 28px 32px 70px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
             <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
             <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>Product</div>
             <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
@@ -155,7 +155,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             const isDeleting = deleting === row.id;
             const expanded = expandedId === row.id;
             const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
-            const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "42px 1fr 28px 32px 70px";
+            const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
 
             return (
               <div key={row.id}>
