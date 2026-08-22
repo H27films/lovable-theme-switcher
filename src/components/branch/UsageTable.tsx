@@ -92,9 +92,10 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   const cycleType = (id: number) => {
     setUsageEntries(prev => prev.map(e => {
       if (e.id !== id) return e;
-      const idx = USAGE_TYPES.indexOf(e.type);
-      const nextType = USAGE_TYPES[(idx + 1) % USAGE_TYPES.length];
-      return { ...e, type: nextType };
+      const list = USAGE_TYPES && USAGE_TYPES.length > 0 ? USAGE_TYPES : ["Salon Use", "Staff", "Customer", "FOC", "Transfer"];
+      const idx = list.indexOf(e.type);
+      const nextType = list[(idx + 1) % list.length];
+      return { ...e, type: nextType as any };
     }));
   };
 
