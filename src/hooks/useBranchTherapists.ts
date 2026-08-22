@@ -7,22 +7,22 @@ export const useBranchTherapists = (branchIdentifier: string) => {
 
   const fetchTherapists = useCallback(async () => {
     try {
-      // Try matching against branch column variations (e.g. "CHIC", "Chic Nailspa", "chic", etc.)
-      const upper = branchIdentifier.toUpperCase();
+      const upper = (branchIdentifier || "").toUpperCase();
       const { data, error } = await (supabase as any)
         .from("Therapists")
-        .select("name");
+        .select("branch, name");
 
       if (!error && data && data.length > 0) {
-        // Filter in memory or query exact matches
         const matched = data.filter((t: any) => {
-          const b = String(t.branch || "").toUpperCase();
-          return b.includes(upper) || upper.includes(b) || (upper === "CHIC" && b.includes("CHIC")) || (upper === "NUR YADI" && b.includes("NUR"));
+          const b = String(t.branch || "").toUpperCase().trim();
+          if (upper.includes("CHIC") && (b === "CHIC" || b.includes("CHIC"))) return true;
+          if (upper.includes("NUR") && (b.includes("NUR") || b.includes("YADI"))) return true;
+          if (upper.includes("BOUDOIR") && (b === "BOUDOIR" || b.includes("BOUDOIR"))) return true;
+          return b === upper;
         });
 
         if (matched.length > 0) {
-          // Ensure unique names
-          const uniqueNames = Array.from(new Set(matched.map((t: any) => t.name)));
+          const uniqueNames = Array.from(new Set(matched.map((t: any) => String(t.name).trim().toUpperCase())));
           setTherapists(uniqueNames);
           return;
         }
@@ -43,4 +43,5 @@ export const useBranchTherapists = (branchIdentifier: string) => {
 
   return therapists;
 };
+
 
