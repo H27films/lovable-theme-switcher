@@ -484,7 +484,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Log");
-        XLSX.writeFile(wb, `log_export.xlsx`);
+        XLSX.writeFile(wb, `logexport.xlsx`);
         setExportLoading(false);
         setShowExportPanel(false);
         return;
