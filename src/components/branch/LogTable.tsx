@@ -182,7 +182,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                         {row.THERAPIST ? (
                           <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "2px 6px", borderRadius: "999px", fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
                         ) : (
-                          <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>—</span>
+                          <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}
                       </div>
                     </>
@@ -232,8 +232,8 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                 {expanded && (
                   <div style={{ padding: "0 0 16px", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
                     <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
-                      {/* Edit / Delete buttons span the leading columns (Date→Bal); product view uses 1-3, home view uses 1-4 */}
-                      <div style={{ gridColumn: selectedProduct ? "1 / 4" : "1 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
+                      {/* Edit / Delete buttons sit under the content columns (after the Date col): product view aligns under Qty (col 2), home view under Product (col 2) */}
+                      <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
                         {onUpdate && withinCutoff && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setEditRow(row); }}
@@ -262,7 +262,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                         {row.THERAPIST ? (
                           <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "4px 10px", borderRadius: "999px", fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
                         ) : (
-                          <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>—</span>
+                          <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}
                       </div>
                     </div>
