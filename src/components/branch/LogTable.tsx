@@ -193,7 +193,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                         <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
                           {row["PRODUCT NAME"] || "—"}
                         </div>
-                        {viewType === "week" && ((row as any)["THERAPIST"] || (row as any)["NOTES"]) && (
+                        {viewType === "week" && !expanded && ((row as any)["THERAPIST"] || (row as any)["NOTES"]) && (
                           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
                             {(row as any)["THERAPIST"] && (
                               <span style={{
