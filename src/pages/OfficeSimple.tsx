@@ -2278,7 +2278,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
                     { key: "cash", label: "Cash", desc: "Export entries from the Cash table" },
                     { key: "order", label: "Order Forms", desc: "Export entries from the Order Submit table" },
                   ] as { key: "log" | "cash" | "order"; label: string; desc: string }[]).map(opt => (
-                    { key: "order", label: "Order Forms", desc: "Export entries from the Order Submit table" },
+
 
                     <button
                       key={opt.key}
