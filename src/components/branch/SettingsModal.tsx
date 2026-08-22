@@ -18,10 +18,22 @@ export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => 
   const fetchTherapists = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
+      let { data, error } = await (supabase as any)
         .from("Therapists")
         .select("name")
         .eq("branch", branch);
+
+      // If table name is lowercase or wasn't found, try lowercase "therapists"
+      if (error || !data || data.length === 0) {
+        const res2 = await (supabase as any)
+          .from("therapists")
+          .select("name")
+          .eq("branch", branch);
+        if (!res2.error && res2.data) {
+          data = res2.data;
+          error = null;
+        }
+      }
 
       if (!error && data) {
         setTherapists(data.map((t: any) => String(t.name).trim().toUpperCase()));

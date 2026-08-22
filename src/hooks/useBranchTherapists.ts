@@ -6,10 +6,21 @@ export const useBranchTherapists = (branchIdentifier: string) => {
 
   const fetchTherapists = useCallback(async () => {
     try {
-      const { data, error } = await (supabase as any)
+      let { data, error } = await (supabase as any)
         .from("Therapists")
         .select("name")
         .eq("branch", branchIdentifier);
+
+      if (error || !data || data.length === 0) {
+        const res2 = await (supabase as any)
+          .from("therapists")
+          .select("name")
+          .eq("branch", branchIdentifier);
+        if (!res2.error && res2.data) {
+          data = res2.data;
+          error = null;
+        }
+      }
 
       if (!error && data) {
         setTherapists(data.map((t: any) => String(t.name).trim().toUpperCase()));
