@@ -23,7 +23,7 @@ interface ChicSimpleNewProps {
 }
 
 const ChicSimpleNew = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleNewProps) => {
-  const { isFav, isColour, allowedIds, toggleFavourite } = useBranchFavourites("chic");
+  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("chic");
   const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = chicConfig.logBranchName;
 
@@ -360,6 +360,7 @@ const setLogViewToWeek = () => {
             alreadyAdded={alreadyAdded}
             isColour={isColour}
             allowedIds={allowedIds}
+            nameOf={nameOf}
           />
         )}
         {!searchActive && (

@@ -23,7 +23,7 @@ interface NurYadiSimpleNewProps {
 }
 
 const NurYadiSimpleNew = ({ onBack, onBackToMain, products: propProducts }: NurYadiSimpleNewProps) => {
-  const { isFav, isColour, allowedIds, toggleFavourite } = useBranchFavourites("nuryadi");
+  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("nuryadi");
   const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;
 
@@ -360,6 +360,7 @@ const setLogViewToWeek = () => {
             alreadyAdded={alreadyAdded}
             isColour={isColour}
             allowedIds={allowedIds}
+            nameOf={nameOf}
           />
         )}
         {!searchActive && (
