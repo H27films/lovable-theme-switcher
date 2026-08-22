@@ -217,7 +217,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                                 color: "hsl(var(--muted-foreground))",
                                 lineHeight: 1.2
                               }}>
-                                Note: {(row as any)["NOTES"]}
+                                {(row as any)["NOTES"]}
                               </span>
                             )}
                           </div>
