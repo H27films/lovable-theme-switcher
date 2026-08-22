@@ -139,32 +139,10 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
          .eq("BRANCH", BRANCH_LOG_NAME)
          .order("DATE", { ascending: false })
          .limit(200);
-       let fetchedLog = sortLog(data || []);
-       
-       // Filter based on logView
-       if (logView === "week") {
-         const today = new Date();
-         today.setHours(0, 0, 0, 0);
-         // Last 7 days: start from the most recent day and go back 6 days
-         const cutoff = new Date(today);
-         cutoff.setDate(today.getDate() - 6);
-         
-         fetchedLog = fetchedLog.filter(row => {
-           const rowDate = new Date(row.DATE);
-           rowDate.setHours(0, 0, 0, 0);
-           return rowDate >= cutoff;
-         });
-         
-         // Sort most recent day first (last 7 days)
-         fetchedLog = [...fetchedLog].sort((a, b) => 
-           new Date(b.DATE).getTime() - new Date(a.DATE).getTime()
-         );
-       }
-       
-       setProductLog(fetchedLog);
+       setProductLog(sortLog(data || []));
      };
      fetchProductLog();
-   }, [selectedProduct, logView]);
+   }, [selectedProduct]);
 
 // Initial fetches
    useEffect(() => {
@@ -263,7 +241,7 @@ const setLogViewToWeek = () => {
 
   const activeLog = useMemo(() => {
     const base = selectedProduct ? productLog : branchLog;
-    if (logView === "week") {
+    if (!selectedProduct && logView === "week") {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const cutoff = new Date(today);
@@ -495,7 +473,7 @@ const setLogViewToWeek = () => {
     )}
   </div>
 )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={logView} />
+            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} />
           </div>
         )}
       </div>
