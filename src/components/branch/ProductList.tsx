@@ -36,6 +36,7 @@ const ProductRow = ({
   nameOf?: (p: any) => string;
 }) => {
   const added = alreadyAdded?.has(p["PRODUCT NAME"]);
+  const bal = (p as any)[balanceKey];
   return (
     <div
       key={p.id}
@@ -48,20 +49,22 @@ const ProductRow = ({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1 }}>
-          {nameOf ? nameOf(p) : p["PRODUCT NAME"]}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0, flex: 1 }}>
+          <Star
+            size={11}
+            fill="hsl(var(--foreground))"
+            color="hsl(var(--foreground))"
+            style={{ flexShrink: 0, visibility: isFav(p) ? "visible" : "hidden" }}
+          />
+          <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", minWidth: 0 }}>
+            {nameOf ? nameOf(p) : p["PRODUCT NAME"]}
+          </div>
         </div>
-        {(p as any)[balanceKey] != null && (
-          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>
-            {(p as any)[balanceKey]}
+        {bal != null && (
+          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number(bal) <= 0 ? "hsl(0 70% 40%)" : "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>
+            {bal}
           </div>
         )}
-        <button
-          onClick={(e) => { e.stopPropagation(); }}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0, visibility: isFav(p) ? "visible" : "hidden" }}
-        >
-          <Star size={16} fill={isFav(p) ? "hsl(var(--foreground))" : "none"} color="hsl(var(--foreground))" />
-        </button>
       </div>
     </div>
   );
