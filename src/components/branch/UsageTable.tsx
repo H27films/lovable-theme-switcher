@@ -93,15 +93,18 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
     setUsageEntries(prev => prev.map(e => {
       if (e.id !== id) return e;
       const idx = USAGE_TYPES.indexOf(e.type);
-      return { ...e, type: USAGE_TYPES[(idx + 1) % USAGE_TYPES.length] };
+      const nextType = USAGE_TYPES[(idx + 1) % USAGE_TYPES.length];
+      return { ...e, type: nextType };
     }));
   };
 
   const cycleTherapist = (id: number) => {
     setUsageEntries(prev => prev.map(e => {
       if (e.id !== id) return e;
-      const idx = therapists.indexOf(e.therapist);
-      return { ...e, therapist: therapists[(idx + 1) % therapists.length] };
+      const list = therapists.length > 0 ? therapists : ["AILING", "ANNIE", "HAMZA", "SZI WAH"];
+      const idx = list.indexOf(e.therapist);
+      const nextTh = list[(idx + 1) % list.length];
+      return { ...e, therapist: nextTh };
     }));
   };
 
