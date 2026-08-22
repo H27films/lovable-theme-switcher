@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { handleInputFocus, handleInputBlur } from "@/lib/utils";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "lucide-react";
