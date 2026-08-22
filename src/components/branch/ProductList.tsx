@@ -12,6 +12,10 @@ interface ProductListProps {
   showDropdown: boolean;
   onSelect: (p: any) => void;
   alreadyAdded?: Set<string>;
+  /** Colour flag lookup (defaults to the product's own Colour column) */
+  isColour?: (p: any) => boolean;
+  /** Restrict the dropdown to these AllFileProducts ids (Favourites SOURCE ID) */
+  allowedIds?: Set<number>;
 }
 
 const SectionHeader = ({ label }: { label: string }) => (
@@ -62,17 +66,21 @@ const ProductRow = ({
 
 export const ProductList = ({
   products, isFav, balanceKey, favouritesLabel, search, showDropdown, onSelect, alreadyAdded,
+  isColour, allowedIds,
 }: ProductListProps) => {
   if (!showDropdown || search.length === 0) return null;
 
   const q = search.toLowerCase();
+  const colourOf = isColour ?? ((p: any) => isYes(p["Colour"]));
   const allMatched = products.filter(p =>
     p["PRODUCT NAME"]?.toLowerCase().includes(q) &&
-    (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
+    (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1) &&
+    (!allowedIds || allowedIds.has(Number(p.id)))
   );
-  const favourites = allMatched.filter(p => isFav(p));
-  const colours    = allMatched.filter(p => !isFav(p) && isYes(p["Colour"]));
-  const regular    = allMatched.filter(p => !isFav(p) && !isYes(p["Colour"]));
+  const byName = (a: any, b: any) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+  const favourites = allMatched.filter(p => isFav(p)).sort(byName);
+  const colours    = allMatched.filter(p => !isFav(p) && colourOf(p)).sort(byName);
+  const regular    = allMatched.filter(p => !isFav(p) && !colourOf(p)).sort(byName);
   const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
   return (
@@ -80,7 +88,7 @@ export const ProductList = ({
       {favourites.length > 0 && (
         <>
           <SectionHeader label={favouritesLabel} />
-          {favourites.sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"])).map((p, i) => (
+          {favourites.map((p, i) => (
             <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} />
           ))}
         </>

@@ -208,6 +208,7 @@ export type Database = {
           "BOUDOIR FAVOURITE": string | null
           "CHIC NAILSPA FAVOURITE": string | null
           COLOUR: string | null
+          DUPLICATE: string | null
           id: number
           "NUR YADI FAVOURITE": string | null
           "OFFICE FAVOURITE": string | null
@@ -218,6 +219,7 @@ export type Database = {
           "BOUDOIR FAVOURITE"?: string | null
           "CHIC NAILSPA FAVOURITE"?: string | null
           COLOUR?: string | null
+          DUPLICATE?: string | null
           id?: number
           "NUR YADI FAVOURITE"?: string | null
           "OFFICE FAVOURITE"?: string | null
@@ -228,6 +230,7 @@ export type Database = {
           "BOUDOIR FAVOURITE"?: string | null
           "CHIC NAILSPA FAVOURITE"?: string | null
           COLOUR?: string | null
+          DUPLICATE?: string | null
           id?: number
           "NUR YADI FAVOURITE"?: string | null
           "OFFICE FAVOURITE"?: string | null
