@@ -23,6 +23,10 @@ export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => 
         .from("Therapists")
         .select("branch, name");
 
+      if (error) {
+        console.error("Supabase Therapists fetch error:", error);
+      }
+
       if (!error && data && data.length > 0) {
         const matched = data.filter((t: any) => {
           const b = String(t.branch || "").toUpperCase().trim();
@@ -41,7 +45,8 @@ export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => 
       }
 
       setTherapists([...DEFAULT_THERAPISTS]);
-    } catch {
+    } catch (err) {
+      console.error("Fetch therapists catch:", err);
       setTherapists([...DEFAULT_THERAPISTS]);
     } finally {
       setLoading(false);
