@@ -24,10 +24,19 @@ interface OrderPanelProps {
   onBack: () => void;
   onSuccess?: () => void;
   onPastOrdersChange?: (expanded: boolean) => void;
+  isFav?: (p: any) => boolean;
+  isColour?: (p: any) => boolean;
+  nameOf?: (p: any) => string;
+  allowedIds?: Set<number>;
 }
 
-export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBranchLog, onBack, onSuccess, onPastOrdersChange }: OrderPanelProps) => {
-  const isFav = makeIsFavourite(config.favouriteKey);
+export const OrderPanel = ({
+  config, products, setProducts, branchLog, refreshBranchLog, onBack, onSuccess, onPastOrdersChange,
+  isFav: propIsFav, isColour: propIsColour, nameOf: propNameOf, allowedIds
+}: OrderPanelProps) => {
+  const checkFav = propIsFav || makeIsFavourite(config.favouriteKey);
+  const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
+  const getName = propNameOf || ((p: any) => p["PRODUCT NAME"]);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const { tablet } = useTabletMode();
 
@@ -110,12 +119,26 @@ export const OrderPanel = ({ config, products, setProducts, branchLog, refreshBr
     })();
   }, [pendingLoaded, pendingOrder, grnNotes, config.logBranchName]);
 
-const orderFiltered = orderSearch.length > 0
-  ? products.filter(p => (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(orderSearch.toLowerCase()))
-  : products;
-  const orderFavs    = orderFiltered.filter(p => isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const uniqueProducts = useMemo(() => {
+    const map = new Map<string, OfficeProduct>();
+    products.forEach(p => {
+      if (!allowedIds || allowedIds.has(Number(p.id))) {
+        const name = getName(p);
+        if (name && !map.has(name)) {
+          map.set(name, p);
+        }
+      }
+    });
+    return Array.from(map.values());
+  }, [products, getName, allowedIds]);
+
+  const orderFiltered = orderSearch.length > 0
+    ? uniqueProducts.filter(p => getName(p).toLowerCase().includes(orderSearch.toLowerCase()))
+    : uniqueProducts;
+
+  const orderFavs    = orderFiltered.filter(p => checkFav(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
+  const orderColours = orderFiltered.filter(p => !checkFav(p) && checkColour(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
+  const orderRegular = orderFiltered.filter(p => !checkFav(p) && !checkColour(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
 
   const handleAddOrderProduct = (p: OfficeProduct) => {
     const existing = orderEntries.find(e => e.productName === p["PRODUCT NAME"]);

@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "lucide-react";
 import { USAGE_TYPES, THERAPISTS, makeIsFavourite, UsageType, isYes, typeColumnValue, usagePillValue, therapistValue } from "@/lib/branchSimpleUtils";
@@ -16,10 +16,15 @@ interface UsageTableProps {
   onBack: () => void;
   onSuccess?: () => void;
   onUsageEntriesChange: (count: number) => void;
+  isFav?: (p: any) => boolean;
+  isColour?: (p: any) => boolean;
+  nameOf?: (p: any) => string;
 }
 
-export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack, onSuccess, onUsageEntriesChange }: UsageTableProps) => {
-  const isFav = makeIsFavourite(config.favouriteKey);
+export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack, onSuccess, onUsageEntriesChange, isFav: propIsFav, isColour: propIsColour, nameOf: propNameOf }: UsageTableProps) => {
+  const checkFav = propIsFav || makeIsFavourite(config.favouriteKey);
+  const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
+  const getName = propNameOf || ((p: any) => p["PRODUCT NAME"]);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const { tablet } = useTabletMode();
 
@@ -35,15 +40,26 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
     onUsageEntriesChange(usageEntries.length);
   }, [usageEntries, onUsageEntriesChange]);
 
+  const uniqueProducts = useMemo(() => {
+    const map = new Map<string, OfficeProduct>();
+    products.forEach(p => {
+      if (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1) {
+        const name = getName(p);
+        if (name && !map.has(name)) {
+          map.set(name, p);
+        }
+      }
+    });
+    return Array.from(map.values());
+  }, [products, getName]);
+
   const usageFiltered = usageSearch.length > 0
-    ? products.filter(p =>
-        p["PRODUCT NAME"].toLowerCase().includes(usageSearch.toLowerCase()) &&
-        (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
-      )
-    : products.filter(p => p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1);
-  const usageFavs    = usageFiltered.filter(p =>  isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const usageRegular = usageFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+    ? uniqueProducts.filter(p => getName(p).toLowerCase().includes(usageSearch.toLowerCase()))
+    : uniqueProducts;
+
+  const usageFavs    = usageFiltered.filter(p =>  checkFav(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
+  const usageColours = usageFiltered.filter(p => !checkFav(p) && checkColour(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
+  const usageRegular = usageFiltered.filter(p => !checkFav(p) && !checkColour(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
 
   const handleAddUsageProduct = (p: OfficeProduct) => {
     const existing = usageEntries.find(e => e.productName === p["PRODUCT NAME"]);

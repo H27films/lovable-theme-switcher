@@ -75,12 +75,23 @@ export const ProductList = ({
 
   const q = search.toLowerCase();
   const colourOf = isColour ?? ((p: any) => isYes(p["Colour"]));
-  const allMatched = products.filter(p =>
-    p["PRODUCT NAME"]?.toLowerCase().includes(q) &&
+  const getName = nameOf ?? ((p: any) => p["PRODUCT NAME"]);
+  const matchedRaw = products.filter(p =>
+    getName(p)?.toLowerCase().includes(q) &&
     (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1) &&
     (!allowedIds || allowedIds.has(Number(p.id)))
   );
-  const byName = (a: any, b: any) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+
+  const uniqueMap = new Map<string, any>();
+  matchedRaw.forEach(p => {
+    const name = getName(p);
+    if (name && !uniqueMap.has(name)) {
+      uniqueMap.set(name, p);
+    }
+  });
+  const allMatched = Array.from(uniqueMap.values());
+
+  const byName = (a: any, b: any) => getName(a).localeCompare(getName(b));
   const favourites = allMatched.filter(p => isFav(p)).sort(byName);
   const colours    = allMatched.filter(p => !isFav(p) && colourOf(p)).sort(byName);
   const regular    = allMatched.filter(p => !isFav(p) && !colourOf(p)).sort(byName);

@@ -537,6 +537,9 @@ const setLogViewToWeek = () => {
           onBack={() => setActivePanel(null)}
           onSuccess={goHome}
           onUsageEntriesChange={setUsageEntriesCount}
+          isFav={isFav}
+          isColour={isColour}
+          nameOf={nameOf}
         />,
         document.body
       )}
@@ -552,6 +555,10 @@ const setLogViewToWeek = () => {
           onBack={() => setActivePanel(null)}
           onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
+          isFav={isFav}
+          isColour={isColour}
+          nameOf={nameOf}
+          allowedIds={allowedIds}
         />,
         document.body
       )}
