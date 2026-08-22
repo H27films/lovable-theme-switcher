@@ -96,6 +96,8 @@ export interface BranchConfig {
   pdfHeader: string;
   /** Download filename for the cash deposit export */
   cashExportFilename: string;
+  /** Download filename (no extension) for the order form export */
+  orderExportFilename: string;
   /** Section heading for favourites in the pickers */
   favouritesLabel: string;
 }
@@ -110,6 +112,7 @@ export const boudoirConfig: BranchConfig = {
   grnPrefix: "BOU",
   pdfHeader: "BOUDOIR",
   cashExportFilename: "Boudoir Cash Export.csv",
+  orderExportFilename: "BoudoirOrder",
   favouritesLabel: "Boudoir Favourites",
 };
 
@@ -123,6 +126,7 @@ export const chicConfig: BranchConfig = {
   grnPrefix: "CHIC",
   pdfHeader: "CHIC",
   cashExportFilename: "Chic Nailspa Export.csv",
+  orderExportFilename: "ChicOrder",
   favouritesLabel: "Chic Nailspa Favourites",
 };
 
@@ -136,6 +140,7 @@ export const nuryadiConfig: BranchConfig = {
   grnPrefix: "NUR",
   pdfHeader: "NUR YADI",
   cashExportFilename: "Nur Yadi Cash Export.csv",
+  orderExportFilename: "NurYadiOrder",
   favouritesLabel: "Nur Yadi Favourites",
 };
 

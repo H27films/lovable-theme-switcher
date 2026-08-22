@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 import { type BranchConfig } from "./branchSimple";
 
 export interface GrnEntry {
@@ -65,7 +66,7 @@ export const generateGRNPdf = (entries: GrnEntry[], grn: string, config: BranchC
   doc.setTextColor(26, 26, 26);
   doc.text("NO", numX + 10, tableTop - 2, { align: "center" });
   doc.text("PRODUCT NAME", nameX, tableTop - 2);
-  doc.text("OLD", oldCX, tableTop + 5, { align: "center" });
+  doc.text("START", oldCX, tableTop + 5, { align: "center" });
   doc.text("BALANCE", oldCX, tableTop - 5, { align: "center" });
   doc.text("ORDER", qtyCX, tableTop + 5, { align: "center" });
   doc.text("QTY", qtyCX, tableTop - 5, { align: "center" });
@@ -125,17 +126,38 @@ export const generateGRNPdf = (entries: GrnEntry[], grn: string, config: BranchC
   doc.save(`${grn} - GRN.pdf`);
 };
 
-export const exportToExcel = (entries: GrnEntry[], grn: string) => {
-  const rows = [
-    ["Product Name", "Starting Balance", "Order Qty", "Ending Balance"],
-    ...entries.map(e => [e.productName, e.starting, e.qty, e.ending]),
-  ];
-  const csv = rows.map(r => r.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${grn}-order.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+// Exports a branch order as an Excel file following the same format as the
+// "Order Forms" export on the Office page (PRODUCT NAME / DATE / BRANCH / TYPE / QTY).
+// Branch-specific: every row carries this branch's name, and the file is
+// always named after the branch (e.g. BoudoirOrder.xlsx).
+export const exportToExcel = (entries: GrnEntry[], config: BranchConfig, dateStr: string) => {
+  const toExcelDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const epoch = new Date(Date.UTC(1899, 11, 30));
+    return Math.floor((d.getTime() - epoch.getTime()) / 86400000);
+  };
+
+  const transformedData = entries.map((e) => ({
+    "PRODUCT NAME": e.productName,
+    "DATE": toExcelDate(dateStr),
+    "BRANCH": config.displayName,
+    "TYPE": "ORDER",
+    "QTY": e.qty,
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(transformedData, {
+    header: ["PRODUCT NAME", "DATE", "BRANCH", "TYPE", "QTY"],
+  });
+  // Format DATE column as dd/mm/yyyy
+  const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+  for (let R = range.s.r + 1; R <= range.e.r; R++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: R, c: 1 })];
+    if (cell && typeof cell.v === "number") {
+      cell.t = "n"; cell.z = "dd/mm/yyyy";
+    }
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Orders");
+  XLSX.writeFile(wb, `${config.orderExportFilename}.xlsx`);
 };
