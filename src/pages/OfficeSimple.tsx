@@ -1040,8 +1040,6 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
               if (searchMode !== "idle") {
                 setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
                 setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
-              } else if (onBack) {
-                onBack();
               } else {
                 navigate("/simple/office");
               }
