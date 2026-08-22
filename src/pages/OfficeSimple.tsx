@@ -444,10 +444,14 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
         const transformedData = data.map((row: any) => {
           const branch = branchMap[row["BRANCH"]] || row["BRANCH"];
           const rawType = (row["TYPE"] || "").trim();
-          const isOffice = branch === "OFFICE";
+          const qty = Number(row["QTY"] || 0);
           let type = "", subType = "", productSold = "";
+
           if (rawType === "Order") {
             type = "ORDER";
+          } else if (rawType.toLowerCase() === "transfer") {
+            type = "USAGE";
+            subType = qty > 0 ? "TRANSFER IN" : qty < 0 ? "TRANSFER OUT" : "TRANSFER";
           } else if (isOffice) {
             type = "USAGE";
             subType = rawType === "Error" ? "Expired" : rawType;
@@ -456,6 +460,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
             if (rawType === "Customer") productSold = "CUSTOMER";
             else if (rawType === "Staff")    productSold = "STAFF";
           }
+
           const dateVal = toExcelDate(row["DATE"]);
           return {
             "PRODUCT NAME": row["PRODUCT NAME"],
