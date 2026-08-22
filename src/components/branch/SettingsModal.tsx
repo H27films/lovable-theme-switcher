@@ -18,35 +18,18 @@ export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => 
   const fetchTherapists = async () => {
     setLoading(true);
     try {
-      const upper = (branch || "").toUpperCase().trim();
       const { data, error } = await (supabase as any)
         .from("Therapists")
-        .select("branch, name");
-
-      if (error) {
-        console.error("Supabase Therapists fetch error:", error);
-      }
+        .select("name")
+        .eq("branch", branch);
 
       if (!error && data && data.length > 0) {
-        const matched = data.filter((t: any) => {
-          const b = String(t.branch || "").toUpperCase().trim();
-          if (upper.includes("CHIC") && (b === "CHIC" || b.includes("CHIC") || b.includes("NAILSPA"))) return true;
-          if (upper.includes("NUR") && (b.includes("NUR") || b.includes("YADI"))) return true;
-          if (upper.includes("BOUDOIR") && (b === "BOUDOIR" || b.includes("BOUDOIR"))) return true;
-          return b === upper;
-        });
-
-        if (matched.length > 0) {
-          const uniqueNames = Array.from(new Set(matched.map((t: any) => String(t.name).trim().toUpperCase())));
-          setTherapists(uniqueNames);
-          setLoading(false);
-          return;
-        }
+        setTherapists(data.map((t: any) => String(t.name).trim().toUpperCase()));
+      } else {
+        setTherapists([...DEFAULT_THERAPISTS]);
       }
-
-      setTherapists([...DEFAULT_THERAPISTS]);
     } catch (err) {
-      console.error("Fetch therapists catch:", err);
+      console.error("Fetch therapists error:", err);
       setTherapists([...DEFAULT_THERAPISTS]);
     } finally {
       setLoading(false);
