@@ -25,6 +25,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   const checkFav = propIsFav || makeIsFavourite(config.favouriteKey);
   const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
   const getName = propNameOf || ((p: any) => p["PRODUCT NAME"]);
+  const therapists = useBranchTherapists(config.displayName);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const { tablet } = useTabletMode();
 
@@ -96,8 +97,8 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   const cycleTherapist = (id: number) => {
     setUsageEntries(prev => prev.map(e => {
       if (e.id !== id) return e;
-      const idx = THERAPISTS.indexOf(e.therapist as (typeof THERAPISTS)[number]);
-      return { ...e, therapist: THERAPISTS[(idx + 1) % THERAPISTS.length] };
+      const idx = therapists.indexOf(e.therapist);
+      return { ...e, therapist: therapists[(idx + 1) % therapists.length] };
     }));
   };
 
