@@ -445,6 +445,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
           const branch = branchMap[row["BRANCH"]] || row["BRANCH"];
           const rawType = (row["TYPE"] || "").trim();
           const qty = Number(row["QTY"] || 0);
+          const isOfficeRow = branch === "OFFICE";
           let type = "", subType = "", productSold = "";
 
           if (rawType === "Order") {
@@ -452,7 +453,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
           } else if (rawType.toLowerCase() === "transfer") {
             type = "USAGE";
             subType = qty > 0 ? "TRANSFER IN" : qty < 0 ? "TRANSFER OUT" : "TRANSFER";
-          } else if (isOffice) {
+          } else if (isOfficeRow) {
             type = "USAGE";
             subType = rawType === "Error" ? "Expired" : rawType;
           } else {
