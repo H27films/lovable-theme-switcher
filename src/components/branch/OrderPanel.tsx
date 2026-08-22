@@ -383,11 +383,11 @@ return createPortal(
 
       {showAllOrders && allOrderGroups.length > 0 && (
         <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background, 0 0% 0%))", paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px",         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)", borderTop: "0.5px solid hsl(var(--border, 0 0% 50%))", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+          <div onClick={() => setShowAllOrders(false)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", cursor: "pointer" }}>
             <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Past Orders</div>
-            <button onClick={() => setShowAllOrders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground, 0 0% 50%))", display: "flex", alignItems: "center", marginLeft: "auto" }}>
+            <span style={{ padding: "4px", color: "hsl(var(--muted-foreground, 0 0% 50%))", display: "flex", alignItems: "center", marginLeft: "auto" }}>
               <ChevronDown size={14} />
-            </button>
+            </span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingBottom: "8px", marginBottom: "4px" }}>
             <div style={{ fontSize: "11px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", letterSpacing: "0.02em" }}>Date</div>

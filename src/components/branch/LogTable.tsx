@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Check } from "lucide-react";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
 import { supabase } from "@/integrations/supabase/client";
+import { therapistPillStyle } from "@/lib/branchSimpleUtils";
 import { EditEntryModal, type EditEntryUpdates } from "./EditEntryModal";
 
 interface LogTableProps {
@@ -126,11 +127,13 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {selectedProduct ? (
-          <div style={{ display: "grid", gridTemplateColumns: "50px 44px 52px 90px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
             <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
             <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
             <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
             <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
+            {/* Therapist column has no header — the name is shown as a pill */}
+            <div />
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "42px 1fr 28px 32px 70px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))" }}>
@@ -152,7 +155,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             const isDeleting = deleting === row.id;
             const expanded = expandedId === row.id;
             const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
-            const gridCols = selectedProduct ? "50px 44px 52px 90px" : "42px 1fr 28px 32px 70px";
+            const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "42px 1fr 28px 32px 70px";
 
             return (
               <div key={row.id}>
@@ -175,6 +178,13 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                      <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
+                        {row.THERAPIST ? (
+                          <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "2px 6px", borderRadius: "999px", fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                        ) : (
+                          <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>—</span>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <>
@@ -186,13 +196,12 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                         {viewType === "week" && ((row as any)["THERAPIST"] || (row as any)["NOTES"]) && (
                           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
                             {(row as any)["THERAPIST"] && (
-                              <span style={{ 
-                                background: "hsl(var(--secondary))", 
-                                color: "hsl(var(--secondary-foreground))", 
-                                padding: "2px 8px", 
-                                borderRadius: "999px", 
-                                fontSize: "10px", 
-                                fontWeight: 600, 
+                              <span style={{
+                                ...therapistPillStyle((row as any)["THERAPIST"]),
+                                padding: "2px 8px",
+                                borderRadius: "999px",
+                                fontSize: "10px",
+                                fontWeight: 600,
                                 fontFamily: "Raleway, inherit",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.02em"

@@ -82,13 +82,11 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      setSearchMode("idle");
    };
 
-  // Sort log: DATE desc, within same date Order rows first (logged last at night)
+  // Sort log: DATE desc; within the same date, most recent entry first (highest id)
   const sortLog = (rows: LogRow[]) => [...rows].sort((a, b) => {
     const dateDiff = b.DATE.localeCompare(a.DATE);
     if (dateDiff !== 0) return dateDiff;
-    const aOrder = a.TYPE === 'Order' ? 0 : 1;
-    const bOrder = b.TYPE === 'Order' ? 0 : 1;
-    return aOrder - bOrder;
+    return b.id - a.id;
   });
 
   // Product fetch

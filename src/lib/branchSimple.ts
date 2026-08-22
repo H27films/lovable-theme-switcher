@@ -40,6 +40,8 @@ export interface LogRow {
   "ENDING BALANCE": number;
   GRN?: string;
   "OFFICE BALANCE"?: number;
+  /** Therapist name recorded on usage rows (null for orders/transfers) */
+  THERAPIST?: string | null;
 }
 
 export interface EntryLine {
