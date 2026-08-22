@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { THERAPISTS as DEFAULT_THERAPISTS } from "./branchSimpleUtils";
+import { THERAPISTS as DEFAULT_THERAPISTS } from "@/lib/branchSimpleUtils";
 
 export const useBranchTherapists = (branchIdentifier: string) => {
   const [therapists, setTherapists] = useState<string[]>([...DEFAULT_THERAPISTS]);
