@@ -229,39 +229,79 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                     </>
                   )}
                 </div>
-                {expanded && (
-                  <div style={{ 
-                    padding: "8px 0 16px", 
-                    paddingLeft: selectedProduct ? "54px" : "46px",
-                    borderBottom: "0.5px solid hsl(var(--border) / 0.5)", 
-                    display: "flex", 
-                    gap: "10px", 
-                    alignItems: "center" 
-                  }}>
-                    {onUpdate && withinCutoff && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditRow(row); }}
-                        style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}
-                      >
-                        Edit
-                      </button>
-                    )}
-                    {withinCutoff && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setConfirmPos({ top: rect.top, left: rect.left });
-                          setConfirmRow(row);
-                        }}
-                        disabled={isDeleting}
-                        style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}
-                      >
-                        {isDeleting ? "Deleting..." : "Delete"}
-                      </button>
-                    )}
-                  </div>
-                )}
+                {expanded &&
+                  (selectedProduct ? (
+                    <div style={{ padding: "0 0 16px", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
+                        <div style={{ gridColumn: "1 / 4", display: "flex", gap: "10px", alignItems: "center" }}>
+                          {onUpdate && withinCutoff && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setEditRow(row); }}
+                              style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {withinCutoff && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setConfirmPos({ top: rect.top, left: rect.left });
+                                setConfirmRow(row);
+                              }}
+                              disabled={isDeleting}
+                              style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}
+                            >
+                              {isDeleting ? "Deleting..." : "Delete"}
+                            </button>
+                          )}
+                        </div>
+                        {/* Therapist pill sits in the same grid position as the Type column */}
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                          {row.THERAPIST ? (
+                            <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "4px 10px", borderRadius: "999px", fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                          ) : (
+                            <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>—</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        padding: "8px 0 16px",
+                        paddingLeft: "46px",
+                        borderBottom: "0.5px solid hsl(var(--border) / 0.5)",
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "center"
+                      }}
+                    >
+                      {onUpdate && withinCutoff && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditRow(row); }}
+                          style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {withinCutoff && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setConfirmPos({ top: rect.top, left: rect.left });
+                            setConfirmRow(row);
+                          }}
+                          disabled={isDeleting}
+                          style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}
+                        >
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </button>
+                      )}
+                    </div>
+                  ))}
               </div>
             );
           })}
