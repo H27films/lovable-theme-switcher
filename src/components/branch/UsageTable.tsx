@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "luci
 import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { type BranchConfig, type OfficeProduct, type EntryLine } from "@/lib/branchSimple";
 import { useTabletMode } from "@/hooks/useTabletMode";
-import { makeIsFavourite, isYes, USAGE_TYPES } from "@/lib/branchSimpleUtils";
+import { makeIsFavourite, isYes, USAGE_TYPES, typeColumnValue, usagePillValue, therapistValue } from "@/lib/branchSimpleUtils";
 
 
 interface UsageTableProps {
