@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { X, Search, Building2, ChevronDown, ChevronUp, Star, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
@@ -176,6 +177,7 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
 };
 
 const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps) => {
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const toggleTheme = () => setTheme(theme === "sand" ? "light" : "sand");
   const [showOrderPanel, setShowOrderPanel] = useState(false);
@@ -1038,7 +1040,11 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
               if (searchMode !== "idle") {
                 setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
                 setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
-              } else { onBack(); }
+              } else if (onBack) {
+                onBack();
+              } else {
+                navigate("/simple/office");
+              }
             }}
             style={{
               display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
