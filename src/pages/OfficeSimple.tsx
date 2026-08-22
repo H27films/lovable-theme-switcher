@@ -465,11 +465,13 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
             "QTY": row["QTY"],
             "SUB TYPE": subType,
             "PRODUCT SOLD": productSold,
+            "THERAPIST": row["THERAPIST"] || "",
+            "NOTES": row["NOTES"] || "",
           };
         });
 
         const ws = XLSX.utils.json_to_sheet(transformedData, {
-          header: ["PRODUCT NAME","DATE","BRANCH","TYPE","QTY","SUB TYPE","PRODUCT SOLD"],
+          header: ["PRODUCT NAME","DATE","BRANCH","TYPE","QTY","SUB TYPE","PRODUCT SOLD","THERAPIST","NOTES"],
         });
         // Format DATE column as dd/mm/yyyy
         const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
@@ -479,6 +481,15 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
             cell.t = "n"; cell.z = "dd/mm/yyyy";
           }
         }
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Log");
+        const from = exportDateFrom || "start";
+        const to   = exportDateTo   || "end";
+        XLSX.writeFile(wb, `log_export_${from}_to_${to}.xlsx`);
+        setExportLoading(false);
+        setShowExportPanel(false);
+        return;
       } else if (exportType === "order") {
         // ── ORDER SUBMIT EXPORT ──────────────────────────────────────────────
         const { data, error } = await (supabase as any).from("OrderSubmit").select("*").order("DATE", { ascending: true });
