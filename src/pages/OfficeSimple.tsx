@@ -204,7 +204,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
 
   // ── EXPORT PANEL STATE ────────────────────────────────────
   const [showExportPanel, setShowExportPanel] = useState(false);
-  const [exportType, setExportType] = useState<"log" | "cash" | null>(null);
+  const [exportType, setExportType] = useState<"log" | "cash" | "order" | null>(null);
   const [exportDateFrom, setExportDateFrom] = useState<string>("");
   const [exportDateTo, setExportDateTo] = useState<string>("");
   const [quickSelect, setQuickSelect] = useState<"7d"|"month"|null>(null);
