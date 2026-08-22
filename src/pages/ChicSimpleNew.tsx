@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useBranchFavourites } from "@/hooks/useBranchFavourites";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { chicConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
@@ -22,7 +23,7 @@ interface ChicSimpleNewProps {
 }
 
 const ChicSimpleNew = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleNewProps) => {
-  const isFav = (p: any) => isYes(p[chicConfig.favouriteKey]);
+  const { isFav, isColour, allowedIds, toggleFavourite } = useBranchFavourites("chic");
   const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = chicConfig.logBranchName;
 
@@ -172,21 +173,6 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      refreshBranchLog();
    }, [logView]);
 
-  const toggleFavourite = async (product: OfficeProduct) => {
-    const currentlyFav = isFav(product);
-    const newVal = !currentlyFav ? "TRUE" : null;
-    await (supabase as any)
-      .from("AllFileProducts")
-      .update({ [chicConfig.favouriteKey]: newVal })
-      .eq("id", product.id);
-    setProducts(prev =>
-      prev.map(p => p.id === product.id ? { ...p, [chicConfig.favouriteKey]: newVal } : p)
-    );
-    setSelectedProduct(prev =>
-      prev && prev.id === product.id ? { ...prev, [chicConfig.favouriteKey]: newVal } : prev
-    );
-  };
-
   const reverseRow = async (row: LogRow) => {
     try {
       // The deletion and product balance restoration is now handled inside LogTable.tsx's handleConfirm
@@ -314,12 +300,12 @@ const setLogViewToWeek = () => {
   }, [search, searchMode, filteredProducts]);
 
   const usageFavs    = usageFiltered.filter(p => isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const usageColours = usageFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const usageRegular = usageFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const usageColours = usageFiltered.filter(p => !isFav(p) && isColour(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const usageRegular = usageFiltered.filter(p => !isFav(p) && !isColour(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
 
   const orderFavs    = orderFiltered.filter(p => isFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const orderColours = orderFiltered.filter(p => !isFav(p) && isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isYes(p["Colour"])).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const orderColours = orderFiltered.filter(p => !isFav(p) && isColour(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+  const orderRegular = orderFiltered.filter(p => !isFav(p) && !isColour(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
 
   // Product list already added state (for grey-out) - not used in thin version
   const alreadyAdded = undefined;
@@ -372,6 +358,8 @@ const setLogViewToWeek = () => {
               closeSearch();
             }}
             alreadyAdded={alreadyAdded}
+            isColour={isColour}
+            allowedIds={allowedIds}
           />
         )}
         {!searchActive && (
