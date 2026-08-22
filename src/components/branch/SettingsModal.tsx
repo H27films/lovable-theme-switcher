@@ -23,14 +23,15 @@ export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => 
         .select("name")
         .eq("branch", branch);
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         setTherapists(data.map((t: any) => String(t.name).trim().toUpperCase()));
       } else {
-        setTherapists([...DEFAULT_THERAPISTS]);
+        console.error("Supabase error fetching therapists:", error);
+        setTherapists([]);
       }
     } catch (err) {
       console.error("Fetch therapists error:", err);
-      setTherapists([...DEFAULT_THERAPISTS]);
+      setTherapists([]);
     } finally {
       setLoading(false);
     }
