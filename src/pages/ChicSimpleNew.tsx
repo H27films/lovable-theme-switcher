@@ -369,7 +369,8 @@ const setLogViewToWeek = () => {
                 selectedProduct={selectedProduct} 
                 balanceKey={BALANCE_KEY} 
                 favouriteKey={chicConfig.favouriteKey} 
-                onToggleFav={toggleFavourite} 
+                onToggleFav={toggleFavourite}
+                isFavourite={isFav}
               />
             )}
 {!selectedProduct && (

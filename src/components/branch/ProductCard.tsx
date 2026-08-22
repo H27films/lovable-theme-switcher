@@ -8,12 +8,14 @@ interface ProductCardProps {
   balanceKey: keyof OfficeProduct;
   favouriteKey: keyof OfficeProduct;
   onToggleFav: (product: any) => void;
+  /** Favourite lookup (defaults to the product's own favourite column) */
+  isFavourite?: (product: any) => boolean;
 }
 
-export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggleFav }: ProductCardProps) => {
+export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggleFav, isFavourite }: ProductCardProps) => {
   if (!selectedProduct) return null;
 
-  const isFav = (p: any) => isYes(p[favouriteKey]);
+  const isFav = (p: any) => (isFavourite ? isFavourite(p) : isYes(p[favouriteKey]));
 
   return (
     <div style={{ flexShrink: 0, marginBottom: "12px", paddingBottom: "0px" }}>
