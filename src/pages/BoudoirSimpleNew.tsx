@@ -23,7 +23,7 @@ interface BoudoirSimpleNewProps {
 }
 
 const BoudoirSimpleNew = ({ onBack, onBackToMain, products: propProducts }: BoudoirSimpleNewProps) => {
-  const { isFav, isColour, allowedIds, toggleFavourite } = useBranchFavourites("boudoir");
+  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("boudoir");
   const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
 
@@ -360,6 +360,7 @@ const setLogViewToWeek = () => {
             alreadyAdded={alreadyAdded}
             isColour={isColour}
             allowedIds={allowedIds}
+            nameOf={nameOf}
           />
         )}
         {!searchActive && (

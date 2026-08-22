@@ -65,6 +65,12 @@ export const useBranchFavourites = (branch: BranchKey) => {
     return String(row?.["COLOUR"] ?? "").trim().toUpperCase() === "YES";
   }, [bySourceId]);
 
+  /** Label shown in the dropdown: the Favourites table's PRODUCT NAME. */
+  const nameOf = useCallback((p: any) => {
+    const row = bySourceId.get(Number(p?.id));
+    return row?.["PRODUCT NAME"] ?? p?.["PRODUCT NAME"];
+  }, [bySourceId]);
+
   /** Marks/unmarks the Favourites row matched via SOURCE ID. */
   const toggleFavourite = useCallback(async (p: any) => {
     const sourceId = Number(p?.id);
@@ -82,5 +88,5 @@ export const useBranchFavourites = (branch: BranchKey) => {
     }
   }, [bySourceId, column, isFav, refresh]);
 
-  return { favouriteRows: rows, bySourceId, allowedIds, isFav, isColour, toggleFavourite, refreshFavourites: refresh };
+  return { favouriteRows: rows, bySourceId, allowedIds, isFav, isColour, nameOf, toggleFavourite, refreshFavourites: refresh };
 };

@@ -14,6 +14,8 @@ interface ProductListProps {
   alreadyAdded?: Set<string>;
   /** Colour flag lookup (defaults to the product's own Colour column) */
   isColour?: (p: any) => boolean;
+  /** Display label lookup (defaults to the product's own PRODUCT NAME) */
+  nameOf?: (p: any) => string;
   /** Restrict the dropdown to these AllFileProducts ids (Favourites SOURCE ID) */
   allowedIds?: Set<number>;
 }
@@ -27,10 +29,11 @@ const SectionHeader = ({ label }: { label: string }) => (
 );
 
 const ProductRow = ({
-  p, last, isFav, balanceKey, onSelect, alreadyAdded,
+  p, last, isFav, balanceKey, onSelect, alreadyAdded, nameOf,
 }: {
   p: any; last: boolean; isFav: (p: any) => boolean;
   balanceKey: keyof OfficeProduct; onSelect: (p: any) => void; alreadyAdded?: Set<string>;
+  nameOf?: (p: any) => string;
 }) => {
   const added = alreadyAdded?.has(p["PRODUCT NAME"]);
   return (
@@ -46,7 +49,7 @@ const ProductRow = ({
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", flex: 1 }}>
-          {p["PRODUCT NAME"]}
+          {nameOf ? nameOf(p) : p["PRODUCT NAME"]}
         </div>
         {(p as any)[balanceKey] != null && (
           <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>
@@ -66,7 +69,7 @@ const ProductRow = ({
 
 export const ProductList = ({
   products, isFav, balanceKey, favouritesLabel, search, showDropdown, onSelect, alreadyAdded,
-  isColour, allowedIds,
+  isColour, allowedIds, nameOf,
 }: ProductListProps) => {
   if (!showDropdown || search.length === 0) return null;
 
@@ -89,20 +92,20 @@ export const ProductList = ({
         <>
           <SectionHeader label={favouritesLabel} />
           {favourites.map((p, i) => (
-            <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} />
+            <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />
           ))}
         </>
       )}
       {regular.length > 0 && (
         <>
           <SectionHeader label="Products" />
-          {regular.map((p, i) => <ProductRow key={p.id} p={p} last={i === regular.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} />)}
+          {regular.map((p, i) => <ProductRow key={p.id} p={p} last={i === regular.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />)}
         </>
       )}
       {colours.length > 0 && (
         <>
           <SectionHeader label="Colours" />
-          {colours.map((p, i) => <ProductRow key={p.id} p={p} last={i === colours.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} />)}
+          {colours.map((p, i) => <ProductRow key={p.id} p={p} last={i === colours.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />)}
         </>
       )}
       {!hasResults && (
