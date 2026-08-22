@@ -41,6 +41,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     const [usageEntriesCount, setUsageEntriesCount] = useState(0);
     const [pastOrdersExpanded, setPastOrdersExpanded] = useState(false);
     const [isSearchProduct, setIsSearchProduct] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
 
    // Reset Past Orders expanded flag whenever we leave the Order panel
    useEffect(() => {
@@ -398,12 +399,12 @@ const setLogViewToWeek = () => {
     </button>
   </div>
 )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} />
+            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} />
           </div>
         )}
       </div>
 
-      {(activePanel !== "ORDER" && !isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0)))) && (
+      {!editModalOpen && (activePanel !== "ORDER" && !isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0)))) && (
         <BottomNav
           activePanel={activePanel}
           setActivePanel={setActivePanel}
@@ -414,7 +415,7 @@ const setLogViewToWeek = () => {
         />
       )}
 
-      {((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct)) && (
+      {!editModalOpen && ((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct)) && (
         <BottomNav
           activePanel={activePanel}
           setActivePanel={setActivePanel}

@@ -12,9 +12,11 @@ interface LogTableProps {
   onReverse: (row: LogRow) => void | Promise<void>;
   onUpdate?: (row: LogRow, updates: EditEntryUpdates) => void | Promise<void>;
   viewType?: "all" | "week";
+  /** Called when the edit-entry modal opens (true) or closes (false). */
+  onEditModalChange?: (open: boolean) => void;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all" }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -122,6 +124,12 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [expandedId]);
+
+  // Notify the parent when the edit modal opens/closes so the bottom nav can be hidden
+  useEffect(() => {
+    onEditModalChange?.(editRow !== null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editRow]);
 
   return (
     <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
