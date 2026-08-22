@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus, Trash2, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { THERAPISTS as DEFAULT_THERAPISTS } from "@/lib/branchSimpleUtils";
 
 interface SettingsModalProps {
   open: boolean;
@@ -10,30 +9,37 @@ interface SettingsModalProps {
   branch: string;
 }
 
+// The therapists table may have been created as "Therapists" or "therapists".
+// Reads already try both; writes must too, otherwise saving blows up silently.
+const THERAPISTS_TABLES = ["Therapists", "therapists"] as const;
+
+/**
+ * Try an operation against every possible therapists table name and return the
+ * first result that didn't error (so reads and writes always hit the same table).
+ */
+const runTherapistsOperation = async <T,>(
+  build: (table: string) => Promise<{ data: T | null; error: any }>
+): Promise<{ data: T | null; error: any }> => {
+  for (const table of THERAPISTS_TABLES) {
+    const result = await build(table);
+    if (!result.error) return result;
+  }
+  // Return the last attempt so the caller can surface the real error message.
+  return build(THERAPISTS_TABLES[THERAPISTS_TABLES.length - 1]);
+};
+
 export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => {
   const [therapists, setTherapists] = useState<string[]>([]);
   const [newTherapist, setNewTherapist] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const fetchTherapists = async () => {
     setLoading(true);
     try {
-      let { data, error } = await (supabase as any)
-        .from("Therapists")
-        .select("name")
-        .eq("branch", branch);
-
-      // If table name is lowercase or wasn't found, try lowercase "therapists"
-      if (error || !data || data.length === 0) {
-        const res2 = await (supabase as any)
-          .from("therapists")
-          .select("name")
-          .eq("branch", branch);
-        if (!res2.error && res2.data) {
-          data = res2.data;
-          error = null;
-        }
-      }
+      const { data, error } = await runTherapistsOperation<{ name: string }[]>((table) =>
+        (supabase as any).from(table).select("name").eq("branch", branch)
+      );
 
       if (!error && data) {
         setTherapists(data.map((t: any) => String(t.name).trim().toUpperCase()));
@@ -63,33 +69,42 @@ export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => 
       return;
     }
 
-    const updated = [...therapists, upper];
-    setTherapists(updated);
-    setNewTherapist("");
+    setSaveError(null);
 
-    try {
-      await (supabase as any)
-        .from("Therapists")
-        .insert({ branch: branch, name: upper });
-    } catch (err) {
-      console.error("Error saving therapist:", err);
+    // id and timestamp are auto-generated; we only supply branch + name
+    const { error } = await runTherapistsOperation((table) =>
+      (supabase as any).from(table).insert({ branch: branch, name: upper }).select()
+    );
+
+    if (error) {
+      console.error("Error saving therapist:", error);
+      setSaveError(error?.message || "Could not save therapist. Check console for details.");
+      return;
     }
+
+    setTherapists(prev => [...prev, upper]);
+    setNewTherapist("");
     window.dispatchEvent(new Event("therapists_updated"));
   };
 
   const handleRemove = async (name: string) => {
-    const updated = therapists.filter(t => t !== name);
-    setTherapists(updated);
+    setSaveError(null);
 
-    try {
-      await (supabase as any)
-        .from("Therapists")
+    const { error } = await runTherapistsOperation((table) =>
+      (supabase as any)
+        .from(table)
         .delete()
         .eq("branch", branch)
-        .eq("name", name);
-    } catch (err) {
-      console.error("Error deleting therapist:", err);
+        .eq("name", name)
+    );
+
+    if (error) {
+      console.error("Error deleting therapist:", error);
+      setSaveError(error?.message || "Could not delete therapist. Check console for details.");
+      return;
     }
+
+    setTherapists(prev => prev.filter(t => t !== name));
     window.dispatchEvent(new Event("therapists_updated"));
   };
 
@@ -123,6 +138,11 @@ export const SettingsModal = ({ open, onClose, branch }: SettingsModalProps) => 
             <input type="text" value={newTherapist} onChange={e => setNewTherapist(e.target.value)} placeholder="Add therapist name..." style={{ flex: 1, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", padding: "10px 12px", fontSize: "14px", outline: "none", color: "hsl(var(--foreground))" }} />
             <button type="submit" style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "8px", padding: "0 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Plus size={18} /></button>
           </form>
+          {saveError && (
+            <div style={{ marginTop: "10px", fontSize: "11px", color: "hsl(0 70% 50%)", fontFamily: "Raleway, inherit", lineHeight: 1.4 }}>
+              ✗ {saveError}
+            </div>
+          )}
         </div>
 
         <button onClick={onClose} style={{ width: "100%", background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "999px", padding: "12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer", marginTop: "8px" }}>Done</button>
