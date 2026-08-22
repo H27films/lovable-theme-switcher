@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "lucide-react";
-import { USAGE_TYPES, THERAPISTS, makeIsFavourite, UsageType, isYes, typeColumnValue, usagePillValue, therapistValue } from "@/lib/branchSimpleUtils";
+import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { type BranchConfig, type OfficeProduct, type EntryLine } from "@/lib/branchSimple";
 import { useTabletMode } from "@/hooks/useTabletMode";
 
