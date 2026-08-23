@@ -245,7 +245,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
       </div>
 
       {showUsageDropdown && (
-        <div style={{ flexShrink: 0, background: "hsl(var(--background))", maxHeight: "55vh", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px" }}>
+        <div style={{ flex: "1 1 auto", minHeight: 0, marginBottom: "44px", background: "hsl(var(--background))", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "0", paddingBottom: "env(safe-area-inset-bottom, 12px)" }}>
           {(() => {
             const sectionLabel = (label: string) => (
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
@@ -275,7 +275,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         </div>
       )}
 
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => setShowUsageDropdown(false)}>
+      <div style={{ flex: 1, display: showUsageDropdown ? "none" : "block", overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => setShowUsageDropdown(false)}>
         {usageEntries.map(entry => {
           const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
           const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
