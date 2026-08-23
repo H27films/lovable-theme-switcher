@@ -1289,7 +1289,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             {!selectedProduct && (
               <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
                 <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
-                  Recent
+                  All Data
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
                   <div style={hdrStyle}>Date</div>
