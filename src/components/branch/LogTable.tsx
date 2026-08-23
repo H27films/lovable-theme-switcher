@@ -170,7 +170,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
 
             return (
-              <div key={row.id}>
+              <div key={row.id} style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}>
                 <div
                   onClick={(e) => { e.stopPropagation(); setExpandedId(expanded ? null : row.id); }}
                   style={{ 
@@ -179,7 +179,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                     gap: "4px", 
                     padding: "8px 0", 
                     borderTop: dateSeparator ? "1px solid hsl(var(--border) / 0.9)" : "none", 
-                    borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
+                    borderBottom: "none",
                     marginTop: dateSeparator ? "4px" : "0",  
                     alignItems: "start", 
                     cursor: "pointer" 
@@ -193,7 +193,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                       <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
                         {row.THERAPIST ? (
-                          <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "2px 6px", borderRadius: "999px", fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                          <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "2px 5px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
                         ) : (
                           <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}
@@ -210,9 +210,9 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                           {viewType === "week" && !expanded && (row as any)["THERAPIST"] && (
                             <span style={{
                               ...therapistPillStyle((row as any)["THERAPIST"]),
-                              padding: "2px 8px",
+                              padding: "2px 6px",
                               borderRadius: "999px",
-                              fontSize: "10px",
+                              fontSize: "8px",
                               fontWeight: 600,
                               fontFamily: "Raleway, inherit",
                               textTransform: "uppercase",
@@ -241,7 +241,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                   )}
                 </div>
                 {expanded && (
-                  <div style={{ padding: "0 0 16px", borderBottom: "0.5px solid hsl(var(--border) / 0.5)" }}>
+                  <div style={{ padding: "0 0 16px" }}>
                     <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
                       {/* Edit / Delete buttons sit under the content columns (after the Date col): product view aligns under Qty (col 2), home view under Product (col 2) */}
                       <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
@@ -271,7 +271,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                       {/* Colour-coded therapist pill, aligned under the Type column (col 4 on product view, col 5 on home view) */}
                       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {row.THERAPIST ? (
-                          <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "4px 10px", borderRadius: "999px", fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                          <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
                         ) : (
                           <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}
