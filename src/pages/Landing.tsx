@@ -168,9 +168,9 @@ export default function Landing() {
                     transition: `opacity 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s, transform 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s`,
                   }}
                 >
-                  <CircularButton onClick={() => navigate(b.path)} />
+                  <CircularButton onClick={() => navigate(b.path, { state: { from: "landing" } })} />
                   <span
-                    onClick={() => navigate(b.path)}
+                    onClick={() => navigate(b.path, { state: { from: "landing" } })}
                     style={{
                       fontSize: "clamp(15px, 2.6vw, 20px)",
                       fontWeight: 300,

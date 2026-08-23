@@ -96,7 +96,8 @@ const SubLanding = () => {
      if (branch === "office") {
         navigate("/simple/office");
      } else {
-       navigate(`/simple/${branch}`);
+       // Pass origin so the branch page's header title knows where to navigate back to
+       navigate(`/simple/${branch}`, { state: { from: "sublanding" } });
      }
    };
 

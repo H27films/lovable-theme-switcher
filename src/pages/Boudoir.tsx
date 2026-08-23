@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranchFavourites } from "@/hooks/useBranchFavourites";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
@@ -28,6 +28,9 @@ const Boudoir = ({ onBack, onBackToMain, products: propProducts }: BoudoirProps)
   const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
 
   const navigate = useNavigate();
+  const location = useLocation();
+  // Origin of this visit ("landing" | "sublanding" | "branches") – set via router state at navigation time
+  const cameFrom = (location.state as { from?: string } | null)?.from;
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
   const [productLog, setProductLog] = useState<LogRow[]>([]);
@@ -220,7 +223,17 @@ const handleHeaderBack = () => {
         setSearch("");
         setSelectedProduct(null);
         setShowDropdown(false);
+    } else if (cameFrom === "landing") {
+        // Arrived directly from Landing -> back to Landing
+        navigate("/");
+    } else if (cameFrom === "sublanding") {
+        // Arrived via Admin Portal (SubLanding) -> back to SubLanding
+        navigate("/simple/branches/admin");
+    } else if (cameFrom === "branches") {
+        // Arrived via Admin Portal > Branches -> back to Branches page
+        navigate("/simple/branches");
     } else {
+        // Fallback (e.g. direct deep link) -> Admin Portal
         navigate("/simple/branches/admin");
     }
 };
