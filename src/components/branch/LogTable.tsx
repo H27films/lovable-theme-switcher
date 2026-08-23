@@ -162,6 +162,8 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             const prevDateStr = idx > 0 ? formatDate(rows[idx - 1].DATE) : null;
             const showDate = dateStr !== prevDateStr;
             const dateSeparator = showDate && idx > 0;
+            const nextDateStr = idx < rows.length - 1 ? formatDate(rows[idx + 1].DATE) : null;
+            const isLastRowBeforeDateChange = nextDateStr !== null && nextDateStr !== dateStr;
             const isDeleting = deleting === row.id;
             const expanded = expandedId === row.id;
             const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
@@ -176,8 +178,9 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                     gridTemplateColumns: gridCols, 
                     gap: "4px", 
                     padding: "8px 0", 
-                    borderTop: dateSeparator ? "0.5px solid hsl(var(--border) / 0.95)" : "none", 
-                    marginTop: dateSeparator ? "4px" : "0", 
+                    borderTop: dateSeparator ? "1px solid hsl(var(--border) / 0.9)" : "none", 
+                    borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none",
+                    marginTop: dateSeparator ? "4px" : "0",  
                     alignItems: "start", 
                     cursor: "pointer" 
                   }}
