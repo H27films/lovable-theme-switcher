@@ -130,22 +130,22 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
       });
   }, []);
 
-  // ── Product log (for selected product card) ──────────────────
-  const [productLog, setProductLog] = useState<LogRow[]>([]);
-  const [productLogLoading, setProductLogLoading] = useState(false);
+// ── Product log (for selected product card) ──────────────────
+   const [productLog, setProductLog] = useState<LogRow[]>([]);
+   const [productLogLoading, setProductLogLoading] = useState(false);
 
-  useEffect(() => {
-    if (!selectedProduct) { setProductLog([]); return; }
-    setProductLogLoading(true);
-    (supabase as any)
-      .from("AllFileLog").select("*")
-      .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
-      .order("DATE", { ascending: false }).limit(30)
-      .then(({ data }: any) => {
-        setProductLog(data || []);
-        setProductLogLoading(false);
-      });
-  }, [selectedProduct]);
+   useEffect(() => {
+     if (!selectedProduct) { setProductLog([]); return; }
+     setProductLogLoading(true);
+     (supabase as any)
+       .from("AllFileLog").select("*")
+       .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"].trim())
+       .order("DATE", { ascending: false }).limit(30)
+       .then(({ data }: any) => {
+         setProductLog(data || []);
+         setProductLogLoading(false);
+       });
+   }, [selectedProduct]);
 
   // ── Favourite state ──────────────────────────────────────────
   const [isFav, setIsFav] = useState(false);
@@ -187,10 +187,10 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
     const updated = { ...selectedProduct, "OFFICE BALANCE": newBal };
     setSelectedProduct(updated);
     setUsageQty(""); setUsageOpen(false); setUsageSubmitting(false);
-    const { data } = await (supabase as any).from("AllFileLog").select("*")
-      .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
-      .order("DATE", { ascending: false }).limit(30);
-    setProductLog(data || []);
+const { data } = await (supabase as any).from("AllFileLog").select("*")
+       .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"].trim())
+       .order("DATE", { ascending: false }).limit(30);
+     setProductLog(data || []);
   };
 
   // ── GRN groups for Recent section ────────────────────────────
@@ -595,7 +595,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             {/* Recent section */}
             {!selectedProduct && (
               <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
-<div style={{
+                <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+                 <div style={{
                    position: "sticky",
                    top: 0,
                    background: "hsl(var(--background))",
@@ -623,7 +624,6 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                     <div />
                    </div>
                  </div>
-                <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                   {loadingLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>}
                   {!loadingLog && grnGroups.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>}
                   {!loadingLog && grnGroups.map(group => {
