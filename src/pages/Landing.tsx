@@ -156,8 +156,18 @@ export default function Landing() {
                 { name: "Boudoir", path: "/simple/boudoir" },
                 { name: "Chic", path: "/simple/chic" },
                 { name: "Nur Yadi", path: "/simple/nuryadi" },
-              ].map((b) => (
-                <div key={b.name} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              ].map((b, i) => (
+                <div
+                  key={b.name}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "14px",
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? "translateY(0)" : "translateY(24px)",
+                    transition: `opacity 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s, transform 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s`,
+                  }}
+                >
                   <CircularButton onClick={() => navigate(b.path)} />
                   <span
                     onClick={() => navigate(b.path)}
