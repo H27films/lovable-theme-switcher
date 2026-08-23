@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { ArrowRight, Building2, Search as SearchIcon, X } from "lucide-react";
+import { ArrowLeft, Building2, Search as SearchIcon, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +38,9 @@ export default function Search({ onBack }: SearchProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Tracks where the dropdown should sit when it's position: fixed (escapes clipping ancestors)
+  const [dropdownTop, setDropdownTop] = useState<number>(0);
 
   const fg = "hsl(var(--foreground))";
   const dimColor = "hsl(var(--muted-foreground))";
@@ -112,15 +115,28 @@ export default function Search({ onBack }: SearchProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Keep the fixed dropdown's top position in sync with the input row (handles resize/scroll of the page itself)
+  useEffect(() => {
+    const updatePosition = () => {
+      if (containerRef.current) {
+        setDropdownTop(containerRef.current.getBoundingClientRect().bottom);
+      }
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
+  }, [showDropdown]);
+
   const nameSort = (a: Product, b: Product) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
 
   const q = query.trim().toLowerCase();
 
   // 1) Suppliers matching the query (distinct SUPPLIER values from AllFileProducts), A–Z
+  //    (no cap here previously beyond 20 — left as-is since this list is a supplier index, not products)
   const suppliers = q.length > 0
     ? Array.from(new Set(
         products.map(p => p.SUPPLIER).filter((s): s is string => !!s && s.toLowerCase().includes(q))
-      )).sort((a, b) => a.localeCompare(b)).slice(0, 20)
+      )).sort((a, b) => a.localeCompare(b))
     : [];
 
   const matched = q.length > 0 ? products.filter(p =>
@@ -130,9 +146,10 @@ export default function Search({ onBack }: SearchProps) {
 
   // 2–4) Product groups (reusing favBySourceId-backed helpers):
   //      Office Favourites A–Z → non-fav colour-NO A–Z → non-fav colour-YES A–Z
-  const favs    = matched.filter(isOfficeFav).sort(nameSort).slice(0, 30);
-  const regular = matched.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort(nameSort).slice(0, 30);
-  const colours = matched.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort(nameSort).slice(0, 30);
+  //      (30-result cap removed — all matches now render)
+  const favs    = matched.filter(isOfficeFav).sort(nameSort);
+  const regular = matched.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort(nameSort);
+  const colours = matched.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort(nameSort);
 
   const hasResults = suppliers.length > 0 || favs.length > 0 || regular.length > 0 || colours.length > 0;
 
@@ -233,7 +250,10 @@ export default function Search({ onBack }: SearchProps) {
           title="Back"
           style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: fg, display: "flex", alignItems: "center", touchAction: "manipulation" }}
         >
-          <ArrowRight size={22} strokeWidth={1.4} />
+          <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+  <line x1="30" y1="8" x2="1" y2="8" />
+  <polyline points="9,1 1,8 9,15" />
+</svg>
         </button>
       </div>
 
@@ -284,17 +304,20 @@ export default function Search({ onBack }: SearchProps) {
           )}
         </div>
 
-        {/* ── Dropdown ── clean, no box */}
+        {/* ── Dropdown ── position: fixed so it can't be clipped by any ancestor's overflow:hidden
+             (e.g. a full-height app shell wrapping routed pages). Positioned via dropdownTop,
+             which tracks the bottom edge of the input row. */}
         {showDropdown && hasResults && (
           <div
             style={{
-              position: "absolute",
-              top: "100%",
+              position: "fixed",
+              top: dropdownTop,
               left: 20,
               right: 20,
               zIndex: 50,
-              maxHeight: "60dvh",
+              maxHeight: `calc(100dvh - ${dropdownTop}px - 16px)`,
               overflowY: "auto",
+              background: "hsl(var(--background))",
               animation: "spFadeIn 0.18s ease",
             }}
           >

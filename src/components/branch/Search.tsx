@@ -35,7 +35,7 @@ export const Search = ({
   }, [autoFocus]);
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", borderBottom: "0.5px solid hsl(var(--border))", padding: "0 12px 12px 12px", marginBottom: "0" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px", padding: "0 12px" }}>
       <input
         ref={inputRef}
         type="text"
