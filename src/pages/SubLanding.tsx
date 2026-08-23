@@ -274,19 +274,19 @@ const SubLanding = () => {
                   style={{
                     display: "block", textAlign: "left", padding: "2px 0",
                     background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                    fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em",
-                    color: "hsl(var(--foreground))", lineHeight: 1,
+                    fontSize: "clamp(24px, 7vw, 40px)", fontWeight: 300, letterSpacing: "0.05em",
+color: "hsl(var(--foreground))", lineHeight: 1,
                     transition: "opacity 0.2s ease", overflow: "hidden", width: "100%",
                   }}
                   onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
                   onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                 >
                   <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
-                    <span style={{ flexShrink: 0 }}>{item}</span>
-                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, marginLeft: "0.25em" }}>{item}</span>
-                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.05, marginLeft: "0.25em" }}>{item}</span>
-                    <span style={{ fontSize: "clamp(40px, 12vw, 64px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, marginLeft: "0.25em" }}>{item}</span>
-                  </div>
+  <span style={{ flexShrink: 0 }}>{item}</span>
+  <span style={{ fontSize: "clamp(24px, 7vw, 40px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, marginLeft: "0.25em" }}>{item}</span>
+  <span style={{ fontSize: "clamp(24px, 7vw, 40px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.05, marginLeft: "0.25em" }}>{item}</span>
+  <span style={{ fontSize: "clamp(24px, 7vw, 40px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, marginLeft: "0.25em" }}>{item}</span>
+</div>
                 </button>
               ))}
             </div>
