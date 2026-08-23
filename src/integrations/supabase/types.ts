@@ -237,7 +237,15 @@ export type Database = {
           "PRODUCT NAME"?: string | null
           "SOURCE ID"?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_source_id"
+            columns: ["SOURCE ID"]
+            isOneToOne: false
+            referencedRelation: "AllFileProducts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       InputFullTable: {
         Row: {
@@ -344,6 +352,27 @@ export type Database = {
         }
         Relationships: []
       }
+      therapists: {
+        Row: {
+          branch: string
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          branch: string
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          branch?: string
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       "Favourites Sorted": {
@@ -377,7 +406,15 @@ export type Database = {
           "PRODUCT NAME"?: string | null
           "SOURCE ID"?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_source_id"
+            columns: ["SOURCE ID"]
+            isOneToOne: false
+            referencedRelation: "AllFileProducts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
