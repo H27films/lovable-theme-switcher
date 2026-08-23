@@ -3,7 +3,6 @@ import { X, Search, Building2, ChevronDown, ChevronUp, Star, Upload } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 interface OfficeProduct {
@@ -178,8 +177,6 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
 
 const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps) => {
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
-  const toggleTheme = () => setTheme(theme === "sand" ? "light" : "sand");
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   // ── IMPORT PANEL STATE ────────────────────────────────────
   const [showImportPanel, setShowImportPanel] = useState(false);
@@ -1076,18 +1073,6 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
           >
             {BRANCH_NAME}
           </button>
-          {!showOrderPanel && (
-            <span
-              onClick={toggleTheme}
-              style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", paddingTop: "6px" }}
-              title="Switch theme"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-              </svg>
-            </span>
-          )}
         </div>
 
         {/* ORDER button */}

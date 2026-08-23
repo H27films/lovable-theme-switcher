@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import SearchSimple from "./SearchSimple";
 import BranchesPage from "./BranchesPage";
@@ -41,9 +40,6 @@ interface OfficeProduct {
 import { useNavigate } from "react-router-dom";
 
 const SubLandingSimple = () => {
-  const { theme, setTheme } = useTheme();
-  const isSandTheme = theme === "sand";
-  const toggleTheme = () => setTheme(isSandTheme ? "light" : "sand");
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
@@ -231,16 +227,6 @@ const SubLandingSimple = () => {
 
   return (
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
-
-      {/* Fixed theme toggle - only show when not in branch view (branch pages have their own toggle) */}
-      <div style={{ position: "fixed", top: "28px", right: "20px", zIndex: 60, display: (activeSection === "order") ? "none" : "block" }}>
-        <span onClick={toggleTheme} style={{ cursor: "pointer", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }} title="Switch theme">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-          </svg>
-        </span>
-      </div>
 
       {/* Fixed Home button (bottom right) - only show on home menu */}
       <a

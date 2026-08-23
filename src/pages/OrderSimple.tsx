@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Sun, Moon, Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
-import { useTheme } from "@/hooks/useTheme";
+import { Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 
@@ -147,10 +146,6 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
 }
 
 export default function OrderSimple({ onBack }: OrderSimpleProps) {
-  const { theme, setTheme } = useTheme();
-  const isSand = theme === "sand";
-  const handleToggle = () => setTheme(isSand ? "light" : "sand");
-
   const [products, setProducts] = useState<OfficeProduct[]>([]);
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
@@ -359,12 +354,6 @@ export default function OrderSimple({ onBack }: OrderSimpleProps) {
             <ChevronDown size={11} strokeWidth={2} style={{ color: muted }} />
           </button>
         </div>
-        <button
-          onClick={handleToggle}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
-        >
-          {isSand ? <Moon size={18} strokeWidth={1.5} /> : <Sun size={18} strokeWidth={1.5} />}
-        </button>
       </div>
 
       {/* Scrollable content */}

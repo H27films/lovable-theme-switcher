@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Search, X, Sun } from "lucide-react";
+import { ChevronLeft, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useTheme } from "@/hooks/useTheme";
 
 interface Product {
   id: number;
@@ -21,10 +20,6 @@ function belowPar(balance: number | null | undefined, par: number | null | undef
 }
 
 export default function SearchSimple({ onBack }: SearchSimpleProps) {
-  const { theme, setTheme } = useTheme();
-  const isSand = theme === "sand";
-  const handleToggle = () => setTheme(isSand ? "light" : "sand");
-
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -112,13 +107,6 @@ export default function SearchSimple({ onBack }: SearchSimpleProps) {
           style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: fg, display: "flex", alignItems: "center", touchAction: "manipulation" }}
         >
           <ChevronLeft size={24} strokeWidth={1.5} />
-        </button>
-        <button
-          onClick={handleToggle}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: fg, display: "flex", alignItems: "center", touchAction: "manipulation" }}
-          title={isSand ? "Switch to Light" : "Switch to Sand"}
-        >
-          <Sun size={18} strokeWidth={1.5} />
         </button>
       </div>
 
