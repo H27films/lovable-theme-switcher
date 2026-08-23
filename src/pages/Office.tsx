@@ -45,8 +45,18 @@ interface OfficeProps {
 
 const hdrStyle: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
-  color: "hsl(var(--muted-foreground))", textTransform: "uppercase",
+  color: "#000000", textTransform: "uppercase",
   letterSpacing: "0.08em",
+};
+
+const allDataHdrStyle: React.CSSProperties = {
+  fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit",
+  color: "hsl(var(--foreground))",
+};
+
+const allDataHeaderStyle: React.CSSProperties = {
+  ...hdrStyle,
+  textTransform: "capitalize",
 };
 
 const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
@@ -585,17 +595,34 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             {/* Recent section */}
             {!selectedProduct && (
               <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
-                <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
-                  All Data
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-                  <div style={hdrStyle}>Date</div>
-                  <div style={hdrStyle}>GRN</div>
-                  <div style={hdrStyle}>Supplier</div>
-                  <div style={{ ...hdrStyle, textAlign: "center" }}>Items</div>
-                  <div style={{ ...hdrStyle, textAlign: "center", visibility: expandedGRNs.size > 0 ? "visible" : "hidden" }}>Bal</div>
-                  <div />
-                </div>
+<div style={{
+                   position: "sticky",
+                   top: 0,
+                   background: "hsl(var(--background))",
+                   zIndex: 10,
+                   display: "flex",
+                   flexDirection: "column",
+                   width: "100%",
+                 }}>
+                   <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
+                     All Data
+                   </div>
+                   <div style={{ 
+                     display: "grid", 
+                     gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", 
+                     gap: "6px", 
+                     paddingBottom: "8px", 
+                     borderBottom: "0.5px solid hsl(var(--border))",
+                     width: "100%",
+                   }}>
+                    <div style={{ ...allDataHeaderStyle }}>Date</div>
+                    <div style={{ ...allDataHeaderStyle }}>GRN</div>
+                    <div style={{ ...allDataHeaderStyle }}>Supplier</div>
+                    <div style={{ ...allDataHeaderStyle, textAlign: "center" }}>Items</div>
+                    <div style={{ ...allDataHeaderStyle, textAlign: "center", visibility: expandedGRNs.size > 0 ? "visible" : "hidden" }}>Bal</div>
+                    <div />
+                   </div>
+                 </div>
                 <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                   {loadingLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>}
                   {!loadingLog && grnGroups.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>}
