@@ -153,9 +153,9 @@ export default function Landing() {
 {/* Branch buttons */}
 <div style={{ marginTop: "100px", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "22px", alignItems: "flex-start" }}>
               {[
-                { name: "Boudoir", path: "/simple/boudoir", bg: "#22372B" },
-                { name: "Chic", path: "/simple/chic", bg: "#390007" },
-                { name: "Nur Yadi", path: "/simple/nuryadi", bg: "#5B7E98" },
+                { name: "Boudoir", path: "/simple/boudoir" },
+                { name: "Chic", path: "/simple/chic" },
+                { name: "Nur Yadi", path: "/simple/nuryadi" },
               ].map((b) => (
                 <div key={b.name} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                   <CircularButton onClick={() => navigate(b.path)} />
@@ -165,15 +165,9 @@ export default function Landing() {
                       fontSize: "clamp(15px, 2.6vw, 20px)",
                       fontWeight: 300,
                       letterSpacing: "2px",
-                      color: "#FFFFFF",
-                      background: b.bg,
-                      padding: "8px 26px",
-                      borderRadius: "6px",
+                      color: "hsl(var(--foreground))",
                       textTransform: "capitalize",
                       cursor: "pointer",
-                      display: "inline-block",
-                      lineHeight: 1.2,
-                      whiteSpace: "nowrap",
                     }}
                   >
                     {b.name}
