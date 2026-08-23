@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Search as SearchIcon, X } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { ArrowRight, Search as SearchIcon, X } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -8,6 +9,13 @@ interface Product {
   SUPPLIER?: string;
   "OFFICE BALANCE"?: number | null;
   PAR?: number | null;
+}
+
+/** Row shape we read from the Favourites table (keyed to AllFileProducts via SOURCE ID). */
+interface FavouriteRow {
+  "SOURCE ID": number | null;
+  "OFFICE FAVOURITE": string | null;
+  COLOUR: string | null;
 }
 
 interface SearchProps {
@@ -20,6 +28,10 @@ function belowPar(balance: number | null | undefined, par: number | null | undef
 }
 
 export default function Search({ onBack }: SearchProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Origin of this visit ("office" when navigated here from Office) – set via router state at navigation time
+  const from = location.state?.from;
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -52,6 +64,43 @@ export default function Search({ onBack }: SearchProps) {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
+  const [favourites, setFavourites] = useState<FavouriteRow[]>([]);
+
+  // Fetch the Favourites table – source of truth for Office favourites & colour flags
+  const fetchFavourites = useCallback(async () => {
+    let allData: FavouriteRow[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data, error } = await (supabase as any)
+        .from("Favourites")
+        .select(`"SOURCE ID", "OFFICE FAVOURITE", COLOUR`)
+        .range(from, from + batchSize - 1);
+      if (error || !data || data.length === 0) break;
+      allData = allData.concat(data);
+      if (data.length < batchSize) break;
+      from += batchSize;
+    }
+    setFavourites(allData);
+  }, []);
+
+  useEffect(() => { fetchFavourites(); }, [fetchFavourites]);
+
+  /** Favourite rows keyed by SOURCE ID (= AllFileProducts.id), mirroring useBranchFavourites. */
+  const favBySourceId = useMemo(() => {
+    const m = new Map<number, FavouriteRow>();
+    favourites.forEach(r => { if (r["SOURCE ID"] != null) m.set(Number(r["SOURCE ID"]), r); });
+    return m;
+  }, [favourites]);
+
+  const isOfficeFav = useCallback((p: Product) =>
+    String(favBySourceId.get(Number(p.id))?.["OFFICE FAVOURITE"] ?? "").trim().toUpperCase() === "TRUE"
+  , [favBySourceId]);
+
+  const isColourProduct = useCallback((p: Product) =>
+    String(favBySourceId.get(Number(p.id))?.["COLOUR"] ?? "").trim().toUpperCase() === "YES"
+  , [favBySourceId]);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -63,11 +112,17 @@ export default function Search({ onBack }: SearchProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const nameSort = (a: Product, b: Product) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+
+  // Same grouping/order as UsageTable: favourites A-Z, then colour-No A-Z, then colour-Yes A-Z
   const results = query.length > 0
-    ? products
-        .filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(query.toLowerCase()))
-        .sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]))
-        .slice(0, 30)
+    ? (() => {
+        const matched = products.filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(query.toLowerCase()));
+        const favs    = matched.filter(isOfficeFav).sort(nameSort);
+        const regular = matched.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort(nameSort);
+        const colours = matched.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort(nameSort);
+        return [...favs, ...regular, ...colours].slice(0, 30);
+      })()
     : [];
 
   const handleSelect = (p: Product) => {
@@ -93,25 +148,45 @@ export default function Search({ onBack }: SearchProps) {
         overflowX: "hidden",
       }}
     >
-      {/* ── Top bar ── */}
+      {/* ── Top bar ── SEARCH title (matches SubLanding search view) + back arrow top right ── */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "16px 16px 12px 12px",
+          paddingLeft: "20px",
+          paddingRight: "16px",
+          paddingTop: "28px",
+          paddingBottom: "12px",
         }}
       >
+        <div
+          style={{
+            fontSize: "clamp(22px, 6vw, 36px)",
+            fontWeight: 300,
+            letterSpacing: "0.08em",
+            color: fg,
+            fontFamily: "'Raleway', sans-serif",
+            lineHeight: 1,
+          }}
+        >
+          SEARCH
+        </div>
         <button
-          onClick={onBack}
+          onClick={() => {
+            if (from === "office") navigate("/simple/office");
+            else onBack?.();
+          }}
+          aria-label="Back"
+          title="Back"
           style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: fg, display: "flex", alignItems: "center", touchAction: "manipulation" }}
         >
-          <ChevronLeft size={24} strokeWidth={1.5} />
+          <ArrowRight size={22} strokeWidth={1.4} />
         </button>
       </div>
 
       {/* ── Search bar + dropdown ── */}
-      <div ref={containerRef} style={{ padding: "4px 12px 0", position: "relative" }}>
+      <div ref={containerRef} style={{ padding: "4px 20px 0", position: "relative" }}>
         {/* Input row */}
         <div
           style={{
@@ -163,8 +238,8 @@ export default function Search({ onBack }: SearchProps) {
             style={{
               position: "absolute",
               top: "100%",
-              left: 12,
-              right: 12,
+              left: 20,
+              right: 20,
               zIndex: 50,
               maxHeight: "60dvh",
               overflowY: "auto",

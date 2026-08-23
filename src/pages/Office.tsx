@@ -1084,7 +1084,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
           {/* Order */}
           <button
-            onClick={() => setShowOrderPanel(true)}
+            onClick={() => navigate("/simple/order", { state: { from: "office" } })}
             title="Order"
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
             onMouseEnter={e => e.currentTarget.style.opacity = "1"}
@@ -1141,7 +1141,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           {/* Search — icon only, pushed to right */}
           <div style={{ flex: 1 }} />
           <button
-            onClick={() => { setSearchMode("active"); setTimeout(() => inputRef.current?.focus(), 100); }}
+            onClick={() => navigate("/simple/search", { state: { from: "office" } })}
             title="Search"
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", opacity: searchMode !== "idle" ? 1 : 0.7, transition: "opacity 0.2s" }}
           >

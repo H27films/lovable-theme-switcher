@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 
@@ -146,6 +147,10 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
 }
 
 export default function Order({ onBack }: OrderProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Origin of this visit ("office" when navigated here from Office) – set via router state at navigation time
+  const from = location.state?.from;
   const [products, setProducts] = useState<OfficeProduct[]>([]);
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
@@ -328,7 +333,10 @@ export default function Order({ onBack }: OrderProps) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span
-            onClick={onBack}
+            onClick={() => {
+              if (from === "office") navigate("/simple/office");
+              else onBack?.();
+            }}
             style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}
           >ORDER</span>
           {/* BELOW PAR button */}
