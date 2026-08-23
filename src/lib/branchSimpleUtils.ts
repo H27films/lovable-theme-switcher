@@ -32,6 +32,7 @@ const THERAPIST_PILL_PALETTE: { backgroundColor: string; color: string }[] = [
   { backgroundColor: "hsl(210 30% 44%)", color: "hsl(212 80% 96%)" }, // slate blue
   { backgroundColor: "hsl(155 28% 38%)", color: "hsl(150 60% 95%)" }, // sage green
   { backgroundColor: "hsl(275 30% 46%)", color: "hsl(275 70% 96%)" }, // dusty violet
+  { backgroundColor: "hsl(43 42% 40%)",  color: "hsl(45 70% 96%)" },  // antique gold
 ];
 
 /**
