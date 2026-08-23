@@ -35,7 +35,7 @@ export const Search = ({
   }, [autoFocus]);
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", padding: "0 12px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", borderBottom: "0.5px solid hsl(var(--border))", padding: "0 12px 12px 12px", marginBottom: "0" }}>
       <input
         ref={inputRef}
         type="text"
@@ -49,7 +49,7 @@ export const Search = ({
           setShowDropdown(val.length > 0);
         }}
         onFocus={() => setShowDropdown(true)}
-        placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Enter Product"}
+        placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Select Product"}
         style={{
           flex: 1,
           background: "none",

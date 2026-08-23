@@ -77,6 +77,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
        setSearchActive(false);
      } else {
        setSearchActive(true);
+       setShowDropdown(true);
      }
    };
 

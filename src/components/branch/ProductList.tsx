@@ -74,7 +74,7 @@ export const ProductList = ({
   products, isFav, balanceKey, favouritesLabel, search, showDropdown, onSelect, alreadyAdded,
   isColour, allowedIds, nameOf,
 }: ProductListProps) => {
-  if (!showDropdown || search.length === 0) return null;
+  if (!showDropdown) return null;
 
   const q = search.toLowerCase();
   const colourOf = isColour ?? ((p: any) => isYes(p["Colour"]));
@@ -101,7 +101,7 @@ export const ProductList = ({
   const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px" }}>
+    <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px", marginBottom: "44px" }}>
       {favourites.length > 0 && (
         <>
           <SectionHeader label={favouritesLabel} />
