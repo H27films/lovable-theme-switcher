@@ -159,7 +159,7 @@ export default function Landing() {
                   style={{
                     fontSize: "clamp(16px, 2.8vw, 22px)",
                     fontWeight: 400,
-                    letterSpacing: "0",
+                    letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
                     cursor: "pointer",
@@ -176,7 +176,7 @@ export default function Landing() {
                   style={{
                     fontSize: "clamp(16px, 2.8vw, 22px)",
                     fontWeight: 400,
-                    letterSpacing: "0",
+                    letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
                     cursor: "pointer",
@@ -193,7 +193,7 @@ export default function Landing() {
                   style={{
                     fontSize: "clamp(16px, 2.8vw, 22px)",
                     fontWeight: 400,
-                    letterSpacing: "0",
+                    letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
                     cursor: "pointer",
