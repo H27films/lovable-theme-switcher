@@ -1050,161 +1050,107 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
       fontFamily: "'Raleway', sans-serif", display: "flex", flexDirection: "column", overflow: "hidden",
     }}>
 
-      {/* ── TOP AREA ── */}
-      <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", flexShrink: 0 }}>
+            {/* ── TOP AREA ── */}
+            <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", flexShrink: 0 }}>
 
-        {/* Branch name header row */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
-          <button
-            onClick={() => {
-              if (searchMode !== "idle") {
-                setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
-                setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
-              } else {
-                navigate("/simple/branches/admin");
-              }
-            }}
-            style={{
-              display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
-              letterSpacing: "0.08em", color: "hsl(var(--foreground))",
-              background: "none", border: "none", cursor: "pointer", textAlign: "left",
-              padding: 0, fontFamily: "Raleway, inherit", lineHeight: 1,
-            }}
-          >
-            {BRANCH_NAME}
-          </button>
-        </div>
+{/* Branch name header row */}
+<div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
+  <button
+    onClick={() => {
+      if (searchMode !== "idle") {
+        setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
+        setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
+      } else {
+        navigate("/simple/branches/admin");
+      }
+    }}
+    style={{
+      display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
+      letterSpacing: "0.08em", color: "hsl(var(--foreground))",
+      background: "none", border: "none", cursor: "pointer", textAlign: "left",
+      padding: 0, fontFamily: "Raleway, inherit", lineHeight: 1,
+    }}
+  >
+    {BRANCH_NAME}
+  </button>
+</div>
 
-        {/* ORDER button */}
-        <div style={{ display: "flex", gap: "28px", borderBottom: "0.5px solid hsl(var(--border))", marginBottom: "20px" }}>
+        {/* ── Icon tab bar ── */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "20px",
+          borderBottom: "0.5px solid hsl(var(--border))",
+          paddingBottom: "12px", marginBottom: "20px",
+        }}>
+
+          {/* Order */}
           <button
             onClick={() => setShowOrderPanel(true)}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              padding: "0 0 12px 0",
-              fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
-              letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
-              color: "hsl(var(--foreground))",
-              opacity: 0.28,
-              borderBottom: "2px solid transparent",
-              marginBottom: "-1px",
-              transition: "opacity 0.2s ease, border-color 0.2s ease",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.opacity = "0.8";
-              e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.opacity = "0.28";
-              e.currentTarget.style.borderBottomColor = "transparent";
-            }}
+            title="Order"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
           >
-            ORDER
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Order</span>
           </button>
+
+          {/* Sales */}
           <button
             onClick={() => setShowSalesPanel(true)}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              padding: "0 0 12px 0",
-              fontSize: "clamp(16px, 4.5vw, 24px)", fontWeight: 300,
-              letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
-              color: "hsl(var(--foreground))",
-              opacity: 0.28,
-              borderBottom: "2px solid transparent",
-              marginBottom: "-1px",
-              transition: "opacity 0.2s ease, border-color 0.2s ease",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.opacity = "0.8";
-              e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.opacity = "0.28";
-              e.currentTarget.style.borderBottomColor = "transparent";
-            }}
+            title="Sales"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
           >
-            SALES
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Sales</span>
           </button>
+
+          {/* Import */}
           <button
             onClick={() => { setShowImportPanel(true); resetImport(); }}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              padding: "0 0 12px 0",
-              fontSize: "clamp(11px, 3vw, 15px)", fontWeight: 300,
-              letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
-              color: "hsl(var(--foreground))",
-              opacity: 0.28,
-              borderBottom: "2px solid transparent",
-              marginBottom: "-1px",
-              transition: "opacity 0.2s ease, border-color 0.2s ease",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.opacity = "0.8";
-              e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.opacity = "0.28";
-              e.currentTarget.style.borderBottomColor = "transparent";
-            }}
+            title="Import"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
           >
-            IMPORT
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Import</span>
           </button>
+
+          {/* Export */}
           <button
             onClick={() => { setShowExportPanel(true); resetExport(); }}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              padding: "0 0 12px 0",
-              fontSize: "clamp(11px, 3vw, 15px)", fontWeight: 300,
-              letterSpacing: "0.08em", fontFamily: "Raleway, inherit",
-              color: "hsl(var(--foreground))",
-              opacity: 0.28,
-              borderBottom: "2px solid transparent",
-              marginBottom: "-1px",
-              transition: "opacity 0.2s ease, border-color 0.2s ease",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.opacity = "0.8";
-              e.currentTarget.style.borderBottomColor = "hsl(var(--foreground))";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.opacity = "0.28";
-              e.currentTarget.style.borderBottomColor = "transparent";
-            }}
+            title="Export"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
           >
-            EXPORT
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Export</span>
           </button>
-        </div>
-        {/* Search input */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-          <input
-            ref={inputRef}
-            type="text"
-            inputMode="search"
-            value={searchMode === "result" || searchMode === "supplier" ? "" : search}
-            onChange={e => {
-              const val = e.target.value;
-              setSearch(val); setSelectedProduct(null); setSelectedSupplier(null);
-              setSearchMode("active"); setShowDropdown(val.length > 0); setUsageOpen(false);
-            }}
-            placeholder="Enter Product / Supplier"
-            style={{
-              flex: 1, background: "none", border: "none", outline: "none",
-              fontSize: "15px", fontFamily: "Raleway, inherit",
-              color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
-            }}
-          />
-          {search.length > 0 && searchMode !== "result" && searchMode !== "supplier" && (
-            <button
-              onClick={() => { setSearch(""); setSelectedProduct(null); setSelectedSupplier(null); setShowDropdown(false); setSearchMode("active"); setUsageOpen(false); }}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))" }}
-            >
-              <X size={15} />
-            </button>
-          )}
-        </div>
-      </div>
 
+          {/* Search — icon only, pushed to right */}
+          <div style={{ flex: 1 }} />
+          <button
+            onClick={() => { setSearchMode("active"); setTimeout(() => inputRef.current?.focus(), 100); }}
+            title="Search"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", opacity: searchMode !== "idle" ? 1 : 0.7, transition: "opacity 0.2s" }}
+          >
+            <Search size={14} />
+          </button>
+
+        </div>
+        </div> 
+        
       {/* ── MIDDLE SCROLLABLE ── */}
       <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
 
