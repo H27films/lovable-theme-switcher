@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X, Search, Building2, ChevronDown, ChevronUp, Star, Upload } from "lucide-react";
+import { X, Search, ChevronDown, ChevronUp, Star, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
@@ -608,13 +608,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
 
-  // ── Search state ────────────────────────────────────────────
-  const [searchMode, setSearchMode] = useState<"idle" | "active" | "result" | "supplier">("idle");
-  const [search, setSearch] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
+  // ── Selected product (detail view; opened by tapping a Recent/GRN entry) ──
   const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
-  const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const BRANCH_NAME = "OFFICE";
   const BALANCE_KEY = "OFFICE BALANCE" as keyof OfficeProduct;
@@ -1057,9 +1052,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
   <button
     onClick={() => {
-      if (searchMode !== "idle") {
-        setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
-        setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
+      if (selectedProduct) {
+        setSelectedProduct(null); setUsageOpen(false);
       } else {
         navigate("/simple/branches/admin");
       }
@@ -1143,7 +1137,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           <button
             onClick={() => navigate("/simple/search", { state: { from: "office" } })}
             title="Search"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", opacity: searchMode !== "idle" ? 1 : 0.7, transition: "opacity 0.2s" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.2s" }}
           >
             <Search size={14} />
           </button>
@@ -1157,63 +1151,10 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         {/* ══ SEARCH + RECENT ══════════════════════════════════════ */}
         <>
 
-            {/* Dropdown */}
-            {showDropdown && search.length > 0 && (() => {
-              const q = search.toLowerCase();
-              const allMatched = localProducts.filter(p =>
-                p["PRODUCT NAME"].toLowerCase().includes(q) && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
-              );
-              const isTrue = (v: any) => v === true || v === "TRUE" || v === "true" || v === 1;
-              const favourites = allMatched.filter(p => isTrue(p["OFFICE FAVOURITE"])).slice(0, 6);
-              const colours = allMatched.filter(p => !isTrue(p["OFFICE FAVOURITE"]) && isTrue(p["Colour"])).slice(0, 6);
-              const regular = allMatched.filter(p => !isTrue(p["OFFICE FAVOURITE"]) && !isTrue(p["Colour"])).slice(0, 6);
-              const matchedSuppliers = Array.from(new Set(
-                localProducts.map(p => p["SUPPLIER"]).filter((s): s is string => !!s && s.toLowerCase().includes(q))
-              )).sort().slice(0, 5);
-              const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0 || matchedSuppliers.length > 0;
+            
 
-              const SectionHeader = ({ label }: { label: string }) => (
-                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit", paddingTop: "14px", paddingBottom: "4px" }}>
-                  {label}
-                </div>
-              );
-              const ProductRow = ({ p, last }: { p: OfficeProduct; last: boolean }) => (
-                <div
-                  onClick={() => { setSelectedProduct(p); setSearch(p["PRODUCT NAME"]); setShowDropdown(false); setSearchMode("result"); }}
-                  style={{ padding: "12px 0", borderBottom: last ? "none" : "0.5px solid hsl(var(--border))", cursor: "pointer" }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</div>
-                    {(p as any)[BALANCE_KEY] != null && (
-                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>{(p as any)[BALANCE_KEY]}</div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: "12px", marginTop: "2px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{p["SUPPLIER"]}</div>
-                </div>
-              );
-
-              return (
-                <div>
-                  {favourites.length > 0 && (<><SectionHeader label="Office Favourites" />{favourites.map((p, i) => <ProductRow key={p.id} p={p} last={i === favourites.length - 1} />)}</>)}
-                  {matchedSuppliers.map(supplier => (
-                    <div
-                      key={`sup-${supplier}`}
-                      onClick={() => { setSelectedSupplier(supplier); setSearch(supplier); setShowDropdown(false); setSearchMode("supplier"); }}
-                      style={{ padding: "12px 0", borderBottom: "0.5px solid hsl(var(--border))", cursor: "pointer", display: "flex", alignItems: "center" }}
-                    >
-                      <span style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{supplier}</span>
-                      <Building2 size={11} style={{ color: "hsl(var(--muted-foreground))", opacity: 0.4, flexShrink: 0, marginLeft: "5px" }} />
-                    </div>
-                  ))}
-                  {regular.length > 0 && (<><SectionHeader label="Products" />{regular.map((p, i) => <ProductRow key={p.id} p={p} last={i === regular.length - 1} />)}</>)}
-                  {colours.length > 0 && (<><SectionHeader label="Colours" />{colours.map((p, i) => <ProductRow key={p.id} p={p} last={i === colours.length - 1} />)}</>)}
-                  {!hasResults && <div style={{ padding: "20px 0", fontSize: "15px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>No results found</div>}
-                </div>
-              );
-            })()}
-
-            {/* Product result card */}
-            {searchMode === "result" && selectedProduct && !showDropdown && (
+            {/* Product detail */}
+            {selectedProduct && (
               <div style={{ paddingTop: "20px" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                   <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
@@ -1345,36 +1286,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               </div>
             )}
 
-            {/* Supplier result */}
-            {searchMode === "supplier" && selectedSupplier && !showDropdown && (
-              <div style={{ paddingTop: "20px" }}>
-                <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "20px" }}>
-                  {selectedSupplier}
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))", marginBottom: "4px" }}>
-                  <div style={{ ...hdrStyle }}>Product</div>
-                  <div style={{ ...hdrStyle, textAlign: "right", minWidth: "64px" }}>Price</div>
-                  <div style={{ ...hdrStyle, textAlign: "right", minWidth: "36px" }}>Bal</div>
-                </div>
-                {localProducts
-                  .filter(p => p["SUPPLIER"] === selectedSupplier && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1))
-                  .sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]))
-                  .map((p, i, arr) => (
-                    <div
-                      key={p.id}
-                      onClick={() => { setSelectedProduct(p); setSelectedSupplier(null); setSearchMode("result"); }}
-                      style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px", padding: "11px 0", borderBottom: i < arr.length - 1 ? "0.5px solid hsl(var(--border))" : "none", cursor: "pointer", alignItems: "center" }}
-                    >
-                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{p["PRODUCT NAME"]}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "right", minWidth: "64px" }}>{p["SUPPLIER PRICE"] != null ? `RM ${p["SUPPLIER PRICE"].toFixed(2)}` : "—"}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "right", minWidth: "36px" }}>{(p as any)[BALANCE_KEY] ?? "—"}</div>
-                    </div>
-                  ))}
-              </div>
-            )}
-
-            {/* Recent section (idle only) */}
-            {searchMode === "idle" && !showDropdown && (
+            {/* Recent section */}
+            {!selectedProduct && (
               <div style={{ paddingTop: "16px", display: "flex", flexDirection: "column", flex: 1 }}>
                 <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
                   Recent
@@ -1427,7 +1340,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                                 <div key={row.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
                                   <div style={{ visibility: "hidden", fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
                                   <div
-                                    onClick={(e) => { e.stopPropagation(); if (matchedProduct) { setSelectedProduct(matchedProduct); setSearch(matchedProduct["PRODUCT NAME"]); setShowDropdown(false); setSearchMode("result"); }}}
+                                    onClick={(e) => { e.stopPropagation(); if (matchedProduct) setSelectedProduct(matchedProduct); }}
                                     style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: matchedProduct ? "pointer" : "default", textDecoration: "none" }}
                                   >{row["PRODUCT NAME"]}</div>
                                   {isOfficeGRN && (

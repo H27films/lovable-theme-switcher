@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { ArrowRight, Search as SearchIcon, X } from "lucide-react";
+import { ArrowRight, Building2, Search as SearchIcon, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -114,16 +114,27 @@ export default function Search({ onBack }: SearchProps) {
 
   const nameSort = (a: Product, b: Product) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
 
-  // Same grouping/order as UsageTable: favourites A-Z, then colour-No A-Z, then colour-Yes A-Z
-  const results = query.length > 0
-    ? (() => {
-        const matched = products.filter(p => p["PRODUCT NAME"]?.toLowerCase().includes(query.toLowerCase()));
-        const favs    = matched.filter(isOfficeFav).sort(nameSort);
-        const regular = matched.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort(nameSort);
-        const colours = matched.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort(nameSort);
-        return [...favs, ...regular, ...colours].slice(0, 30);
-      })()
+  const q = query.trim().toLowerCase();
+
+  // 1) Suppliers matching the query (distinct SUPPLIER values from AllFileProducts), A–Z
+  const suppliers = q.length > 0
+    ? Array.from(new Set(
+        products.map(p => p.SUPPLIER).filter((s): s is string => !!s && s.toLowerCase().includes(q))
+      )).sort((a, b) => a.localeCompare(b)).slice(0, 20)
     : [];
+
+  const matched = q.length > 0 ? products.filter(p =>
+    p["PRODUCT NAME"]?.toLowerCase().includes(q) ||
+    p.SUPPLIER?.toLowerCase().includes(q)
+  ) : [];
+
+  // 2–4) Product groups (reusing favBySourceId-backed helpers):
+  //      Office Favourites A–Z → non-fav colour-NO A–Z → non-fav colour-YES A–Z
+  const favs    = matched.filter(isOfficeFav).sort(nameSort).slice(0, 30);
+  const regular = matched.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort(nameSort).slice(0, 30);
+  const colours = matched.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort(nameSort).slice(0, 30);
+
+  const hasResults = suppliers.length > 0 || favs.length > 0 || regular.length > 0 || colours.length > 0;
 
   const handleSelect = (p: Product) => {
     setQuery(p["PRODUCT NAME"]);
@@ -137,6 +148,47 @@ export default function Search({ onBack }: SearchProps) {
     setShowDropdown(false);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
+
+  const sectionHeader: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: dimColor,
+    paddingTop: 14,
+    paddingBottom: 4,
+  };
+
+  const productRow = (p: Product, last: boolean) => (
+    <div
+      key={p.id}
+      onMouseDown={() => handleSelect(p)}
+      onTouchEnd={e => { e.preventDefault(); handleSelect(p); }}
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "11px 4px",
+        borderBottom: last ? "none" : `1px solid ${border}`,
+        cursor: "pointer",
+        touchAction: "manipulation",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1, paddingRight: 8 }}>
+        <span style={{ fontSize: 14, fontWeight: 300, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {p["PRODUCT NAME"]}
+        </span>
+        {p.SUPPLIER && (
+          <span style={{ fontSize: 11, color: dimColor }}>{p.SUPPLIER}</span>
+        )}
+      </div>
+      {p["OFFICE BALANCE"] != null && (
+        <span style={{ fontSize: 13, fontWeight: 300, flexShrink: 0, color: belowPar(p["OFFICE BALANCE"], p.PAR) ? redColor : fg }}>
+          {p["OFFICE BALANCE"]}
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -233,7 +285,7 @@ export default function Search({ onBack }: SearchProps) {
         </div>
 
         {/* ── Dropdown ── clean, no box */}
-        {showDropdown && results.length > 0 && (
+        {showDropdown && hasResults && (
           <div
             style={{
               position: "absolute",
@@ -246,41 +298,55 @@ export default function Search({ onBack }: SearchProps) {
               animation: "spFadeIn 0.18s ease",
             }}
           >
-            {results.map((p, i) => (
-              <div
-                key={p.id}
-                onMouseDown={() => handleSelect(p)}
-                onTouchEnd={e => { e.preventDefault(); handleSelect(p); }}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "11px 4px",
-                  borderBottom: i < results.length - 1 ? `1px solid ${border}` : "none",
-                  cursor: "pointer",
-                  touchAction: "manipulation",
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1, paddingRight: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 300, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {p["PRODUCT NAME"]}
-                  </span>
-                  {p.SUPPLIER && (
-                    <span style={{ fontSize: 11, color: dimColor }}>{p.SUPPLIER}</span>
-                  )}
-                </div>
-                {p["OFFICE BALANCE"] != null && (
-                  <span style={{
-                    fontSize: 13,
-                    fontWeight: 300,
-                    flexShrink: 0,
-                    color: belowPar(p["OFFICE BALANCE"], p.PAR) ? redColor : fg,
-                  }}>
-                    {p["OFFICE BALANCE"]}
-                  </span>
-                )}
-              </div>
-            ))}
+            {/* 1) Suppliers first — visually distinct group */}
+            {suppliers.length > 0 && (
+              <>
+                <div style={sectionHeader}>Suppliers</div>
+                {suppliers.map((s, i) => (
+                  <div
+                    key={`sup-${s}`}
+                    onMouseDown={() => setQuery(s)}
+                    onTouchEnd={e => { e.preventDefault(); setQuery(s); }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "11px 4px",
+                      borderBottom: i < suppliers.length - 1 ? `1px solid ${border}` : "none",
+                      cursor: "pointer",
+                      touchAction: "manipulation",
+                    }}
+                  >
+                    <Building2 size={14} strokeWidth={1.4} style={{ color: dimColor, flexShrink: 0 }} />
+                    <span style={{ fontSize: 14, fontWeight: 400, color: fg }}>{s}</span>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* 2) Office Favourites A–Z */}
+            {favs.length > 0 && (
+              <>
+                <div style={sectionHeader}>Office Favourites</div>
+                {favs.map((p, i) => productRow(p, i === favs.length - 1))}
+              </>
+            )}
+
+            {/* 3) Non-favourites, colour NO */}
+            {regular.length > 0 && (
+              <>
+                <div style={sectionHeader}>Products</div>
+                {regular.map((p, i) => productRow(p, i === regular.length - 1))}
+              </>
+            )}
+
+            {/* 4) Non-favourites, colour YES */}
+            {colours.length > 0 && (
+              <>
+                <div style={sectionHeader}>Colours</div>
+                {colours.map((p, i) => productRow(p, i === colours.length - 1))}
+              </>
+            )}
           </div>
         )}
       </div>
