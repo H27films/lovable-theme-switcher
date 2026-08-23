@@ -150,16 +150,16 @@ export default function Landing() {
              </span>
 </h1>
             
-            {/* Branch buttons */}
-            <div style={{ marginTop: "40px", display: "flex", flexDirection: "column", gap: "20px" }}>
-<div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+{/* Branch buttons */}
+<div style={{ marginTop: "100px", display: "flex", flexDirection: "column", gap: "28px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <CircularButton onClick={() => navigate("/simple/boudoir")} />
                 <span
                   onClick={() => navigate("/simple/boudoir")}
                   style={{
-                    fontSize: "clamp(13px, 2.2vw, 16px)",
+                    fontSize: "clamp(16px, 2.8vw, 22px)",
                     fontWeight: 400,
-                    letterSpacing: "2px",
+                    letterSpacing: "0",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
                     cursor: "pointer",
@@ -169,14 +169,14 @@ export default function Landing() {
                 </span>
               </div>
               
-<div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <CircularButton onClick={() => navigate("/simple/chic")} />
                 <span
                   onClick={() => navigate("/simple/chic")}
                   style={{
-                    fontSize: "clamp(13px, 2.2vw, 16px)",
+                    fontSize: "clamp(16px, 2.8vw, 22px)",
                     fontWeight: 400,
-                    letterSpacing: "2px",
+                    letterSpacing: "0",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
                     cursor: "pointer",
@@ -186,14 +186,14 @@ export default function Landing() {
                 </span>
               </div>
               
-<div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <CircularButton onClick={() => navigate("/simple/nuryadi")} />
                 <span
                   onClick={() => navigate("/simple/nuryadi")}
                   style={{
-                    fontSize: "clamp(13px, 2.2vw, 16px)",
+                    fontSize: "clamp(16px, 2.8vw, 22px)",
                     fontWeight: 400,
-                    letterSpacing: "2px",
+                    letterSpacing: "0",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
                     cursor: "pointer",

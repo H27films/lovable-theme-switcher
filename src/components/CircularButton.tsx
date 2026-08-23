@@ -8,12 +8,28 @@ const CircularButton: React.FC<CircularButtonProps> = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
-      style={{ width: "18px", height: "18px", padding: 0, border: "none", background: "none", cursor: "pointer" }}
+      style={{
+        width: "22px",
+        height: "22px",
+        borderRadius: "50%",
+        background: "#1a1a1a",
+        border: "none",
+        position: "relative",
+        cursor: "pointer",
+        padding: 0,
+      }}
     >
-      <svg width="18" height="18" viewBox="0 0 18 18">
-        <circle cx="9" cy="9" r="9" fill="#1a1a1a" />
-        <circle cx="9" cy="9" r="7.3" fill="none" stroke="#fff" strokeWidth="1" />
-      </svg>
+      <span
+        style={{
+          position: "absolute",
+          top: "1.5px",
+          left: "1.5px",
+          right: "1.5px",
+          bottom: "1.5px",
+          borderRadius: "50%",
+          border: "1px solid #fff",
+        }}
+      />
     </button>
   );
 };
