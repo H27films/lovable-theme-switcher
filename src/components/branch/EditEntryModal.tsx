@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { USAGE_TYPES, THERAPISTS, type UsageType } from "@/lib/branchSimpleUtils";
+import { USAGE_TYPES, THERAPISTS, type UsageType, therapistPillStyle } from "@/lib/branchSimpleUtils";
 import { type LogRow } from "@/lib/branchSimple";
+import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 
 export interface EditEntryUpdates {
   qty: number;
@@ -13,6 +14,7 @@ export interface EditEntryUpdates {
 
 interface EditEntryModalProps {
   row: LogRow;
+  branchDisplayName: string;
   onSave: (updates: EditEntryUpdates) => void | Promise<void>;
   onClose: () => void;
 }
@@ -72,17 +74,31 @@ const pillButtonStyle: React.CSSProperties = {
   textTransform: "uppercase",
 };
 
-export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) => {
+export const EditEntryModal = ({ row, branchDisplayName, onSave, onClose }: EditEntryModalProps) => {
   const [qty, setQty] = useState(String(row.QTY ?? 0));
   const isOrder = row.TYPE === "Order";
-  const [therapist, setTherapist] = useState<string | null>(isOrder ? "Hamza" : ((row as any)["THERAPIST"] || null));
+  // Fetch the live therapist list from Supabase (alphabetically sorted inside the hook),
+  // falling back to the static THERAPISTS constant when the table is empty/unavailable.
+  const branchTherapists = useBranchTherapists(branchDisplayName);
+  const therapistList = useMemo(
+    () => (branchTherapists.length > 0 ? branchTherapists : [...THERAPISTS]),
+    [branchTherapists]
+  );
+  // Normalise the row's stored value to uppercase so cycling works regardless of casing.
+  const storedTherapist = (row as any)["THERAPIST"] || null;
+  const normalizedStored = storedTherapist
+    ? String(storedTherapist).trim().toUpperCase()
+    : null;
+  const [therapist, setTherapist] = useState<string | null>(
+    isOrder ? "HAMZA" : normalizedStored
+  );
   const [type, setType] = useState<UsageType>(pillFromRow(row));
   const [notes, setNotes] = useState<string>((row as any)["NOTES"] || "");
   const [saving, setSaving] = useState(false);
 
   const cycleTherapist = () => {
     if (isOrder) return;
-    const order: (string | null)[] = [null, ...THERAPISTS];
+    const order: (string | null)[] = [null, ...therapistList];
     const idx = order.indexOf(therapist);
     setTherapist(order[(idx + 1) % order.length]);
   };
@@ -171,8 +187,7 @@ export const EditEntryModal = ({ row, onSave, onClose }: EditEntryModalProps) =>
               onClick={cycleTherapist} 
               style={{
                 ...pillButtonStyle,
-                background: therapist ? "#ffffff" : "none",
-                color: therapist ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                ...(therapist ? therapistPillStyle(therapist) : { background: "none", color: "hsl(var(--muted-foreground))" }),
                 cursor: isOrder ? "default" : "pointer",
               }}
             >

@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Star } from "luci
 import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { type BranchConfig, type OfficeProduct, type EntryLine } from "@/lib/branchSimple";
 import { useTabletMode } from "@/hooks/useTabletMode";
-import { makeIsFavourite, isYes, USAGE_TYPES, typeColumnValue, usagePillValue, therapistValue } from "@/lib/branchSimpleUtils";
+import { makeIsFavourite, isYes, USAGE_TYPES, typeColumnValue, usagePillValue, therapistValue, therapistPillStyle } from "@/lib/branchSimpleUtils";
 
 
 interface UsageTableProps {
@@ -300,7 +300,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
                   <button onClick={() => cycleType(entry.id)} style={{ background: "#ffffff", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.type}</button>
-                  <button onClick={() => cycleTherapist(entry.id)} style={{ background: entry.therapist !== "THERAPIST" ? "#ffffff" : "none", color: entry.therapist !== "THERAPIST" ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.therapist}</button>
+                <button onClick={() => cycleTherapist(entry.id)} style={{ ...(entry.therapist !== "THERAPIST" ? therapistPillStyle(entry.therapist) : { background: "none", color: "hsl(var(--muted-foreground))" }), border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.therapist}</button>
                   <button onClick={() => toggleNote(entry.id)} style={{ background: entry.noteOpen || entry.note.trim().length > 0 ? "hsl(24 35% 28%)" : "none", color: entry.noteOpen || entry.note.trim().length > 0 ? "#ffffff" : "hsl(var(--muted-foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>+NOTE</button>
                 </div>
                 <button onClick={() => setUsageEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "#ffffff", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(0 60% 35%)", flexShrink: 0, width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>

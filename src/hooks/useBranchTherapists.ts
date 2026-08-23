@@ -22,8 +22,11 @@ export const useBranchTherapists = (branchIdentifier: string) => {
         }
       }
 
-      if (!error && data) {
-        setTherapists(data.map((t: any) => String(t.name).trim().toUpperCase()));
+            if (!error && data) {
+        const names = data
+          .map((t: any) => String(t.name).trim().toUpperCase())
+          .sort((a, b) => a.localeCompare(b));
+        setTherapists(names);
         return;
       }
       setTherapists([]);

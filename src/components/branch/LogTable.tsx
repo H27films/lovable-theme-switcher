@@ -14,9 +14,11 @@ interface LogTableProps {
   viewType?: "all" | "week";
   /** Called when the edit-entry modal opens (true) or closes (false). */
   onEditModalChange?: (open: boolean) => void;
+  /** Branch displayName (e.g. "BOUDOIR") used to fetch the live therapist list for the edit modal. */
+  branchDisplayName: string;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -285,6 +287,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
       {editRow && onUpdate && (
         <EditEntryModal
           row={editRow}
+          branchDisplayName={branchDisplayName}
           onSave={async (updates) => {
             await onUpdate(editRow, updates);
             setEditRow(null);
