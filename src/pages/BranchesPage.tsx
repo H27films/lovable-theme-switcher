@@ -34,7 +34,7 @@ export default function BranchesPage({ onBack, onSelectBranch }: BranchesPagePro
           >
             {(["BRANCHES", "SEARCH", "ORDER"] as const).map((item) => (
               <div key={item} style={{
-                fontSize: "clamp(24px, 7vw, 40px)", fontWeight: 300, letterSpacing: "0.04em",
+                fontSize: "clamp(26px, 8vw, 44px)", fontWeight: 300, letterSpacing: "0.04em",
                 color: "hsl(var(--foreground))", lineHeight: 1, padding: "2px 0",
                 overflow: "hidden", whiteSpace: "nowrap",
                 filter: item === "BRANCHES" ? "blur(0.5px)" : "blur(1px)",
@@ -56,7 +56,7 @@ export default function BranchesPage({ onBack, onSelectBranch }: BranchesPagePro
                 style={{
                   display: "block", textAlign: "left", padding: "2px 0",
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: "clamp(24px, 7vw, 40px)", fontWeight: 300, letterSpacing: "0.05em",
+                  fontSize: "clamp(26px, 8vw, 44px)", fontWeight: 300, letterSpacing: "0.05em",
                   color: "hsl(var(--foreground))", lineHeight: 1,
                   transition: "opacity 0.2s ease",
                 }}

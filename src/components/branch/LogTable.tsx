@@ -4,6 +4,7 @@ import { X, Check } from "lucide-react";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
 import { supabase } from "@/integrations/supabase/client";
 import { therapistPillStyle } from "@/lib/branchSimpleUtils";
+import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { EditEntryModal, type EditEntryUpdates } from "./EditEntryModal";
 
 interface LogTableProps {
@@ -25,6 +26,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editRow, setEditRow] = useState<LogRow | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const branchTherapists = useBranchTherapists(branchDisplayName);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -193,7 +195,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                       <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
                         {row.THERAPIST ? (
-                          <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "2px 5px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                          <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "2px 5px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
                         ) : (
                           <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}
@@ -209,7 +211,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                           </div>
                           {viewType === "week" && !expanded && (row as any)["THERAPIST"] && (
                             <span style={{
-                              ...therapistPillStyle((row as any)["THERAPIST"]),
+                              ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists),
                               padding: "2px 6px",
                               borderRadius: "999px",
                               fontSize: "8px",
@@ -271,7 +273,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                       {/* Colour-coded therapist pill, aligned under the Type column (col 4 on product view, col 5 on home view) */}
                       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {row.THERAPIST ? (
-                          <span style={{ ...therapistPillStyle(row.THERAPIST), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                          <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
                         ) : (
                           <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}

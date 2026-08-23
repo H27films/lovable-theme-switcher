@@ -28,25 +28,44 @@ export const therapistValue = (therapist: string): string | null =>
 // instantly recognisable in the log tables / pills. Medium tones work
 // on the light (cream), dark and sand themes alike.
 const THERAPIST_PILL_PALETTE: { backgroundColor: string; color: string }[] = [
-  { backgroundColor: "hsl(24 38% 42%)",  color: "hsl(42 65% 95%)" },  // terracotta
-  { backgroundColor: "hsl(210 30% 44%)", color: "hsl(212 80% 96%)" }, // slate blue
-  { backgroundColor: "hsl(155 28% 38%)", color: "hsl(150 60% 95%)" }, // sage green
-  { backgroundColor: "hsl(275 30% 46%)", color: "hsl(275 70% 96%)" }, // dusty violet
-  { backgroundColor: "hsl(43 42% 40%)",  color: "hsl(45 70% 96%)" },  // antique gold
+  { backgroundColor: "hsl(202 29% 76%)", color: "hsl(202 40% 22%)" }, // Cloudy Valley
+  { backgroundColor: "hsl(208 20% 60%)", color: "hsl(208 35% 18%)" }, // Tsunami
+  { backgroundColor: "hsl(37 15% 56%)",  color: "hsl(37 30% 15%)" },  // Weather Board
+  { backgroundColor: "hsl(28 16% 33%)",  color: "hsl(28 45% 95%)" },  // Volcanic Island
+  { backgroundColor: "hsl(354 54% 24%)", color: "hsl(354 60% 95%)" }, // Red Oxide
 ];
 
 /**
- * Deterministic pill colours for a therapist name. The known names in
- * THERAPISTS each get their own stable colour; any other name is hashed
- * onto the palette so its shade stays consistent wherever it appears.
- * The returned object uses real CSS style keys, so it can be spread
- * directly into a React `style` prop.
+ * Deterministic pill colours for a therapist name. When the full therapist
+ * set is supplied, each distinct name is assigned its own palette slot
+ * (alphabetical within that set), so no two therapists ever share a colour.
+ * When the set is unknown, the known names in THERAPISTS keep a stable
+ * colour and any other name is hashed onto the palette, so its shade stays
+ * consistent wherever it appears. The returned object uses real CSS style
+ * keys, so it can be spread directly into a React `style` prop.
  */
-export const therapistPillStyle = (name: string | null | undefined): { backgroundColor: string; color: string } => {
+export const therapistPillStyle = (
+  name: string | null | undefined,
+  allTherapists?: readonly (string | null | undefined)[]
+): { backgroundColor: string; color: string } => {
   const n = (name ?? "").trim().toUpperCase();
   if (!n) return { backgroundColor: "transparent", color: "hsl(var(--muted-foreground))" };
 
-  let idx = (THERAPISTS as readonly string[]).indexOf(n);
+  // When we know the full therapist set, map every distinct name onto its own
+  // (unique) palette index based on alphabetical order within that set.
+  if (allTherapists && allTherapists.length > 0) {
+    const known = allTherapists
+      .map(x => String(x ?? "").trim().toUpperCase())
+      .filter(v => v.length > 0)
+      .filter((v, i, arr) => arr.indexOf(v) === i)
+      .sort((a, b) => a.localeCompare(b));
+    const idx = known.indexOf(n);
+    if (idx >= 0) return THERAPIST_PILL_PALETTE[idx % THERAPIST_PILL_PALETTE.length];
+  }
+
+  // Fallback when the set is unknown: known names keep a fixed slot; any other
+  // name is hashed onto the palette so its shade stays consistent everywhere.
+  let idx = THERAPISTS.indexOf(n as (typeof THERAPISTS)[number]);
   if (idx < 0) {
     let hash = 0;
     for (let i = 0; i < n.length; i++) hash = (hash * 31 + n.charCodeAt(i)) >>> 0;

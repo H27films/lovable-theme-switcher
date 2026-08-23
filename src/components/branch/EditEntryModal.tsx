@@ -187,7 +187,7 @@ export const EditEntryModal = ({ row, branchDisplayName, onSave, onClose }: Edit
               onClick={cycleTherapist} 
               style={{
                 ...pillButtonStyle,
-                ...(therapist ? therapistPillStyle(therapist) : { background: "none", color: "hsl(var(--muted-foreground))" }),
+                ...(therapist ? therapistPillStyle(therapist, therapistList) : { background: "none", color: "hsl(var(--muted-foreground))" }),
                 cursor: isOrder ? "default" : "pointer",
               }}
             >
