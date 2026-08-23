@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranchFavourites } from "@/hooks/useBranchFavourites";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
-import { chicConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
+import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { BranchHeader } from "@/components/branch/BranchHeader";
@@ -16,16 +16,16 @@ import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
 
-interface ChicSimpleNewProps {
+interface BoudoirProps {
   onBack?: () => void;
   onBackToMain?: () => void;
   products?: OfficeProduct[];
 }
 
-const ChicSimpleNew = ({ onBack, onBackToMain, products: propProducts }: ChicSimpleNewProps) => {
-  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("chic");
-  const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
-  const BRANCH_LOG_NAME = chicConfig.logBranchName;
+const Boudoir = ({ onBack, onBackToMain, products: propProducts }: BoudoirProps) => {
+  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("boudoir");
+  const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
+  const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
 
   const navigate = useNavigate();
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
@@ -260,7 +260,7 @@ const setLogViewToWeek = () => {
   const usageFiltered = useMemo(() => {
     if (searchMode === "active" || searchMode === "result") {
       return filteredProducts.filter(p =>
-        p["PRODUCT NAME"].toLowerCase().includes(search.toLowerCase()) &&
+        (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(search.toLowerCase()) &&
         (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1)
       );
     }
@@ -270,7 +270,7 @@ const setLogViewToWeek = () => {
   const orderFiltered = useMemo(() => {
     if (searchMode === "active" || searchMode === "result") {
       return filteredProducts.filter(p => 
-        p["PRODUCT NAME"].toLowerCase().includes(search.toLowerCase())
+        (String(p["PRODUCT NAME"] ?? "")).toLowerCase().includes(search.toLowerCase())
       );
     }
     return filteredProducts;
@@ -298,7 +298,7 @@ const setLogViewToWeek = () => {
       overflow: "hidden",
     }}>
 {/* Header */}
-        <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} />
+        <BranchHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} />
 
        
 {/* Search input - only show when search is active */}
@@ -324,7 +324,7 @@ const setLogViewToWeek = () => {
             products={products}
             isFav={isFav}
             balanceKey={BALANCE_KEY}
-            favouritesLabel={chicConfig.favouritesLabel}
+            favouritesLabel={boudoirConfig.favouritesLabel}
             search={search}
             showDropdown={showDropdown}
             onSelect={(p) => {
@@ -346,7 +346,7 @@ const setLogViewToWeek = () => {
               <ProductCard 
                 selectedProduct={selectedProduct} 
                 balanceKey={BALANCE_KEY} 
-                favouriteKey={chicConfig.favouriteKey} 
+                favouriteKey={boudoirConfig.favouriteKey} 
                 onToggleFav={toggleFavourite}
                 isFavourite={isFav}
               />
@@ -399,7 +399,7 @@ const setLogViewToWeek = () => {
     </button>
   </div>
 )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={chicConfig.displayName} />
+            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} />
           </div>
         )}
       </div>
@@ -430,7 +430,7 @@ const setLogViewToWeek = () => {
       {/* USAGE Panel */}
       {activePanel === "USAGE" && createPortal(
         <UsageTable 
-          config={chicConfig} 
+          config={boudoirConfig} 
           products={products} 
           setProducts={setProducts} 
           refreshBranchLog={refreshBranchLog} 
@@ -439,6 +439,9 @@ const setLogViewToWeek = () => {
           onBack={() => setActivePanel(null)}
           onSuccess={goHome}
           onUsageEntriesChange={setUsageEntriesCount}
+          isFav={isFav}
+          isColour={isColour}
+          nameOf={nameOf}
         />,
         document.body
       )}
@@ -446,7 +449,7 @@ const setLogViewToWeek = () => {
       {/* ORDER Panel */}
       {activePanel === "ORDER" && createPortal(
         <OrderPanel 
-          config={chicConfig} 
+          config={boudoirConfig} 
           products={products} 
           setProducts={setProducts} 
           branchLog={branchLog} 
@@ -467,4 +470,4 @@ const setLogViewToWeek = () => {
   );
 };
 
-export default ChicSimpleNew;
+export default Boudoir;

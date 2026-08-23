@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import React, { useState, useEffect } from "react";
 
-export default function LandingSimple() {
+export default function Landing() {
   const navigate = useNavigate();
   const { tablet, toggle: toggleTablet } = useTabletMode();
   const [visible, setVisible] = useState(false);

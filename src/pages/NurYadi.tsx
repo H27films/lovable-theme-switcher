@@ -16,13 +16,13 @@ import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
 
-interface NurYadiSimpleNewProps {
+interface NurYadiProps {
   onBack?: () => void;
   onBackToMain?: () => void;
   products?: OfficeProduct[];
 }
 
-const NurYadiSimpleNew = ({ onBack, onBackToMain, products: propProducts }: NurYadiSimpleNewProps) => {
+const NurYadi = ({ onBack, onBackToMain, products: propProducts }: NurYadiProps) => {
   const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("nuryadi");
   const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;
@@ -467,4 +467,4 @@ const setLogViewToWeek = () => {
   );
 };
 
-export default NurYadiSimpleNew;
+export default NurYadi;

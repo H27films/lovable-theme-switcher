@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import SearchSimple from "./SearchSimple";
+import Search from "./Search";
 import BranchesPage from "./BranchesPage";
-import OrderSimple from "./OrderSimple";
-import OfficeSimple from "./OfficeSimple";
-import BoudoirSimpleNew from "@/pages/BoudoirSimpleNew";
-import ChicSimpleNew from "@/pages/ChicSimpleNew";
-import NurYadiSimpleNew from "@/pages/NurYadiSimpleNew";
-import { X, Search, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
+import Order from "./Order";
+import Office from "./Office";
+import Boudoir from "@/pages/Boudoir";
+import Chic from "@/pages/Chic";
+import NurYadi from "@/pages/NurYadi";
+import { X, Search as SearchIcon, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
 
 const hdrStyle: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
@@ -39,7 +39,7 @@ interface OfficeProduct {
 
 import { useNavigate } from "react-router-dom";
 
-const SubLandingSimple = () => {
+const SubLanding = () => {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
@@ -228,15 +228,15 @@ const SubLandingSimple = () => {
   return (
     <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
 
-      {/* Fixed Home button (bottom right) - only show on home menu */}
+      {/* Fixed Home button (top left) - only show on home menu */}
       <a
         href="/"
         aria-label="Go to main landing page"
         title="Home"
         style={{
           position: "fixed",
-          right: "20px",
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+          left: "20px",
+          top: "calc(env(safe-area-inset-top, 0px) + 24px)",
           zIndex: 60,
           display: (activeSection !== null || simpleSearchMode !== "idle") ? "none" : "flex",
           alignItems: "center",
@@ -320,7 +320,7 @@ const SubLandingSimple = () => {
 
                 {/* Search input row */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <Search size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+                  <SearchIcon size={15} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                   <input
                     ref={simpleInputRef}
                     type="text"
@@ -683,7 +683,7 @@ const SubLandingSimple = () => {
         {/* Section pages */}
         {activeSection !== null && (
           <div style={sectionTransitionStyle}>
-            {activeSection === "search" && <SearchSimple onBack={navigateBack} />}
+            {activeSection === "search" && <Search onBack={navigateBack} />}
             {activeSection === "branches" && (
               <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative", overflow: "hidden" }}>
 
@@ -740,7 +740,7 @@ const SubLandingSimple = () => {
 
               </div>
             )}
-            {activeSection === "order" && <OrderSimple onBack={navigateBack} />}
+            {activeSection === "order" && <Order onBack={navigateBack} />}
           </div>
         )}
 
@@ -749,4 +749,4 @@ const SubLandingSimple = () => {
   );
 };
 
-export default SubLandingSimple;
+export default SubLanding;

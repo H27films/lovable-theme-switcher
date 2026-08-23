@@ -42,7 +42,7 @@ interface OrderLine {
   qty: number;
 }
 
-interface OfficeSimpleProps {
+interface OfficeProps {
   onBack?: () => void;
   onBackToMain?: () => void;
   products?: OfficeProduct[];
@@ -175,7 +175,7 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
   );
 };
 
-const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps) => {
+const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const navigate = useNavigate();
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   // ── IMPORT PANEL STATE ────────────────────────────────────
@@ -2397,4 +2397,4 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
   );
 };
 
-export default OfficeSimple;
+export default Office;

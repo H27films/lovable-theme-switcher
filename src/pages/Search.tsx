@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Search, X } from "lucide-react";
+import { ChevronLeft, Search as SearchIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -10,7 +10,7 @@ interface Product {
   PAR?: number | null;
 }
 
-interface SearchSimpleProps {
+interface SearchProps {
   onBack?: () => void;
 }
 
@@ -19,7 +19,7 @@ function belowPar(balance: number | null | undefined, par: number | null | undef
   return Number(balance) < Number(par);
 }
 
-export default function SearchSimple({ onBack }: SearchSimpleProps) {
+export default function Search({ onBack }: SearchProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -122,7 +122,7 @@ export default function SearchSimple({ onBack }: SearchSimpleProps) {
             paddingBottom: 10,
           }}
         >
-          <Search size={16} strokeWidth={1.5} style={{ color: dimColor, flexShrink: 0 }} />
+          <SearchIcon size={16} strokeWidth={1.5} style={{ color: dimColor, flexShrink: 0 }} />
           <input
             ref={inputRef}
             type="text"

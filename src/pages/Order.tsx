@@ -3,7 +3,7 @@ import { Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 
-interface OrderSimpleProps {
+interface OrderProps {
   onBack?: () => void;
 }
 
@@ -145,7 +145,7 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   }
 }
 
-export default function OrderSimple({ onBack }: OrderSimpleProps) {
+export default function Order({ onBack }: OrderProps) {
   const [products, setProducts] = useState<OfficeProduct[]>([]);
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
