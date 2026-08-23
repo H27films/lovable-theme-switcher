@@ -152,45 +152,51 @@ export default function Landing() {
             
             {/* Branch buttons */}
             <div style={{ marginTop: "40px", display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+<div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <CircularButton onClick={() => navigate("/simple/boudoir")} />
                 <span
+                  onClick={() => navigate("/simple/boudoir")}
                   style={{
                     fontSize: "clamp(13px, 2.2vw, 16px)",
                     fontWeight: 400,
                     letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
+                    cursor: "pointer",
                   }}
                 >
                   Boudoir
                 </span>
               </div>
               
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+<div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <CircularButton onClick={() => navigate("/simple/chic")} />
                 <span
+                  onClick={() => navigate("/simple/chic")}
                   style={{
                     fontSize: "clamp(13px, 2.2vw, 16px)",
                     fontWeight: 400,
                     letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
+                    cursor: "pointer",
                   }}
                 >
-                  Chic Nailspa
+                  Chic
                 </span>
               </div>
               
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+<div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <CircularButton onClick={() => navigate("/simple/nuryadi")} />
                 <span
+                  onClick={() => navigate("/simple/nuryadi")}
                   style={{
                     fontSize: "clamp(13px, 2.2vw, 16px)",
                     fontWeight: 400,
                     letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
+                    cursor: "pointer",
                   }}
                 >
                   Nur Yadi
