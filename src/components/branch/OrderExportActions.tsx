@@ -14,8 +14,8 @@ interface OrderExportActionsProps {
 
 // Export action: plain text label preceded by a small solid circular icon
 // badge (icon centred inside a round dark disc).
-const actionBtnStyle = { display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" };
-const iconCircleStyle = { width: "20px", height: "20px", borderRadius: "50%", background: "hsl(var(--background, 0 0% 0%))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 };
+const actionBtnStyle: React.CSSProperties = { display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "10px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" };
+const iconCircleStyle: React.CSSProperties = { width: "20px", height: "20px", borderRadius: "50%", background: "hsl(var(--background, 0 0% 0%))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 };
 
 // GRN PDF + Excel export button pair used by the Order panel.
 export const OrderExportActions = ({ entries, grn, config, grnNotes, exportDate }: OrderExportActionsProps) => (
