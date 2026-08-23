@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import SubLanding from "./pages/SubLanding";
+import BranchesPage from "./pages/BranchesPage";
 import Office from "./pages/Office";
 import Order from "./pages/Order";
 import Search from "./pages/Search";
@@ -27,7 +28,8 @@ const App = () => (
           <Route path="/" element={<SafeAreaTop><Landing /></SafeAreaTop>} />
           {/* ── Simple / Boss routes (all wrapped in TabletScaler + SafeAreaTop for iOS notch / status bar) ── */}
           <Route path="/simple" element={<SafeAreaTop><Landing /></SafeAreaTop>} />
-          <Route path="/simple/branches" element={<SafeAreaTop><TabletScaler><SubLanding /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/branches" element={<SafeAreaTop><TabletScaler><BranchesPage /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/branches/admin" element={<SafeAreaTop><TabletScaler><SubLanding /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/boudoir" element={<SafeAreaTop><TabletScaler><Boudoir /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/chic" element={<SafeAreaTop><TabletScaler><Chic /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/nuryadi" element={<SafeAreaTop><TabletScaler><NurYadi /></TabletScaler></SafeAreaTop>} />

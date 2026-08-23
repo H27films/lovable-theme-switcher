@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Search from "./Search";
-import BranchesPage from "./BranchesPage";
 import Order from "./Order";
 import Office from "./Office";
 import Boudoir from "@/pages/Boudoir";
@@ -102,7 +101,7 @@ const SubLanding = () => {
    };
 
    const navigateBackToBranches = () => {
-     navigate("/simple/branches");
+     navigate("/simple/branches/admin");
    };
 
    const navigateBackToMain = () => {
@@ -269,7 +268,7 @@ const SubLanding = () => {
                   onClick={() => {
                     if (item === "SEARCH") { setSimpleSearchMode("active"); setTimeout(() => simpleInputRef.current?.focus(), 420); }
                     else if (item === "ORDER") { navigateTo("order"); }
-                    else { navigateTo("branches"); }
+                    else { navigate("/simple/branches"); }
                   }}
                   style={{
                     display: "block", textAlign: "left", padding: "2px 0",
@@ -684,9 +683,6 @@ const SubLanding = () => {
         {activeSection !== null && (
           <div style={sectionTransitionStyle}>
             {activeSection === "search" && <Search onBack={navigateBack} />}
-            {activeSection === "branches" && (
-              <BranchesPage onBack={navigateBack} onSelectBranch={navigateToBranch} />
-            )}
             {activeSection === "order" && <Order onBack={navigateBack} />}
           </div>
         )}

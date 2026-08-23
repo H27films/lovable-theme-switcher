@@ -221,7 +221,7 @@ const handleHeaderBack = () => {
         setSelectedProduct(null);
         setShowDropdown(false);
     } else {
-        navigate("/simple/branches");
+        navigate("/simple/branches/admin");
     }
 };
 

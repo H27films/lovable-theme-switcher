@@ -167,7 +167,7 @@ export default function Landing() {
           {/* Enter Here button */}
           <div
             className="ls-enter-btn"
-            onClick={() => navigate("/simple/branches")}
+            onClick={() => navigate("/simple/branches/admin")}
             style={{
               fontSize: "clamp(14px, 3.5vw, 32px)",
               fontWeight: 300,

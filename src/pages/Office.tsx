@@ -1061,7 +1061,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                 setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
                 setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
               } else {
-                navigate("/simple/branches");
+                navigate("/simple/branches/admin");
               }
             }}
             style={{

@@ -1,11 +1,19 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface BranchesPageProps {
-  onBack: () => void;
-  onSelectBranch: (branch: "office" | "boudoir" | "chic" | "nuryadi") => void;
+  onBack?: () => void;
+  onSelectBranch?: (branch: "office" | "boudoir" | "chic" | "nuryadi") => void;
 }
 
 export default function BranchesPage({ onBack, onSelectBranch }: BranchesPageProps) {
+  const navigate = useNavigate();
+
+  const handleBack = onBack ?? (() => navigate("/simple/branches/admin"));
+  const handleSelectBranch = onSelectBranch ?? ((branch: "office" | "boudoir" | "chic" | "nuryadi") =>
+    branch === "office" ? navigate("/simple/office") : navigate(`/simple/${branch}`)
+  );
+
   return (
     <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative", overflow: "hidden" }}>
 
@@ -14,7 +22,7 @@ export default function BranchesPage({ onBack, onSelectBranch }: BranchesPagePro
         <div style={{ display: "flex", position: "relative", minHeight: "100dvh", overflow: "hidden" }}>
           {/* Ghost menu on left */}
           <div
-            onClick={onBack}
+            onClick={handleBack}
             style={{
               position: "absolute", left: "-70%", top: 0, bottom: 0, width: "100%",
               display: "flex", flexDirection: "column", justifyContent: "center",
@@ -42,7 +50,7 @@ export default function BranchesPage({ onBack, onSelectBranch }: BranchesPagePro
             ] as { label: string; key: "office" | "boudoir" | "chic" | "nuryadi" }[]).map(({ label, key }) => (
               <button
                 key={key}
-                onClick={() => onSelectBranch(key)}
+                onClick={() => handleSelectBranch(key)}
                 style={{
                   display: "block", textAlign: "left", padding: "2px 0",
                   background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
