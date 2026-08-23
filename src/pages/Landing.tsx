@@ -158,7 +158,7 @@ export default function Landing() {
                   onClick={() => navigate("/simple/boudoir")}
                   style={{
                     fontSize: "clamp(16px, 2.8vw, 22px)",
-                    fontWeight: 400,
+                    fontWeight: 300,
                     letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
@@ -175,7 +175,7 @@ export default function Landing() {
                   onClick={() => navigate("/simple/chic")}
                   style={{
                     fontSize: "clamp(16px, 2.8vw, 22px)",
-                    fontWeight: 400,
+                    fontWeight: 300,
                     letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
@@ -192,7 +192,7 @@ export default function Landing() {
                   onClick={() => navigate("/simple/nuryadi")}
                   style={{
                     fontSize: "clamp(16px, 2.8vw, 22px)",
-                    fontWeight: 400,
+                    fontWeight: 300,
                     letterSpacing: "2px",
                     color: "hsl(var(--foreground))",
                     textTransform: "capitalize",
