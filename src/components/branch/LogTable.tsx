@@ -200,37 +200,35 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                     <>
                       <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
-                          {row["PRODUCT NAME"] || "—"}
-                        </div>
-                        {viewType === "week" && !expanded && ((row as any)["THERAPIST"] || (row as any)["NOTES"]) && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                            {(row as any)["THERAPIST"] && (
-                              <span style={{
-                                ...therapistPillStyle((row as any)["THERAPIST"]),
-                                padding: "2px 8px",
-                                borderRadius: "999px",
-                                fontSize: "10px",
-                                fontWeight: 600,
-                                fontFamily: "Raleway, inherit",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.02em"
-                              }}>
-                                {(row as any)["THERAPIST"]}
-                              </span>
-                            )}
-                            {(row as any)["NOTES"] && (
-                              <span style={{ 
-                                fontSize: "11px", 
-                                fontWeight: 400, 
-                                fontFamily: "Raleway, inherit", 
-                                color: "hsl(var(--muted-foreground))",
-                                lineHeight: 1.2
-                              }}>
-                                {(row as any)["NOTES"]}
-                              </span>
-                            )}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                          <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
+                            {row["PRODUCT NAME"] || "—"}
                           </div>
+                          {viewType === "week" && !expanded && (row as any)["THERAPIST"] && (
+                            <span style={{
+                              ...therapistPillStyle((row as any)["THERAPIST"]),
+                              padding: "2px 8px",
+                              borderRadius: "999px",
+                              fontSize: "10px",
+                              fontWeight: 600,
+                              fontFamily: "Raleway, inherit",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.02em"
+                            }}>
+                              {(row as any)["THERAPIST"]}
+                            </span>
+                          )}
+                        </div>
+                        {viewType === "week" && !expanded && (row as any)["NOTES"] && (
+                          <span style={{ 
+                            fontSize: "11px", 
+                            fontWeight: 400, 
+                            fontFamily: "Raleway, inherit", 
+                            color: "hsl(var(--muted-foreground))",
+                            lineHeight: 1.2
+                          }}>
+                            {(row as any)["NOTES"]}
+                          </span>
                         )}
                       </div>
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
