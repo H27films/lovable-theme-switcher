@@ -71,8 +71,16 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
    };
 
    const toggleSearch = () => {
-     if (selectedProduct || searchActive) {
-       // Icon is in "X" state (product selected or search open) -> back to default view
+     if (selectedProduct) {
+       // Product card open -> open the "Select Product" search dropdown instead
+       setSelectedProduct(null);
+       setSearch("");
+       setSearchMode("active");
+       setIsSearchProduct(false);
+       setSearchActive(true);
+       setShowDropdown(true);
+     } else if (searchActive) {
+       // Search view is open -> back to default view
        resetSearchState();
        setSearchActive(false);
      } else {
