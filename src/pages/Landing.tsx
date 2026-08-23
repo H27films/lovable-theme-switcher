@@ -151,58 +151,37 @@ export default function Landing() {
 </h1>
             
 {/* Branch buttons */}
-<div style={{ marginTop: "100px", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "28px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <CircularButton onClick={() => navigate("/simple/boudoir")} />
-                <span
-                  onClick={() => navigate("/simple/boudoir")}
-                  style={{
-                    fontSize: "clamp(16px, 2.8vw, 22px)",
-                    fontWeight: 300,
-                    letterSpacing: "2px",
-                    color: "hsl(var(--foreground))",
-                    textTransform: "capitalize",
-                    cursor: "pointer",
-                  }}
-                >
-                  Boudoir
-                </span>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <CircularButton onClick={() => navigate("/simple/chic")} />
-                <span
-                  onClick={() => navigate("/simple/chic")}
-                  style={{
-                    fontSize: "clamp(16px, 2.8vw, 22px)",
-                    fontWeight: 300,
-                    letterSpacing: "2px",
-                    color: "hsl(var(--foreground))",
-                    textTransform: "capitalize",
-                    cursor: "pointer",
-                  }}
-                >
-                  Chic
-                </span>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <CircularButton onClick={() => navigate("/simple/nuryadi")} />
-                <span
-                  onClick={() => navigate("/simple/nuryadi")}
-                  style={{
-                    fontSize: "clamp(16px, 2.8vw, 22px)",
-                    fontWeight: 300,
-                    letterSpacing: "2px",
-                    color: "hsl(var(--foreground))",
-                    textTransform: "capitalize",
-                    cursor: "pointer",
-                  }}
-                >
-                  Nur Yadi
-                </span>
-              </div>
+<div style={{ marginTop: "100px", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "22px", alignItems: "flex-start" }}>
+              {[
+                { name: "Boudoir", path: "/simple/boudoir", bg: "#22372B" },
+                { name: "Chic", path: "/simple/chic", bg: "#390007" },
+                { name: "Nur Yadi", path: "/simple/nuryadi", bg: "#5B7E98" },
+              ].map((b) => (
+                <div key={b.name} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <CircularButton onClick={() => navigate(b.path)} />
+                  <span
+                    onClick={() => navigate(b.path)}
+                    style={{
+                      fontSize: "clamp(15px, 2.6vw, 20px)",
+                      fontWeight: 300,
+                      letterSpacing: "2px",
+                      color: "#FFFFFF",
+                      background: b.bg,
+                      padding: "8px 26px",
+                      borderRadius: "6px",
+                      textTransform: "capitalize",
+                      cursor: "pointer",
+                      display: "inline-block",
+                      lineHeight: 1.2,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {b.name}
+                  </span>
+                </div>
+              ))}
             </div>
+
          </div>
 
         {/* ── Bottom bar ── */}
