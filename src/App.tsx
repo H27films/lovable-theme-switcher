@@ -27,11 +27,11 @@ const App = () => (
           <Route path="/" element={<SafeAreaTop><LandingSimple /></SafeAreaTop>} />
           {/* ── Simple / Boss routes (all wrapped in TabletScaler + SafeAreaTop for iOS notch / status bar) ── */}
           <Route path="/simple" element={<SafeAreaTop><LandingSimple /></SafeAreaTop>} />
-          <Route path="/simple/office" element={<SafeAreaTop><TabletScaler><SubLandingSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/branches" element={<SafeAreaTop><TabletScaler><SubLandingSimple /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/boudoir" element={<SafeAreaTop><TabletScaler><BoudoirSimpleNew /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/chic" element={<SafeAreaTop><TabletScaler><ChicSimpleNew /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/nuryadi" element={<SafeAreaTop><TabletScaler><NurYadiSimpleNew /></TabletScaler></SafeAreaTop>} />
-          <Route path="/simple/branch-office" element={<SafeAreaTop><TabletScaler><OfficeSimple /></TabletScaler></SafeAreaTop>} />
+          <Route path="/simple/office" element={<SafeAreaTop><TabletScaler><OfficeSimple /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/order" element={<SafeAreaTop><TabletScaler><OrderSimple /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/search" element={<SafeAreaTop><TabletScaler><SearchSimple /></TabletScaler></SafeAreaTop>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

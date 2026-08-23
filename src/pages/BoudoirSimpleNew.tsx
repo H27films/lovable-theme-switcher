@@ -221,7 +221,7 @@ const handleHeaderBack = () => {
         setSelectedProduct(null);
         setShowDropdown(false);
     } else {
-        navigate("/simple/office");
+        navigate("/simple/branches");
     }
 };
 

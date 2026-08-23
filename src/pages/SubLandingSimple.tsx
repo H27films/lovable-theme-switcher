@@ -99,14 +99,14 @@ const SubLandingSimple = () => {
 
    const navigateToBranch = (branch: "office" | "boudoir" | "chic" | "nuryadi") => {
      if (branch === "office") {
-       navigate("/simple/branch-office");
+        navigate("/simple/office");
      } else {
        navigate(`/simple/${branch}`);
      }
    };
 
    const navigateBackToBranches = () => {
-     navigate("/simple/office");
+     navigate("/simple/branches");
    };
 
    const navigateBackToMain = () => {

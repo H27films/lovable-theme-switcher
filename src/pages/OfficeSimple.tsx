@@ -1064,7 +1064,7 @@ const OfficeSimple = ({ onBack, onBackToMain, products = [] }: OfficeSimpleProps
                 setSearchMode("idle"); setSearch(""); setSelectedProduct(null);
                 setSelectedSupplier(null); setShowDropdown(false); setUsageOpen(false);
               } else {
-                navigate("/simple/office");
+                navigate("/simple/branches");
               }
             }}
             style={{
