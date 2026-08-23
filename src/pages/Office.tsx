@@ -1073,7 +1073,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         <div style={{
           display: "flex", alignItems: "center", gap: "20px",
           borderBottom: "0.5px solid hsl(var(--border))",
-          paddingBottom: "12px", marginBottom: "20px",
+          paddingBottom: "12px", marginBottom: "8px",
         }}>
 
           {/* Order */}
@@ -1132,8 +1132,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Export</span>
           </button>
 
-          {/* Search — icon only, pushed to right */}
-          <div style={{ flex: 1 }} />
+          {/* Search — icon only, next to Export */}
           <button
             onClick={() => navigate("/simple/search", { state: { from: "office" } })}
             title="Search"
@@ -1288,7 +1287,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
             {/* Recent section */}
             {!selectedProduct && (
-              <div style={{ paddingTop: "16px", display: "flex", flexDirection: "column", flex: 1 }}>
+              <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
                 <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
                   Recent
                 </div>
