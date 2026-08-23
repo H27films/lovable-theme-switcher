@@ -151,7 +151,7 @@ export default function Landing() {
 </h1>
             
 {/* Branch buttons */}
-<div style={{ marginTop: "100px", display: "flex", flexDirection: "column", gap: "28px" }}>
+<div style={{ marginTop: "100px", paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "28px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <CircularButton onClick={() => navigate("/simple/boudoir")} />
                 <span
