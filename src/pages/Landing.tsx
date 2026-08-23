@@ -54,8 +54,7 @@ export default function Landing() {
           user-select: none;
         }
         .ls-enter-btn:hover {
-          letter-spacing: 0.22em;
-          gap: 18px;
+          opacity: 0.7;
         }
         .ls-enter-btn:active {
           opacity: 0.5;
@@ -67,9 +66,9 @@ export default function Landing() {
         }
 
         @media (max-width: 480px) {
-          .ls-topbar  { padding: 22px 28px 0 !important; }
-          .ls-hero    { padding: 0 28px !important; }
-          .ls-bottom  { padding: 22px 28px !important; }
+          .ls-topbar  { padding: 22px 16px 0 !important; }
+          .ls-hero    { padding: 14vh 16px !important; }
+          .ls-bottom  { padding: 22px 16px !important; }
         }
       `}</style>
 
@@ -92,7 +91,7 @@ export default function Landing() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "28px 44px 0",
+            padding: "28px 16px 0",
             flexShrink: 0,
             opacity: visible ? 1 : 0,
             transition: "opacity 0.8s ease 0.2s",
@@ -117,14 +116,14 @@ export default function Landing() {
           style={{
             flex: 1,
             display: "flex",
-            alignItems: "center",
-            padding: "0 44px",
+            alignItems: "flex-start",
+            padding: "14vh 16px",
           }}
         >
           <h1
             style={{
-              fontSize: "clamp(56px, 14vw, 88px)",
-              fontWeight: 200,
+              fontSize: "clamp(44px, 10vw, 60px)",
+              fontWeight: 205,
               letterSpacing: "-0.02em",
               lineHeight: 0.9,
               margin: 0,
@@ -156,7 +155,7 @@ export default function Landing() {
           style={{
             flexShrink: 0,
             borderTop: "1px solid hsl(var(--border))",
-            padding: "22px 44px",
+            padding: "22px 16px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -164,7 +163,7 @@ export default function Landing() {
             transition: "opacity 0.9s ease 1.0s",
           }}
         >
-          {/* Enter Here button */}
+          {/* Admin Portal button */}
           <div
             className="ls-enter-btn"
             onClick={() => navigate("/simple/branches/admin")}
@@ -172,14 +171,14 @@ export default function Landing() {
               fontSize: "clamp(14px, 3.5vw, 32px)",
               fontWeight: 300,
               letterSpacing: "0.08em",
-              textTransform: "uppercase",
+              textTransform: "capitalize",
               display: "flex",
               alignItems: "center",
               gap: "10px",
               color: "hsl(var(--foreground))",
             }}
           >
-            Enter Here
+            Admin Portal
             <svg
               width="20"
               height="20"
