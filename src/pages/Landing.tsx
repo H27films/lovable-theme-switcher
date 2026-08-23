@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import React, { useState, useEffect } from "react";
+import CircularButton from "@/components/CircularButton";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -110,44 +111,93 @@ export default function Landing() {
           </span>
         </div>
 
-        {/* ── Hero title ── */}
-        <div
-          className="ls-hero"
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "flex-start",
-            padding: "14vh 16px",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "clamp(44px, 10vw, 60px)",
-              fontWeight: 205,
-              letterSpacing: "-0.02em",
-              lineHeight: 0.9,
-              margin: 0,
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0)" : "translateY(24px)",
-              transition:
-                "opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s",
-              userSelect: "none",
-            }}
-          >
-            <span
-              className="ls-title-line"
-              style={{ color: "hsl(var(--foreground))" }}
-            >
-              Product
-            </span>
-            <span
-              className="ls-title-line"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              Database.
-            </span>
-          </h1>
-        </div>
+{/* ── Hero title ── */}
+         <div
+           className="ls-hero"
+           style={{
+             flex: 1,
+             display: "flex",
+             flexDirection: "column",
+             alignItems: "flex-start",
+             padding: "14vh 16px",
+           }}
+         >
+           <h1
+             style={{
+               fontSize: "clamp(44px, 10vw, 60px)",
+               fontWeight: 205,
+               letterSpacing: "-0.02em",
+               lineHeight: 0.9,
+               margin: 0,
+               opacity: visible ? 1 : 0,
+               transform: visible ? "translateY(0)" : "translateY(24px)",
+               transition:
+                 "opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s",
+               userSelect: "none",
+             }}
+           >
+             <span
+               className="ls-title-line"
+               style={{ color: "hsl(var(--foreground))" }}
+             >
+               Product
+             </span>
+             <span
+               className="ls-title-line"
+               style={{ color: "hsl(var(--muted-foreground))" }}
+             >
+               Database.
+             </span>
+</h1>
+            
+            {/* Branch buttons */}
+            <div style={{ marginTop: "40px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <CircularButton onClick={() => navigate("/simple/boudoir")} />
+                <span
+                  style={{
+                    fontSize: "clamp(13px, 2.2vw, 16px)",
+                    fontWeight: 400,
+                    letterSpacing: "2px",
+                    color: "hsl(var(--foreground))",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Boudoir
+                </span>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <CircularButton onClick={() => navigate("/simple/chic")} />
+                <span
+                  style={{
+                    fontSize: "clamp(13px, 2.2vw, 16px)",
+                    fontWeight: 400,
+                    letterSpacing: "2px",
+                    color: "hsl(var(--foreground))",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Chic Nailspa
+                </span>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <CircularButton onClick={() => navigate("/simple/nuryadi")} />
+                <span
+                  style={{
+                    fontSize: "clamp(13px, 2.2vw, 16px)",
+                    fontWeight: 400,
+                    letterSpacing: "2px",
+                    color: "hsl(var(--foreground))",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Nur Yadi
+                </span>
+              </div>
+            </div>
+         </div>
 
         {/* ── Bottom bar ── */}
         <div
@@ -168,7 +218,7 @@ export default function Landing() {
             className="ls-enter-btn"
             onClick={() => navigate("/simple/branches/admin")}
             style={{
-              fontSize: "clamp(14px, 3.5vw, 32px)",
+              fontSize: "clamp(17px, 2.0vw, 50px)",
               fontWeight: 300,
               letterSpacing: "0.08em",
               textTransform: "capitalize",
