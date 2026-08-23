@@ -154,7 +154,7 @@ export default function Landing() {
 <div style={{ marginTop: "100px", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "22px", alignItems: "flex-start" }}>
               {[
                 { name: "Boudoir", path: "/simple/boudoir" },
-                { name: "Chic", path: "/simple/chic" },
+                { name: "Chic Nailspa", path: "/simple/chic" },
                 { name: "Nur Yadi", path: "/simple/nuryadi" },
               ].map((b, i) => (
                 <div
