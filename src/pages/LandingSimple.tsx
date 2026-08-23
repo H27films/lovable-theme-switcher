@@ -224,20 +224,23 @@ export default function LandingSimple() {
             style={{ opacity: visible ? 1 : 0, transition: "opacity 0.9s ease 1.2s", gap: "6px" }}
           >
             {tablet ? (
-              /* Tablet icon (active) + IPAD label */
+              /* Tablet icon (active) + Tablet label */
               <>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--foreground))" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
                   <circle cx="12" cy="18" r="0.8" fill="hsl(var(--foreground))" stroke="none" />
                 </svg>
-                <span style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>Ipad</span>
+                <span style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>Tablet</span>
               </>
             ) : (
-              /* Phone icon (inactive / muted) */
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                <circle cx="12" cy="18" r="0.8" fill="hsl(var(--muted-foreground))" stroke="none" />
-              </svg>
+              /* Phone icon (active) + Phone label */
+              <>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--foreground))" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                  <circle cx="12" cy="18" r="0.8" fill="hsl(var(--foreground))" stroke="none" />
+                </svg>
+                <span style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--foreground))", fontFamily: "Raleway, inherit" }}>Phone</span>
+              </>
             )}
           </button>
         </div>
