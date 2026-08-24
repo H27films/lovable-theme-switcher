@@ -300,3 +300,6 @@
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border-active)); }
 }
+
+/* Office icon tab bar: hide horizontal scrollbar (WebKit/Blink) */
+.office-tab-bar::-webkit-scrollbar { display: none; }

@@ -62,6 +62,7 @@ const allDataHeaderStyle: React.CSSProperties = {
 
 const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const navigate = useNavigate();
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   // ── IMPORT PANEL STATE ────────────────────────────────────
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [showSalesPanel, setShowSalesPanel] = useState(false);
@@ -307,75 +308,98 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 </div>
 
         {/* ── Icon tab bar ── */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: "20px",
-          borderBottom: "0.5px solid hsl(var(--border))",
-          paddingBottom: "12px", marginBottom: "8px",
-        }}>
+        <div
+          className="office-tab-bar"
+          style={{
+            display: "flex", alignItems: "center", gap: "20px",
+            borderBottom: "0.5px solid hsl(var(--border))",
+            paddingBottom: "12px", marginBottom: "8px",
+            overflowX: "auto", overflowY: "visible",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none", msOverflowStyle: "none",
+          }}
+        >
 
           {/* Order */}
           <button
             onClick={() => navigate("/simple/order", { state: { from: "office" } })}
             title="Order"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "order" ? 1 : 0.7, transform: hoveredTab === "order" ? "scale(1.08)" : "scale(1)" }}
+            onMouseEnter={() => setHoveredTab("order")}
+            onMouseLeave={() => setHoveredTab(null)}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
             </svg>
-            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Order</span>
+            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Order</span>
+            {hoveredTab === "order" && (
+              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
+            )}
           </button>
 
           {/* Sales */}
           <button
             onClick={() => setShowSalesPanel(true)}
             title="Sales"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "sales" ? 1 : 0.7, transform: hoveredTab === "sales" ? "scale(1.08)" : "scale(1)" }}
+            onMouseEnter={() => setHoveredTab("sales")}
+            onMouseLeave={() => setHoveredTab(null)}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
             </svg>
-            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Sales</span>
+            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Sales</span>
+            {hoveredTab === "sales" && (
+              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
+            )}
           </button>
 
           {/* Import */}
           <button
             onClick={() => setShowImportPanel(true)}
             title="Import"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "import" ? 1 : 0.7, transform: hoveredTab === "import" ? "scale(1.08)" : "scale(1)" }}
+            onMouseEnter={() => setHoveredTab("import")}
+            onMouseLeave={() => setHoveredTab(null)}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Import</span>
+            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Import</span>
+            {hoveredTab === "import" && (
+              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
+            )}
           </button>
 
           {/* Export */}
           <button
             onClick={() => setShowExportPanel(true)}
             title="Export"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", opacity: 0.7, transition: "opacity 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "export" ? 1 : 0.7, transform: hoveredTab === "export" ? "scale(1.08)" : "scale(1)" }}
+            onMouseEnter={() => setHoveredTab("export")}
+            onMouseLeave={() => setHoveredTab(null)}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Export</span>
+            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Export</span>
+            {hoveredTab === "export" && (
+              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
+            )}
           </button>
 
           {/* Search — icon only, next to Export */}
           <button
             onClick={() => navigate("/simple/search", { state: { from: "office" } })}
             title="Search"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.2s" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "search" ? 1 : 0.7, transform: hoveredTab === "search" ? "scale(1.08)" : "scale(1)" }}
+            onMouseEnter={() => setHoveredTab("search")}
+            onMouseLeave={() => setHoveredTab(null)}
           >
-            <Search size={14} />
+            <Search size={18} />
+            {hoveredTab === "search" && (
+              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
+            )}
           </button>
 
         </div>
