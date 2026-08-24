@@ -3,12 +3,7 @@ import { Menu, Tablet, Laptop, Settings as SettingsIcon } from "lucide-react";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { SettingsModalOffice } from "./SettingsModalOffice";
 
-interface OfficeHeaderProps {
-  branch: string;
-  onBack: () => void;
-}
-
-export const OfficeHeader = ({ branch, onBack }: OfficeHeaderProps) => {
+export const OfficeHeader = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { tablet, toggle: toggleTablet } = useTabletMode();
@@ -26,12 +21,7 @@ export const OfficeHeader = ({ branch, onBack }: OfficeHeaderProps) => {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px 0px 12px", width: "100%", boxSizing: "border-box" }}>
-        <button onClick={onBack} style={{ display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0, flex: 1 }}>
-          {branch}
-        </button>
-
-        <div style={{ position: "relative", flexShrink: 0 }} ref={dropdownRef}>
+      <div style={{ position: "relative", flexShrink: 0 }} ref={dropdownRef}>
           <button onClick={() => setShowDropdown(!showDropdown)} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "black" }} aria-label="Menu">
             <Menu size={24} color="black" />
           </button>
@@ -46,7 +36,6 @@ export const OfficeHeader = ({ branch, onBack }: OfficeHeaderProps) => {
               </button>
             </div>
           )}
-        </div>
       </div>
 
       <SettingsModalOffice open={showSettingsModal} onClose={() => setShowSettingsModal(false)} />

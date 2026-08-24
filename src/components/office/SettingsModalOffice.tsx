@@ -8,7 +8,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-const BRANCHES = ["Boudoir", "Chic Nailspa", "Nur Yadi"];
+const BRANCHES = ["BOUDOIR", "CHIC", "NUR YADI"];
 
 // The therapists table may have been created as "Therapists" or "therapists".
 // Reads already try both; writes must too, otherwise saving blows up silently.
