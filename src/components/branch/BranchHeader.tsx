@@ -1,8 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Menu, Tablet, Laptop, Settings as SettingsIcon } from "lucide-react";
+import { Menu, Tablet, Laptop, Settings as SettingsIcon, Star } from "lucide-react";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { SettingsModal } from "./SettingsModal";
+import { Favourites } from "./Favourites";
+import type { BranchKey } from "@/lib/branchSimple";
+
+/** Hamburger "Favourites" is only shown for branches this feature supports */
+const FAV_BRANCH_BY_NAME: Record<string, BranchKey> = {
+  BOUDOIR: "boudoir",
+  CHIC: "chic",
+  "NUR YADI": "nuryadi",
+};
 
 interface BranchHeaderProps {
   branch: string;
@@ -15,6 +24,9 @@ export const BranchHeader = ({ branch, onBack }: BranchHeaderProps) => {
   const { tablet, toggle: toggleTablet } = useTabletMode();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showFavourites, setShowFavourites] = useState(false);
+
+  const favBranch = FAV_BRANCH_BY_NAME[(branch ?? "").trim().toUpperCase()];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -46,6 +58,11 @@ export const BranchHeader = ({ branch, onBack }: BranchHeaderProps) => {
               <button onClick={() => { setShowDropdown(false); setShowSettingsModal(true); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", fontSize: "14px", fontWeight: 400, letterSpacing: "0.04em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", fontFamily: "Raleway, sans-serif", textAlign: "left" }}>
                 <SettingsIcon size={16} /> Settings
               </button>
+              {favBranch && (
+                <button onClick={() => { setShowDropdown(false); setShowFavourites(true); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", fontSize: "14px", fontWeight: 400, letterSpacing: "0.04em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", fontFamily: "Raleway, sans-serif", textAlign: "left" }}>
+                  <Star size={16} /> Favourites
+                </button>
+              )}
               <button onClick={() => { setShowDropdown(false); setShowPasswordModal(true); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", fontSize: "14px", fontWeight: 400, letterSpacing: "0.04em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", fontFamily: "Raleway, sans-serif", textAlign: "left" }}>
                 Change Password
               </button>
@@ -56,6 +73,9 @@ export const BranchHeader = ({ branch, onBack }: BranchHeaderProps) => {
 
       <ChangePasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
       <SettingsModal open={showSettingsModal} onClose={() => setShowSettingsModal(false)} branch={branch} />
+      {favBranch && (
+        <Favourites open={showFavourites} onClose={() => setShowFavourites(false)} branch={favBranch} />
+      )}
     </>
   );
 };
