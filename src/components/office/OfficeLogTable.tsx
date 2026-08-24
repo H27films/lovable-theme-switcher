@@ -28,6 +28,8 @@ interface GrnGroup {
   rows: LogRow[];
 }
 
+type LogView = "all" | "branches" | "supplier";
+
 interface OfficeLogTableProps {
   localProducts: OfficeProduct[];
   refreshTrigger?: number;
@@ -49,6 +51,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
   const [logRows, setLogRows] = useState<LogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(true);
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
+  const [logView, setLogView] = useState<LogView>("all");
 
   const fetchLog = useCallback(async () => {
     setLoadingLog(true);
@@ -80,9 +83,18 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
     if (refreshTrigger !== undefined && refreshTrigger > 0) fetchLog();
   }, [refreshTrigger, fetchLog]);
 
+  // View filter: Branches = office's own stock movements (SUPPLIER = "Office"),
+  // Supplier = external supplier movements (SUPPLIER <> "Office").
+  const visibleRows =
+    logView === "all"
+      ? logRows
+      : logRows.filter(row =>
+          logView === "branches" ? row.SUPPLIER === "Office" : row.SUPPLIER !== "Office"
+        );
+
   const grnGroups: GrnGroup[] = (() => {
     const map = new Map<string, GrnGroup>();
-    for (const row of logRows) {
+    for (const row of visibleRows) {
       const grn = row.GRN || `no-grn-${row.id}`;
       if (!map.has(grn))
         map.set(grn, { grn, date: row.DATE, branch: row.BRANCH, supplier: row.SUPPLIER ?? "—", rows: [] });
@@ -99,6 +111,35 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
     });
   };
 
+  const renderViewTab = (view: LogView, label: string) => {
+    const active = logView === view;
+    return (
+      <button
+        key={view}
+        onClick={() => setLogView(view)}
+        style={{
+          background: "none",
+          border: "none",
+          borderBottom: `2px solid ${active ? "hsl(var(--foreground))" : "transparent"}`,
+          cursor: "pointer",
+          padding: "0 0 6px 0",
+          fontSize: active ? "16px" : "14px",
+          fontWeight: active ? 400 : 300,
+          letterSpacing: "0.06em",
+          fontFamily: "Raleway, inherit",
+          color: "hsl(var(--foreground))",
+          opacity: active ? 1 : 0.6,
+          marginBottom: "-1px",
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = "0.8"; }}
+        onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = "0.6"; }}
+      >
+        {label}
+      </button>
+    );
+  };
+
   return (
     <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
@@ -109,8 +150,10 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
           background: "hsl(var(--background))",
           zIndex: 10, display: "flex", flexDirection: "column", width: "100%",
         }}>
-          <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
-            All Data
+          <div style={{ display: "flex", gap: "12px", alignItems: "baseline", marginBottom: "12px" }}>
+            {renderViewTab("all", "All Data")}
+            {renderViewTab("branches", "Branches")}
+            {renderViewTab("supplier", "Supplier")}
           </div>
           <div style={{
             display: "grid",
