@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import ImportPanel from "@/components/office/ImportPanel";
 import ExportPanel from "@/components/office/ExportPanel";
+import OfficeLogTable from "@/components/office/OfficeLogTable";
 import { OfficeHeader } from "@/components/office/OfficeHeader";
 
 interface OfficeProduct {
@@ -26,18 +27,6 @@ interface OfficeProduct {
   "PAR": number | null;
 }
 
-interface LogRow {
-  id: number;
-  DATE: string;
-  "PRODUCT NAME": string;
-  BRANCH: string;
-  TYPE: string;
-  SUPPLIER: string | null;
-  QTY: number;
-  GRN?: string;
-  "OFFICE BALANCE"?: number;
-}
-
 interface OfficeProps {
   onBack?: () => void;
   onBackToMain?: () => void;
@@ -48,17 +37,6 @@ const hdrStyle: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
   color: "#000000", textTransform: "uppercase",
   letterSpacing: "0.08em",
-};
-
-const allDataHdrStyle: React.CSSProperties = {
-  fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit",
-  color: "hsl(var(--foreground))",
-};
-
-const allDataHeaderStyle: React.CSSProperties = {
-  ...hdrStyle,
-  fontSize: "12px",
-  textTransform: "capitalize",
 };
 
 const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
@@ -109,48 +87,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Recent log state ─────────────────────────────────────────
-  const [logRows, setLogRows] = useState<LogRow[]>([]);
-  const [loadingLog, setLoadingLog] = useState(true);
-  const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    setLoadingLog(true);
-    (supabase as any)
-      .from("AllFileLog").select("*").eq("TYPE", "Order")
-      .order("DATE", { ascending: false }).limit(300)
-      .then(({ data }: { data: LogRow[] | null }) => {
-        const sorted = (data || []).sort((a, b) => {
-          if (a.DATE !== b.DATE) return a.DATE > b.DATE ? -1 : 1;
-          const aOff = a.BRANCH === "Office" ? 1 : 0;
-          const bOff = b.BRANCH === "Office" ? 1 : 0;
-          return aOff - bOff; // Branch orders first, Office last within same date
-        });
-        setLogRows(sorted);
-        setLoadingLog(false);
-      });
-  }, []);
-
-  // ── GRN groups for Recent section ────────────────────────────
-  interface GrnGroup {
-    grn: string; date: string; branch: string; supplier: string; rows: LogRow[];
-  }
-  const grnGroups: GrnGroup[] = (() => {
-    const map = new Map<string, GrnGroup>();
-    for (const row of logRows) {
-      const grn = row.GRN || `no-grn-${row.id}`;
-      if (!map.has(grn)) map.set(grn, { grn, date: row.DATE, branch: row.BRANCH, supplier: row.SUPPLIER ?? "—", rows: [] });
-      map.get(grn)!.rows.push(row);
-    }
-    return Array.from(map.values());
-  })();
-
-  const toggleGRN = (grn: string) => {
-    setExpandedGRNs(prev => { const next = new Set(prev); next.has(grn) ? next.delete(grn) : next.add(grn); return next; });
-  };
-
-  const fmtDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  // ── Log table refresh trigger ────────────────────────────────
+  const [logRefreshTrigger, setLogRefreshTrigger] = useState(0);
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
@@ -415,97 +353,13 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
             
 
+            {/* ══ LOG TABLE ══════════════════════════════════════════════ */}
+            <OfficeLogTable
+              localProducts={localProducts}
+              refreshTrigger={logRefreshTrigger}
+            />
 
-            {/* Recent section */}
-            <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
-                <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-                 <div style={{
-                   position: "sticky",
-                   top: 0,
-                   background: "hsl(var(--background))",
-                   zIndex: 10,
-                   display: "flex",
-                   flexDirection: "column",
-                   width: "100%",
-                 }}>
-                   <div style={{ fontSize: "16px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "12px" }}>
-                     All Data
-                   </div>
-                   <div style={{ 
-                     display: "grid", 
-                     gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", 
-                     gap: "6px", 
-                     paddingBottom: "8px", 
-                     borderBottom: "0.5px solid hsl(var(--border))",
-                     width: "100%",
-                   }}>
-                    <div style={{ ...allDataHeaderStyle }}>Date</div>
-                    <div style={{ ...allDataHeaderStyle }}>GRN</div>
-                    <div style={{ ...allDataHeaderStyle }}>Supplier</div>
-                    <div style={{ ...allDataHeaderStyle, textAlign: "center" }}>Items</div>
-                    <div style={{ ...allDataHeaderStyle, textAlign: "center", visibility: expandedGRNs.size > 0 ? "visible" : "hidden" }}>Bal</div>
-                    <div />
-                   </div>
-                 </div>
-                  {loadingLog && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>}
-                  {!loadingLog && grnGroups.length === 0 && <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>}
-                  {!loadingLog && grnGroups.map(group => {
-                    const isOpen = expandedGRNs.has(group.grn);
-                    const isOfficeGRN = group.grn.startsWith("OFFICE");
-                    const groupTotal = isOfficeGRN && isOpen
-                      ? group.rows.reduce((sum, row) => {
-                          const mp = localProducts.find(lp => lp["PRODUCT NAME"] === row["PRODUCT NAME"]);
-                          return sum + (mp ? Number(mp["SUPPLIER PRICE"] ?? 0) * Math.abs(row.QTY ?? 0) : 0);
-                        }, 0)
-                      : null;
-                    return (
-                      <div key={group.grn}>
-                        <div
-                          onClick={() => toggleGRN(group.grn)}
-                          style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "9px 0", borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)", cursor: "pointer", alignItems: "center" }}
-                        >
-                          <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDate(group.date)}</div>
-                          <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{group.grn}</div>
-                          <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {group.supplier}{groupTotal !== null ? ` — RM ${groupTotal.toFixed(2)}` : ""}
-                          </div>
-                          <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
-                          <div />
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
-                            {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                          </div>
-                        </div>
-                        {isOpen && (
-                          <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
-                            {group.rows.map((row, idx) => {
-                              const matchedProduct = localProducts.find(lp => lp["PRODUCT NAME"] === row["PRODUCT NAME"]);
-                              const lineTotal = isOfficeGRN && matchedProduct
-                                ? (Number(matchedProduct["SUPPLIER PRICE"] ?? 0) * Math.abs(row.QTY ?? 0))
-                                : null;
-                              return (
-                                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
-                                  <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
-                                  <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", whiteSpace: "normal", wordBreak: "break-word" }}>{row["PRODUCT NAME"]}</div>
-                                  {isOfficeGRN && (
-                                    <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                      {lineTotal !== null && lineTotal > 0 ? `RM ${lineTotal.toFixed(2)}` : "—"}
-                                    </div>
-                                  )}
-                                  <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: (row.BRANCH || "").toLowerCase() === "office" ? "hsl(120 45% 30%)" : "hsl(0 60% 35%)", textAlign: "center" }}>
-                                    {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
-                                  </div>
-                                  <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
-                                  <div />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+
         </>
       </div>
 
@@ -766,7 +620,10 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         {/* ═ IMPORT PANEL ══════════════════════════════ */}
         {showImportPanel && (
           <ImportPanel
-            onClose={() => setShowImportPanel(false)}
+            onClose={() => {
+              setShowImportPanel(false);
+              setLogRefreshTrigger(prev => prev + 1);
+            }}
             onProductsUpdated={refreshLocalProducts}
           />
         )}
