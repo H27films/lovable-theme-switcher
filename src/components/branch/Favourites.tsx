@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Search, X, MoveLeft } from "lucide-react";
+import { Search, X, MoveLeft, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { BranchKey } from "@/lib/branchSimple";
 
@@ -221,12 +221,12 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
             {BRANCH_LABEL[branch].toUpperCase()}
           </div>
         </div>
-        <button
+                <button
           onClick={onClose}
           aria-label="Back"
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", marginRight: "-6px" }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", marginRight: "-8px" }}
         >
-          <MoveLeft size={24} strokeWidth={1.3} />
+          <MoveLeft size={28} strokeWidth={1.2} />
         </button>
       </div>
 
@@ -290,13 +290,17 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
                   )}
                 </div>
 
-                {/* Product name */}
+                                {/* Product name + small star for checked items (no bold weight) */}
                 <div style={{
                   flex: 1, marginRight: "8px",
-                  fontSize: "13px", fontWeight: isChecked ? 400 : 300,
-                  fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.3,
+                  display: "flex", alignItems: "center", gap: "6px",
                 }}>
-                  {r["PRODUCT NAME"]}
+                  {isChecked && (
+                    <Star size={11} fill="currentColor" style={{ color: "hsl(var(--foreground))", flexShrink: 0 }} />
+                  )}
+                  <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                    {r["PRODUCT NAME"]}
+                  </span>
                 </div>
 
                 {/* Branch balance — Order.tsx-style colouring */}
