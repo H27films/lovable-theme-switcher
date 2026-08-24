@@ -264,7 +264,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           <button
             onClick={() => navigate("/simple/order", { state: { from: "office" } })}
             title="Order"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "order" ? 1 : 0.7, transform: hoveredTab === "order" ? "scale(1.08)" : "scale(1)" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "order" ? 1 : 0.7, transform: hoveredTab === "order" ? "scale(1.03)" : "scale(1)" }}
             onMouseEnter={() => setHoveredTab("order")}
             onMouseLeave={() => setHoveredTab(null)}
           >
@@ -281,7 +281,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           <button
             onClick={() => setShowSalesPanel(true)}
             title="Sales"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "sales" ? 1 : 0.7, transform: hoveredTab === "sales" ? "scale(1.08)" : "scale(1)" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "sales" ? 1 : 0.7, transform: hoveredTab === "sales" ? "scale(1.03)" : "scale(1)" }}
             onMouseEnter={() => setHoveredTab("sales")}
             onMouseLeave={() => setHoveredTab(null)}
           >
@@ -298,7 +298,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           <button
             onClick={() => setShowImportPanel(true)}
             title="Import"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "import" ? 1 : 0.7, transform: hoveredTab === "import" ? "scale(1.08)" : "scale(1)" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "import" ? 1 : 0.7, transform: hoveredTab === "import" ? "scale(1.03)" : "scale(1)" }}
             onMouseEnter={() => setHoveredTab("import")}
             onMouseLeave={() => setHoveredTab(null)}
           >
@@ -315,7 +315,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           <button
             onClick={() => setShowExportPanel(true)}
             title="Export"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "export" ? 1 : 0.7, transform: hoveredTab === "export" ? "scale(1.08)" : "scale(1)" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "export" ? 1 : 0.7, transform: hoveredTab === "export" ? "scale(1.03)" : "scale(1)" }}
             onMouseEnter={() => setHoveredTab("export")}
             onMouseLeave={() => setHoveredTab(null)}
           >
@@ -332,7 +332,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           <button
             onClick={() => navigate("/simple/search", { state: { from: "office" } })}
             title="Search"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "search" ? 1 : 0.7, transform: hoveredTab === "search" ? "scale(1.08)" : "scale(1)" }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "search" ? 1 : 0.7, transform: hoveredTab === "search" ? "scale(1.03)" : "scale(1)" }}
             onMouseEnter={() => setHoveredTab("search")}
             onMouseLeave={() => setHoveredTab(null)}
           >
