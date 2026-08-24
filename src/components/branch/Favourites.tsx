@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Search, X } from "lucide-react";
+import { Search, X, MoveLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { BranchKey } from "@/lib/branchSimple";
 
@@ -61,6 +61,9 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  /** Selection as of last load/save — lets Submit write only what actually changed */
+  const baselineRef = useRef<Set<number>>(new Set());
+
   const favCol = FAVOURITE_COLUMN[branch];
   const balCol = BALANCE_COLUMN[branch];
 
@@ -87,6 +90,7 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
     const initial = new Set<number>();
     list.forEach(r => { if (isTrue((r as any)[FAVOURITE_COLUMN[branch]])) initial.add(r.id); });
     setChecked(initial);
+    baselineRef.current = new Set(initial);
     setLoading(false);
   }, [branch]);
 
@@ -118,9 +122,12 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
   })();
 
   /**
-   * Submit: write the branch's favourite column for EVERY product in the list,
-   * matched by PRODUCT NAME — checked rows become "TRUE", unchecked become ""
-   * (never NULL). Two bulk updates keep it fast regardless of list size.
+   * Submit: write the branch's favourite column matched by PRODUCT NAME —
+   * checked rows become "TRUE", unchecked become "" (never NULL).
+   *
+   * Only rows whose tick state changed since load/save are written, and each
+   * write is chunked into small .in() batches — with ~1,500 products a single
+   * all-names request produces an oversized PostgREST URL that fails silently.
    */
   const handleSubmit = async () => {
     if (saving || loading) return;
@@ -128,34 +135,50 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
     setErrorMsg(null);
     setSuccessMsg(null);
     try {
-      const namesOf = (ids: Set<number>) =>
-        Array.from(new Set(
-          rows.filter(r => ids.has(r.id))
-            .map(r => String(r["PRODUCT NAME"] ?? "").trim())
-            .filter(Boolean)
-        ));
-      const checkedNames = namesOf(checked);
-      const uncheckedIds = new Set(rows.filter(r => !checked.has(r.id)).map(r => r.id));
-      const uncheckedNames = namesOf(uncheckedIds);
+      // Raw names exactly as stored (no transformation) so filters match
+      const nameById = new Map<number, string>();
+      rows.forEach(r => {
+        const n = String(r["PRODUCT NAME"] ?? "");
+        if (n.trim()) nameById.set(r.id, n);
+      });
 
-      if (checkedNames.length > 0) {
+      const addedNames = Array.from(checked)
+        .filter(id => !baselineRef.current.has(id))
+        .map(id => nameById.get(id))
+        .filter((n): n is string => !!n);
+      const removedNames = Array.from(baselineRef.current)
+        .filter(id => !checked.has(id))
+        .map(id => nameById.get(id))
+        .filter((n): n is string => !!n);
+
+      const totalChanges = addedNames.length + removedNames.length;
+
+      const chunk = <T,>(arr: T[], size: number): T[][] => {
+        const out: T[][] = [];
+        for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+        return out;
+      };
+      const BATCH = 80; // keeps each PostgREST URL well within limits
+
+      for (const batch of chunk(Array.from(new Set(addedNames)), BATCH)) {
         const { error } = await (supabase as any)
           .from("Favourites")
           .update({ [favCol]: "TRUE" })
-          .in("PRODUCT NAME", checkedNames);
+          .in("PRODUCT NAME", batch);
         if (error) throw error;
       }
-      if (uncheckedNames.length > 0) {
+      for (const batch of chunk(Array.from(new Set(removedNames)), BATCH)) {
         const { error } = await (supabase as any)
           .from("Favourites")
           .update({ [favCol]: "" })
-          .in("PRODUCT NAME", uncheckedNames);
+          .in("PRODUCT NAME", batch);
         if (error) throw error;
       }
 
-      // Sync local state so re-opening reflects the saved selection
+      // Sync local state + baseline so re-saving only sends new changes
+      baselineRef.current = new Set(checked);
       setRows(prev => prev.map(r => ({ ...r, [favCol]: checked.has(r.id) ? "TRUE" : "" })));
-      setSuccessMsg(`Favourites saved for ${BRANCH_LABEL[branch]}`);
+      setSuccessMsg(totalChanges === 0 ? "No changes to save" : `Saved · ${totalChanges} ${totalChanges === 1 ? "change" : "changes"}`);
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (e: any) {
       console.error("Favourites save failed:", e);
@@ -174,32 +197,36 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
     return Number(bal) <= 0 ? "hsl(0 84% 60%)" : "hsl(142 71% 45%)";
   };
 
-  return createPortal(
+    return createPortal(
     <div style={{
-      position: "fixed", inset: 0, zIndex: 2000,
+      position: "fixed", inset: 0, zIndex: 100000,
       height: "100dvh", overflow: "hidden",
       background: "hsl(var(--background))", color: "hsl(var(--foreground))",
       fontFamily: "Raleway, inherit",
       display: "flex", flexDirection: "column",
     }}>
-      {/* Top bar — same treatment as the ORDER header */}
+      {/* Top bar — title block left, long back arrow right (mirrors ORDER header) */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "24px 16px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
       }}>
         <div>
-          <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>
+          <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", lineHeight: 1.1 }}>
             FAVOURITES
+            <span style={{ fontSize: "0.65em", fontWeight: 300, letterSpacing: "0.06em" }}>
+              {loading ? "" : ` (${checked.size})`}
+            </span>
           </div>
-          <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginTop: "2px" }}>
-            {BRANCH_LABEL[branch]} · {loading ? "loading…" : `${checked.size} of ${rows.length} selected`}
+          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "0.1em", color: "hsl(var(--muted-foreground))", marginTop: "3px" }}>
+            {BRANCH_LABEL[branch].toUpperCase()}
           </div>
         </div>
         <button
           onClick={onClose}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}
+          aria-label="Back"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center", marginRight: "-6px" }}
         >
-          <X size={20} strokeWidth={1.5} />
+          <MoveLeft size={24} strokeWidth={1.3} />
         </button>
       </div>
 
@@ -266,7 +293,7 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
                 {/* Product name */}
                 <div style={{
                   flex: 1, marginRight: "8px",
-                  fontSize: "13px", fontWeight: isChecked ? 500 : 300,
+                  fontSize: "13px", fontWeight: isChecked ? 400 : 300,
                   fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.3,
                 }}>
                   {r["PRODUCT NAME"]}
