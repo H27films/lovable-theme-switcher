@@ -407,7 +407,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                    </div>
                    <div style={{ 
                      display: "grid", 
-                     gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", 
+                     gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", 
                      gap: "6px", 
                      paddingBottom: "8px", 
                      borderBottom: "0.5px solid hsl(var(--border))",
@@ -436,7 +436,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                       <div key={group.grn}>
                         <div
                           onClick={() => toggleGRN(group.grn)}
-                          style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "9px 0", borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)", cursor: "pointer", alignItems: "center" }}
+                          style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "9px 0", borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)", cursor: "pointer", alignItems: "center" }}
                         >
                           <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDate(group.date)}</div>
                           <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{group.grn}</div>
@@ -457,7 +457,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                                 ? (Number(matchedProduct["SUPPLIER PRICE"] ?? 0) * Math.abs(row.QTY ?? 0))
                                 : null;
                               return (
-                                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
+                                <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
                                   <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
                                   <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row["PRODUCT NAME"]}</div>
                                   {isOfficeGRN && (
