@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X, Search, ChevronDown, ChevronUp, Star } from "lucide-react";
+import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
@@ -79,8 +79,6 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   // ── EXPORT PANEL STATE ────────────────────────────────────
   const [showExportPanel, setShowExportPanel] = useState(false);
 
-  // ── Selected product (detail view; opened by tapping a Recent/GRN entry) ──
-  const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
 
   const BRANCH_NAME = "OFFICE";
 
@@ -129,69 +127,6 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         setLoadingLog(false);
       });
   }, []);
-
-// ── Product log (for selected product card) ──────────────────
-   const [productLog, setProductLog] = useState<LogRow[]>([]);
-   const [productLogLoading, setProductLogLoading] = useState(false);
-
-   useEffect(() => {
-     if (!selectedProduct) { setProductLog([]); return; }
-     setProductLogLoading(true);
-     (supabase as any)
-       .from("AllFileLog").select("*")
-       .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"].trim())
-       .order("DATE", { ascending: false }).limit(30)
-       .then(({ data }: any) => {
-         setProductLog(data || []);
-         setProductLogLoading(false);
-       });
-   }, [selectedProduct]);
-
-  // ── Favourite state ──────────────────────────────────────────
-  const [isFav, setIsFav] = useState(false);
-  useEffect(() => {
-    const v = selectedProduct ? (selectedProduct as any)["OFFICE FAVOURITE"] : null;
-    setIsFav(v === true || v === "TRUE" || v === "true" || v === 1);
-  }, [selectedProduct]);
-
-  const toggleFav = async () => {
-    if (!selectedProduct) return;
-    const newVal = !isFav;
-    setIsFav(newVal);
-    const updated = { ...selectedProduct, "OFFICE FAVOURITE": newVal ? "TRUE" : null } as any;
-    setSelectedProduct(updated);
-    setLocalProducts(prev => prev.map(p => p.id === selectedProduct.id ? { ...p, "OFFICE FAVOURITE": newVal ? "TRUE" : null } : p));
-    await (supabase as any).from("AllFileProducts")
-      .update({ "OFFICE FAVOURITE": newVal ? "TRUE" : null }).eq("id", selectedProduct.id);
-  };
-
-  // ── Usage form state ─────────────────────────────────────────
-  const [usageOpen, setUsageOpen] = useState(false);
-  const [usageType, setUsageType] = useState<"Personal Use" | "Expired">("Personal Use");
-  const [usageQty, setUsageQty] = useState("");
-  const [usageSubmitting, setUsageSubmitting] = useState(false);
-
-  const submitUsage = async () => {
-    if (!selectedProduct || !usageQty || isNaN(Number(usageQty)) || Number(usageQty) <= 0) return;
-    setUsageSubmitting(true);
-    const qty = Number(usageQty);
-    const currentBal = selectedProduct["OFFICE BALANCE"] ?? 0;
-    const newBal = currentBal - qty;
-    const today = new Date().toISOString().split("T")[0];
-    await (supabase as any).from("AllFileLog").insert({
-      BRANCH: "Office", "PRODUCT NAME": selectedProduct["PRODUCT NAME"],
-      QTY: -qty, TYPE: usageType, DATE: today, "OFFICE BALANCE": newBal,
-    });
-    await (supabase as any).from("AllFileProducts")
-      .update({ "OFFICE BALANCE": newBal }).eq("id", selectedProduct.id);
-    const updated = { ...selectedProduct, "OFFICE BALANCE": newBal };
-    setSelectedProduct(updated);
-    setUsageQty(""); setUsageOpen(false); setUsageSubmitting(false);
-const { data } = await (supabase as any).from("AllFileLog").select("*")
-       .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"].trim())
-       .order("DATE", { ascending: false }).limit(30);
-     setProductLog(data || []);
-  };
 
   // ── GRN groups for Recent section ────────────────────────────
   interface GrnGroup {
@@ -358,13 +293,7 @@ const { data } = await (supabase as any).from("AllFileLog").select("*")
 {/* Branch name header row */}
 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
   <button
-    onClick={() => {
-      if (selectedProduct) {
-        setSelectedProduct(null); setUsageOpen(false);
-      } else {
-        navigate("/simple/branches/admin");
-      }
-    }}
+    onClick={() => navigate("/simple/branches/admin")}
     style={{
       display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
       letterSpacing: "0.08em", color: "hsl(var(--foreground))",
@@ -459,142 +388,9 @@ const { data } = await (supabase as any).from("AllFileLog").select("*")
 
             
 
-            {/* Product detail */}
-            {selectedProduct && (
-              <div style={{ paddingTop: "20px" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                  <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
-                    {selectedProduct["PRODUCT NAME"]}
-                  </div>
-                  <button onClick={toggleFav} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: isFav ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", flexShrink: 0, marginTop: "4px" }}>
-                    <Star size={16} fill={isFav ? "currentColor" : "none"} />
-                  </button>
-                </div>
-                <div style={{ borderBottom: "0.5px solid hsl(var(--border))", margin: "16px 0" }} />
-
-                <div style={{ marginBottom: "20px" }}>
-                  <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Supplier</div>
-                  <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["SUPPLIER"] || "—"}</div>
-                </div>
-
-                {/* 2-col grid: prices + Office Balance + Store Room */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", columnGap: "12px", marginBottom: "20px" }}>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Supplier Price</div>
-                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["SUPPLIER PRICE"] != null ? `RM ${selectedProduct["SUPPLIER PRICE"].toFixed(2)}` : "—"}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Branch Price</div>
-                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["BRANCH PRICE"] != null ? `RM ${selectedProduct["BRANCH PRICE"].toFixed(2)}` : "—"}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Customer Price</div>
-                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["CUSTOMER PRICE"] != null ? `RM ${selectedProduct["CUSTOMER PRICE"].toFixed(2)}` : "—"}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Staff Price</div>
-                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["STAFF PRICE"] != null ? `RM ${selectedProduct["STAFF PRICE"].toFixed(2)}` : "—"}</div>
-                  </div>
-                  {/* Office Balance + USE chevron */}
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Office Balance</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE BALANCE"] ?? "—"}</div>
-                      <button
-                        onClick={() => { setUsageOpen(o => !o); setUsageQty(""); }}
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}
-                      >
-                        {usageOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                      </button>
-                    </div>
-                    {usageOpen && (
-                      <div style={{ marginTop: "10px", padding: "10px 12px", border: "0.5px solid hsl(var(--border))", borderRadius: "8px", background: "hsl(var(--background))" }}>
-                        <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
-                          {(["Personal Use", "Expired"] as const).map(t => (
-                            <button key={t} onClick={() => setUsageType(t)} style={{
-                              flex: 1, padding: "4px 0", fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
-                              letterSpacing: "0.04em", textTransform: "uppercase", cursor: "pointer", borderRadius: "4px",
-                              border: usageType === t ? "1px solid hsl(var(--foreground))" : "0.5px solid hsl(var(--border))",
-                              background: usageType === t ? "hsl(var(--foreground))" : "none",
-                              color: usageType === t ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
-                            }}>{t}</button>
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                          <input type="number" min="1" value={usageQty} onChange={e => setUsageQty(e.target.value)} placeholder="Qty"
-                            style={{ flex: 1, background: "none", border: "0.5px solid hsl(var(--border))", borderRadius: "4px", padding: "4px 8px", outline: "none", fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }} />
-                          <button onClick={() => setUsageOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}>
-                            <X size={14} />
-                          </button>
-                          <button onClick={submitUsage} disabled={usageSubmitting} style={{
-                            background: "none", border: "1px solid hsl(var(--destructive))", borderRadius: "4px",
-                            padding: "3px 10px", cursor: "pointer", fontSize: "13px", fontFamily: "Raleway, inherit",
-                            color: "hsl(var(--destructive))", opacity: usageSubmitting ? 0.5 : 1,
-                          }}>✓</button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {/* Store Room */}
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>Store Room</div>
-                    <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{selectedProduct["OFFICE SECTION"] || "—"}</div>
-                  </div>
-                </div>
-
-                {/* Branch balances */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "20px" }}>
-                  {([
-                    { label: "Boudoir", key: "BOUDOIR BALANCE" },
-                    { label: "Chic Nailspa", key: "CHIC NAILSPA BALANCE" },
-                    { label: "Nur Yadi", key: "NUR YADI BALANCE" },
-                  ] as { label: string; key: keyof OfficeProduct }[]).map(({ label, key }) => (
-                    <div key={label}>
-                      <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "4px" }}>{label}</div>
-                      <div style={{ fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{(selectedProduct as any)[key] ?? "—"}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Recent transactions for this product */}
-                <div style={{ borderTop: "0.5px solid #d8d0c8", paddingTop: "16px", paddingBottom: "24px" }}>
-                  <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", marginBottom: "10px" }}>Recent</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
-                    <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>Date</div>
-                    <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))" }}>GRN</div>
-                    <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))", textAlign: "center" }}>Supplier</div>
-                    <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))", textAlign: "center" }}>Qty</div>
-                    <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border))", textAlign: "right" }}>Bal</div>
-                    {productLogLoading && <div style={{ gridColumn: "1/-1", fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>Loading...</div>}
-                    {!productLogLoading && productLog.filter(r => r.GRN).length === 0 && (
-                      <div style={{ gridColumn: "1/-1", fontSize: "11px", color: "hsl(var(--muted-foreground))", padding: "8px 0" }}>No entries</div>
-                    )}
-                    {!productLogLoading && productLog.filter(r => r.GRN).map((row, i, arr) => {
-                      const isOffice = (row.BRANCH || "").toLowerCase() === "office";
-                      const qty = Math.abs(row.QTY);
-                      const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
-                      const cellStyle: React.CSSProperties = {
-                        fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit",
-                        padding: "6px 0", borderBottom: i < arr.length - 1 ? "0.5px solid hsl(var(--border) / 0.3)" : "none",
-                      };
-                      return (
-                        <React.Fragment key={row.id}>
-                          <div style={{ ...cellStyle, color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
-                          <div style={{ ...cellStyle, color: "hsl(var(--foreground))", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.GRN}</div>
-                          <div style={{ ...cellStyle, color: "hsl(var(--muted-foreground))", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
-                          <div style={{ ...cellStyle, color: "hsl(var(--foreground))", textAlign: "center" }}>{qtyDisplay}</div>
-                          <div style={{ ...cellStyle, color: "hsl(var(--muted-foreground))", textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Recent section */}
-            {!selectedProduct && (
-              <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
+            <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
                 <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                  <div style={{
                    position: "sticky",
@@ -662,10 +458,7 @@ const { data } = await (supabase as any).from("AllFileLog").select("*")
                               return (
                                 <div key={row.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
                                   <div style={{ visibility: "hidden", fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
-                                  <div
-                                    onClick={(e) => { e.stopPropagation(); if (matchedProduct) setSelectedProduct(matchedProduct); }}
-                                    style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: matchedProduct ? "pointer" : "default", textDecoration: "none" }}
-                                  >{row["PRODUCT NAME"]}</div>
+                                  <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row["PRODUCT NAME"]}</div>
                                   {isOfficeGRN && (
                                     <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                       {lineTotal !== null && lineTotal > 0 ? `RM ${lineTotal.toFixed(2)}` : "—"}
@@ -686,7 +479,6 @@ const { data } = await (supabase as any).from("AllFileLog").select("*")
                   })}
                 </div>
               </div>
-            )}
         </>
       </div>
 
