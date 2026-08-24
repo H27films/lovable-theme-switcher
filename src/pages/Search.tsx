@@ -550,11 +550,21 @@ const handleSelectProduct = (p: Product) => {
             <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "16px", paddingBottom: "24px" }}>
               <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Recent</div>
               <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
-                <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: `0.5px solid ${border}` }}>Date</div>
-                <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: `0.5px solid ${border}` }}>GRN</div>
-                <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: `0.5px solid ${border}`, textAlign: "center" }}>Supplier</div>
-                <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: `0.5px solid ${border}`, textAlign: "center" }}>Qty</div>
-                <div style={{ ...hdrStyle, paddingBottom: "6px", borderBottom: `0.5px solid ${border}`, textAlign: "right" }}>Bal</div>
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    display: "grid",
+                    gridTemplateColumns: "54px 86px 1fr 32px 38px",
+                    columnGap: "8px",
+                    borderBottom: `0.5px solid ${border}`,
+                  }}
+                >
+                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>Date</div>
+                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>GRN</div>
+                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Supplier</div>
+                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Qty</div>
+                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "right" }}>Bal</div>
+                </div>
                 
                 {productLogLoading && <div style={{ gridColumn: "1/-1", fontSize: "11px", color: dimColor, padding: "8px 0" }}>Loading...</div>}
                 {!productLogLoading && productLog.filter(r => r.GRN).length === 0 && (
@@ -566,16 +576,25 @@ const handleSelectProduct = (p: Product) => {
                   const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
                   const cellStyle: React.CSSProperties = {
                     fontSize: "11px", fontWeight: 300,
-                    padding: "6px 0", borderBottom: i < arr.length - 1 ? `0.5px solid ${border}` : "none",
+                    padding: "6px 0",
                   };
                   return (
-                    <React.Fragment key={row.id}>
+                    <div
+                      key={row.id}
+                      style={{
+                        gridColumn: "1 / -1",
+                        display: "grid",
+                        gridTemplateColumns: "54px 86px 1fr 32px 38px",
+                        columnGap: "8px",
+                        borderBottom: i < arr.length - 1 ? `0.5px solid ${border}` : "none",
+                      }}
+                    >
                       <div style={{ ...cellStyle, color: dimColor, whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
                       <div style={{ ...cellStyle, color: fg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.GRN}</div>
                       <div style={{ ...cellStyle, color: dimColor, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
                       <div style={{ ...cellStyle, color: fg, textAlign: "center" }}>{qtyDisplay}</div>
                       <div style={{ ...cellStyle, color: dimColor, textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
-                    </React.Fragment>
+                    </div>
                   );
                 })}
               </div>
