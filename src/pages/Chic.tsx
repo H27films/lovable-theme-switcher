@@ -40,7 +40,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchActive, setSearchActive] = useState(false);
     const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | null>(null);
-    const [logView, setLogView] = useState<"all" | "week">("all");
+    const [logView, setLogView] = useState<"all" | "week" | "orders">("all");
     const [usageEntriesCount, setUsageEntriesCount] = useState(0);
     const [pastOrdersExpanded, setPastOrdersExpanded] = useState(false);
     const [isSearchProduct, setIsSearchProduct] = useState(false);
@@ -262,6 +262,10 @@ const setLogViewToWeek = () => {
     setLogView("week");
 };
 
+const setLogViewToOrders = () => {
+    setLogView("orders");
+};
+
   const activeLog = useMemo(() => {
     const base = selectedProduct ? productLog : branchLog;
     if (!selectedProduct && logView === "week") {
@@ -419,9 +423,31 @@ const setLogViewToWeek = () => {
     >
       7 Days
     </button>
+    <button
+      onClick={setLogViewToOrders}
+      style={{
+        background: "none",
+        border: "none",
+        borderBottom: `2px solid ${logView === "orders" ? "hsl(var(--foreground))" : "transparent"}`,
+        cursor: "pointer",
+        padding: "0 0 6px 0",
+        fontSize: logView === "orders" ? "16px" : "14px",
+        fontWeight: logView === "orders" ? 400 : 300,
+        letterSpacing: "0.06em",
+        fontFamily: "Raleway, inherit",
+        color: "hsl(var(--foreground))",
+        opacity: logView === "orders" ? 1 : 0.6,
+        marginBottom: "-1px",
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => { if (logView !== "orders") e.currentTarget.style.opacity = "0.8"; }}
+      onMouseLeave={(e) => { if (logView !== "orders") e.currentTarget.style.opacity = "0.6"; }}
+    >
+      Orders
+    </button>
   </div>
 )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={chicConfig.displayName} />
+            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={chicConfig.displayName} branchLogName={BRANCH_LOG_NAME} />
           </div>
         )}
       </div>

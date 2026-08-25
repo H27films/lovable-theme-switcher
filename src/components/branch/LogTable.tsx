@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Check } from "lucide-react";
+import { X, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
 import { supabase } from "@/integrations/supabase/client";
 import { therapistPillStyle } from "@/lib/branchSimpleUtils";
@@ -12,14 +12,16 @@ interface LogTableProps {
   selectedProduct: any;
   onReverse: (row: LogRow) => void | Promise<void>;
   onUpdate?: (row: LogRow, updates: EditEntryUpdates) => void | Promise<void>;
-  viewType?: "all" | "week";
+  viewType?: "all" | "week" | "orders";
   /** Called when the edit-entry modal opens (true) or closes (false). */
   onEditModalChange?: (open: boolean) => void;
   /** Branch displayName (e.g. "BOUDOIR") used to fetch the live therapist list for the edit modal. */
   branchDisplayName: string;
+  /** The BRANCH value in AllFileLog used to filter the "orders" view (e.g. "Boudoir"). */
+  branchLogName?: string;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "" }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -27,6 +29,51 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
   const [editRow, setEditRow] = useState<LogRow | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const branchTherapists = useBranchTherapists(branchDisplayName);
+
+  // ── "orders" view state ─────────────────────────────────────────────
+  const [ordersData, setOrdersData] = useState<LogRow[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [expandedOrderGRNs, setExpandedOrderGRNs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (viewType !== "orders" || !branchLogName) return;
+    let cancelled = false;
+    setOrdersLoading(true);
+    (supabase as any)
+      .from("AllFileLog")
+      .select("*")
+      .eq("TYPE", "Order")
+      .eq("BRANCH", branchLogName)
+      .order("DATE", { ascending: false })
+      .limit(300)
+      .then(({ data }: { data: LogRow[] | null }) => {
+        if (cancelled) return;
+        setOrdersData(data || []);
+        setOrdersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [viewType, branchLogName]);
+
+  const toggleOrderGRN = (grn: string) => {
+    setExpandedOrderGRNs(prev => {
+      const next = new Set(prev);
+      next.has(grn) ? next.delete(grn) : next.add(grn);
+      return next;
+    });
+  };
+
+  const orderGroups = (() => {
+    const map = new Map<string, LogRow[]>();
+    for (const row of ordersData) {
+      const grn = row.GRN || `no-grn-${row.id}`;
+      if (!map.has(grn)) map.set(grn, []);
+      map.get(grn)!.push(row);
+    }
+    return Array.from(map.entries());
+  })();
+
+  const fmtOrderDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -135,7 +182,62 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editRow]);
 
-  return (
+  return viewType === "orders" ? (
+    <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
+        {/* Sticky header */}
+        <div style={{ position: "sticky", top: 0, zIndex: 10, display: "grid", gridTemplateColumns: "54px 1fr 48px 48px 22px", gap: "6px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))", background: "hsl(var(--background))" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
+          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>GRN</div>
+          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Items</div>
+          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center", visibility: expandedOrderGRNs.size > 0 ? "visible" : "hidden" }}>Bal</div>
+          <div />
+        </div>
+
+        {ordersLoading && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
+        )}
+        {!ordersLoading && orderGroups.length === 0 && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
+        )}
+
+        {!ordersLoading && orderGroups.map(([grn, grnRows]) => {
+          const isOpen = expandedOrderGRNs.has(grn);
+          const dateStr = fmtOrderDate(grnRows[0]?.DATE || "");
+          return (
+            <div key={grn}>
+              <div
+                onClick={() => toggleOrderGRN(grn)}
+                style={{ display: "grid", gridTemplateColumns: "54px 1fr 48px 48px 22px", gap: "6px", padding: "9px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.4)", cursor: "pointer", alignItems: "center" }}
+              >
+                <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{dateStr}</div>
+                <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{grn}</div>
+                <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{grnRows.length}</div>
+                <div />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
+                  {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </div>
+              </div>
+
+              {isOpen && (
+                <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
+                  {grnRows.map((row, idxRow) => (
+                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 48px 48px 22px", gap: "6px", padding: "5px 0", borderTop: idxRow > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
+                      <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{dateStr}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>{row["PRODUCT NAME"]}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(142 65% 38%)", textAlign: "center" }}>+{Math.abs(row.QTY ?? 0)}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                      <div />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ) : (
     <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {selectedProduct ? (
