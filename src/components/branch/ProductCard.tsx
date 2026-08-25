@@ -79,8 +79,8 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
 
       {(selectedProduct as any)[balanceKey] != null && (
         <div style={{ marginBottom: "12px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Balance</div>
-          <div style={{ fontSize: "18px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number((selectedProduct as any)[balanceKey]) <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Balance</div>
+          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number((selectedProduct as any)[balanceKey]) <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
             {(selectedProduct as any)[balanceKey]}
           </div>
         </div>
@@ -88,14 +88,14 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px" }}>
         <div>
-          <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Staff Price</div>
-          <div style={{ fontSize: "18px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Staff Price</div>
+          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {selectedProduct["STAFF PRICE"] != null ? `RM ${Number(selectedProduct["STAFF PRICE"]).toFixed(2)}` : "—"}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Customer Price</div>
-          <div style={{ fontSize: "18px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Customer Price</div>
+          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {selectedProduct["CUSTOMER PRICE"] != null ? `RM ${Number(selectedProduct["CUSTOMER PRICE"]).toFixed(2)}` : "—"}
           </div>
         </div>
@@ -104,20 +104,20 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px", marginTop: "12px" }}>
         <div>
-          <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Usage</div>
-          <div style={{ fontSize: "18px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Usage</div>
+          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {usage ?? "—"}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Period (WK)</div>
-          <div style={{ fontSize: "18px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Period (WK)</div>
+          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {period ?? "—"}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Per/Week</div>
-          <div style={{ fontSize: "18px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Per/Week</div>
+          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {perWeek ?? "—"}
           </div>
         </div>

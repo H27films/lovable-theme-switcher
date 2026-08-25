@@ -465,7 +465,11 @@ const setLogViewToOrders = () => {
         )}
       </div>
 
-      {!editModalOpen && (activePanel !== "ORDER" && !isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0)))) && (
+      {!editModalOpen && activePanel !== "ORDER" && (
+        (!isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0))))
+        ||
+        (isSearchProduct && !pastDataExpanded)
+      ) && (
         <BottomNav
           activePanel={activePanel}
           setActivePanel={setActivePanel}
@@ -476,7 +480,7 @@ const setLogViewToOrders = () => {
         />
       )}
 
-      {!editModalOpen && ((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct)) && (
+      {!editModalOpen && ((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct && pastDataExpanded)) && (
         <BottomNav
           activePanel={activePanel}
           setActivePanel={setActivePanel}
