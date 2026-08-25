@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranchFavourites } from "@/hooks/useBranchFavourites";
+import { useTabletMode } from "@/hooks/useTabletMode";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
@@ -24,6 +25,7 @@ interface BoudoirProps {
 
 const Boudoir = ({ onBack, onBackToMain, products: propProducts }: BoudoirProps) => {
   const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("boudoir");
+  const { tablet } = useTabletMode();
   const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
 
@@ -527,14 +529,16 @@ const setLogViewToOrders = () => {
       {/* Past Data bottom sheet panel (only when a product is selected) */}
       {selectedProduct && createPortal(
         <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0,
-          height: pastDataExpanded ? "50vh" : "48px",
+          position: "fixed", bottom: 0, left: 0,
+          width: tablet ? "76.92308vw" : "100vw",
+          height: pastDataExpanded ? (tablet ? "38.46154vh" : "50vh") : (tablet ? "36.923px" : "48px"),
           transition: "height 0.3s ease",
           background: "hsl(var(--background))",
           borderTop: pastDataExpanded ? "none" : "0.5px solid hsl(var(--border))",
           borderRadius: "12px 12px 0 0",
           display: "flex", flexDirection: "column",
           zIndex: 50,
+          zoom: tablet ? 1.3 : 1,
         }}>
           {pastDataExpanded ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, padding: "0 12px" }}>
