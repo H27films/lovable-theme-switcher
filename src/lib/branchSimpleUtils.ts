@@ -21,7 +21,7 @@ export const typeColumnValue = (type: string): string =>
 
 // Value saved to the AllFileLog "THERAPIST" column; blank when the placeholder is still selected
 export const therapistValue = (therapist: string): string | null =>
-  therapist === "THERAPIST" ? null : toTitleCase(therapist);
+  therapist === "THERAPIST" ? null : therapist.trim().toUpperCase();
 
 // ── Therapist pill colours ─────────────────────────────────────
 // Muted, distinct shades keyed by therapist name so each person is
