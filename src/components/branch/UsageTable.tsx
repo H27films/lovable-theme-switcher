@@ -132,7 +132,6 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
         const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
         const endingBalance = currentBalance + entry.qty;
-        // Customer / Staff selections are sales: capture the typed selling price as a number.
         const isSale = entry.type === "Customer" || entry.type === "Staff";
         const parsedPrice = Number.parseFloat(entry.sellingPrice);
         const sellingPrice = isSale && Number.isFinite(parsedPrice) ? Number(parsedPrice.toFixed(2)) : null;
@@ -164,7 +163,6 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         const { data } = await (supabase as any)
           .from("AllFileLog").select("*").eq("BRANCH", config.logBranchName)
           .order("DATE", { ascending: false }).limit(50);
-        // refresh shared products balance
         setProducts(prev => prev.map(p => {
           const entry = valid.find(e => e.productName === p["PRODUCT NAME"]);
           if (!entry) return p;
@@ -286,45 +284,54 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
           const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
           const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
           const projectedBalance = currentBalance + entry.qty;
+          const isSaleType = entry.type === "Customer" || entry.type === "Staff";
+          const saleQty = Math.abs(entry.qty);
+          const parsed = Number.parseFloat(entry.sellingPrice);
+          const totalSale = (Number.isFinite(parsed) ? parsed : 0) * saleQty;
+
           return (
-            <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
-                <span style={{ display: "flex", alignItems: "baseline", gap: "10px", flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", maxWidth: "60%" }}>{entry.productName}</span>
-                  <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: projectedBalance <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--green, 120 60% 40%))", flexShrink: 0 }}>{projectedBalance}</span>
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
-                  <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty - 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}>
-                    <ChevronLeft size={18} />
-                  </button>
-                  <span style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", minWidth: "34px", textAlign: "center" }}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
-                  <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}>
-                    <ChevronRight size={18} />
+            <div key={entry.id} style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+              {/* Product row */}
+              <div style={{ paddingTop: "12px", paddingBottom: "10px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <span style={{ display: "flex", alignItems: "baseline", gap: "10px", flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", maxWidth: "60%" }}>{entry.productName}</span>
+                    <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: projectedBalance <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--green, 120 60% 40%))", flexShrink: 0 }}>{projectedBalance}</span>
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
+                    <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty - 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}>
+                      <ChevronLeft size={18} />
+                    </button>
+                    <span style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", minWidth: "34px", textAlign: "center" }}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
+                    <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground))" }}>
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+                    <button onClick={() => cycleType(entry.id)} style={{ background: "#ffffff", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.type}</button>
+                    <button onClick={() => cycleTherapist(entry.id)} style={{ ...(entry.therapist !== "THERAPIST" ? therapistPillStyle(entry.therapist, therapists) : { background: "none", color: "hsl(var(--muted-foreground))" }), border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.therapist}</button>
+                    <button onClick={() => toggleNote(entry.id)} style={{ background: entry.noteOpen || entry.note.trim().length > 0 ? "hsl(24 35% 28%)" : "none", color: entry.noteOpen || entry.note.trim().length > 0 ? "#ffffff" : "hsl(var(--muted-foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>+NOTE</button>
+                  </div>
+                  <button onClick={() => setUsageEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "#ffffff", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(0 60% 35%)", flexShrink: 0, width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <X size={16} />
                   </button>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
-                  <button onClick={() => cycleType(entry.id)} style={{ background: "#ffffff", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.type}</button>
-                <button onClick={() => cycleTherapist(entry.id)} style={{ ...(entry.therapist !== "THERAPIST" ? therapistPillStyle(entry.therapist, therapists) : { background: "none", color: "hsl(var(--muted-foreground))" }), border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>{entry.therapist}</button>
-                  <button onClick={() => toggleNote(entry.id)} style={{ background: entry.noteOpen || entry.note.trim().length > 0 ? "hsl(24 35% 28%)" : "none", color: entry.noteOpen || entry.note.trim().length > 0 ? "#ffffff" : "hsl(var(--muted-foreground))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>+NOTE</button>
-                </div>
-                <button onClick={() => setUsageEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "#ffffff", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(0 60% 35%)", flexShrink: 0, width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <X size={16} />
-                </button>
-              </div>
-              {(entry.type === "Customer" || entry.type === "Staff") && (() => {
-                const saleQty = Math.abs(entry.qty);
-                const parsed = Number.parseFloat(entry.sellingPrice);
-                const totalSale = (Number.isFinite(parsed) ? parsed : 0) * saleQty;
-                const headerStyle: React.CSSProperties = { fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "capitalize" };
-                return (
-                  <div style={{ display: "grid", gridTemplateColumns: "90px 24px 64px 24px 120px", gap: "6px 12px", marginTop: "12px", paddingTop: "12px", borderTop: "0.5px solid hsl(var(--border))" }}>
-                    <span style={headerStyle}>Selling Price</span>
-                    <span />
-                    <span style={headerStyle}>Qty</span>
-                    <span />
-                    <span style={headerStyle}>Total Sale</span>
+
+              {/* Sale price strip — full bleed, no top border */}
+              {isSaleType && (
+                <div style={{
+                  display: "flex", alignItems: "center",
+                  marginLeft: "-12px", marginRight: "-12px",
+                  padding: "7px 16px",
+                  background: "hsl(var(--muted) / 0.5)",
+                  gap: "0",
+                }}>
+                  {/* Unit Price col */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", flex: "0 0 100px" }}>
+                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Unit Price</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -336,17 +343,29 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
                         setUsageEntries(prev => prev.map(x => x.id === entry.id ? { ...x, sellingPrice: v } : x));
                       }}
                       placeholder="0.00"
-                      style={{ width: "100%", background: "#ffffff", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", borderRadius: "8px", outline: "none", fontSize: "14px", fontWeight: 500, fontFamily: "Raleway, inherit", caretColor: "hsl(var(--foreground))", padding: "4px 8px", textAlign: "right" }}
+                      style={{ width: "80px", background: "hsl(var(--background))", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", borderRadius: "6px", outline: "none", fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", caretColor: "hsl(var(--foreground))", padding: "3px 6px", textAlign: "center" }}
                     />
-                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>×</span>
-                    <span style={{ fontSize: "15px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{saleQty}</span>
-                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>=</span>
-                    <span style={{ fontSize: "15px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "left" }}>RM {totalSale.toFixed(2)}</span>
                   </div>
-                );
-              })()}
+                  {/* × operator */}
+                  <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", flex: "0 0 20px", textAlign: "center", paddingTop: "14px" }}>×</span>
+                  {/* Qty col */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", flex: "0 0 40px" }}>
+                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Qty</span>
+                    <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: "1", padding: "4px 0" }}>{saleQty}</span>
+                  </div>
+                  {/* = operator */}
+                  <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", flex: "0 0 20px", textAlign: "center", paddingTop: "14px" }}>=</span>
+                  {/* Total col */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "3px", flex: 1 }}>
+                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Total Sale</span>
+                    <span style={{ fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: "1", padding: "4px 0" }}>RM {totalSale.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Note input */}
               {entry.noteOpen && (
-                <div style={{ marginTop: "12px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0 8px" }}>
+                <div style={{ paddingLeft: "0", paddingRight: "0", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0 8px" }}>
                   <input
                     type="text"
                     value={entry.note}
