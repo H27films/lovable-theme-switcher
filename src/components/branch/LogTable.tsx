@@ -19,9 +19,11 @@ interface LogTableProps {
   branchDisplayName: string;
   /** The BRANCH value in AllFileLog used to filter the "orders" view (e.g. "Boudoir"). */
   branchLogName?: string;
+  /** Optional element rendered in the last (therapist) header cell of the product view header. */
+  headerAction?: React.ReactNode;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "" }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -242,20 +244,24 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {selectedProduct ? (
           <div style={{ position: "sticky", top: 0, zIndex: 10, display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))", background: "hsl(var(--background))" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
-            {/* Therapist column has no header — the name is shown as a pill */}
-            <div />
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
+            {/* Therapist column has no header — the name is shown as a pill; headerAction (e.g. minimise chevron) sits here */}
+            {headerAction ? (
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{headerAction}</div>
+            ) : (
+              <div />
+            )}
           </div>
         ) : (
           <div style={{ position: "sticky", top: 0, zIndex: 10, display: "grid", gridTemplateColumns: "45px 1fr 28px 32px 70px", gap: "4px", paddingTop: "16px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))", background: "hsl(var(--background))" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>Product</div>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
-            <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>Product</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
           </div>
         )}
         <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }} onClick={() => setExpandedId(null)}>

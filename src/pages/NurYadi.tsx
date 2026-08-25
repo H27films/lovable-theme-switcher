@@ -375,6 +375,7 @@ const setLogViewToOrders = () => {
                 favouriteKey={nuryadiConfig.favouriteKey} 
                 onToggleFav={toggleFavourite}
                 isFavourite={isFav}
+                branchLogName={BRANCH_LOG_NAME}
               />
             )}
 {!selectedProduct && (

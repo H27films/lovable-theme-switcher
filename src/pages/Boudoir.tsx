@@ -43,6 +43,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     const [logView, setLogView] = useState<"all" | "week" | "orders">("all");
     const [usageEntriesCount, setUsageEntriesCount] = useState(0);
     const [pastOrdersExpanded, setPastOrdersExpanded] = useState(false);
+    const [pastDataExpanded, setPastDataExpanded] = useState(true);
     const [isSearchProduct, setIsSearchProduct] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
 
@@ -60,7 +61,12 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
 
    // Clear the search-product flag when the selected product is cleared
    useEffect(() => {
-     if (!selectedProduct) setIsSearchProduct(false);
+     if (!selectedProduct) {
+       setIsSearchProduct(false);
+       setPastDataExpanded(false);
+     } else {
+       setPastDataExpanded(true);
+     }
    }, [selectedProduct]);
 
    const resetSearchState = () => {
@@ -313,6 +319,10 @@ const setLogViewToOrders = () => {
   // Product list already added state (for grey-out) - not used in thin version
   const alreadyAdded = undefined;
 
+  const logTableElement = (
+    <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} />
+  );
+
   return (
     <div style={{
       position: "relative", height: "100dvh",
@@ -375,6 +385,7 @@ const setLogViewToOrders = () => {
                 favouriteKey={boudoirConfig.favouriteKey} 
                 onToggleFav={toggleFavourite}
                 isFavourite={isFav}
+                branchLogName={BRANCH_LOG_NAME}
               />
             )}
 {!selectedProduct && (
@@ -447,7 +458,7 @@ const setLogViewToOrders = () => {
     </button>
   </div>
 )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} />
+            {!selectedProduct && logTableElement}
           </div>
         )}
       </div>
@@ -513,7 +524,53 @@ const setLogViewToOrders = () => {
         document.body
       )}
 
-      
+      {/* Past Data bottom sheet panel (only when a product is selected) */}
+      {selectedProduct && createPortal(
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          height: pastDataExpanded ? "50vh" : "48px",
+          transition: "height 0.3s ease",
+          background: "hsl(var(--background))",
+          borderTop: pastDataExpanded ? "none" : "0.5px solid hsl(var(--border))",
+          borderRadius: "12px 12px 0 0",
+          display: "flex", flexDirection: "column",
+          zIndex: 50,
+        }}>
+          {pastDataExpanded ? (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, padding: "0 12px" }}>
+              <LogTable
+                rows={activeLog}
+                selectedProduct={selectedProduct}
+                onReverse={reverseRow}
+                onUpdate={updateLogRow}
+                viewType={selectedProduct ? "all" : logView}
+                onEditModalChange={setEditModalOpen}
+                branchDisplayName={boudoirConfig.displayName}
+                branchLogName={BRANCH_LOG_NAME}
+                headerAction={
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setPastDataExpanded(false); }}
+                    aria-label="Minimise past data"
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                }
+              />
+            </div>
+          ) : (
+            <div
+              onClick={() => setPastDataExpanded(true)}
+              style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "6px", paddingLeft: "16px", flex: 1, cursor: "pointer", color: "hsl(var(--foreground))" }}
+            >
+              <span style={{ fontFamily: "Raleway, inherit", fontWeight: 300, letterSpacing: "0.06em", fontSize: "14px" }}>Past Data</span>
+              <ChevronUp size={14} />
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+
     </div>
   );
 };
