@@ -21,9 +21,11 @@ interface LogTableProps {
   branchLogName?: string;
   /** Optional element rendered in the last (therapist) header cell of the product view header. */
   headerAction?: React.ReactNode;
+  /** Read-only mode: rows are not expandable, editable or deletable (used in compact past-data panels). */
+  readOnly?: boolean;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -282,7 +284,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             return (
               <div key={row.id} style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}>
                 <div
-                  onClick={(e) => { e.stopPropagation(); setExpandedId(expanded ? null : row.id); }}
+                  onClick={(e) => { if (readOnly) return; e.stopPropagation(); setExpandedId(expanded ? null : row.id); }}
                   style={{ 
                     display: "grid", 
                     gridTemplateColumns: gridCols, 
@@ -292,7 +294,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                     borderBottom: "none",
                     marginTop: dateSeparator ? "4px" : "0",  
                     alignItems: "start", 
-                    cursor: "pointer" 
+                    cursor: readOnly ? "default" : "pointer" 
                   }}
                 >
                   {selectedProduct ? (
@@ -350,7 +352,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                     </>
                   )}
                 </div>
-                {expanded && (
+                {expanded && !readOnly && (
                   <div style={{ padding: "0 0 16px" }}>
                     <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
                       {/* Edit / Delete buttons sit under the content columns (after the Date col): product view aligns under Qty (col 2), home view under Product (col 2) */}

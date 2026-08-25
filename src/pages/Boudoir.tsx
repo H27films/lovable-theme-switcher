@@ -550,11 +550,10 @@ const setLogViewToOrders = () => {
                 rows={activeLog}
                 selectedProduct={selectedProduct}
                 onReverse={reverseRow}
-                onUpdate={updateLogRow}
                 viewType={selectedProduct ? "all" : logView}
-                onEditModalChange={setEditModalOpen}
                 branchDisplayName={boudoirConfig.displayName}
                 branchLogName={BRANCH_LOG_NAME}
+                readOnly
                 headerAction={
                   <button
                     onClick={(e) => { e.stopPropagation(); setPastDataExpanded(false); }}
