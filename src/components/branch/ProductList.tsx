@@ -23,7 +23,7 @@ interface ProductListProps {
 const SectionHeader = ({ label }: { label: string }) => (
   <div style={{
     fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
-    color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit",
+    color: "#1a1a1a", fontFamily: "Raleway, inherit",
     paddingTop: "14px", paddingBottom: "4px",
   }}>{label}</div>
 );
@@ -61,7 +61,7 @@ const ProductRow = ({
           </div>
         </div>
         {bal != null && (
-          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number(bal) <= 0 ? "hsl(0 70% 40%)" : "hsl(var(--muted-foreground))", marginLeft: "8px", flexShrink: 0 }}>
+          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number(bal) > 0 ? "hsl(142 65% 30%)" : Number(bal) < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", marginLeft: "8px", flexShrink: 0 }}>
             {bal}
           </div>
         )}
@@ -101,7 +101,7 @@ export const ProductList = ({
   const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px", marginBottom: "44px" }}>
+    <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px", marginBottom: "44px", marginLeft: "-12px", marginRight: "-12px", paddingLeft: "12px", paddingRight: "12px" }}>
       {favourites.length > 0 && (
         <>
           <SectionHeader label={favouritesLabel} />
