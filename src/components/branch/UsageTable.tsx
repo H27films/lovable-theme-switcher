@@ -76,6 +76,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         therapist: "THERAPIST",
         note: "",
         noteOpen: false,
+        sellingPrice: "",
       }]);
     }
     setUsageSearch("");
@@ -131,6 +132,10 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
         const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
         const endingBalance = currentBalance + entry.qty;
+        // Customer / Staff selections are sales: capture the typed selling price as a number.
+        const isSale = entry.type === "Customer" || entry.type === "Staff";
+        const parsedPrice = Number.parseFloat(entry.sellingPrice);
+        const sellingPrice = isSale && Number.isFinite(parsedPrice) ? Number(parsedPrice.toFixed(2)) : null;
         const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": today,
           "PRODUCT NAME": entry.productName,
@@ -145,6 +150,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
           "ENDING BALANCE": endingBalance,
           "GRN": null,
           "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
+          ...(sellingPrice != null ? { "SELLING PRICE": sellingPrice } : {}),
         });
         if (logErr) { setUsageError(logErr.message || "Write failed"); hadError = true; break; }
         await (supabase as any).from("AllFileProducts")
@@ -307,6 +313,38 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
                   <X size={16} />
                 </button>
               </div>
+              {(entry.type === "Customer" || entry.type === "Staff") && (() => {
+                const saleQty = Math.abs(entry.qty);
+                const parsed = Number.parseFloat(entry.sellingPrice);
+                const totalSale = (Number.isFinite(parsed) ? parsed : 0) * saleQty;
+                const headerStyle: React.CSSProperties = { fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "capitalize" };
+                return (
+                  <div style={{ display: "grid", gridTemplateColumns: "90px 24px 64px 24px 120px", gap: "6px 12px", marginTop: "12px", paddingTop: "12px", borderTop: "0.5px solid hsl(var(--border))" }}>
+                    <span style={headerStyle}>Selling Price</span>
+                    <span />
+                    <span style={headerStyle}>Qty</span>
+                    <span />
+                    <span style={headerStyle}>Total Sale</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={entry.sellingPrice}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      onChange={e => {
+                        const v = e.target.value.replace(/[^0-9.]/g, "");
+                        setUsageEntries(prev => prev.map(x => x.id === entry.id ? { ...x, sellingPrice: v } : x));
+                      }}
+                      placeholder="0.00"
+                      style={{ width: "100%", background: "#ffffff", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", borderRadius: "8px", outline: "none", fontSize: "14px", fontWeight: 500, fontFamily: "Raleway, inherit", caretColor: "hsl(var(--foreground))", padding: "4px 8px", textAlign: "right" }}
+                    />
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>×</span>
+                    <span style={{ fontSize: "15px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{saleQty}</span>
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>=</span>
+                    <span style={{ fontSize: "15px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "left" }}>RM {totalSale.toFixed(2)}</span>
+                  </div>
+                );
+              })()}
               {entry.noteOpen && (
                 <div style={{ marginTop: "12px", borderBottom: "0.5px solid hsl(var(--border))", padding: "10px 0 8px" }}>
                   <input

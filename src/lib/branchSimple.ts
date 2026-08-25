@@ -42,6 +42,8 @@ export interface LogRow {
   "OFFICE BALANCE"?: number;
   /** Therapist name recorded on usage rows (null for orders/transfers) */
   THERAPIST?: string | null;
+  /** Selling price recorded on Customer / Staff sale rows (null otherwise). */
+  "SELLING PRICE"?: number | null;
 }
 
 export interface EntryLine {
@@ -52,6 +54,8 @@ export interface EntryLine {
   therapist: string;
   note: string;
   noteOpen: boolean;
+  /** Selling price typed by the user for Customer / Staff sales (kept as a string while typing, parsed to a number on submit). */
+  sellingPrice: string;
 }
 
 export interface CashRow {
