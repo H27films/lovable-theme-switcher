@@ -218,6 +218,20 @@ const handleSelectProduct = (p: Product) => {
     paddingBottom: 4,
   };
 
+  const sectionHeaderBlack: React.CSSProperties = {
+    ...sectionHeader,
+    color: "#1a1a1a",
+  };
+
+  // Colour the office balance shown in the dropdown rows:
+  // 0 -> black, negative -> red, positive -> dark green
+  const balanceColor = (b: number | null | undefined) => {
+    if (b == null) return dimColor;
+    if (b > 0) return "hsl(142 65% 30%)";
+    if (b < 0) return "hsl(0 70% 50%)";
+    return fg;
+  };
+
   // Dropdown logic — NO .slice() limits
   const dropdownContent = search.length > 0 && showDropdown ? (() => {
     const q = search.toLowerCase();
@@ -331,12 +345,15 @@ const handleSelectProduct = (p: Product) => {
           return (
             <div>
               {/* Suppliers */}
+              {matchedSuppliers.length > 0 && <div style={sectionHeaderBlack}>Suppliers</div>}
               {matchedSuppliers.map((supplier) => (
                 <div
                   key={`sup-${supplier}`}
                   onClick={() => handleSelectSupplier(supplier)}
                   style={{
-                    padding: "12px 0",
+                    padding: "12px 20px",
+                    marginLeft: "-20px",
+                    marginRight: "-20px",
                     borderBottom: `1px solid ${border}`,
                     cursor: "pointer",
                     display: "flex",
@@ -354,21 +371,26 @@ const handleSelectProduct = (p: Product) => {
               {/* Office Favourites */}
               {favourites.length > 0 && (
                 <>
-                  <div style={sectionHeader}>Office Favourites</div>
+                  <div style={sectionHeaderBlack}>Office Favourites</div>
                   {favourites.map((p, i) => (
                     <div
                       key={p.id}
                       onClick={() => handleSelectProduct(p)}
                       style={{
-                        padding: "12px 0",
+                        padding: "12px 20px",
+                        marginLeft: "-20px",
+                        marginRight: "-20px",
                         borderBottom: i === favourites.length - 1 ? "none" : `1px solid ${border}`,
                         cursor: "pointer",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ fontSize: "15px", fontWeight: 300, color: fg }}>{p["PRODUCT NAME"]}</div>
+                        <div style={{ fontSize: "15px", fontWeight: 300, color: fg, display: "flex", alignItems: "center", gap: "6px" }}>
+                          <Star size={12} fill="currentColor" style={{ color: "#000", flexShrink: 0 }} />
+                          <span>{p["PRODUCT NAME"]}</span>
+                        </div>
                         {p["OFFICE BALANCE"] != null && (
-                          <div style={{ fontSize: "14px", fontWeight: 300, color: dimColor, marginLeft: "8px", flexShrink: 0 }}>
+                          <div style={{ fontSize: "14px", fontWeight: 300, color: balanceColor(p["OFFICE BALANCE"]), marginLeft: "8px", flexShrink: 0 }}>
                             {p["OFFICE BALANCE"]}
                           </div>
                         )}
@@ -382,13 +404,15 @@ const handleSelectProduct = (p: Product) => {
               {/* Regular Products */}
               {regular.length > 0 && (
                 <>
-                  <div style={sectionHeader}>Products</div>
+                  <div style={sectionHeaderBlack}>Products</div>
                   {regular.map((p, i) => (
                     <div
                       key={p.id}
                       onClick={() => handleSelectProduct(p)}
                       style={{
-                        padding: "12px 0",
+                        padding: "12px 20px",
+                        marginLeft: "-20px",
+                        marginRight: "-20px",
                         borderBottom: i === regular.length - 1 ? "none" : `1px solid ${border}`,
                         cursor: "pointer",
                       }}
@@ -396,7 +420,7 @@ const handleSelectProduct = (p: Product) => {
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ fontSize: "15px", fontWeight: 300, color: fg }}>{p["PRODUCT NAME"]}</div>
                         {p["OFFICE BALANCE"] != null && (
-                          <div style={{ fontSize: "14px", fontWeight: 300, color: dimColor, marginLeft: "8px", flexShrink: 0 }}>
+                          <div style={{ fontSize: "14px", fontWeight: 300, color: balanceColor(p["OFFICE BALANCE"]), marginLeft: "8px", flexShrink: 0 }}>
                             {p["OFFICE BALANCE"]}
                           </div>
                         )}
@@ -416,7 +440,9 @@ const handleSelectProduct = (p: Product) => {
                       key={p.id}
                       onClick={() => handleSelectProduct(p)}
                       style={{
-                        padding: "12px 0",
+                        padding: "12px 20px",
+                        marginLeft: "-20px",
+                        marginRight: "-20px",
                         borderBottom: i === colours.length - 1 ? "none" : `1px solid ${border}`,
                         cursor: "pointer",
                       }}
@@ -424,7 +450,7 @@ const handleSelectProduct = (p: Product) => {
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ fontSize: "15px", fontWeight: 300, color: fg }}>{p["PRODUCT NAME"]}</div>
                         {p["OFFICE BALANCE"] != null && (
-                          <div style={{ fontSize: "14px", fontWeight: 300, color: dimColor, marginLeft: "8px", flexShrink: 0 }}>
+                          <div style={{ fontSize: "14px", fontWeight: 300, color: balanceColor(p["OFFICE BALANCE"]), marginLeft: "8px", flexShrink: 0 }}>
                             {p["OFFICE BALANCE"]}
                           </div>
                         )}
