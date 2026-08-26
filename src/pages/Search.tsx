@@ -574,7 +574,7 @@ const handleSelectProduct = (p: Product) => {
 
             {/* Recent transactions */}
             <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "16px", paddingBottom: "24px" }}>
-              <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Recent</div>
+              <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Past Data</div>
               <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
                 <div
                   style={{
@@ -600,6 +600,7 @@ const handleSelectProduct = (p: Product) => {
                   const isOffice = (row.BRANCH || "").toLowerCase() === "office";
                   const qty = Math.abs(row.QTY);
                   const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
+                  const qtyColor = isOffice ? "hsl(142 65% 30%)" : "hsl(0 70% 50%)";
                   const cellStyle: React.CSSProperties = {
                     fontSize: "11px", fontWeight: 300,
                     padding: "6px 0",
@@ -618,7 +619,7 @@ const handleSelectProduct = (p: Product) => {
                       <div style={{ ...cellStyle, color: dimColor, whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
                       <div style={{ ...cellStyle, color: fg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.GRN}</div>
                       <div style={{ ...cellStyle, color: dimColor, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
-                      <div style={{ ...cellStyle, color: fg, textAlign: "center" }}>{qtyDisplay}</div>
+                      <div style={{ ...cellStyle, color: qtyColor, textAlign: "center" }}>{qtyDisplay}</div>
                       <div style={{ ...cellStyle, color: dimColor, textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
                     </div>
                   );
