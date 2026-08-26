@@ -71,7 +71,7 @@ const ExportPanel = ({ onClose }: ExportPanelProps) => {
           const qty = Number(row["QTY"] || 0);
           const isOfficeRow = branch === "OFFICE";
           let type = "", subType = "", productSold = "";
-
+        
           if (rawType === "Order") {
             type = "ORDER";
           } else if (rawType.toLowerCase() === "transfer") {
@@ -83,9 +83,9 @@ const ExportPanel = ({ onClose }: ExportPanelProps) => {
           } else {
             type = "USAGE";
             if (rawType === "Customer") productSold = "CUSTOMER";
-            else if (rawType === "Staff")    productSold = "STAFF";
+            else if (rawType === "Staff") productSold = "STAFF";
           }
-
+        
           const dateVal = toExcelDate(row["DATE"]);
           return {
             "PRODUCT NAME": row["PRODUCT NAME"],
@@ -97,11 +97,12 @@ const ExportPanel = ({ onClose }: ExportPanelProps) => {
             "PRODUCT SOLD": productSold,
             "THERAPIST": row["THERAPIST"] || "",
             "NOTES": row["NOTES"] || "",
+            "SELLING PRICE": row["SELLING PRICE"] ?? "",
           };
         });
-
+        
         const ws = XLSX.utils.json_to_sheet(transformedData, {
-          header: ["PRODUCT NAME","DATE","BRANCH","TYPE","QTY","SUB TYPE","PRODUCT SOLD","THERAPIST","NOTES"],
+          header: ["PRODUCT NAME","DATE","BRANCH","TYPE","QTY","SUB TYPE","PRODUCT SOLD","THERAPIST","NOTES","SELLING PRICE"],
         });
         // Format DATE column as dd/mm/yyyy
         const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
