@@ -39,6 +39,18 @@ const hdrStyle: React.CSSProperties = {
   letterSpacing: "0.08em",
 };
 
+// Y-axis tick rendered flush-left so the labels line up with the branch title above each chart.
+// NOTE: Recharts discards `tickFormatter` for function-component ticks, so the "k" formatting
+// is applied here directly (payload.value is the raw tick value).
+const LeftAlignedYTick = ({ y, payload }: any) => {
+  const v = payload.value;
+  return (
+    <text x={0} y={y} dy={4} textAnchor="start" fill="#888" fontSize={10} fontWeight={300} fontFamily="Raleway, inherit">
+      {v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`}
+    </text>
+  );
+};
+
 const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const navigate = useNavigate();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
@@ -564,7 +576,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             </div>
                           )}
                           <ResponsiveContainer width="100%" height={160}>
-                          <BarChart data={data} barCategoryGap="25%" margin={{ top: 4, right: 4, left: 16, bottom: 0 }}>
+                          <BarChart data={data} barCategoryGap="25%" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
                               dataKey="week"
@@ -576,7 +588,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                               ticks={yTicks}
                               domain={[0, topTick]}
                               interval={0}
-                              tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "#888" }}
+                              tick={LeftAlignedYTick}
                               axisLine={false}
                               tickLine={false}
                               tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`}
@@ -596,7 +608,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                                 }
                               }}
                             />
-                            {weeklyAvg !== null && (
+                            {salesViewMode === "week" && weeklyAvg !== null && (
                               <ReferenceLine y={weeklyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
                             )}
                           </BarChart>
