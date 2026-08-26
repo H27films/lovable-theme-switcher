@@ -476,8 +476,7 @@ const handleSelectProduct = (p: Product) => {
                 <Star size={16} fill={isFav ? "currentColor" : "none"} />
               </button>
             </div>
-            <div style={{ borderBottom: `0.5px solid ${border}`, margin: "16px 0" }} />
-
+            <div style={{ height: "20px" }} />
             {/* Supplier */}
             <div style={{ marginBottom: "20px" }}>
               <div style={{ fontSize: "14px", fontWeight: 700, color: fg, marginBottom: "6px" }}>Supplier</div>
@@ -557,7 +556,7 @@ const handleSelectProduct = (p: Product) => {
             </div>
 
             {/* Branch balances */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "0" }}>
               {([
                 { label: "Boudoir", key: "BOUDOIR BALANCE" },
                 { label: "Chic Nailspa", key: "CHIC NAILSPA BALANCE" },
@@ -572,8 +571,8 @@ const handleSelectProduct = (p: Product) => {
               ))}
             </div>
 
-            {/* Recent transactions */}
-            <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "16px", paddingBottom: "24px" }}>
+            {/* Past Data transactions */}
+            <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "20px", paddingBottom: "20px" }}>
               <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Past Data</div>
               <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
                 <div
