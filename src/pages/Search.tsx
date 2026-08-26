@@ -574,7 +574,7 @@ const handleSelectProduct = (p: Product) => {
 
             {/* Recent transactions */}
             <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "16px", paddingBottom: "24px" }}>
-              <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Past Data</div>
+              <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Past Data</div>
               <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
                 <div
                   style={{
