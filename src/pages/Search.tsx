@@ -556,7 +556,7 @@ const handleSelectProduct = (p: Product) => {
             </div>
 
             {/* Branch balances */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", paddingBottom: "20px" }}>
               {([
                 { label: "Boudoir", key: "BOUDOIR BALANCE" },
                 { label: "Chic Nailspa", key: "CHIC NAILSPA BALANCE" },
