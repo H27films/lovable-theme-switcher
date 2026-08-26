@@ -320,48 +320,55 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
                 </div>
               </div>
 
-              {/* Sale price strip — full bleed, no top border */}
-              {isSaleType && (
-                <div style={{
-                  display: "flex", alignItems: "center",
-                  marginLeft: "-12px", marginRight: "-12px",
-                  padding: "7px 16px",
-                  background: "hsl(var(--muted) / 0.5)",
-                  gap: "0",
-                }}>
-                  {/* Unit Price col */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", flex: "0 0 100px" }}>
-                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Unit Price</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={entry.sellingPrice}
-                      onFocus={handleInputFocus}
-                      onBlur={handleInputBlur}
-                      onChange={e => {
-                        const v = e.target.value.replace(/[^0-9.]/g, "");
-                        setUsageEntries(prev => prev.map(x => x.id === entry.id ? { ...x, sellingPrice: v } : x));
-                      }}
-                      placeholder="0.00"
-                      style={{ width: "80px", background: "hsl(var(--background))", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", borderRadius: "6px", outline: "none", fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", caretColor: "hsl(var(--foreground))", padding: "3px 6px", textAlign: "center" }}
-                    />
-                  </div>
-                  {/* × operator */}
-                  <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", flex: "0 0 20px", textAlign: "center", paddingTop: "14px" }}>×</span>
-                  {/* Qty col */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", flex: "0 0 40px" }}>
-                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Qty</span>
-                    <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: "1", padding: "4px 0" }}>{saleQty}</span>
-                  </div>
-                  {/* = operator */}
-                  <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", flex: "0 0 20px", textAlign: "center", paddingTop: "14px" }}>=</span>
-                  {/* Total col */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "3px", flex: 1 }}>
-                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Total Sale</span>
-                    <span style={{ fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: "1", padding: "4px 0" }}>RM {totalSale.toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
+{isSaleType && (
+  <div style={{
+    display: "flex",
+    alignItems: "flex-end",
+    marginLeft: "-12px",
+    marginRight: "-12px",
+    background: "hsl(var(--muted) / 0.5)",
+    padding: "10px 16px",
+    gap: "12px",
+  }}>
+
+    {/* Unit Price */}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+      <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Unit Price</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={entry.sellingPrice}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
+        onChange={e => {
+          const v = e.target.value.replace(/[^0-9.]/g, "");
+          setUsageEntries(prev => prev.map(x => x.id === entry.id ? { ...x, sellingPrice: v } : x));
+        }}
+        placeholder="0.00"
+        style={{ width: "90px", background: "hsl(var(--background))", color: "hsl(var(--foreground))", border: "0.5px solid hsl(var(--border))", borderRadius: "6px", outline: "none", fontSize: "14px", fontWeight: 500, fontFamily: "Raleway, inherit", caretColor: "hsl(var(--foreground))", padding: "5px 8px", textAlign: "center" }}
+      />
+    </div>
+
+    {/* × */}
+    <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", paddingBottom: "7px" }}>×</span>
+
+    {/* Qty */}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+      <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Qty</span>
+      <span style={{ fontSize: "14px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", padding: "5px 0" }}>{saleQty}</span>
+    </div>
+
+    {/* = */}
+    <span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", paddingBottom: "7px" }}>=</span>
+
+    {/* Total Sale */}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+      <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>Total Sale</span>
+      <span style={{ fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", padding: "5px 0" }}>RM {totalSale.toFixed(2)}</span>
+    </div>
+
+  </div>
+)}
 
               {/* Note input */}
               {entry.noteOpen && (
