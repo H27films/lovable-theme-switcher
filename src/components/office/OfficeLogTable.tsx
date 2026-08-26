@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sortLogByBalance } from "@/lib/branchSimpleUtils";
 
 interface OfficeProduct {
   id: number;
@@ -62,12 +63,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
       .order("DATE", { ascending: false })
       .limit(300)
       .then(({ data }: { data: LogRow[] | null }) => {
-        const sorted = (data || []).sort((a, b) => {
-          if (a.DATE !== b.DATE) return a.DATE > b.DATE ? -1 : 1;
-          const aOff = a.BRANCH === "Office" ? 1 : 0;
-          const bOff = b.BRANCH === "Office" ? 1 : 0;
-          return aOff - bOff;
-        });
+        const sorted = sortLogByBalance(data || [], r => r["OFFICE BALANCE"]);
         setLogRows(sorted);
         setLoadingLog(false);
       });

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBranchFavourites } from "@/hooks/useBranchFavourites";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { chicConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
-import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, type UsageType } from "@/lib/branchSimpleUtils";
+import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, sortLogByBalance, sortBranchLogTable, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { BranchHeader } from "@/components/branch/BranchHeader";
 import { BottomNav } from "@/components/branch/BottomNav";
@@ -95,12 +95,10 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      setSearchMode("idle");
    };
 
-  // Sort log: DATE desc; within the same date, most recent entry first (highest id)
-  const sortLog = (rows: LogRow[]) => [...rows].sort((a, b) => {
-    const dateDiff = b.DATE.localeCompare(a.DATE);
-    if (dateDiff !== 0) return dateDiff;
-    return b.id - a.id;
-  });
+  // Past Data (product search): DATE desc; within the same date, lowest ending balance first
+  const sortLog = (rows: LogRow[]) => sortLogByBalance(rows, r => r["ENDING BALANCE"]);
+  // Main log table: DATE desc; Order type first then other types; A–Z by product name
+  const sortBranchLog = (rows: LogRow[]) => sortBranchLogTable(rows);
 
   // Product fetch
   useEffect(() => {
@@ -135,7 +133,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
        .eq("BRANCH", BRANCH_LOG_NAME)
        .order("DATE", { ascending: false })
        .limit(200);
-     setBranchLog(sortLog(data || []));
+     setBranchLog(sortBranchLog(data || []));
    };
 
 // Product log fetch

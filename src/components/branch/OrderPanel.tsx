@@ -280,8 +280,13 @@ export const OrderPanel = ({
     const groups: { key: string; date: string; grn: string; rows: LogRow[] }[] = [];
     seen.forEach((rows, key) => {
       const [date, grn] = key.split("__");
+      // Products inside an expanded order are listed A–Z by product name
+      rows.sort((a, b) =>
+        String(a["PRODUCT NAME"] ?? "").localeCompare(String(b["PRODUCT NAME"] ?? ""), undefined, { sensitivity: "base" })
+      );
       groups.push({ key, date, grn, rows });
     });
+    // Past Orders groups: newest date first
     return groups.sort((a, b) => b.date.localeCompare(a.date));
   }, [branchLog]);
 
@@ -318,7 +323,7 @@ return createPortal(
 <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", textTransform: "uppercase" }}>
       Enter Today's Order
     </span>
-<span style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textTransform: "uppercase" }}>
+<span style={{ fontSize: "15px", fontWeight: 400, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
       {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
     </span>
         </div>

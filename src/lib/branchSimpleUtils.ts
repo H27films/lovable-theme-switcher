@@ -80,6 +80,56 @@ export const isYes = (v: any): boolean =>
   (typeof v === "string" &&
     (v.toUpperCase() === "YES" || v.toUpperCase() === "TRUE"));
 
+/**
+ * Canonical ordering for every log / past-data table:
+ * 1. newest date first (DATE descending)
+ * 2. within the same date, lowest ending balance first
+ * 3. final tiebreak: newest inserted row first (highest id)
+ * `getBalance` supplies the row's ending-balance value ("ENDING BALANCE" for
+ * branch logs, "OFFICE BALANCE" for office views); rows with a missing or
+ * non-numeric balance sort last within their date group. Returns a sorted copy.
+ */
+export const sortLogByBalance = <T,>(
+  rows: T[],
+  getBalance: (row: T) => number | null | undefined
+): T[] =>
+  [...rows].sort((a, b) => {
+    const dateCmp = String((b as any).DATE ?? "").localeCompare(String((a as any).DATE ?? ""));
+    if (dateCmp !== 0) return dateCmp;
+    const toNum = (v: number | null | undefined) =>
+      typeof v === "number" && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY;
+    const balDiff = toNum(getBalance(a)) - toNum(getBalance(b));
+    if (balDiff !== 0) return balDiff;
+    const idA = (a as any).id;
+    const idB = (b as any).id;
+    if (typeof idA === "number" && typeof idB === "number") return idB - idA;
+    return String(idB ?? "").localeCompare(String(idA ?? ""));
+  });
+
+/**
+ * Ordering for the main branch log table (Boudoir / Chic / Nur Yadi):
+ * 1. newest date first (DATE descending)
+ * 2. within the same date, "Order" rows first, all other types after
+ * 3. within each of those two groups, A–Z by product name
+ * 4. final tiebreak: newest inserted row first (highest id)
+ * Returns a sorted copy.
+ */
+export const sortBranchLogTable = <T,>(rows: T[]): T[] =>
+  [...rows].sort((a, b) => {
+    const dateCmp = String((b as any).DATE ?? "").localeCompare(String((a as any).DATE ?? ""));
+    if (dateCmp !== 0) return dateCmp;
+    const aOrder = (a as any).TYPE === "Order" ? 0 : 1;
+    const bOrder = (b as any).TYPE === "Order" ? 0 : 1;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    const nameCmp = String((a as any)["PRODUCT NAME"] ?? "")
+      .localeCompare(String((b as any)["PRODUCT NAME"] ?? ""), undefined, { sensitivity: "base" });
+    if (nameCmp !== 0) return nameCmp;
+    const idA = (a as any).id;
+    const idB = (b as any).id;
+    if (typeof idA === "number" && typeof idB === "number") return idB - idA;
+    return String(idB ?? "").localeCompare(String(idA ?? ""));
+  });
+
 export const makeIsFavourite =
   (favouriteKey: string) =>
   (p: any): boolean =>

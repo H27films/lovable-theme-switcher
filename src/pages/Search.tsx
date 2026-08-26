@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Building2, Search as SearchIcon, X, Star, ChevronUp, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { sortLogByBalance } from "@/lib/branchSimpleUtils";
 
 interface Product {
   id: number;
@@ -44,6 +45,9 @@ const fmtDate = (d: string) => {
     return d;
   }
 };
+
+// Past Data ordering: newest date first; within the same date, lowest ending balance first
+const sortPastData = (rows: ProductLog[]) => sortLogByBalance(rows, r => r["OFFICE BALANCE"]);
 
 export default function Search({ onBack }: SearchProps) {
   const navigate = useNavigate();
@@ -116,7 +120,7 @@ const fetchProductLog = useCallback(async (productName: string) => {
       .order("DATE", { ascending: false })
       .limit(30);
     if (error) throw error;
-    setProductLog(data || []);
+    setProductLog(sortPastData(data || []));
   } catch (err) {
     console.error("Error fetching product log:", err);
     setProductLog([]);
@@ -169,7 +173,7 @@ const submitUsage = async () => {
     .eq("PRODUCT NAME", selectedProduct["PRODUCT NAME"])
     .order("DATE", { ascending: false })
     .limit(30);
-  setProductLog(data || []);
+  setProductLog(sortPastData(data || []));
 };
 
 const handleSelectProduct = (p: Product) => {
