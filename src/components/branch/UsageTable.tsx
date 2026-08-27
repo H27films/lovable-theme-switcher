@@ -24,6 +24,37 @@ interface UsageTableProps {
   nameOf?: (p: any) => string;
 }
 
+// ── Draft persistence (localStorage) ────────────────────────────
+// In-progress usage entries survive navigating away / closing the panel.
+// Keyed per branch ("boudoir" | "chic" | "nuryadi") + version suffix so a
+// schema change can never load stale shapes. Cleared automatically on
+// successful submit (entries reset to [], which overwrites the stored draft).
+const usageStorageKey = (branchKey: string) => `usageEntries:${branchKey}:v1`;
+
+const isValidEntryLine = (e: any): e is EntryLine =>
+  e != null &&
+  typeof e === "object" &&
+  typeof e.id === "number" &&
+  typeof e.productName === "string" &&
+  typeof e.type === "string" &&
+  typeof e.qty === "number" &&
+  typeof e.therapist === "string" &&
+  typeof e.note === "string" &&
+  typeof e.noteOpen === "boolean" &&
+  typeof e.sellingPrice === "string";
+
+const loadStoredEntries = (branchKey: string): EntryLine[] => {
+  try {
+    const raw = localStorage.getItem(usageStorageKey(branchKey));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isValidEntryLine);
+  } catch {
+    return [];
+  }
+};
+
 export const UsageTable = ({ config, products, setProducts, refreshBranchLog, selectedProduct, setSelectedProduct, onBack, onSuccess, onUsageEntriesChange, isFav: propIsFav, isColour: propIsColour, nameOf: propNameOf }: UsageTableProps) => {
   const checkFav = propIsFav || makeIsFavourite(config.favouriteKey);
   const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
@@ -32,7 +63,8 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const { tablet } = useTabletMode();
 
-  const [usageEntries, setUsageEntries] = useState<EntryLine[]>([]);
+  // Restore any in-progress draft from localStorage (per branch), then save on every change
+  const [usageEntries, setUsageEntries] = useState<EntryLine[]>(() => loadStoredEntries(config.key));
   const [usageSearch, setUsageSearch] = useState("");
   const [showUsageDropdown, setShowUsageDropdown] = useState(false);
   const [usageSubmitting, setUsageSubmitting] = useState(false);
@@ -43,6 +75,14 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   useEffect(() => {
     onUsageEntriesChange(usageEntries.length);
   }, [usageEntries, onUsageEntriesChange]);
+
+  // Persist the draft so it survives leaving the page / closing the panel.
+  // Submitting resets entries to [], which also clears the stored draft.
+  useEffect(() => {
+    try {
+      localStorage.setItem(usageStorageKey(config.key), JSON.stringify(usageEntries));
+    } catch {}
+  }, [usageEntries, config.key]);
 
   const uniqueProducts = useMemo(() => {
     const map = new Map<string, OfficeProduct>();
