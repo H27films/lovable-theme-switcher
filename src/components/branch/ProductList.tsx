@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect, useRef, useSyncExternalStore } from "react";
 import { Star } from "lucide-react";
 import { isYes } from "@/lib/branchSimpleUtils";
 import { type OfficeProduct } from "@/lib/branchSimple";
+import { dropdownNavChannelStore } from "@/hooks/useDropdownKeyboardNavigation";
+import { ResultRow } from "./ResultRow";
 
 interface ProductListProps {
   products: any[];
@@ -29,18 +31,20 @@ const SectionHeader = ({ label }: { label: string }) => (
 );
 
 const ProductRow = ({
-  p, last, isFav, balanceKey, onSelect, alreadyAdded, nameOf,
+  p, last, isFav, balanceKey, onSelect, alreadyAdded, nameOf, isActive,
 }: {
   p: any; last: boolean; isFav: (p: any) => boolean;
   balanceKey: keyof OfficeProduct; onSelect: (p: any) => void; alreadyAdded?: Set<string>;
-  nameOf?: (p: any) => string;
+  nameOf?: (p: any) => string; isActive?: boolean;
 }) => {
   const added = alreadyAdded?.has(p["PRODUCT NAME"]);
   const bal = (p as any)[balanceKey];
   return (
-    <div
-      key={p.id}
-      onClick={() => !added && onSelect(p)}
+    <ResultRow
+      isActive={isActive}
+      onSelect={() => {
+        if (!added) onSelect(p);
+      }}
       style={{
         padding: "12px 0",
         borderBottom: last ? "none" : "0.5px solid hsl(var(--border))",
@@ -66,7 +70,7 @@ const ProductRow = ({
           </div>
         )}
       </div>
-    </div>
+    </ResultRow>
   );
 };
 
@@ -74,11 +78,11 @@ export const ProductList = ({
   products, isFav, balanceKey, favouritesLabel, search, showDropdown, onSelect, alreadyAdded,
   isColour, allowedIds, nameOf,
 }: ProductListProps) => {
-  if (!showDropdown) return null;
-
-  const q = search.toLowerCase();
+  // NOTE: every hook runs before the `showDropdown` early return below.
   const colourOf = isColour ?? ((p: any) => isYes(p["Colour"]));
   const getName = nameOf ?? ((p: any) => p["PRODUCT NAME"]);
+
+  const q = search.toLowerCase();
   const matchedRaw = products.filter(p =>
     getName(p)?.toLowerCase().includes(q) &&
     (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1) &&
@@ -100,26 +104,67 @@ export const ProductList = ({
   const regular    = allMatched.filter(p => !isFav(p) && !colourOf(p)).sort(byName);
   const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0;
 
+  // Latest items / callbacks for the sibling bridge — kept in refs so the
+  // registration effect never churns (the getter reads them live).
+  const flatItemsRef = useRef<any[]>([]);
+  flatItemsRef.current = [...favourites, ...regular, ...colours];
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+  const alreadyAddedRef = useRef(alreadyAdded);
+  alreadyAddedRef.current = alreadyAdded;
+
+  // Register with the <Search/> input's keyboard bridge while visible.
+  useEffect(() => {
+    if (!showDropdown) return;
+    const channel = {
+      get items() {
+        return flatItemsRef.current;
+      },
+      selectAt: (index: number) => {
+        const item = flatItemsRef.current[index];
+        if (!item) return;
+        if (alreadyAddedRef.current?.has(item["PRODUCT NAME"])) return;
+        onSelectRef.current(item);
+      },
+    };
+    dropdownNavChannelStore.publish(channel);
+    return () => dropdownNavChannelStore.unpublish(channel);
+  }, [showDropdown]);
+
+  // Current keyboard highlight pushed down by Search.
+  const navSnapshot = useSyncExternalStore(
+    dropdownNavChannelStore.subscribe,
+    dropdownNavChannelStore.getSnapshot
+  );
+  const activeIdx = navSnapshot.activeIndex;
+
+  if (!showDropdown) return null;
+
+  // Absolute row positions for highlight comparison (render order:
+  // Favourites → Products → Colours).
+  const regularStart = favourites.length;
+  const coloursStart = favourites.length + regular.length;
+
   return (
     <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px", marginBottom: "44px", marginLeft: "-12px", marginRight: "-12px", paddingLeft: "12px", paddingRight: "12px" }}>
       {favourites.length > 0 && (
         <>
           <SectionHeader label={favouritesLabel} />
           {favourites.map((p, i) => (
-            <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />
+            <ProductRow key={p.id} p={p} last={i === favourites.length - 1} isActive={activeIdx === i} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />
           ))}
         </>
       )}
       {regular.length > 0 && (
         <>
           <SectionHeader label="Products" />
-          {regular.map((p, i) => <ProductRow key={p.id} p={p} last={i === regular.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />)}
+          {regular.map((p, i) => <ProductRow key={p.id} p={p} last={i === regular.length - 1} isActive={activeIdx === regularStart + i} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />)}
         </>
       )}
       {colours.length > 0 && (
         <>
           <SectionHeader label="Colours" />
-          {colours.map((p, i) => <ProductRow key={p.id} p={p} last={i === colours.length - 1} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />)}
+          {colours.map((p, i) => <ProductRow key={p.id} p={p} last={i === colours.length - 1} isActive={activeIdx === coloursStart + i} isFav={isFav} balanceKey={balanceKey} onSelect={onSelect} alreadyAdded={alreadyAdded} nameOf={nameOf} />)}
         </>
       )}
       {!hasResults && (

@@ -7,6 +7,8 @@ import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { type BranchConfig, type OfficeProduct, type EntryLine } from "@/lib/branchSimple";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { makeIsFavourite, isYes, USAGE_TYPES, typeColumnValue, usagePillValue, therapistValue, therapistPillStyle } from "@/lib/branchSimpleUtils";
+import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
+import { ResultRow } from "./ResultRow";
 
 
 interface UsageTableProps {
@@ -129,6 +131,28 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
     setUsageSearch("");
     usageInputRef.current?.blur();
   };
+
+  // Flat result list in exact render order (Favourites → Products → Colours)
+  // plus an id→index map so each row knows its keyboard highlight position.
+  const usageFlatItems = useMemo(
+    () => [...usageFavs, ...usageRegular, ...usageColours],
+    [usageFavs, usageRegular, usageColours]
+  );
+  const usageRowIndexById = useMemo(() => {
+    const map = new Map<number, number>();
+    usageFlatItems.forEach((p, i) => map.set(p.id, i));
+    return map;
+  }, [usageFlatItems]);
+
+  const { activeIndex: usageActiveIdx, handleKeyDown: handleUsageKeyNav } =
+    useDropdownKeyboardNavigation({
+      itemCount: showUsageDropdown ? usageFlatItems.length : 0,
+      onSelect: idx => {
+        const p = usageFlatItems[idx];
+        if (p) handleAddUsageProduct(p);
+      },
+      onClose: () => dismissUsageDropdown(),
+    });
 
   const cycleType = (id: number) => {
     setUsageEntries(prev => prev.map(e => {
@@ -280,6 +304,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
               value={usageSearch}
               onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
               onFocus={() => setShowUsageDropdown(true)}
+              onKeyDown={handleUsageKeyNav}
               placeholder="Select Product..."
               style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))" }}
             />
@@ -305,10 +330,11 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
             );
             const renderRow = (p: OfficeProduct, showStar?: boolean) => (
-              <div
+              <ResultRow
                 key={p.id}
-                onMouseDown={() => handleAddUsageProduct(p)}
-                style={{ padding: "11px 0", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: usageEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
+                isActive={showUsageDropdown && usageRowIndexById.get(p.id) === usageActiveIdx}
+                onSelect={() => handleAddUsageProduct(p)}
+                style={{ padding: "11px 0", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: usageEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   {showStar && <Star aria-label="favourite" size={11} fill="hsl(var(--foreground))" color="hsl(var(--foreground))" style={{ flexShrink: 0 }} />}
@@ -317,7 +343,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
                 {(p as any)[BALANCE_KEY] != null && (
                   <span style={{ fontSize: "13px", color: Number((p as any)[BALANCE_KEY]) <= 0 ? "hsl(0 70% 40%)" : "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
                 )}
-              </div>
+              </ResultRow>
             );
             const sections: React.ReactNode[] = [];
             if (usageFavs.length > 0)    { sections.push(sectionLabel(config.favouritesLabel)); usageFavs.forEach(p => sections.push(renderRow(p, true))); }

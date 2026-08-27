@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
+import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
+import { ResultRow } from "@/components/branch/ResultRow";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
@@ -304,6 +306,36 @@ export default function Order({ onBack }: OrderProps) {
     else if (e.key === "Escape") { setShowOrderDropdown(false); setForceOrderDropdown(false); }
   };
 
+  // ── Per-line supplier-choice dropdown (keyboard support) ─────────────────
+  // Mirrors the choices computed during rendering so ↑/↓/Enter operate on the
+  // exact list of suppliers shown for the currently-open line.
+  const getSupplierChoices = (idx: number): string[] => {
+    const line = orderLines[idx];
+    if (!line) return [];
+    const sibs = products.filter(s =>
+      s["PRODUCT NAME"] === line.product["PRODUCT NAME"] && s.id !== line.product.id && s["SUPPLIER"] !== line.product["SUPPLIER"]
+    );
+    return ([line.product["SUPPLIER"], ...sibs.map(s => s["SUPPLIER"])].filter(Boolean)) as string[];
+  };
+
+  const chooseSupplierForOpenLine = (choice: string) => {
+    if (openSupplierIdx == null) return;
+    setOrderLines(prev => prev.map((l, i) => i === openSupplierIdx ? { ...l, supplierChoice: choice } : l));
+    setOpenSupplierIdx(null);
+  };
+
+  const openSupplierChoices = openSupplierIdx != null ? getSupplierChoices(openSupplierIdx) : [];
+
+  const { activeIndex: supplierChoiceIdx, handleKeyDown: handleSupplierChoiceKeyNav } =
+    useDropdownKeyboardNavigation({
+      itemCount: openSupplierIdx != null ? openSupplierChoices.length : 0,
+      onSelect: i => {
+        const choice = openSupplierChoices[i];
+        if (choice) chooseSupplierForOpenLine(choice);
+      },
+      onClose: () => setOpenSupplierIdx(null),
+    });
+
   const handleDraftConfirm = () => {
     setDraftReady(true);
   };
@@ -501,6 +533,9 @@ export default function Order({ onBack }: OrderProps) {
                         <div>
                           <button
                             onClick={() => setOpenSupplierIdx(prev => prev === idx ? null : idx)}
+                            onKeyDown={handleSupplierChoiceKeyNav}
+                            aria-expanded={openSupplierIdx === idx}
+                            aria-haspopup="listbox"
                             style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px", fontFamily: "Raleway, inherit" }}
                           >
                             <span style={{ fontSize: "11px", fontWeight: 300, color: needsChoice ? "hsl(var(--destructive, 0 84% 60%))" : muted }}>
@@ -513,14 +548,15 @@ export default function Order({ onBack }: OrderProps) {
                           )}
                           {openSupplierIdx === idx && (
                             <div style={{ position: "absolute", top: "100%", left: 0, zIndex: 50, background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderRadius: "6px", marginTop: "2px", minWidth: "160px" }}>
-                              {allChoices.map(sup => (
-                                <div
+                              {allChoices.map((sup, choiceIdx) => (
+                                <ResultRow
                                   key={sup}
-                                  onMouseDown={() => { setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, supplierChoice: sup } : l)); setOpenSupplierIdx(null); }}
-                                  style={{ padding: "8px 12px", fontSize: "12px", fontFamily: "Raleway, inherit", color: line.supplierChoice === sup ? fg : muted, cursor: "pointer", borderBottom: border }}
+                                  isActive={supplierChoiceIdx === choiceIdx}
+                                  onSelect={() => chooseSupplierForOpenLine(sup)}
+                                  style={{ padding: "8px 12px", fontSize: "12px", fontFamily: "Raleway, inherit", color: line.supplierChoice === sup ? fg : muted, borderBottom: border }}
                                 >
                                   {sup}
-                                </div>
+                                </ResultRow>
                               ))}
                             </div>
                           )}

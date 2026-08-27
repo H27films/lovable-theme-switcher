@@ -7,6 +7,8 @@ import { type BranchConfig, type OfficeProduct, type LogRow } from "@/lib/branch
 import { OrderSubmitFooter } from "./OrderSubmitFooter";
 import { OrderExportActions } from "./OrderExportActions";
 import { OrderSummary, type PersistedPendingOrder } from "./OrderSummary";
+import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
+import { ResultRow } from "./ResultRow";
 import { useTabletMode } from "@/hooks/useTabletMode";
 
 interface OrderPanelProps {
@@ -131,6 +133,28 @@ export const OrderPanel = ({
   const orderFavs    = orderFiltered.filter(p => checkFav(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
   const orderColours = orderFiltered.filter(p => !checkFav(p) && checkColour(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
   const orderRegular = orderFiltered.filter(p => !checkFav(p) && !checkColour(p)).sort((a, b) => getName(a).localeCompare(getName(b)));
+
+  // Flat result list in exact render order (Favourites → Products → Colours)
+  // plus an id→index map so each row knows its keyboard highlight position.
+  const orderFlatItems = useMemo(
+    () => [...orderFavs, ...orderRegular, ...orderColours],
+    [orderFavs, orderRegular, orderColours]
+  );
+  const orderRowIndexById = useMemo(() => {
+    const map = new Map<number, number>();
+    orderFlatItems.forEach((p, i) => map.set(p.id, i));
+    return map;
+  }, [orderFlatItems]);
+
+  const { activeIndex: orderActiveIdx, handleKeyDown: handleOrderListKeyDown } =
+    useDropdownKeyboardNavigation({
+      itemCount: showOrderDropdown ? orderFlatItems.length : 0,
+      onSelect: idx => {
+        const p = orderFlatItems[idx];
+        if (p) handleAddOrderProduct(p);
+      },
+      onClose: () => dismissOrderDropdown(),
+    });
 
   const handleAddOrderProduct = (p: OfficeProduct) => {
     const existing = orderEntries.find(e => e.productName === p["PRODUCT NAME"]);
@@ -337,6 +361,7 @@ return createPortal(
                 onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); }}
                 onFocus={() => { setShowOrderDropdown(true); setShowAllOrders(false); }}
                 onClick={e => e.stopPropagation()}
+                onKeyDown={handleOrderListKeyDown}
                 placeholder="Select product..."
                 style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground, 0 0% 100%))", caretColor: "hsl(var(--foreground, 0 0% 100%))" }}
               />
@@ -362,10 +387,11 @@ return createPortal(
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
             );
             const renderRow = (p: OfficeProduct, showStar?: boolean) => (
-              <div
+              <ResultRow
                 key={p.id}
-                onMouseDown={() => handleAddOrderProduct(p)}
-                style={{ padding: "11px 0", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: orderEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
+                isActive={showOrderDropdown && orderRowIndexById.get(p.id) === orderActiveIdx}
+                onSelect={() => handleAddOrderProduct(p)}
+                style={{ padding: "11px 0", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: orderEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   {showStar && <Star aria-label="favourite" size={11} fill="hsl(var(--foreground))" color="hsl(var(--foreground))" style={{ flexShrink: 0 }} />}
@@ -374,7 +400,7 @@ return createPortal(
                 {(p as any)[BALANCE_KEY] != null && (
                   <span style={{ fontSize: "13px", color: Number((p as any)[BALANCE_KEY]) <= 0 ? "hsl(0 70% 40%)" : "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
                 )}
-              </div>
+              </ResultRow>
             );
             const sections: React.ReactNode[] = [];
             if (orderFavs.length > 0)    { sections.push(sectionLabel(config.favouritesLabel)); orderFavs.forEach(p => sections.push(renderRow(p, true))); }

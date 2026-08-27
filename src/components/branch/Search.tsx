@@ -1,5 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { X } from "lucide-react";
+import {
+  dropdownNavChannelStore,
+  useDropdownKeyboardNavigation,
+} from "@/hooks/useDropdownKeyboardNavigation";
 
 interface SearchProps {
   search: string;
@@ -28,6 +32,34 @@ export const Search = ({
 }: SearchProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Keyboard bridge to the sibling <ProductList/>: the list publishes its
+  // flat items into the shared channel while visible; this input drives
+  // ArrowUp/ArrowDown/Enter/Escape over them.
+  const navSnapshot = useSyncExternalStore(
+    dropdownNavChannelStore.subscribe,
+    dropdownNavChannelStore.getSnapshot
+  );
+  const { activeIndex, handleKeyDown } = useDropdownKeyboardNavigation({
+    itemCount: showDropdown ? (navSnapshot.channel?.items.length ?? 0) : 0,
+    onSelect: idx => navSnapshot.channel?.selectAt(idx),
+    onClose: () => {
+      // Escape always hides the results; with typed text it also clears the
+      // field and exits search mode — mirroring the ✕ button below.
+      setShowDropdown(false);
+      if (search.length > 0 && searchMode !== "result") {
+        setSearch("");
+        setSelectedProduct(null);
+        setSearchMode("idle");
+        closeSearch();
+      }
+    },
+  });
+
+  // Publish the keyboard highlight down to the ProductList rows.
+  useEffect(() => {
+    dropdownNavChannelStore.publishActiveIndex(activeIndex);
+  }, [activeIndex]);
+
   useEffect(() => {
     if (autoFocus) {
       inputRef.current?.focus();
@@ -48,6 +80,7 @@ export const Search = ({
           setSearchMode("active");
           setShowDropdown(val.length > 0);
         }}
+        onKeyDown={handleKeyDown}
         onFocus={() => setShowDropdown(true)}
         placeholder={selectedProduct ? selectedProduct["PRODUCT NAME"] : "Select Product"}
         style={{

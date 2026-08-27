@@ -3,6 +3,8 @@ import { Building2, Search as SearchIcon, X, Star, ChevronUp, ChevronDown } from
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { sortLogByBalance } from "@/lib/branchSimpleUtils";
+import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
+import { ResultRow } from "@/components/branch/ResultRow";
 
 interface Product {
   id: number;
@@ -257,6 +259,42 @@ const handleSelectProduct = (p: Product) => {
     return { favourites, colours, regular, matchedSuppliers };
   })() : null;
 
+  // Flat keyboard-navigation targets in visual order:
+  // Suppliers → Office Favourites → Products → Colours
+  type DropdownTarget = { kind: "supplier"; supplier: string } | { kind: "product"; product: Product };
+  const dropdownTargets: DropdownTarget[] = (() => {
+    if (!dropdownContent || !showDropdown) return [];
+    const { favourites, colours, regular, matchedSuppliers } = dropdownContent;
+    return [
+      ...matchedSuppliers.map(supplier => ({ kind: "supplier" as const, supplier })),
+      ...favourites.map(product => ({ kind: "product" as const, product })),
+      ...regular.map(product => ({ kind: "product" as const, product })),
+      ...colours.map(product => ({ kind: "product" as const, product })),
+    ];
+  })();
+  const dropdownSectionSizes = {
+    suppliers: showDropdown && dropdownContent ? dropdownContent.matchedSuppliers.length : 0,
+    favourites: showDropdown && dropdownContent ? dropdownContent.favourites.length : 0,
+    regular: showDropdown && dropdownContent ? dropdownContent.regular.length : 0,
+  };
+
+  const { activeIndex: resultActiveIdx, handleKeyDown: handleResultKeyNav } =
+    useDropdownKeyboardNavigation({
+      itemCount: dropdownTargets.length,
+      onSelect: idx => {
+        const target = dropdownTargets[idx];
+        if (!target) return;
+        if (target.kind === "supplier") handleSelectSupplier(target.supplier);
+        else handleSelectProduct(target.product);
+      },
+      onClose: () => {
+        // Escape clears/closes like the ✕ button, but stays harmless on a
+        // pristine screen where there's nothing to clear.
+        if (search.length > 0 || selectedProduct || selectedSupplier) handleClear();
+        else setShowDropdown(false);
+      },
+    });
+
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", background: "hsl(var(--background))", color: fg, fontFamily: "'Raleway', sans-serif" }}>
       {/* TOP BAR — with back button */}
@@ -306,6 +344,7 @@ const handleSelectProduct = (p: Product) => {
             type="text"
             inputMode="search"
             value={searchMode === "result" || searchMode === "supplier" ? "" : search}
+            onKeyDown={handleResultKeyNav}
             onChange={e => {
               const val = e.target.value;
               setSearch(val);
@@ -351,16 +390,16 @@ const handleSelectProduct = (p: Product) => {
             <div>
               {/* Suppliers */}
               {matchedSuppliers.length > 0 && <div style={sectionHeaderBlack}>Suppliers</div>}
-              {matchedSuppliers.map((supplier) => (
-                <div
+              {matchedSuppliers.map((supplier, supIdx) => (
+                <ResultRow
                   key={`sup-${supplier}`}
-                  onClick={() => handleSelectSupplier(supplier)}
+                  isActive={resultActiveIdx === supIdx}
+                  onSelect={() => handleSelectSupplier(supplier)}
                   style={{
                     padding: "12px 20px",
                     marginLeft: "-20px",
                     marginRight: "-20px",
                     borderBottom: `1px solid ${border}`,
-                    cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -370,7 +409,7 @@ const handleSelectProduct = (p: Product) => {
                     <span style={{ fontSize: "15px", fontWeight: 300, color: fg }}>{supplier}</span>
                     <Building2 size={11} style={{ color: dimColor, opacity: 0.4, flexShrink: 0 }} />
                   </div>
-                </div>
+                </ResultRow>
               ))}
 
               {/* Office Favourites */}
@@ -378,15 +417,15 @@ const handleSelectProduct = (p: Product) => {
                 <>
                   <div style={sectionHeaderBlack}>Office Favourites</div>
                   {favourites.map((p, i) => (
-                    <div
+                    <ResultRow
                       key={p.id}
-                      onClick={() => handleSelectProduct(p)}
+                      isActive={resultActiveIdx === dropdownSectionSizes.suppliers + i}
+                      onSelect={() => handleSelectProduct(p)}
                       style={{
                         padding: "12px 20px",
                         marginLeft: "-20px",
                         marginRight: "-20px",
                         borderBottom: i === favourites.length - 1 ? "none" : `1px solid ${border}`,
-                        cursor: "pointer",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -401,7 +440,7 @@ const handleSelectProduct = (p: Product) => {
                         )}
                       </div>
                       <div style={{ fontSize: "12px", marginTop: "2px", color: dimColor }}>{p.SUPPLIER}</div>
-                    </div>
+                    </ResultRow>
                   ))}
                 </>
               )}
@@ -411,15 +450,15 @@ const handleSelectProduct = (p: Product) => {
                 <>
                   <div style={sectionHeaderBlack}>Products</div>
                   {regular.map((p, i) => (
-                    <div
+                    <ResultRow
                       key={p.id}
-                      onClick={() => handleSelectProduct(p)}
+                      isActive={resultActiveIdx === dropdownSectionSizes.suppliers + dropdownSectionSizes.favourites + i}
+                      onSelect={() => handleSelectProduct(p)}
                       style={{
                         padding: "12px 20px",
                         marginLeft: "-20px",
                         marginRight: "-20px",
                         borderBottom: i === regular.length - 1 ? "none" : `1px solid ${border}`,
-                        cursor: "pointer",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -431,7 +470,7 @@ const handleSelectProduct = (p: Product) => {
                         )}
                       </div>
                       <div style={{ fontSize: "12px", marginTop: "2px", color: dimColor }}>{p.SUPPLIER}</div>
-                    </div>
+                    </ResultRow>
                   ))}
                 </>
               )}
@@ -441,15 +480,15 @@ const handleSelectProduct = (p: Product) => {
                 <>
                   <div style={sectionHeader}>Colours</div>
                   {colours.map((p, i) => (
-                    <div
+                    <ResultRow
                       key={p.id}
-                      onClick={() => handleSelectProduct(p)}
+                      isActive={resultActiveIdx === dropdownSectionSizes.suppliers + dropdownSectionSizes.favourites + dropdownSectionSizes.regular + i}
+                      onSelect={() => handleSelectProduct(p)}
                       style={{
                         padding: "12px 20px",
                         marginLeft: "-20px",
                         marginRight: "-20px",
                         borderBottom: i === colours.length - 1 ? "none" : `1px solid ${border}`,
-                        cursor: "pointer",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -461,7 +500,7 @@ const handleSelectProduct = (p: Product) => {
                         )}
                       </div>
                       <div style={{ fontSize: "12px", marginTop: "2px", color: dimColor }}>{p.SUPPLIER}</div>
-                    </div>
+                    </ResultRow>
                   ))}
                 </>
               )}
@@ -540,7 +579,9 @@ const handleSelectProduct = (p: Product) => {
                       ))}
                     </div>
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                      <input type="number" min="1" value={usageQty} onChange={e => setUsageQty(e.target.value)} placeholder="Qty"
+                      <input type="number" min="1" value={usageQty}
+                        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); if (!usageSubmitting) submitUsage(); } }}
+                        onChange={e => setUsageQty(e.target.value)} placeholder="Qty"
                         style={{ flex: 1, background: "none", border: `0.5px solid ${border}`, borderRadius: "4px", padding: "4px 8px", outline: "none", fontSize: "13px", color: fg }} />
                       <button onClick={() => setUsageOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: dimColor }}>
                         <X size={14} />
