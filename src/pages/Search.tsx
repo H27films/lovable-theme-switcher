@@ -279,6 +279,7 @@ const handleSelectProduct = (p: Product) => {
           lineHeight: 1,
         }}>
           SEARCH
+          <span style={{ fontSize: "15px", fontWeight: 200, letterSpacing: "0.08em", color: "hsl(var(--muted-foreground) / 0.65)", marginLeft: "6px" }}>OFFICE</span>
         </div>
         <button
           onClick={() => {

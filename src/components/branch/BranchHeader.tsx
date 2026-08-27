@@ -16,9 +16,13 @@ const FAV_BRANCH_BY_NAME: Record<string, BranchKey> = {
 interface BranchHeaderProps {
   branch: string;
   onBack: () => void;
+  /** Replaces the big title text (menu/favourites logic stays keyed off `branch`) */
+  titleOverride?: string;
+  /** Small lighter label shown to the right of the title (e.g. branch name on the search view) */
+  secondaryLabel?: string;
 }
 
-export const BranchHeader = ({ branch, onBack }: BranchHeaderProps) => {
+export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel }: BranchHeaderProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { tablet, toggle: toggleTablet } = useTabletMode();
@@ -42,7 +46,10 @@ export const BranchHeader = ({ branch, onBack }: BranchHeaderProps) => {
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px 0px 12px", width: "100%", boxSizing: "border-box" }}>
         <button onClick={onBack} style={{ display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0, flex: 1 }}>
-          {branch}
+          {titleOverride ?? branch}
+          {secondaryLabel && (
+            <span style={{ fontSize: "15px", fontWeight: 200, letterSpacing: "0.08em", color: "hsl(var(--muted-foreground) / 0.65)", marginLeft: "6px" }}>{secondaryLabel}</span>
+          )}
         </button>
 
         <div style={{ position: "relative", flexShrink: 0 }} ref={dropdownRef}>

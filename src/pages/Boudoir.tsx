@@ -332,7 +332,7 @@ const setLogViewToOrders = () => {
       overflow: "hidden",
     }}>
 {/* Header */}
-        <BranchHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} />
+        <BranchHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} titleOverride={searchActive ? "SEARCH" : undefined} secondaryLabel={searchActive ? boudoirConfig.displayName : undefined} />
 
        
 {/* Search input - only show when search is active */}

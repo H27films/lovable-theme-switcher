@@ -320,7 +320,7 @@ const setLogViewToOrders = () => {
       overflow: "hidden",
     }}>
 {/* Header */}
-        <BranchHeader branch={nuryadiConfig.displayName} onBack={handleHeaderBack} />
+        <BranchHeader branch={nuryadiConfig.displayName} onBack={handleHeaderBack} titleOverride={searchActive ? "SEARCH" : undefined} secondaryLabel={searchActive ? nuryadiConfig.displayName : undefined} />
 
        
 {/* Search input - only show when search is active */}
