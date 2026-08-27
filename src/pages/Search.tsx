@@ -270,17 +270,17 @@ const handleSelectProduct = (p: Product) => {
         paddingBottom: "12px",
         
       }}>
-        <div style={{
-          fontSize: "clamp(22px, 6vw, 36px)",
-          fontWeight: 300,
-          letterSpacing: "0.08em",
-          color: fg,
-          fontFamily: "'Raleway', sans-serif",
-          lineHeight: 1,
-        }}>
+        <button
+          onClick={() => {
+            if (from === "office") navigate("/simple/office");
+            else onBack?.();
+          }}
+          title="Back to Office"
+          style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, fontFamily: "'Raleway', sans-serif", lineHeight: 1, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}
+        >
           SEARCH
           <span style={{ fontSize: "15px", fontWeight: 200, letterSpacing: "0.08em", color: "hsl(var(--muted-foreground) / 0.65)", marginLeft: "6px" }}>OFFICE</span>
-        </div>
+        </button>
         <button
           onClick={() => {
             if (from === "office") navigate("/simple/office");

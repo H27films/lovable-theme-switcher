@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { X, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 
@@ -209,15 +209,24 @@ const ImportPanel = ({ onClose, onProductsUpdated }: ImportPanelProps) => {
                 {importType && (
                   <button onClick={resetImport} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", fontSize: "18px", lineHeight: 1 }}>‹</button>
                 )}
-                <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>
+                <button
+                  onClick={() => { onClose(); resetImport(); }}
+                  title="Back to Office"
+                  style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}
+                >
                   {importType === "balance" ? "BALANCE IMPORT" : importType === "log" ? "LOG IMPORT" : importType === "cash" ? "CASH IMPORT" : "IMPORT"}
-                </span>
+                </button>
               </div>
               <button
                 onClick={() => { onClose(); resetImport(); }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+                aria-label="Back"
+                title="Back"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center" }}
               >
-                <X size={18} />
+                <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="30" y1="8" x2="1" y2="8" />
+                  <polyline points="9,1 1,8 9,15" />
+                </svg>
               </button>
             </div>
 

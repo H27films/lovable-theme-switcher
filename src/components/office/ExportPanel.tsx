@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import MiniCalendar from "./MiniCalendar";
@@ -247,15 +246,24 @@ const ExportPanel = ({ onClose }: ExportPanelProps) => {
                 {exportType && (
                   <button onClick={resetExport} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", fontSize: "18px", lineHeight: 1 }}>‹</button>
                 )}
-                <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>
+                <button
+                  onClick={() => { onClose(); resetExport(); }}
+                  title="Back to Office"
+                  style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}
+                >
                   {exportType === "log" ? "LOG EXPORT" : exportType === "cash" ? "CASH EXPORT" : "EXPORT"}
-                </span>
+                </button>
               </div>
               <button
                 onClick={() => { onClose(); resetExport(); }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))" }}
+                aria-label="Back"
+                title="Back"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center" }}
               >
-                <X size={18} />
+                <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="30" y1="8" x2="1" y2="8" />
+                  <polyline points="9,1 1,8 9,15" />
+                </svg>
               </button>
             </div>
 

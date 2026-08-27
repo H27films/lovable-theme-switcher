@@ -389,7 +389,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                 <button onClick={() => setShowSalesPanel(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginRight: "16px" }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
                 </button>
-                <span style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>SALES</span>
+                <button onClick={() => setShowSalesPanel(false)} title="Back to Office" style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>SALES</button>
               </div>
               {/* Month navigation chevrons */}
               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
