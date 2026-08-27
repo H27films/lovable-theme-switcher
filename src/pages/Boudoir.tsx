@@ -233,11 +233,9 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
   };
 
 const handleHeaderBack = () => {
-    if (searchMode !== "idle") {
-        setSearchMode("idle");
-        setSearch("");
-        setSelectedProduct(null);
-        setShowDropdown(false);
+    if (searchMode !== "idle" || searchActive || selectedProduct) {
+        // Title press from the search view or a product card -> branch home
+        goHome();
     } else if (cameFrom === "landing") {
         // Arrived directly from Landing -> back to Landing
         navigate("/");
