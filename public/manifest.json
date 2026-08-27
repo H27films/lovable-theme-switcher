@@ -1,6 +1,6 @@
 {
-  "name": "Boudoir Database",
-  "short_name": "Boudoir DB",
+  "name": "Product Database",
+  "short_name": "Nail Salon",
   "description": "Stock inventory management for Nail Boudoir branches",
   "start_url": "/",
   "scope": "/",
