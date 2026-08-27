@@ -96,6 +96,16 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
       const list = USAGE_TYPES && USAGE_TYPES.length > 0 ? USAGE_TYPES : ["Salon Use", "Staff", "Customer", "FOC", "Transfer"];
       const idx = list.indexOf(e.type);
       const nextType = list[(idx + 1) % list.length];
+      // Auto-populate the unit price when a sale type is selected:
+      // Customer → the product's CUSTOMER PRICE, Staff → its STAFF PRICE.
+      // The user can still override the box by typing; the value is only ever
+      // saved to the log's SELLING PRICE column (never back to the product).
+      if (nextType === "Customer" || nextType === "Staff") {
+        const product = products.find(p => p["PRODUCT NAME"] === e.productName);
+        const price = nextType === "Customer" ? product?.["CUSTOMER PRICE"] : product?.["STAFF PRICE"];
+        const prefilled = price != null && Number.isFinite(Number(price)) ? Number(price).toFixed(2) : "";
+        return { ...e, type: nextType as any, sellingPrice: prefilled };
+      }
       return { ...e, type: nextType as any };
     }));
   };
