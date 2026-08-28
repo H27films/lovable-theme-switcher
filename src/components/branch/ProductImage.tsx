@@ -113,7 +113,10 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 48 }: Prod
       const { error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "3600" });
-      if (uploadError) throw new Error(uploadError.message || "Upload to storage failed");
+      if (uploadError) {
+        console.error("ProductImage upload failed:", path, uploadError);
+        throw new Error(`Storage upload failed for "${path}" — ${uploadError.message || "unknown error"}`);
+      }
 
       const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
       const publicUrl = data?.publicUrl;
