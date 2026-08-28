@@ -95,6 +95,14 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      setSearchMode("idle");
    };
 
+  // Image updates from the ProductCard: refresh the card and the product list instantly
+  const handleProductImageUpdated = (url: string | null) => {
+    const id = selectedProduct?.id;
+    if (id == null) return;
+    setSelectedProduct(prev => (prev && prev.id === id ? { ...prev, IMAGES: url } : prev));
+    setProducts(prev => prev.map(p => (p.id === id ? { ...p, IMAGES: url } : p)));
+  };
+
   // Past Data (product search): DATE desc; within the same date, lowest ending balance first
   const sortLog = (rows: LogRow[]) => sortLogByBalance(rows, r => r["ENDING BALANCE"]);
   // Main log table: DATE desc; Order type first then other types; A–Z by product name
@@ -372,6 +380,7 @@ const setLogViewToOrders = () => {
                 onToggleFav={toggleFavourite}
                 isFavourite={isFav}
                 branchLogName={BRANCH_LOG_NAME}
+                onImageUpdated={handleProductImageUpdated}
               />
             )}
 {!selectedProduct && (

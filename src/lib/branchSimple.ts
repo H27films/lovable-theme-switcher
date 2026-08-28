@@ -27,6 +27,8 @@ export interface OfficeProduct {
   "UOM"?: string | null;
   "PAR"?: number | null;
   "OFFICE FAVOURITE"?: string | boolean | null;
+  /** Public URL of the product image in the PRODUCT_IMAGES storage bucket (null = no image yet) */
+  IMAGES?: string | null;
 }
 
 export interface LogRow {

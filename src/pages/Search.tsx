@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { sortLogByBalance } from "@/lib/branchSimpleUtils";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
+import { ProductImage } from "@/components/branch/ProductImage";
 
 interface Product {
   id: number;
@@ -23,6 +24,8 @@ interface Product {
   "OFFICE FAVOURITE"?: boolean | string;
   "Colour"?: boolean | string;
   "UNITS/ORDER"?: number | null;
+  /** Public URL of the product image in the PRODUCT_IMAGES storage bucket */
+  IMAGES?: string | null;
 }
 
 interface ProductLog {
@@ -203,6 +206,14 @@ const handleSelectProduct = (p: Product) => {
     setShowDropdown(false);
     setSearchMode("active");
     setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  // Image updates from the ProductImage component: refresh the result view and product list instantly
+  const handleProductImageUpdated = (url: string | null) => {
+    const id = selectedProduct?.id;
+    if (id == null) return;
+    setSelectedProduct(prev => (prev && prev.id === id ? { ...prev, IMAGES: url } : prev));
+    setProducts(prev => prev.map(p => (p.id === id ? { ...p, IMAGES: url } : p)));
   };
 
   const hdrStyle: React.CSSProperties = {
@@ -615,6 +626,15 @@ const handleSelectProduct = (p: Product) => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Product image — after the product info above, before Past Data below */}
+            <div style={{ display: "flex", paddingBottom: "20px" }}>
+              <ProductImage
+                productId={selectedProduct.id}
+                imageUrl={selectedProduct.IMAGES ?? null}
+                onUpdated={handleProductImageUpdated}
+              />
             </div>
 
             {/* Past Data transactions */}

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Star } from "lucide-react";
 import { isYes } from "@/lib/branchSimpleUtils";
 import { type OfficeProduct } from "@/lib/branchSimple";
+import { ProductImage } from "./ProductImage";
 
 interface ProductCardProps {
   selectedProduct: any;
@@ -13,9 +14,11 @@ interface ProductCardProps {
   isFavourite?: (product: any) => boolean;
   /** The BRANCH value in AllFileLog used to filter usage stats. */
   branchLogName: string;
+  /** Called after the product image is uploaded/updated so the page can refresh its state. */
+  onImageUpdated?: (url: string | null) => void | Promise<void>;
 }
 
-export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggleFav, isFavourite, branchLogName }: ProductCardProps) => {
+export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggleFav, isFavourite, branchLogName, onImageUpdated }: ProductCardProps) => {
   const [usage, setUsage] = useState<number | null>(null);
   const [period, setPeriod] = useState<number | null>(null);
   const [perWeek, setPerWeek] = useState<number | null>(null);
@@ -122,6 +125,16 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
           </div>
         </div>
       </div>
+
+      {onImageUpdated && (
+        <div style={{ display: "flex", marginTop: "12px" }}>
+          <ProductImage
+            productId={selectedProduct.id}
+            imageUrl={(selectedProduct as any).IMAGES ?? null}
+            onUpdated={onImageUpdated}
+          />
+        </div>
+      )}
     </div>
   );
 };
