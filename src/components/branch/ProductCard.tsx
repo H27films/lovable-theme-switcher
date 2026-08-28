@@ -65,12 +65,27 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
   return (
     <div style={{ flexShrink: 0, marginBottom: "12px", paddingBottom: "0px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-        <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", flex: 1 }}>
+        <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))" }}>
           {selectedProduct["PRODUCT NAME"]}
         </div>
+        {(selectedProduct as any)[balanceKey] != null && (
+          <div
+            title="Balance"
+            style={{
+              fontSize: "clamp(16px, 4.5vw, 22px)",
+              fontWeight: 400,
+              fontFamily: "Raleway, inherit",
+              lineHeight: 1.3,
+              flexShrink: 0,
+              color: Number((selectedProduct as any)[balanceKey]) > 0 ? "hsl(142 65% 30%)" : "hsl(0 70% 50%)",
+            }}
+          >
+            {(selectedProduct as any)[balanceKey]}
+          </div>
+        )}
         <button
           onClick={() => onToggleFav(selectedProduct)}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0, marginLeft: "auto" }}
         >
           <Star
             size={16}
@@ -80,16 +95,13 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
         </button>
       </div>
 
-      {(selectedProduct as any)[balanceKey] != null && (
-        <div style={{ marginBottom: "12px" }}>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Balance</div>
-          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number((selectedProduct as any)[balanceKey]) <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
-            {(selectedProduct as any)[balanceKey]}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px" }}>
+        <div>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Bal</div>
+          <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: (selectedProduct as any)[balanceKey] == null ? "hsl(var(--foreground))" : Number((selectedProduct as any)[balanceKey]) > 0 ? "hsl(142 65% 30%)" : "hsl(0 70% 50%)" }}>
+            {(selectedProduct as any)[balanceKey] != null ? (selectedProduct as any)[balanceKey] : "—"}
           </div>
         </div>
-      )}
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px" }}>
         <div>
           <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Staff Price</div>
           <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
@@ -102,7 +114,6 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
             {selectedProduct["CUSTOMER PRICE"] != null ? `RM ${Number(selectedProduct["CUSTOMER PRICE"]).toFixed(2)}` : "—"}
           </div>
         </div>
-        <div />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px", marginTop: "12px" }}>

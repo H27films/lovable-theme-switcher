@@ -522,12 +522,26 @@ const handleSelectProduct = (p: Product) => {
         {/* PRODUCT RESULT */}
         {searchMode === "result" && selectedProduct && !showDropdown && (
           <div style={{ paddingTop: "20px", paddingBottom: "40px" }}>
-            {/* Product name + favorite */}
+            {/* Product name + balance + favorite */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-              <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, lineHeight: 1.3, color: fg, flex: 1 }}>
+              <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, lineHeight: 1.3, color: fg }}>
                 {selectedProduct["PRODUCT NAME"]}
               </div>
-              <button onClick={toggleFav} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: isFav ? fg : dimColor, flexShrink: 0, marginTop: "4px" }}>
+              {selectedProduct["OFFICE BALANCE"] != null && (
+                <div
+                  title="Balance"
+                  style={{
+                    fontSize: "clamp(20px, 5.5vw, 28px)",
+                    fontWeight: 400,
+                    lineHeight: 1.3,
+                    color: Number(selectedProduct["OFFICE BALANCE"]) > 0 ? "hsl(142 65% 30%)" : "hsl(0 70% 50%)",
+                    flexShrink: 0,
+                  }}
+                >
+                  {selectedProduct["OFFICE BALANCE"]}
+                </div>
+              )}
+              <button onClick={toggleFav} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: isFav ? fg : dimColor, flexShrink: 0, marginTop: "4px", marginLeft: "auto" }}>
                 <Star size={16} fill={isFav ? "currentColor" : "none"} />
               </button>
             </div>
