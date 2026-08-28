@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Camera, ImagePlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,7 +20,7 @@ interface ProductImageProps {
   imageUrl: string | null;
   /** Called after a successful upload + DB update so the host can refresh its state instantly. */
   onUpdated: (url: string | null) => void | Promise<void>;
-  /** Thumbnail square size in px (default 48) */
+  /** Thumbnail square size in px (default 64) */
   size?: number;
 }
 
@@ -70,23 +71,34 @@ const compressImage = (file: File): Promise<Blob> =>
  * (branch ProductCard + Office search result page).
  *
  * - No image  -> "Add Image" button that opens the device file picker.
- * - Has image -> thumbnail with a change affordance (camera badge).
+ * - Has image -> thumbnail (tap to enlarge) with a Change Image button beside it.
  * Uploads a compressed JPEG to PRODUCT_IMAGES/{productId}.jpg (upsert), stores
  * the public URL in AllFileProducts.IMAGES keyed by id, and reports back via
  * onUpdated so the host updates its state without a page refresh.
  */
-export const ProductImage = ({ productId, imageUrl, onUpdated, size = 48 }: ProductImageProps) => {
+export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: ProductImageProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [bust, setBust] = useState(() => cacheBustMap.get(productId) ?? 0);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   // Reset the broken-image fallback when a different product/image arrives
   useEffect(() => {
     setLoadFailed(false);
     setBust(cacheBustMap.get(productId) ?? 0);
   }, [productId, imageUrl]);
+
+  // Close the enlarged view with Escape (desktop nicety)
+  useEffect(() => {
+    if (!zoomOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setZoomOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomOpen]);
 
   const hasImage = !!imageUrl && !loadFailed;
 
@@ -150,7 +162,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 48 }: Prod
   const thumbStyle: React.CSSProperties = {
     width: `${size}px`,
     height: `${size}px`,
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: "0.5px solid hsl(var(--border))",
     background: "hsl(var(--muted) / 0.35)",
     display: "flex",
@@ -162,7 +174,22 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 48 }: Prod
     padding: 0,
     overflow: "hidden",
     flexShrink: 0,
-    position: "relative",
+  };
+
+  // Small round "Change Image" button that sits beside the thumbnail
+  const changeBtnStyle: React.CSSProperties = {
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    border: "0.5px solid hsl(var(--border))",
+    background: "hsl(var(--muted) / 0.35)",
+    color: "hsl(var(--muted-foreground))",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    padding: 0,
+    flexShrink: 0,
   };
 
   return (
@@ -180,22 +207,29 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 48 }: Prod
           <Loader2 size={Math.max(14, Math.round(size * 0.35))} className="animate-spin" style={{ color: "hsl(var(--muted-foreground))" }} />
         </div>
       ) : displayUrl ? (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          title="Change image"
-          style={thumbStyle}
-        >
-          <img
-            src={displayUrl}
-            alt=""
-            onError={() => setLoadFailed(true)}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-          <span style={{ position: "absolute", right: "3px", bottom: "3px", width: `${Math.max(16, Math.round(size * 0.34))}px`, height: `${Math.max(16, Math.round(size * 0.34))}px`, borderRadius: "50%", background: "hsl(var(--foreground))", color: "hsl(var(--background))", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Camera size={10} />
-          </span>
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <button
+            type="button"
+            onClick={() => setZoomOpen(true)}
+            title="View image"
+            style={thumbStyle}
+          >
+            <img
+              src={displayUrl}
+              alt=""
+              onError={() => setLoadFailed(true)}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            title="Change image"
+            style={changeBtnStyle}
+          >
+            <Camera size={15} />
+          </button>
+        </div>
       ) : (
         <button
           type="button"
@@ -212,6 +246,44 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 48 }: Prod
         <div style={{ maxWidth: "150px", fontSize: "10px", lineHeight: 1.35, color: "hsl(0 70% 50%)", textAlign: "center", fontFamily: "Raleway, inherit" }}>
           {error}
         </div>
+      )}
+
+      {/* Enlarged view — tap anywhere (or Escape) to close */}
+      {zoomOpen && displayUrl && createPortal(
+        <div
+          onClick={() => setZoomOpen(false)}
+          title="Tap anywhere to close"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.78)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            cursor: "zoom-out",
+            touchAction: "none",
+            overscrollBehavior: "contain",
+            padding: "16px",
+          }}
+        >
+          <img
+            src={displayUrl}
+            alt=""
+            style={{
+              maxWidth: "92vw",
+              maxHeight: "86vh",
+              objectFit: "contain",
+              borderRadius: "12px",
+              background: "hsl(var(--background))",
+              boxShadow: "0 8px 40px rgba(0, 0, 0, 0.4)",
+            }}
+          />
+        </div>,
+        document.body
       )}
     </div>
   );

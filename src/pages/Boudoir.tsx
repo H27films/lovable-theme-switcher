@@ -383,7 +383,7 @@ const setLogViewToOrders = () => {
           />
         )}
         {!searchActive && (
-          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
+          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "170px" : "0px" }}>
             {selectedProduct && (
               <ProductCard 
                 selectedProduct={selectedProduct} 
@@ -540,7 +540,7 @@ const setLogViewToOrders = () => {
         <div style={{
           position: "fixed", bottom: 0, left: 0,
           width: tablet ? "76.92308vw" : "100vw",
-          height: pastDataExpanded ? (tablet ? "38.46154vh" : "50vh") : (tablet ? "36.923px" : "48px"),
+          height: pastDataExpanded ? (tablet ? "32vh" : "44vh") : (tablet ? "36.923px" : "48px"),
           transition: "height 0.3s ease",
           background: "hsl(var(--background))",
           borderTop: pastDataExpanded ? "none" : "0.5px solid hsl(var(--border))",
