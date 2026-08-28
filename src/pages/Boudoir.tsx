@@ -540,7 +540,7 @@ const setLogViewToOrders = () => {
         <div style={{
           position: "fixed", bottom: 0, left: 0,
           width: tablet ? "76.92308vw" : "100vw",
-          height: pastDataExpanded ? (tablet ? "32vh" : "44vh") : (tablet ? "36.923px" : "48px"),
+          height: pastDataExpanded ? (tablet ? "26vh" : "38vh") : (tablet ? "36.923px" : "48px"),
           transition: "height 0.3s ease",
           background: "hsl(var(--background))",
           borderTop: pastDataExpanded ? "none" : "0.5px solid hsl(var(--border))",
