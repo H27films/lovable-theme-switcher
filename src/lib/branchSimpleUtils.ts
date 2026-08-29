@@ -26,7 +26,7 @@ export const therapistValue = (therapist: string): string | null =>
 // ── Therapist pill colours ─────────────────────────────────────
 // Muted, distinct shades keyed by therapist name so each person is
 // instantly recognisable in the log tables / pills. Medium tones work
-// on the light (cream), dark and sand themes alike.
+// on the light (cream) theme.
 const THERAPIST_PILL_PALETTE: { backgroundColor: string; color: string }[] = [
   { backgroundColor: "hsl(202 29% 76%)", color: "hsl(202 40% 22%)" }, // Cloudy Valley
   { backgroundColor: "hsl(208 20% 60%)", color: "hsl(208 35% 18%)" }, // Tsunami
