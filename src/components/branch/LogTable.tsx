@@ -102,16 +102,18 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     return d;
   })();
 
+  const fmtDayName = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", { weekday: "short" });
+  const fmtDayMonth = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
   // Smart date format for the all/usage/sale views:
   // - within the current week (Mon → today): short weekday name only ("Mon", "Tue", "Fri")
   // - older than the current week: day + short month ("28 Aug", "3 Jan")
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     date.setHours(0, 0, 0, 0);
-    if (date >= weekStart) {
-      return date.toLocaleDateString("en-US", { weekday: "short" });
-    }
-    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return date >= weekStart ? fmtDayName(dateString) : fmtDayMonth(dateString);
   };
 
   const handleConfirm = async (row: LogRow) => {
@@ -269,7 +271,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     <div ref={containerRef} style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {selectedProduct ? (
-          <div style={{ position: "sticky", top: 0, zIndex: 10, display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))", background: "hsl(var(--background))" }}>
+          <div style={{ position: "sticky", top: 0, zIndex: 10, display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "1px solid hsl(var(--border) / 0.9)", background: "hsl(var(--background))" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
@@ -282,7 +284,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             )}
           </div>
         ) : (
-          <div style={{ position: "sticky", top: 0, zIndex: 10, display: "grid", gridTemplateColumns: "45px 1fr 28px 32px 70px", gap: "4px", paddingTop: "16px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))", background: "hsl(var(--background))" }}>
+          <div style={{ position: "sticky", top: 0, zIndex: 10, display: "grid", gridTemplateColumns: "45px 1fr 28px 32px 70px", gap: "4px", paddingTop: "16px", paddingBottom: "10px", borderBottom: "1px solid hsl(var(--border) / 0.9)", background: "hsl(var(--background))" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>Product</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
@@ -295,15 +297,27 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
             const dateStr = formatDate(row.DATE);
-            const prevDateStr = idx > 0 ? formatDate(rows[idx - 1].DATE) : null;
+            // Compare against the DISPLAYED list (displayRows) so date grouping stays correct
+            // in the filtered usage/sale views, not just in the unfiltered all view.
+            const prevDateStr = idx > 0 ? formatDate(displayRows[idx - 1].DATE) : null;
             const showDate = dateStr !== prevDateStr;
             const dateSeparator = showDate && idx > 0;
-            const nextDateStr = idx < rows.length - 1 ? formatDate(rows[idx + 1].DATE) : null;
+            const nextDateStr = idx < displayRows.length - 1 ? formatDate(displayRows[idx + 1].DATE) : null;
             const isLastRowBeforeDateChange = nextDateStr !== null && nextDateStr !== dateStr;
             const isDeleting = deleting === row.id;
             const expanded = expandedId === row.id;
             const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
             const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
+
+            // When a row is expanded, the date cell also reveals the complementary format:
+            // current-week rows (day name shown) reveal the calendar date below it,
+            // older rows (date shown) reveal the day name below it.
+            const expandedDateStr = (() => {
+              if (!showDate) return null;
+              const d = new Date(row.DATE);
+              d.setHours(0, 0, 0, 0);
+              return d >= weekStart ? fmtDayMonth(row.DATE) : fmtDayName(row.DATE);
+            })();
 
             return (
               <div key={row.id} style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}>
@@ -323,7 +337,16 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                 >
                   {selectedProduct ? (
                     <>
-                      <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>
+                        {showDate ? (
+                          expanded && expandedDateStr ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <span>{dateStr}</span>
+                              <span>{expandedDateStr}</span>
+                            </div>
+                          ) : dateStr
+                        ) : ""}
+                      </div>
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
@@ -337,7 +360,16 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>
+                        {showDate ? (
+                          expanded && expandedDateStr ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <span>{dateStr}</span>
+                              <span>{expandedDateStr}</span>
+                            </div>
+                          ) : dateStr
+                        ) : ""}
+                      </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                           <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
