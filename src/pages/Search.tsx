@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Building2, Search as SearchIcon, X, Star, ChevronUp, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { sortLogByBalance } from "@/lib/branchSimpleUtils";
+import { sortLogByBalance, isYes } from "@/lib/branchSimpleUtils";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
 import { ProductImage } from "@/components/branch/ProductImage";
@@ -107,8 +107,8 @@ export default function Search({ onBack }: SearchProps) {
   }, []);
 
   const isColourProduct = useCallback((p: Product) => {
-    const v = (p as any)["Colour"];
-    return v === true || v === "YES" || v === "yes" || v === 1;
+    // Canonical YES/TRUE detection (any casing) — matches how branch panels read the Colour column
+    return isYes((p as any)["Colour"]);
   }, []);
 
 const fetchProductLog = useCallback(async (productName: string) => {
@@ -716,12 +716,18 @@ const handleSelectProduct = (p: Product) => {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px", paddingBottom: "8px", borderBottom: `0.5px solid ${border}`, marginBottom: "4px" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em" }}>Product</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right", minWidth: "64px" }}>Price</div>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right", minWidth: "36px" }}>Bal</div>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", minWidth: "64px" }}>Price</div>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", minWidth: "36px" }}>Bal</div>
             </div>
             {products
               .filter(p => p.SUPPLIER === selectedSupplier && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1))
-              .sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]))
+              .sort((a, b) => {
+                // A–Z with non-colour products first, colour products after
+                const aColour = isColourProduct(a) ? 1 : 0;
+                const bColour = isColourProduct(b) ? 1 : 0;
+                if (aColour !== bColour) return aColour - bColour;
+                return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+              })
               .map((p, i, arr) => (
                 <div
                   key={p.id}
@@ -734,10 +740,10 @@ const handleSelectProduct = (p: Product) => {
                   }}
                 >
                   <div style={{ fontSize: "14px", fontWeight: 300, color: fg }}>{p["PRODUCT NAME"]}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, color: dimColor, textAlign: "right", minWidth: "64px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 300, color: dimColor, textAlign: "center", minWidth: "64px" }}>
                     {p["SUPPLIER PRICE"] != null ? `RM ${p["SUPPLIER PRICE"].toFixed(2)}` : "—"}
                   </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, color: fg, textAlign: "right", minWidth: "36px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 300, color: p["OFFICE BALANCE"] == null ? dimColor : Number(p["OFFICE BALANCE"]) <= 0 ? "hsl(var(--red))" : "hsl(var(--green))", textAlign: "center", minWidth: "36px" }}>
                     {p["OFFICE BALANCE"] ?? "—"}
                   </div>
                 </div>
