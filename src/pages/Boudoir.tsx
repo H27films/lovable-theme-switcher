@@ -42,7 +42,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchActive, setSearchActive] = useState(false);
     const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | null>(null);
-    const [logView, setLogView] = useState<"all" | "week" | "orders">("all");
+    const [logView, setLogView] = useState<"all" | "usage" | "sale" | "orders">("all");
     const [usageEntriesCount, setUsageEntriesCount] = useState(0);
     const [pastOrdersExpanded, setPastOrdersExpanded] = useState(false);
     const [pastDataExpanded, setPastDataExpanded] = useState(true);
@@ -270,8 +270,12 @@ const setLogViewToAll = () => {
     setLogView("all");
 };
 
-const setLogViewToWeek = () => {
-    setLogView("week");
+const setLogViewToUsage = () => {
+    setLogView("usage");
+};
+
+const setLogViewToSale = () => {
+    setLogView("sale");
 };
 
 const setLogViewToOrders = () => {
@@ -280,19 +284,10 @@ const setLogViewToOrders = () => {
 
   const activeLog = useMemo(() => {
     const base = selectedProduct ? productLog : branchLog;
-    if (!selectedProduct && logView === "week") {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const cutoff = new Date(today);
-      cutoff.setDate(today.getDate() - 6);
-      return base.filter(row => {
-        const rowDate = new Date(row.DATE);
-        rowDate.setHours(0, 0, 0, 0);
-        return rowDate >= cutoff;
-      });
-    }
+    // Per-view row filtering (usage/sale TYPE filters) lives inside LogTable,
+    // keyed on the viewType prop, so every call site gets identical behaviour.
     return base;
-  }, [selectedProduct, productLog, branchLog, logView]);
+  }, [selectedProduct, productLog, branchLog]);
 
   // Usage and Order filtered lists (for search in dropdowns)
   const usageFiltered = useMemo(() => {
@@ -420,26 +415,48 @@ const setLogViewToOrders = () => {
       All Data
     </button>
     <button
-      onClick={() => setLogViewToWeek()}
+      onClick={() => setLogViewToUsage()}
       style={{
         background: "none",
         border: "none",
-        borderBottom: `2px solid ${logView === "week" ? "hsl(var(--foreground))" : "transparent"}`,
+        borderBottom: `2px solid ${logView === "usage" ? "hsl(var(--foreground))" : "transparent"}`,
         cursor: "pointer",
         padding: "0 0 6px 0",
-        fontSize: logView === "week" ? "16px" : "14px",
-        fontWeight: logView === "week" ? 400 : 300,
+        fontSize: logView === "usage" ? "16px" : "14px",
+        fontWeight: logView === "usage" ? 400 : 300,
         letterSpacing: "0.06em",
         fontFamily: "Raleway, inherit",
         color: "hsl(var(--foreground))",
-        opacity: logView === "week" ? 1 : 0.6,
+        opacity: logView === "usage" ? 1 : 0.6,
         marginBottom: "-1px",
         transition: "all 0.2s ease",
       }}
-      onMouseEnter={(e) => { if (logView !== "week") e.currentTarget.style.opacity = "0.8"; }}
-      onMouseLeave={(e) => { if (logView !== "week") e.currentTarget.style.opacity = "0.6"; }}
+      onMouseEnter={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.8"; }}
+      onMouseLeave={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.6"; }}
     >
-      7 Days
+      Usage
+    </button>
+    <button
+      onClick={() => setLogViewToSale()}
+      style={{
+        background: "none",
+        border: "none",
+        borderBottom: `2px solid ${logView === "sale" ? "hsl(var(--foreground))" : "transparent"}`,
+        cursor: "pointer",
+        padding: "0 0 6px 0",
+        fontSize: logView === "sale" ? "16px" : "14px",
+        fontWeight: logView === "sale" ? 400 : 300,
+        letterSpacing: "0.06em",
+        fontFamily: "Raleway, inherit",
+        color: "hsl(var(--foreground))",
+        opacity: logView === "sale" ? 1 : 0.6,
+        marginBottom: "-1px",
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.8"; }}
+      onMouseLeave={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.6"; }}
+    >
+      Sale
     </button>
     <button
       onClick={setLogViewToOrders}

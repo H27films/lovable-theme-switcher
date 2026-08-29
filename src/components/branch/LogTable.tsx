@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
@@ -12,7 +12,7 @@ interface LogTableProps {
   selectedProduct: any;
   onReverse: (row: LogRow) => void | Promise<void>;
   onUpdate?: (row: LogRow, updates: EditEntryUpdates) => void | Promise<void>;
-  viewType?: "all" | "week" | "orders";
+  viewType?: "all" | "usage" | "sale" | "orders";
   /** Called when the edit-entry modal opens (true) or closes (false). */
   onEditModalChange?: (open: boolean) => void;
   /** Branch displayName (e.g. "BOUDOIR") used to fetch the live therapist list for the edit modal. */
@@ -76,18 +76,42 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     return Array.from(map.entries());
   })();
 
+  // Row filtering per view type (rows are provided by the call site):
+  // - "usage": only rows that are NOT a Customer, Staff or Order entry
+  // - "sale":  only Customer or Staff entries
+  // - "all":   no TYPE filtering
+  // - "orders": fetches and renders its own rows above
+  const displayRows = useMemo(() => {
+    if (viewType === "usage") {
+      return rows.filter(r => r.TYPE !== "Customer" && r.TYPE !== "Staff" && r.TYPE !== "Order");
+    }
+    if (viewType === "sale") {
+      return rows.filter(r => r.TYPE === "Customer" || r.TYPE === "Staff");
+    }
+    return rows;
+  }, [rows, viewType]);
+
   const fmtOrderDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
+  // Monday 00:00 of the current calendar week (used by the smart date format below)
+  const weekStart = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // 0 = Sun … 6 = Sat → step back to Monday
+    return d;
+  })();
+
+  // Smart date format for the all/usage/sale views:
+  // - within the current week (Mon → today): short weekday name only ("Mon", "Tue", "Fri")
+  // - older than the current week: day + short month ("28 Aug", "3 Jan")
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (viewType === "week") {
-      // Return just the day name (Mon, Tue, Wed, etc.)
+    date.setHours(0, 0, 0, 0);
+    if (date >= weekStart) {
       return date.toLocaleDateString("en-US", { weekday: "short" });
-    } else {
-      // Return day month-short format (15 Aug)
-      return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
     }
+    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   };
 
   const handleConfirm = async (row: LogRow) => {
@@ -267,7 +291,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
           </div>
         )}
         <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }} onClick={() => setExpandedId(null)}>
-          {rows.map((row, idx) => {
+          {displayRows.map((row, idx) => {
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
             const dateStr = formatDate(row.DATE);
@@ -319,7 +343,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                           <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
                             {row["PRODUCT NAME"] || "—"}
                           </div>
-                          {viewType === "week" && !expanded && (row as any)["THERAPIST"] && (
+                          {!expanded && (row as any)["THERAPIST"] && (
                             <span style={{
                               ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists),
                               padding: "2px 6px",
@@ -334,7 +358,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                             </span>
                           )}
                         </div>
-                        {viewType === "week" && !expanded && (row as any)["NOTES"] && (
+                        {!expanded && (row as any)["NOTES"] && (
                           <span style={{ 
                             fontSize: "11px", 
                             fontWeight: 400, 
