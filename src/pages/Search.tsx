@@ -654,21 +654,21 @@ const handleSelectProduct = (p: Product) => {
             {/* Past Data transactions */}
             <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "20px", paddingBottom: "20px" }}>
               <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Past Data</div>
-              <div style={{ display: "grid", gridTemplateColumns: "54px 86px 1fr 32px 38px", columnGap: "8px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "54px 1fr 86px 32px 38px", columnGap: "4px" }}>
                 <div
                   style={{
                     gridColumn: "1 / -1",
                     display: "grid",
-                    gridTemplateColumns: "54px 86px 1fr 32px 38px",
-                    columnGap: "8px",
+                    gridTemplateColumns: "54px 1fr 86px 32px 38px",
+                    columnGap: "4px",
                     borderBottom: `0.5px solid ${border}`,
                   }}
                 >
-                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>Date</div>
-                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>GRN</div>
-                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Supplier</div>
-                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Qty</div>
-                  <div style={{ ...hdrStyle, color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "right" }}>Bal</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>Date</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>GRN</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Supplier</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Qty</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "right" }}>Bal</div>
                 </div>
                 
                 {productLogLoading && <div style={{ gridColumn: "1/-1", fontSize: "11px", color: dimColor, padding: "8px 0" }}>Loading...</div>}
@@ -681,8 +681,8 @@ const handleSelectProduct = (p: Product) => {
                   const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
                   const qtyColor = isOffice ? "hsl(142 65% 30%)" : "hsl(0 70% 50%)";
                   const cellStyle: React.CSSProperties = {
-                    fontSize: "11px", fontWeight: 300,
-                    padding: "6px 0",
+                    fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    padding: "8px 0",
                   };
                   return (
                     <div
@@ -690,16 +690,16 @@ const handleSelectProduct = (p: Product) => {
                       style={{
                         gridColumn: "1 / -1",
                         display: "grid",
-                        gridTemplateColumns: "54px 86px 1fr 32px 38px",
-                        columnGap: "8px",
+                        gridTemplateColumns: "54px 1fr 86px 32px 38px",
+                        columnGap: "4px",
                         borderBottom: i < arr.length - 1 ? `0.5px solid ${border}` : "none",
                       }}
                     >
-                      <div style={{ ...cellStyle, color: dimColor, whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
+                      <div style={{ ...cellStyle, fontWeight: 400, color: fg, whiteSpace: "nowrap" }}>{fmtDate(row.DATE)}</div>
                       <div style={{ ...cellStyle, color: fg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.GRN}</div>
-                      <div style={{ ...cellStyle, color: dimColor, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || "—"}</div>
+                      <div style={{ ...cellStyle, color: dimColor, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.SUPPLIER || ""}</div>
                       <div style={{ ...cellStyle, color: qtyColor, textAlign: "center" }}>{qtyDisplay}</div>
-                      <div style={{ ...cellStyle, color: dimColor, textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
+                      <div style={{ ...cellStyle, color: fg, textAlign: "right" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
                     </div>
                   );
                 })}
