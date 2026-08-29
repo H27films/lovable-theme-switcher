@@ -685,11 +685,11 @@ const handleSelectProduct = (p: Product) => {
                     borderBottom: `0.5px solid ${border}`,
                   }}
                 >
-                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>Date</div>
-                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>GRN</div>
-                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Supplier</div>
-                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Qty</div>
-                  <div style={{ ...hdrStyle, fontSize: "13px", letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "right" }}>Bal</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", fontWeight: 500, letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>Date</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", fontWeight: 500, letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px" }}>GRN</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", fontWeight: 500, letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Supplier</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", fontWeight: 500, letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "center" }}>Qty</div>
+                  <div style={{ ...hdrStyle, fontSize: "13px", fontWeight: 500, letterSpacing: "normal", fontFamily: "Raleway, inherit", color: fg, textTransform: "capitalize", paddingBottom: "6px", textAlign: "right" }}>Bal</div>
                 </div>
                 
                 {productLogLoading && <div style={{ gridColumn: "1/-1", fontSize: "11px", color: dimColor, padding: "8px 0" }}>Loading...</div>}
