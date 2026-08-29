@@ -211,12 +211,15 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
                     return (
                       <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
                         <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
-                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: isOfficeGRN ? undefined : "2 / 4", whiteSpace: "normal", wordBreak: "break-word" }}>{row["PRODUCT NAME"]}</div>
-                        {isOfficeGRN && (
-                          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {lineTotal !== null && lineTotal > 0 ? `RM ${lineTotal.toFixed(2)}` : "—"}
-                          </div>
-                        )}
+                        {/* Product name always spans the GRN + Supplier columns; OFFICE GRNs keep their line price, right-aligned inside the same cell */}
+                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", whiteSpace: "normal", wordBreak: "break-word", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", minWidth: 0 }}>
+                          <span style={{ minWidth: 0 }}>{row["PRODUCT NAME"]}</span>
+                          {isOfficeGRN && (
+                            <span style={{ flexShrink: 0, color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {lineTotal !== null && lineTotal > 0 ? `RM ${lineTotal.toFixed(2)}` : null}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: (row.BRANCH || "").toLowerCase() === "office" ? "hsl(120 45% 30%)" : "hsl(0 60% 35%)", textAlign: "center" }}>
                           {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
                         </div>
