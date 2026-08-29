@@ -340,7 +340,7 @@ const setLogViewToOrders = () => {
       overflow: "hidden",
     }}>
 {/* Header */}
-        <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} titleOverride={searchActive ? "SEARCH" : undefined} secondaryLabel={searchActive ? chicConfig.displayName : undefined} />
+        <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? chicConfig.displayName : undefined} />
 
        
 {/* Search input - only show when search is active */}
