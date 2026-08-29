@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
 import { supabase } from "@/integrations/supabase/client";
-import { therapistPillStyle } from "@/lib/branchSimpleUtils";
+import { therapistPillStyle, THERAPISTS } from "@/lib/branchSimpleUtils";
 import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { EditEntryModal, type EditEntryUpdates } from "./EditEntryModal";
 
@@ -12,6 +12,8 @@ interface LogTableProps {
   selectedProduct: any;
   onReverse: (row: LogRow) => void | Promise<void>;
   onUpdate?: (row: LogRow, updates: EditEntryUpdates) => void | Promise<void>;
+  /** Called to change a row's therapist directly from the expanded row (pill cycling). */
+  onTherapistChange?: (row: LogRow, therapist: string | null) => void | Promise<void>;
   viewType?: "all" | "usage" | "sale" | "orders";
   /** Called when the edit-entry modal opens (true) or closes (false). */
   onEditModalChange?: (open: boolean) => void;
@@ -25,7 +27,7 @@ interface LogTableProps {
   readOnly?: boolean;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -90,6 +92,19 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
     }
     return rows;
   }, [rows, viewType]);
+
+  // Therapist pill cycling (expanded rows): live therapist list with the same static fallback as the edit modal
+  const therapistCycleList = branchTherapists.length > 0 ? branchTherapists : [...THERAPISTS];
+
+  // NONE → first therapist → … → last therapist → NONE → …
+  const cycleRowTherapist = async (row: LogRow) => {
+    if (!onTherapistChange || therapistCycleList.length === 0) return;
+    const order: (string | null)[] = [null, ...therapistCycleList];
+    const current = (row.THERAPIST || "").trim().toUpperCase();
+    const idx = current ? order.indexOf(current) : 0;
+    const next = order[(idx + 1) % order.length];
+    await onTherapistChange(row, next);
+  };
 
   const fmtOrderDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -295,6 +310,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
             const expanded = expandedId === row.id;
             const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
             const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
+            const canCycleTherapist = !!onTherapistChange && withinCutoff;
 
             return (
               <div key={row.id} style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}>
@@ -397,9 +413,17 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, viewType 
                           </button>
                         )}
                       </div>
-                      {/* Colour-coded therapist pill, aligned under the Type column (col 4 on product view, col 5 on home view) */}
+                      {/* Colour-coded therapist pill, aligned under the Type column (col 4 on product view, col 5 on home view).
+                          Click it to cycle therapists (… → NONE → first therapist → …) directly — same edit window as Edit / Delete. */}
                       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                        {row.THERAPIST ? (
+                        {canCycleTherapist && therapistCycleList.length > 0 ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); cycleRowTherapist(row); }}
+                            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}
+                          >
+                            <span style={{ ...(row.THERAPIST ? therapistPillStyle(row.THERAPIST, therapistCycleList) : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST ? row.THERAPIST : "NONE"}</span>
+                          </button>
+                        ) : row.THERAPIST ? (
                           <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
                         ) : (
                           <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>

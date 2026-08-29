@@ -240,6 +240,23 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     }
   };
 
+const changeRowTherapist = async (row: LogRow, therapist: string | null) => {
+    try {
+      // Targeted update: only the THERAPIST column is touched (safe for all row types incl. Order)
+      await (supabase as any).from("AllFileLog").update({ THERAPIST: therapist }).eq("id", row.id);
+      if (selectedProduct && selectedProduct["PRODUCT NAME"] === row["PRODUCT NAME"]) {
+        const { data: freshPLog } = await (supabase as any).from("AllFileLog").select("*")
+          .eq("PRODUCT NAME", row["PRODUCT NAME"])
+          .eq("BRANCH", BRANCH_LOG_NAME)
+          .order("DATE", { ascending: false }).limit(50);
+        setProductLog(sortLog(freshPLog || []));
+      }
+      await refreshBranchLog();
+    } catch (err) {
+      console.error("Therapist change error:", err);
+    }
+};
+
 const handleHeaderBack = () => {
     if (searchMode !== "idle" || searchActive || selectedProduct) {
         // Title press from the search view or a product card -> branch home
@@ -321,7 +338,7 @@ const setLogViewToOrders = () => {
   const alreadyAdded = undefined;
 
   const logTableElement = (
-    <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} />
+    <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} />
   );
 
   return (
