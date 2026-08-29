@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_BUCKET = "PRODUCT_IMAGES";
@@ -192,28 +192,19 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
     flexShrink: 0,
   };
 
-  // Small thin white "ADD IMAGE" pill (shown while the product has no image yet)
-  const addPillStyle: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "6px",
-    padding: "9px 16px",
+  // Small round white "+" button (shown while the product has no image yet)
+  const addPlusStyle: React.CSSProperties = {
+    width: "34px",
+    height: "34px",
     borderRadius: "999px",
     border: "0.5px solid hsl(var(--border))",
     background: "#ffffff",
-    color: "#000000",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     cursor: "pointer",
-    lineHeight: 1,
+    padding: 0,
     flexShrink: 0,
-  };
-  const addPillTextStyle: React.CSSProperties = {
-    fontSize: "11px",
-    fontWeight: 400,
-    letterSpacing: "0.08em",
-    fontFamily: "Raleway, inherit",
-    color: "#000000",
-    whiteSpace: "nowrap",
   };
 
   return (
@@ -227,9 +218,8 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
       />
 
       {uploading && !displayUrl ? (
-        <div style={{ ...addPillStyle, cursor: "wait" }}>
-          <Loader2 size={12} className="animate-spin" style={{ color: "#000000" }} />
-          <span style={addPillTextStyle}>ADDING…</span>
+        <div style={{ ...addPlusStyle, cursor: "wait" }}>
+          <Loader2 size={15} className="animate-spin" style={{ color: "#000000" }} />
         </div>
       ) : uploading ? (
         <div style={{ ...thumbStyle, cursor: "wait" }}>
@@ -264,9 +254,9 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
           type="button"
           onClick={() => inputRef.current?.click()}
           title="Add image"
-          style={addPillStyle}
+          style={addPlusStyle}
         >
-          <span style={addPillTextStyle}>+ ADD IMAGE</span>
+          <Plus size={16} strokeWidth={1.8} style={{ color: "#000000" }} />
         </button>
       )}
 

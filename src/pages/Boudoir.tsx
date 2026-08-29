@@ -419,6 +419,7 @@ const setLogViewToOrders = () => {
                     branchLogName={BRANCH_LOG_NAME}
                     readOnly
                     scrollWithPage
+                    showFlowToggle
                     headerAction={
                       <button
                         onClick={(e) => { e.stopPropagation(); setPastDataExpanded(false); }}

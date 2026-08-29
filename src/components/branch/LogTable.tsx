@@ -27,9 +27,11 @@ interface LogTableProps {
   readOnly?: boolean;
   /** Render in page flow: no internal scrolling and no sticky header — the host page scrolls instead. */
   scrollWithPage?: boolean;
+  /** Show the All / In / Out flow toggle above the column headers (past-data product view). */
+  showFlowToggle?: boolean;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false, scrollWithPage = false }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false, scrollWithPage = false, showFlowToggle = false }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -99,6 +101,26 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
     }
     return rows;
   }, [rows, viewType]);
+
+  // ── Past-data flow toggle (All / In / Out) ────────────────────────────
+  // In  -> Order/Transfer rows with QTY > 0 (stock arriving)
+  // Out -> everything else: rows whose TYPE is neither Order nor Transfer,
+  //        plus Transfers with QTY < 0 (stock leaving)
+  const [flowMode, setFlowMode] = useState<"all" | "in" | "out">("all");
+  useEffect(() => { setFlowMode("all"); }, [selectedProduct]);
+  const flowRows = useMemo(() => {
+    if (!showFlowToggle || flowMode === "all") return displayRows;
+    if (flowMode === "in") {
+      return displayRows.filter(r => {
+        const type = (r.TYPE || "").trim().toUpperCase();
+        return (type === "ORDER" || type === "TRANSFER") && Number(r.QTY) > 0;
+      });
+    }
+    return displayRows.filter(r => {
+      const type = (r.TYPE || "").trim().toUpperCase();
+      return type !== "ORDER" && (type !== "TRANSFER" || Number(r.QTY) < 0);
+    });
+  }, [displayRows, flowMode, showFlowToggle]);
 
   // Therapist pill cycling (expanded rows): live therapist list with the same static fallback as the edit modal
   const therapistCycleList = branchTherapists.length > 0 ? branchTherapists : [...THERAPISTS];
@@ -324,8 +346,22 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   ) : (
     <div ref={containerRef} style={scrollWithPage ? { width: "100%", minWidth: 0 } : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
+        {showFlowToggle && (() => {
+          const flowOrder = ["all", "in", "out"] as const;
+          const activeIdx = flowOrder.indexOf(flowMode);
+          return (
+            <div style={{ position: "relative", display: "inline-flex", alignItems: "center", alignSelf: "flex-start", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "3px", marginBottom: "10px" }}>
+              <div style={{ position: "absolute", top: "3px", bottom: "3px", left: "3px", width: "calc((100% - 6px) / 3)", transform: `translateX(${activeIdx * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
+              {flowOrder.map(m => (
+                <button key={m} onClick={() => setFlowMode(m)} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "48px", padding: "3px 0", fontSize: "9.5px", fontWeight: flowMode === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: flowMode === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
+                  {m === "all" ? "All" : m}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
         {selectedProduct ? (
-          <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "1px solid hsl(var(--border) / 0.9)", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
+          <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
@@ -338,7 +374,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             )}
           </div>
         ) : (
-          <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "45px 1fr 28px 32px 70px", gap: "4px", paddingTop: "16px", paddingBottom: "10px", borderBottom: "1px solid hsl(var(--border) / 0.9)", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
+          <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "45px 1fr 28px 32px 70px", gap: "4px", paddingTop: "16px", paddingBottom: "10px", borderBottom: scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>Product</div>
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
@@ -347,16 +383,19 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
           </div>
         )}
         <div style={scrollWithPage ? undefined : { flex: 1, overflowY: "auto", minHeight: 0 }} onClick={() => changeExpandedRow(null)}>
-          {displayRows.map((row, idx) => {
+          {showFlowToggle && flowRows.length === 0 && (
+            <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
+          )}
+          {flowRows.map((row, idx) => {
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
             const dateStr = formatDate(row.DATE);
-            // Compare against the DISPLAYED list (displayRows) so date grouping stays correct
+            // Compare against the DISPLAYED list (flowRows) so date grouping stays correct
             // in the filtered usage/sale views, not just in the unfiltered all view.
-            const prevDateStr = idx > 0 ? formatDate(displayRows[idx - 1].DATE) : null;
+            const prevDateStr = idx > 0 ? formatDate(flowRows[idx - 1].DATE) : null;
             const showDate = dateStr !== prevDateStr;
             const dateSeparator = showDate && idx > 0;
-            const nextDateStr = idx < displayRows.length - 1 ? formatDate(displayRows[idx + 1].DATE) : null;
+            const nextDateStr = idx < flowRows.length - 1 ? formatDate(flowRows[idx + 1].DATE) : null;
             const isLastRowBeforeDateChange = nextDateStr !== null && nextDateStr !== dateStr;
             const isDeleting = deleting === row.id;
             const expanded = expandedId === row.id;
@@ -375,7 +414,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                     gridTemplateColumns: gridCols, 
                     gap: "4px", 
                     padding: "8px 0", 
-                    borderTop: dateSeparator ? "1px solid hsl(var(--border) / 0.9)" : "none", 
+                    borderTop: dateSeparator ? (scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)") : "none", 
                     borderBottom: "none",
                     marginTop: dateSeparator ? "4px" : "0",  
                     alignItems: "start", 
