@@ -241,10 +241,10 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
     }}>
 
             {/* ── TOP AREA ── */}
-            <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", flexShrink: 0 }}>
+            <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", flexShrink: 0 }}>
 
 {/* Branch name header row */}
-<div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
+<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
   <button
     onClick={() => navigate("/simple/branches/admin")}
     style={{
