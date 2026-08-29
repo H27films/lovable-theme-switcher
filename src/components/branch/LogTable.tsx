@@ -32,6 +32,11 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  // Therapist change staged on the expanded row: cycled locally, written to Supabase once on collapse
+  const [pendingTherapist, setPendingTherapist] = useState<{ row: LogRow; value: string | null } | null>(null);
+  const pendingTherapistRef = useRef<{ row: LogRow; value: string | null } | null>(null);
+  const onTherapistChangeRef = useRef(onTherapistChange);
+  onTherapistChangeRef.current = onTherapistChange;
   const [editRow, setEditRow] = useState<LogRow | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const branchTherapists = useBranchTherapists(branchDisplayName);
@@ -96,14 +101,45 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   // Therapist pill cycling (expanded rows): live therapist list with the same static fallback as the edit modal
   const therapistCycleList = branchTherapists.length > 0 ? branchTherapists : [...THERAPISTS];
 
+  const therapistChanged = (row: LogRow, value: string | null) =>
+    (row.THERAPIST || "").trim().toUpperCase() !== (value || "").trim().toUpperCase();
+
   // NONE → first therapist → … → last therapist → NONE → …
-  const cycleRowTherapist = async (row: LogRow) => {
-    if (!onTherapistChange || therapistCycleList.length === 0) return;
+  // Cycling is local-only: the value is staged and written once when the row collapses.
+  const cycleRowTherapist = (row: LogRow) => {
+    if (therapistCycleList.length === 0) return;
     const order: (string | null)[] = [null, ...therapistCycleList];
-    const current = (row.THERAPIST || "").trim().toUpperCase();
+    const staged = pendingTherapistRef.current && pendingTherapistRef.current.row.id === row.id
+      ? pendingTherapistRef.current.value
+      : row.THERAPIST;
+    const current = (staged || "").trim().toUpperCase();
     const idx = current ? order.indexOf(current) : 0;
     const next = order[(idx + 1) % order.length];
-    await onTherapistChange(row, next);
+    const pending = { row, value: next };
+    pendingTherapistRef.current = pending;
+    setPendingTherapist(pending);
+  };
+
+  // Write the staged therapist (if any) — called when the expanded row collapses
+  const commitPendingTherapist = () => {
+    const p = pendingTherapistRef.current;
+    if (!p) return;
+    pendingTherapistRef.current = null;
+    setPendingTherapist(null);
+    if (onTherapistChange && therapistChanged(p.row, p.value)) {
+      void onTherapistChange(p.row, p.value);
+    }
+  };
+
+  const discardPendingTherapist = () => {
+    pendingTherapistRef.current = null;
+    setPendingTherapist(null);
+  };
+
+  // Collapse / switch the expanded row, committing any staged therapist change first
+  const changeExpandedRow = (id: number | null) => {
+    commitPendingTherapist();
+    setExpandedId(id);
   };
 
   const fmtOrderDate = (dateStr: string) =>
@@ -123,6 +159,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
     setConfirmRow(null);
     setConfirmPos(null);
     setDeleting(row.id);
+    discardPendingTherapist();
     setExpandedId(null);
     try {
       await onReverse(r);
@@ -198,7 +235,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
 
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setExpandedId(null);
+        changeExpandedRow(null);
       }
     };
 
@@ -207,6 +244,19 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [expandedId]);
+
+  // Safety net: if the table unmounts while a row is expanded with a staged change, commit it
+  useEffect(() => {
+    return () => {
+      const p = pendingTherapistRef.current;
+      const cb = onTherapistChangeRef.current;
+      if (p && cb && (p.row.THERAPIST || "").trim().toUpperCase() !== (p.value || "").trim().toUpperCase()) {
+        void cb(p.row, p.value);
+      }
+      pendingTherapistRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Notify the parent when the edit modal opens/closes so the bottom nav can be hidden
   useEffect(() => {
@@ -294,7 +344,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
           </div>
         )}
-        <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }} onClick={() => setExpandedId(null)}>
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }} onClick={() => changeExpandedRow(null)}>
           {displayRows.map((row, idx) => {
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
@@ -311,11 +361,13 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
             const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
             const canCycleTherapist = !!onTherapistChange && withinCutoff;
+            // Cycled therapist is staged locally until the row collapses; show it immediately on the pill
+            const pillTherapist = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist.value : row.THERAPIST;
 
             return (
               <div key={row.id} style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}>
                 <div
-                  onClick={(e) => { if (readOnly) return; e.stopPropagation(); setExpandedId(expanded ? null : row.id); }}
+                  onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(expanded ? null : row.id); }}
                   style={{ 
                     display: "grid", 
                     gridTemplateColumns: gridCols, 
@@ -392,7 +444,13 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                       <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
                         {onUpdate && withinCutoff && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); setEditRow(row); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Open the modal from the staged therapist (if one was cycled), then commit it
+                              const stagedPending = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist : null;
+                              commitPendingTherapist();
+                              setEditRow(stagedPending ? { ...row, THERAPIST: stagedPending.value } : row);
+                            }}
                             style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}
                           >
                             Edit
@@ -421,10 +479,10 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                             onClick={(e) => { e.stopPropagation(); cycleRowTherapist(row); }}
                             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}
                           >
-                            <span style={{ ...(row.THERAPIST ? therapistPillStyle(row.THERAPIST, therapistCycleList) : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST ? row.THERAPIST : "NONE"}</span>
+                            <span style={{ ...(pillTherapist ? therapistPillStyle(pillTherapist, therapistCycleList) : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist ? pillTherapist : "NONE"}</span>
                           </button>
-                        ) : row.THERAPIST ? (
-                          <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                        ) : pillTherapist ? (
+                          <span style={{ ...therapistPillStyle(pillTherapist, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist}</span>
                         ) : (
                           <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}
