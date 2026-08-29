@@ -10,6 +10,8 @@ interface BottomNavProps {
   goHome: () => void;
   isHome: boolean;
   compact?: boolean;
+  /** Lift the nav above a fixed bottom bar (e.g. the collapsed past-data footer). */
+  raised?: boolean;
 }
 
 const items = [
@@ -27,6 +29,7 @@ export const BottomNav = ({
   goHome,
   isHome,
   compact = false,
+  raised = false,
 }: BottomNavProps) => {
   const isActive = (key: string) => {
     if (key === "HOME") return isHome;
@@ -49,7 +52,7 @@ export const BottomNav = ({
         position: "fixed",
         left: "50%",
         transform: "translateX(-50%)",
-        bottom: compact ? "env(safe-area-inset-bottom, 0px)" : "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+        bottom: compact ? "env(safe-area-inset-bottom, 0px)" : `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 16}px)`,
         zIndex: 99999,
         display: "flex",
         alignItems: "center",

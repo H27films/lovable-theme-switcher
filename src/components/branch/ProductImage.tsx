@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Camera, Loader2, Plus } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_BUCKET = "PRODUCT_IMAGES";
@@ -192,19 +192,24 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
     flexShrink: 0,
   };
 
-  // Small round white "+" button (shown while the product has no image yet)
-  const addPlusStyle: React.CSSProperties = {
-    width: "34px",
-    height: "34px",
+  // Small black circle with a white "+" (shown while the product has no image yet)
+  const addPlusCircleStyle: React.CSSProperties = {
+    width: "28px",
+    height: "28px",
     borderRadius: "999px",
-    border: "0.5px solid hsl(var(--border))",
-    background: "#ffffff",
+    background: "#000000",
+    border: "none",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
     padding: 0,
     flexShrink: 0,
+    fontSize: "18px",
+    fontWeight: 300,
+    lineHeight: 1,
+    color: "#ffffff",
+    fontFamily: "Raleway, inherit",
   };
 
   return (
@@ -218,8 +223,8 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
       />
 
       {uploading && !displayUrl ? (
-        <div style={{ ...addPlusStyle, cursor: "wait" }}>
-          <Loader2 size={15} className="animate-spin" style={{ color: "#000000" }} />
+        <div style={{ ...addPlusCircleStyle, cursor: "wait" }}>
+          <Loader2 size={14} className="animate-spin" style={{ color: "#ffffff" }} />
         </div>
       ) : uploading ? (
         <div style={{ ...thumbStyle, cursor: "wait" }}>
@@ -254,9 +259,9 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
           type="button"
           onClick={() => inputRef.current?.click()}
           title="Add image"
-          style={addPlusStyle}
+          style={addPlusCircleStyle}
         >
-          <Plus size={16} strokeWidth={1.8} style={{ color: "#000000" }} />
+          +
         </button>
       )}
 

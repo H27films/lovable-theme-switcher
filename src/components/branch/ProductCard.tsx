@@ -16,9 +16,11 @@ interface ProductCardProps {
   branchLogName: string;
   /** Called after the product image is uploaded/updated so the page can refresh its state. */
   onImageUpdated?: (url: string | null) => void | Promise<void>;
+  /** Called when the product name is tapped (e.g. back to product search). */
+  onProductNameClick?: () => void;
 }
 
-export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggleFav, isFavourite, branchLogName, onImageUpdated }: ProductCardProps) => {
+export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggleFav, isFavourite, branchLogName, onImageUpdated, onProductNameClick }: ProductCardProps) => {
   const [usage, setUsage] = useState<number | null>(null);
   const [period, setPeriod] = useState<number | null>(null);
   const [perWeek, setPerWeek] = useState<number | null>(null);
@@ -65,7 +67,10 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
   return (
     <div style={{ flexShrink: 0, marginTop: "14px", marginBottom: "12px", paddingBottom: "0px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "18px" }}>
-        <div style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))" }}>
+        <div
+          onClick={onProductNameClick}
+          style={{ fontSize: "clamp(16px, 4.5vw, 22px)", fontWeight: 400, fontFamily: "Raleway, inherit", lineHeight: 1.3, color: "hsl(var(--foreground))", cursor: onProductNameClick ? "pointer" : "default" }}
+        >
           {selectedProduct["PRODUCT NAME"]}
         </div>
         {(selectedProduct as any)[balanceKey] != null && (

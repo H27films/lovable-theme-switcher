@@ -350,24 +350,30 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
           const flowOrder = ["all", "in", "out"] as const;
           const activeIdx = flowOrder.indexOf(flowMode);
           return (
-            <div style={{ position: "relative", display: "inline-flex", alignItems: "center", alignSelf: "flex-start", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "3px", marginBottom: "10px" }}>
-              <div style={{ position: "absolute", top: "3px", bottom: "3px", left: "3px", width: "calc((100% - 6px) / 3)", transform: `translateX(${activeIdx * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
-              {flowOrder.map(m => (
-                <button key={m} onClick={() => setFlowMode(m)} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "48px", padding: "3px 0", fontSize: "9.5px", fontWeight: flowMode === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: flowMode === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
-                  {m === "all" ? "All" : m}
-                </button>
-              ))}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Past Data</span>
+                {headerAction}
+              </div>
+              <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px" }}>
+                <div style={{ position: "absolute", top: "2px", bottom: "2px", left: "2px", width: "calc((100% - 4px) / 3)", transform: `translateX(${activeIdx * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
+                {flowOrder.map(m => (
+                  <button key={m} onClick={() => setFlowMode(m)} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "40px", padding: "2px 0", fontSize: "8.5px", fontWeight: flowMode === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: flowMode === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
+                    {m === "all" ? "All" : m}
+                  </button>
+                ))}
+              </div>
             </div>
           );
         })()}
         {selectedProduct ? (
           <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
+            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
+            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
+            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
+            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
             {/* Therapist column has no header — the name is shown as a pill; headerAction (e.g. minimise chevron) sits here */}
-            {headerAction ? (
+            {!showFlowToggle && headerAction ? (
               <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{headerAction}</div>
             ) : (
               <div />

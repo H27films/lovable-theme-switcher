@@ -397,14 +397,15 @@ const setLogViewToOrders = () => {
         {!searchActive && (
           <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "120px" : "0px" }}>
             {selectedProduct && (
-              <ProductCard 
-                selectedProduct={selectedProduct} 
-                balanceKey={BALANCE_KEY} 
-                favouriteKey={boudoirConfig.favouriteKey} 
+              <ProductCard
+                selectedProduct={selectedProduct}
+                balanceKey={BALANCE_KEY}
+                favouriteKey={boudoirConfig.favouriteKey}
                 onToggleFav={toggleFavourite}
                 isFavourite={isFav}
                 branchLogName={BRANCH_LOG_NAME}
                 onImageUpdated={handleProductImageUpdated}
+                onProductNameClick={toggleSearch}
               />
             )}
             {selectedProduct && (
@@ -448,7 +449,7 @@ const setLogViewToOrders = () => {
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "6px", paddingLeft: "16px", flex: 1, cursor: "pointer", color: "hsl(var(--foreground))" }}>
-                      <span style={{ fontFamily: "Raleway, inherit", fontWeight: 300, letterSpacing: "0.06em", fontSize: "14px" }}>Past Data</span>
+                      <span style={{ fontFamily: "Raleway, inherit", fontWeight: 400, letterSpacing: "0.06em", fontSize: "14px" }}>Past Data</span>
                       <ChevronUp size={14} />
                     </div>
                   </div>,
@@ -565,6 +566,7 @@ const setLogViewToOrders = () => {
           toggleSearch={toggleSearch}
           goHome={goHome}
           isHome={!activePanel && !searchActive && !selectedProduct}
+          raised={isSearchProduct && !pastDataExpanded}
         />
       )}
 
