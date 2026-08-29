@@ -69,6 +69,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   const [usageEntries, setUsageEntries] = useState<EntryLine[]>(() => loadStoredEntries(config.key));
   const [usageSearch, setUsageSearch] = useState("");
   const [showUsageDropdown, setShowUsageDropdown] = useState(false);
+  const [usageKeyboardArmed, setUsageKeyboardArmed] = useState(false); // false = first tap only opens the dropdown (no keyboard); true = input editable
   const [usageSubmitting, setUsageSubmitting] = useState(false);
   const [usageSuccess, setUsageSuccess] = useState(false);
   const [usageError, setUsageError] = useState<string | null>(null);
@@ -123,12 +124,14 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
     }
     setUsageSearch("");
     setShowUsageDropdown(false);
+    setUsageKeyboardArmed(false);
     usageInputRef.current?.blur();
   };
 
   const dismissUsageDropdown = () => {
     setShowUsageDropdown(false);
     setUsageSearch("");
+    setUsageKeyboardArmed(false);
     usageInputRef.current?.blur();
   };
 
@@ -274,7 +277,12 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
     }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
-          <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>USAGE</button>
+          <span style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+            <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>USAGE</button>
+            <span style={{ fontSize: "13px", fontWeight: 300, letterSpacing: "0.01em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
+              {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
+            </span>
+          </span>
           <button onClick={closePanel} aria-label="Back to menu" title="Back" style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center" }}>
             <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
               <line x1="30" y1="8" x2="1" y2="8" />
@@ -283,33 +291,29 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
           </button>
         </div>
 
-        <div
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", cursor: showUsageDropdown ? "pointer" : "default" }}
-          onClick={() => { if (showUsageDropdown) dismissUsageDropdown(); }}
-        >
-          <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textTransform: "uppercase" }}>
-            Enter Today's Stock Movements
-          </span>
-          <span style={{ fontSize: "15px", fontWeight: 400, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
-            {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
-          </span>
-        </div>
-
         <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "12px", marginBottom: "0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <input
               ref={usageInputRef}
               type="text"
               inputMode="search"
+              readOnly={!usageKeyboardArmed}
               value={usageSearch}
               onChange={e => { setUsageSearch(e.target.value); setShowUsageDropdown(true); }}
               onFocus={() => setShowUsageDropdown(true)}
               onKeyDown={handleUsageKeyNav}
+              onClick={() => {
+                if (usageKeyboardArmed) return; // already editable — this tap focuses normally and raises the keyboard
+                // First tap: open the dropdown, but keep the keyboard down
+                setShowUsageDropdown(true);
+                setUsageKeyboardArmed(true);
+                usageInputRef.current?.blur();
+              }}
               placeholder="Select Product..."
-              style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))" }}
+              style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "15px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))" }}
             />
             <button
-              onMouseDown={e => { e.preventDefault(); if (showUsageDropdown) { dismissUsageDropdown(); } else { setShowUsageDropdown(true); usageInputRef.current?.focus(); } }}
+              onMouseDown={e => { e.preventDefault(); if (showUsageDropdown) { dismissUsageDropdown(); } else { setShowUsageDropdown(true); setUsageKeyboardArmed(true); usageInputRef.current?.focus(); } }}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground))", flexShrink: 0, display: "flex", alignItems: "center" }}
             >
               {showUsageDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
