@@ -70,6 +70,17 @@ export default function Search({ onBack }: SearchProps) {
   // Product detail state
   const [productLog, setProductLog] = useState<ProductLog[]>([]);
   const [productLogLoading, setProductLogLoading] = useState(false);
+  // Past Data flow toggle (All / In / Out) — Out = SUPPLIER "OFFICE", In = everything else
+  const [flowMode, setFlowMode] = useState<"all" | "in" | "out">("all");
+  useEffect(() => { setFlowMode("all"); }, [selectedProduct]);
+  const grnLog = useMemo(() => productLog.filter(r => r.GRN), [productLog]);
+  const flowRows = useMemo(() => {
+    if (flowMode === "all") return grnLog;
+    return grnLog.filter(r => {
+      const supplier = (r.SUPPLIER || "").trim().toUpperCase();
+      return flowMode === "out" ? supplier === "OFFICE" : supplier !== "OFFICE";
+    });
+  }, [grnLog, flowMode]);
   const [usageOpen, setUsageOpen] = useState(false);
   const [usageType, setUsageType] = useState<"Personal Use" | "Expired">("Personal Use");
   const [usageQty, setUsageQty] = useState("");
@@ -652,8 +663,18 @@ const handleSelectProduct = (p: Product) => {
             </div>
 
             {/* Past Data transactions */}
-            <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "20px", paddingBottom: "20px" }}>
-              <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Past Data</div>
+            <div style={{ background: "hsl(var(--muted) / 0.3)", borderRadius: "16px", padding: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: fg }}>Past Data</span>
+                <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px" }}>
+                  <div style={{ position: "absolute", top: "2px", bottom: "2px", left: "2px", width: "calc((100% - 4px) / 3)", transform: `translateX(${(["all", "in", "out"] as const).indexOf(flowMode) * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
+                  {(["all", "in", "out"] as const).map(m => (
+                    <button key={m} onClick={() => setFlowMode(m)} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "40px", padding: "2px 0", fontSize: "8.5px", fontWeight: flowMode === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: flowMode === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
+                      {m === "all" ? "All" : m}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "54px minmax(0, 100px) minmax(0, 120px) 32px 38px", columnGap: "4px" }}>
                 <div
                   style={{
@@ -672,10 +693,10 @@ const handleSelectProduct = (p: Product) => {
                 </div>
                 
                 {productLogLoading && <div style={{ gridColumn: "1/-1", fontSize: "11px", color: dimColor, padding: "8px 0" }}>Loading...</div>}
-                {!productLogLoading && productLog.filter(r => r.GRN).length === 0 && (
+                {!productLogLoading && flowRows.length === 0 && (
                   <div style={{ gridColumn: "1/-1", fontSize: "11px", color: dimColor, padding: "8px 0" }}>No entries</div>
                 )}
-                {!productLogLoading && productLog.filter(r => r.GRN).map((row, i, arr) => {
+                {!productLogLoading && flowRows.map((row, i, arr) => {
                   const isOffice = (row.BRANCH || "").toLowerCase() === "office";
                   const qty = Math.abs(row.QTY);
                   const qtyDisplay = isOffice ? `+${qty}` : `-${qty}`;
