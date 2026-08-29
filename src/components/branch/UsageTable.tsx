@@ -372,12 +372,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px" }}>
                   <span style={{ display: "flex", alignItems: "baseline", gap: "10px", flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", maxWidth: "60%" }}>{entry.productName}</span>
-                    {/* Balance: starting → ending, so the change is visible at a glance */}
-                    <span style={{ display: "flex", alignItems: "baseline", gap: "5px", flexShrink: 0 }}>
-                      <span style={{ fontSize: "15px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>{currentBalance}</span>
-                      <span style={{ fontSize: "13px", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>→</span>
-                      <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: projectedBalance <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--green, 120 60% 40%))" }}>{projectedBalance}</span>
-                    </span>
+                    <span style={{ fontSize: "17px", fontWeight: 500, fontFamily: "Raleway, inherit", color: projectedBalance <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--green, 120 60% 40%))", flexShrink: 0 }}>{projectedBalance}</span>
                   </span>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                     <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty - 1 } : e))} aria-label="Decrease quantity" style={{ background: "hsl(var(--raised, 38 30% 97.5%))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
