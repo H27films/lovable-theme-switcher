@@ -654,12 +654,12 @@ const handleSelectProduct = (p: Product) => {
             {/* Past Data transactions */}
             <div style={{ borderTop: `0.5px solid ${border}`, paddingTop: "20px", paddingBottom: "20px" }}>
               <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.06em", color: fg, marginBottom: "10px" }}>Past Data</div>
-              <div style={{ display: "grid", gridTemplateColumns: "54px 1fr 86px 32px 38px", columnGap: "4px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "54px minmax(0, 100px) minmax(0, 120px) 32px 38px", columnGap: "4px" }}>
                 <div
                   style={{
                     gridColumn: "1 / -1",
                     display: "grid",
-                    gridTemplateColumns: "54px 1fr 86px 32px 38px",
+                    gridTemplateColumns: "54px minmax(0, 100px) minmax(0, 120px) 32px 38px",
                     columnGap: "4px",
                     borderBottom: `0.5px solid ${border}`,
                   }}
@@ -690,7 +690,7 @@ const handleSelectProduct = (p: Product) => {
                       style={{
                         gridColumn: "1 / -1",
                         display: "grid",
-                        gridTemplateColumns: "54px 1fr 86px 32px 38px",
+                        gridTemplateColumns: "54px minmax(0, 100px) minmax(0, 120px) 32px 38px",
                         columnGap: "4px",
                         borderBottom: i < arr.length - 1 ? `0.5px solid ${border}` : "none",
                       }}
