@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Camera, ImagePlus, Loader2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_BUCKET = "PRODUCT_IMAGES";
@@ -192,6 +192,30 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
     flexShrink: 0,
   };
 
+  // Small thin white "ADD IMAGE" pill (shown while the product has no image yet)
+  const addPillStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    padding: "4px 14px",
+    borderRadius: "999px",
+    border: "0.5px solid hsl(var(--border))",
+    background: "#ffffff",
+    color: "#000000",
+    cursor: "pointer",
+    lineHeight: 1,
+    flexShrink: 0,
+  };
+  const addPillTextStyle: React.CSSProperties = {
+    fontSize: "11px",
+    fontWeight: 400,
+    letterSpacing: "0.08em",
+    fontFamily: "Raleway, inherit",
+    color: "#000000",
+    whiteSpace: "nowrap",
+  };
+
   return (
     <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
       <input
@@ -202,7 +226,12 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
 
-      {uploading ? (
+      {uploading && !displayUrl ? (
+        <div style={{ ...addPillStyle, cursor: "wait" }}>
+          <Loader2 size={12} className="animate-spin" style={{ color: "#000000" }} />
+          <span style={addPillTextStyle}>ADDING…</span>
+        </div>
+      ) : uploading ? (
         <div style={{ ...thumbStyle, cursor: "wait" }}>
           <Loader2 size={Math.max(14, Math.round(size * 0.35))} className="animate-spin" style={{ color: "hsl(var(--muted-foreground))" }} />
         </div>
@@ -235,10 +264,9 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
           type="button"
           onClick={() => inputRef.current?.click()}
           title="Add image"
-          style={thumbStyle}
+          style={addPillStyle}
         >
-          <ImagePlus size={Math.max(13, Math.round(size * 0.3))} style={{ color: "hsl(var(--muted-foreground))" }} />
-          <span style={{ fontSize: "8.5px", fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>ADD IMAGE</span>
+          <span style={addPillTextStyle}>ADD IMAGE</span>
         </button>
       )}
 
