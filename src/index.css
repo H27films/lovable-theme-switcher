@@ -44,6 +44,9 @@
     --green: 150 40% 45%;
     --red: 0 60% 55%;
 
+    /* Background hue but slightly lighter — subtle raised buttons (e.g. qty +/- steppers) */
+    --raised: 38 30% 97.5%;
+
     --sidebar-background: 37 27% 93%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
