@@ -383,7 +383,7 @@ const setLogViewToOrders = () => {
           />
         )}
         {!searchActive && (
-          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "170px" : "0px" }}>
+          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "120px" : "0px" }}>
             {selectedProduct && (
               <ProductCard 
                 selectedProduct={selectedProduct} 
@@ -487,7 +487,7 @@ const setLogViewToOrders = () => {
     </button>
   </div>
 )}
-            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={chicConfig.displayName} branchLogName={BRANCH_LOG_NAME} />
+            <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={chicConfig.displayName} branchLogName={BRANCH_LOG_NAME} scrollWithPage={!!selectedProduct} />
           </div>
         )}
       </div>

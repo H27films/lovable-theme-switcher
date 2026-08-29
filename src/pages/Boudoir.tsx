@@ -395,7 +395,7 @@ const setLogViewToOrders = () => {
           />
         )}
         {!searchActive && (
-          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "170px" : "0px" }}>
+          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "120px" : "0px" }}>
             {selectedProduct && (
               <ProductCard 
                 selectedProduct={selectedProduct} 
@@ -406,6 +406,54 @@ const setLogViewToOrders = () => {
                 branchLogName={BRANCH_LOG_NAME}
                 onImageUpdated={handleProductImageUpdated}
               />
+            )}
+            {selectedProduct && (
+              pastDataExpanded ? (
+                <div style={{ marginTop: "16px" }}>
+                  <LogTable
+                    rows={activeLog}
+                    selectedProduct={selectedProduct}
+                    onReverse={reverseRow}
+                    viewType="all"
+                    branchDisplayName={boudoirConfig.displayName}
+                    branchLogName={BRANCH_LOG_NAME}
+                    readOnly
+                    scrollWithPage
+                    headerAction={
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPastDataExpanded(false); }}
+                        aria-label="Minimise past data"
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}
+                      >
+                        <ChevronDown size={14} />
+                      </button>
+                    }
+                  />
+                </div>
+              ) : (
+                createPortal(
+                  <div
+                    onClick={() => setPastDataExpanded(true)}
+                    style={{
+                      position: "fixed", bottom: 0, left: 0,
+                      width: tablet ? "76.92308vw" : "100vw",
+                      height: tablet ? "36.923px" : "48px",
+                      background: "hsl(var(--background))",
+                      borderTop: "0.5px solid hsl(var(--border))",
+                      borderRadius: "12px 12px 0 0",
+                      display: "flex", alignItems: "center",
+                      zIndex: 50,
+                      zoom: tablet ? 1.3 : 1,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "6px", paddingLeft: "16px", flex: 1, cursor: "pointer", color: "hsl(var(--foreground))" }}>
+                      <span style={{ fontFamily: "Raleway, inherit", fontWeight: 300, letterSpacing: "0.06em", fontSize: "14px" }}>Past Data</span>
+                      <ChevronUp size={14} />
+                    </div>
+                  </div>,
+                  document.body
+                )
+              )
             )}
 {!selectedProduct && (
   <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -566,54 +614,6 @@ const setLogViewToOrders = () => {
           nameOf={nameOf}
           allowedIds={allowedIds}
         />,
-        document.body
-      )}
-
-      {/* Past Data bottom sheet panel (only when a product is selected) */}
-      {selectedProduct && createPortal(
-        <div style={{
-          position: "fixed", bottom: 0, left: 0,
-          width: tablet ? "76.92308vw" : "100vw",
-          height: pastDataExpanded ? (tablet ? "26vh" : "38vh") : (tablet ? "36.923px" : "48px"),
-          transition: "height 0.3s ease",
-          background: "hsl(var(--background))",
-          borderTop: pastDataExpanded ? "none" : "0.5px solid hsl(var(--border))",
-          borderRadius: "12px 12px 0 0",
-          display: "flex", flexDirection: "column",
-          zIndex: 50,
-          zoom: tablet ? 1.3 : 1,
-        }}>
-          {pastDataExpanded ? (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, padding: "0 12px" }}>
-              <LogTable
-                rows={activeLog}
-                selectedProduct={selectedProduct}
-                onReverse={reverseRow}
-                viewType={selectedProduct ? "all" : logView}
-                branchDisplayName={boudoirConfig.displayName}
-                branchLogName={BRANCH_LOG_NAME}
-                readOnly
-                headerAction={
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setPastDataExpanded(false); }}
-                    aria-label="Minimise past data"
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                }
-              />
-            </div>
-          ) : (
-            <div
-              onClick={() => setPastDataExpanded(true)}
-              style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "6px", paddingLeft: "16px", flex: 1, cursor: "pointer", color: "hsl(var(--foreground))" }}
-            >
-              <span style={{ fontFamily: "Raleway, inherit", fontWeight: 300, letterSpacing: "0.06em", fontSize: "14px" }}>Past Data</span>
-              <ChevronUp size={14} />
-            </div>
-          )}
-        </div>,
         document.body
       )}
 
