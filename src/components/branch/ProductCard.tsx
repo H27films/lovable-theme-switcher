@@ -102,19 +102,19 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px" }}>
         <div>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Bal</div>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px", letterSpacing: "0.06em" }}>Bal</div>
           <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: (selectedProduct as any)[balanceKey] == null ? "hsl(var(--foreground))" : Number((selectedProduct as any)[balanceKey]) > 0 ? "hsl(142 65% 30%)" : "hsl(0 70% 50%)" }}>
             {(selectedProduct as any)[balanceKey] != null ? (selectedProduct as any)[balanceKey] : "—"}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Staff Price</div>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px", letterSpacing: "0.06em" }}>Staff Price</div>
           <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {selectedProduct["STAFF PRICE"] != null ? `RM ${Number(selectedProduct["STAFF PRICE"]).toFixed(2)}` : "—"}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Customer Price</div>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px", letterSpacing: "0.06em" }}>Customer Price</div>
           <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {selectedProduct["CUSTOMER PRICE"] != null ? `RM ${Number(selectedProduct["CUSTOMER PRICE"]).toFixed(2)}` : "—"}
           </div>
@@ -123,19 +123,19 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px", marginTop: "12px" }}>
         <div>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Usage</div>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px", letterSpacing: "0.06em" }}>Usage</div>
           <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {usage ?? "—"}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Period (WK)</div>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px", letterSpacing: "0.06em" }}>Period (WK)</div>
           <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {period ?? "—"}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", marginBottom: "2px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Per/Week</div>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "#000000", marginBottom: "2px", letterSpacing: "0.06em" }}>Per/Week</div>
           <div style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
             {perWeek ?? "—"}
           </div>
