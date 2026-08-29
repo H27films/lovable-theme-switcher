@@ -487,7 +487,9 @@ const setLogViewToOrders = () => {
     </button>
   </div>
 )}
+            <div style={selectedProduct ? { background: "hsl(var(--muted) / 0.3)", borderRadius: "16px", padding: "12px" } : { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
             <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={chicConfig.displayName} branchLogName={BRANCH_LOG_NAME} scrollWithPage={!!selectedProduct} />
+            </div>
           </div>
         )}
       </div>

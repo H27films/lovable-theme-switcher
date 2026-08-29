@@ -409,7 +409,7 @@ const setLogViewToOrders = () => {
             )}
             {selectedProduct && (
               pastDataExpanded ? (
-                <div style={{ marginTop: "16px" }}>
+                <div style={{ background: "hsl(var(--muted) / 0.3)", borderRadius: "16px", padding: "12px", marginTop: "16px" }}>
                   <LogTable
                     rows={activeLog}
                     selectedProduct={selectedProduct}

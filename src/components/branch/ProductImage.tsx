@@ -198,7 +198,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
     alignItems: "center",
     justifyContent: "center",
     gap: "6px",
-    padding: "4px 14px",
+    padding: "9px 16px",
     borderRadius: "999px",
     border: "0.5px solid hsl(var(--border))",
     background: "#ffffff",
@@ -266,7 +266,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64 }: Prod
           title="Add image"
           style={addPillStyle}
         >
-          <span style={addPillTextStyle}>ADD IMAGE</span>
+          <span style={addPillTextStyle}>+ ADD IMAGE</span>
         </button>
       )}
 
