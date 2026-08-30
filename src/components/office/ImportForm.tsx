@@ -228,8 +228,9 @@ const runImport = () => {
             style={{
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               gap: "10px", padding: "24px 16px",
-              border: "0.5px dashed hsl(var(--border-active))", borderRadius: "10px",
-              background: "hsl(var(--surface))",
+              width: "75%", margin: "0 auto",
+              border: "1px dashed hsl(var(--border-active))", borderRadius: "10px",
+              background: "hsl(var(--background))",
               cursor: "pointer",
               transition: "border-color 0.2s",
             }}

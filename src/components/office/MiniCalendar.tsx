@@ -3,6 +3,9 @@ import { useState } from "react";
 // ── Mini Calendar ────────────────────────────────────────────
 const CAL_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CAL_DAYS   = ["M","T","W","T","F","S","S"];
+// Short names for the compact date display inside the field, e.g. "Thu 28 Aug".
+const SHORT_DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const SHORT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
   value: string; onChange: (v: string) => void; placeholder?: string;
@@ -24,7 +27,7 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
   };
 
   const displayStr = parsed
-    ? `${String(parsed.getDate()).padStart(2,"0")}/${String(parsed.getMonth()+1).padStart(2,"0")}/${String(parsed.getFullYear()).slice(-2)}`
+    ? `${SHORT_DAYS[parsed.getDay()]} ${parsed.getDate()} ${SHORT_MONTHS[parsed.getMonth()]}`
     : placeholder;
 
   const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y-1); } else setViewMonth(m => m-1); };

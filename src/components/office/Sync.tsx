@@ -161,7 +161,7 @@ export default function Sync({ onClose, onImported, onProductsUpdated }: SyncPro
                 <div
                   key={opt.key}
                   style={{
-                    border: open ? "0.5px solid hsl(var(--foreground))" : "0.5px solid hsl(var(--border))",
+                    border: open ? "none" : "0.5px solid hsl(var(--border))",
                     borderRadius: "10px",
                     background: open ? "hsl(var(--card))" : "none",
                     overflow: "hidden",
