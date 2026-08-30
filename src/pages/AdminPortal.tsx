@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import {
-  ArrowLeft,
   Building2,
   User,
   ChevronRight,
@@ -142,7 +141,19 @@ const AdminPortal = () => {
         onMouseEnter={e => (e.currentTarget.style.opacity = "0.55")}
         onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
       >
-        <ArrowLeft size={32} strokeWidth={1.8} />
+        <svg
+          width="36"
+          height="16"
+          viewBox="0 0 36 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="30" y1="8" x2="1" y2="8" />
+          <polyline points="9,1 1,8 9,15" />
+        </svg>
       </a>
 
       {/* Main menu */}
@@ -189,8 +200,8 @@ const AdminPortal = () => {
             >
               {/* ── BRANCHES ── */}
               <p style={{
-                fontSize: tablet ? "14px" : "15px",
-                fontWeight: 500,
+                fontSize: tablet ? "16px" : "22px",
+                fontWeight: 350,
                 letterSpacing: "0.01em",
                 color: "#000000",
                 margin: "0 0 12px 4px",
