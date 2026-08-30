@@ -161,7 +161,7 @@ const AdminPortal = () => {
           {/* Main container box - LEFT HALF - FULL HEIGHT */}
           <div
             style={{
-              width: tablet ? "45%" : "48%",
+              width: "58%",
               height: tablet ? `calc(${TABLET_FIT_HEIGHT} - 32px)` : "calc(100dvh - 32px)",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(8px)",
@@ -172,7 +172,7 @@ const AdminPortal = () => {
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
               overflow: "hidden",
               zIndex: 10,
-              marginLeft: tablet ? "2%" : "1%",
+              marginLeft: "4%",
               marginTop: "16px",
               marginBottom: "16px",
             }}
