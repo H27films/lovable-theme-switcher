@@ -86,18 +86,19 @@ const AdminPortal = () => {
       }}
     >
       {/* Background SVG */}
-      <div
-        style={{
-          position: "absolute",
-          right: "-95px",
-          top: "50%",
-          transform: "translateY(calc(-50% + 40px))",
-          width: "700px",
-          height: "700px",
-          zIndex: 1,
-          opacity: 0.05,
-        }}
-      >
+       <div
+         style={{
+           position: "absolute",
+           right: "-95px",
+           top: "50%",
+           transform: "translateY(calc(-50% + 40px))",
+           width: "700px",
+           height: "700px",
+           zIndex: 1,
+           opacity: 0.05,
+           pointerEvents: "none",
+         }}
+       >
         <img
           src="/Hand.svg"
           alt="background"
@@ -183,6 +184,7 @@ const AdminPortal = () => {
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
               overflow: "hidden",
               zIndex: 10,
+              position: "relative",
               marginLeft: "4px",
               marginTop: "16px",
               marginBottom: "16px",
@@ -283,7 +285,7 @@ const AdminPortal = () => {
               <img
                 src="/AdminIcon.svg"
                 alt="Admin Portal"
-                style={{ width: "40px", height: "40px", marginBottom: "8px" }}
+                style={{ width: "50px", height: "50px", marginBottom: "8px" }}
               />
               <p style={{
                 fontSize: "12px",
