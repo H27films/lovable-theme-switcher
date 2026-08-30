@@ -249,26 +249,22 @@ const AdminPortal = () => {
               ))}
             </div>
 
-            {/* ── SEARCH & ORDER BOXES ── */}
+            {/* ── SEARCH & ORDER PANEL ── */}
             <div
               style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
+                ...actionPanel,
                 marginTop: "auto",
                 paddingTop: "18px",
               }}
             >
               <div
                 onClick={() => navigateTo("search")}
-                style={actionBox}
+                style={actionRow}
                 onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "scale(1.01)";
+                  e.currentTarget.style.opacity = "0.75";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "scale(1)";
                 }}
               >
                 <SearchIcon size={17} color="#ffffff" strokeWidth={1.6} />
@@ -283,16 +279,16 @@ const AdminPortal = () => {
                 </span>
               </div>
 
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", margin: "0 16px" }} />
+
               <div
                 onClick={() => navigateTo("order")}
-                style={actionBox}
+                style={actionRow}
                 onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "scale(1.01)";
+                  e.currentTarget.style.opacity = "0.75";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "scale(1)";
                 }}
               >
                 <ClipboardList size={17} color="#ffffff" strokeWidth={1.6} />
