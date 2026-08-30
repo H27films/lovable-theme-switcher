@@ -563,8 +563,8 @@ const handleSelectProduct = (p: Product) => {
               <div style={{ fontSize: "15px", fontWeight: 300, color: fg }}>{selectedProduct.SUPPLIER || "—"}</div>
             </div>
 
-            {/* Prices grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "18px", columnGap: "12px", marginBottom: "20px" }}>
+            {/* Prices grid — 1fr 1fr 1fr so Branch/Staff/Store Room align with the middle (Chic Nailspa) column of the balances grid below */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", rowGap: "18px", columnGap: "12px", marginBottom: "20px" }}>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 700, color: fg, marginBottom: "4px" }}>Supplier Price</div>
                 <div style={{ fontSize: "15px", fontWeight: 300, color: fg }}>
@@ -577,6 +577,8 @@ const handleSelectProduct = (p: Product) => {
                   {selectedProduct["BRANCH PRICE"] != null ? `RM ${selectedProduct["BRANCH PRICE"].toFixed(2)}` : "—"}
                 </div>
               </div>
+              {/* Empty right cell so Branch Price stays in the middle column with Chic Nailspa */}
+              <div></div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 700, color: fg, marginBottom: "4px" }}>Customer Price</div>
                 <div style={{ fontSize: "15px", fontWeight: 300, color: fg }}>
@@ -589,6 +591,8 @@ const handleSelectProduct = (p: Product) => {
                   {selectedProduct["STAFF PRICE"] != null ? `RM ${selectedProduct["STAFF PRICE"].toFixed(2)}` : "—"}
                 </div>
               </div>
+              {/* Empty right cell so Staff Price stays in the middle column with Chic Nailspa */}
+              <div></div>
               {/* Office Balance + Usage */}
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 700, color: fg, marginBottom: "4px" }}>Office Balance</div>
@@ -635,6 +639,8 @@ const handleSelectProduct = (p: Product) => {
                 <div style={{ fontSize: "14px", fontWeight: 700, color: fg, marginBottom: "4px" }}>Store Room</div>
                 <div style={{ fontSize: "15px", fontWeight: 300, color: fg }}>{selectedProduct["OFFICE SECTION"] || "—"}</div>
               </div>
+              {/* Empty right cell so Store Room stays in the middle column with Chic Nailspa */}
+              <div></div>
             </div>
 
             {/* Branch balances */}
