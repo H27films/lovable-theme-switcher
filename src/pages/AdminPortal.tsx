@@ -89,6 +89,9 @@ const AdminPortal = () => {
   };
 
   const actionPanel: React.CSSProperties = {
+    width: "100%",
+    maxWidth: "420px",
+    margin: "0 auto",
     background: "#1a1a1a",
     borderRadius: "22px",
     overflow: "hidden",
@@ -99,8 +102,8 @@ const AdminPortal = () => {
     height: "50px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    gap: "10px",
+    justifyContent: "space-between",
+    padding: "0 18px",
     cursor: "pointer",
     transition: "opacity 0.15s ease, transform 0.15s ease",
   };
@@ -169,12 +172,12 @@ const AdminPortal = () => {
             ...menuTransitionStyle,
           }}
         >
-          {/* Main transparent box */}
+          {/* Branches translucent box */}
           <div
             style={{
               width: "100%",
               maxWidth: "420px",
-              minHeight: tablet ? "86dvh" : "calc(100dvh - 70px)",
+              flex: 1,
               margin: "0 auto",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(8px)",
@@ -183,125 +186,121 @@ const AdminPortal = () => {
               padding: "22px",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "space-between",
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
             }}
           >
             {/* ── BRANCHES ── */}
-            <div>
-              <p style={{
-                fontSize: "16px",
-                fontWeight: 500,
-                letterSpacing: "0.01em",
-                color: "#000000",
-                margin: "0 0 12px 4px",
-                fontFamily: "'Raleway', sans-serif",
-              }}>
-                Branches.
-              </p>
+            <p style={{
+              fontSize: "16px",
+              fontWeight: 500,
+              letterSpacing: "0.01em",
+              color: "#000000",
+              margin: "0 0 12px 4px",
+              fontFamily: "'Raleway', sans-serif",
+            }}>
+              Branches.
+            </p>
 
-              {branches.map(({ label, key, icon }, i) => (
+            {branches.map(({ label, key, icon }, i) => (
+              <div
+                key={key}
+                onClick={() => handleBranch(key)}
+                style={{
+                  ...pillRow,
+                  marginBottom: i < branches.length - 1 ? "10px" : "0",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "hsl(38 22% 88%)";
+                  e.currentTarget.style.transform = "scale(1.01)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "hsl(38 25% 92%)";
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
                 <div
-                  key={key}
-                  onClick={() => handleBranch(key)}
                   style={{
-                    ...pillRow,
-                    marginBottom: i < branches.length - 1 ? "10px" : "0",
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = "hsl(38 22% 88%)";
-                    e.currentTarget.style.transform = "scale(1.01)";
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = "hsl(38 25% 92%)";
-                    e.currentTarget.style.transform = "scale(1)";
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    background: "rgba(255,255,255,0.6)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginRight: "12px",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                   }}
                 >
-                  <div
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      background: "rgba(255,255,255,0.6)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      marginRight: "12px",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    {icon}
-                  </div>
-
-                  <span style={{
-                    fontSize: "15px",
-                    fontWeight: 500,
-                    color: "rgb(50,45,40)",
-                    fontFamily: "'Raleway', sans-serif",
-                    letterSpacing: "0.01em",
-                  }}>
-                    {label}
-                  </span>
-
-                  <ChevronRight size={15} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.25)" }} />
+                  {icon}
                 </div>
-              ))}
-            </div>
 
-            {/* ── SEARCH & ORDER PANEL ── */}
+                <span style={{
+                  fontSize: "15px",
+                  fontWeight: 500,
+                  color: "rgb(50,45,40)",
+                  fontFamily: "'Raleway', sans-serif",
+                  letterSpacing: "0.01em",
+                }}>
+                  {label}
+                </span>
+
+                <ChevronRight size={15} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.25)" }} />
+              </div>
+            ))}
+          </div>
+
+          {/* ── SEARCH & ORDER PANEL ── */}
+          <div
+            style={{
+              ...actionPanel,
+              marginTop: "12px",
+            }}
+          >
             <div
-              style={{
-                ...actionPanel,
-                marginTop: "auto",
-                paddingTop: "18px",
+              onClick={() => navigateTo("search")}
+              style={actionRow}
+              onMouseEnter={e => {
+                e.currentTarget.style.opacity = "0.75";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.opacity = "1";
               }}
             >
-              <div
-                onClick={() => navigateTo("search")}
-                style={actionRow}
-                onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.75";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.opacity = "1";
-                }}
-              >
-                <SearchIcon size={17} color="#ffffff" strokeWidth={1.6} />
-                <span style={{
-                  fontSize: "15px",
-                  fontWeight: 500,
-                  color: "#ffffff",
-                  fontFamily: "'Raleway', sans-serif",
-                  letterSpacing: "0.01em",
-                }}>
-                  Search
-                </span>
-              </div>
+              <span style={{
+                fontSize: "15px",
+                fontWeight: 500,
+                color: "#ffffff",
+                fontFamily: "'Raleway', sans-serif",
+                letterSpacing: "0.01em",
+              }}>
+                Search
+              </span>
+              <SearchIcon size={17} color="#ffffff" strokeWidth={1.6} />
+            </div>
 
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", margin: "0 16px" }} />
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", margin: "0 16px" }} />
 
-              <div
-                onClick={() => navigateTo("order")}
-                style={actionRow}
-                onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.75";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.opacity = "1";
-                }}
-              >
-                <ClipboardList size={17} color="#ffffff" strokeWidth={1.6} />
-                <span style={{
-                  fontSize: "15px",
-                  fontWeight: 500,
-                  color: "#ffffff",
-                  fontFamily: "'Raleway', sans-serif",
-                  letterSpacing: "0.01em",
-                }}>
-                  Order
-                </span>
-              </div>
+            <div
+              onClick={() => navigateTo("order")}
+              style={actionRow}
+              onMouseEnter={e => {
+                e.currentTarget.style.opacity = "0.75";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.opacity = "1";
+              }}
+            >
+              <span style={{
+                fontSize: "15px",
+                fontWeight: 500,
+                color: "#ffffff",
+                fontFamily: "'Raleway', sans-serif",
+                letterSpacing: "0.01em",
+              }}>
+                Order
+              </span>
+              <ClipboardList size={17} color="#ffffff" strokeWidth={1.6} />
             </div>
           </div>
         </div>
