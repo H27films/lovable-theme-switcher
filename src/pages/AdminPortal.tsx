@@ -81,7 +81,7 @@ const AdminPortal = () => {
     display: "flex",
     alignItems: "center",
     height: "48px",
-    background: "rgba(232, 222, 204, 0.95)",
+    background: "hsl(38 25% 92%)",
     borderRadius: "16px",
     padding: "0 14px 0 10px",
     cursor: "pointer",
@@ -183,21 +183,14 @@ const AdminPortal = () => {
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
             }}
           >
-            {/* ── BRANCHES CARD ── */}
-            <div
-              style={{
-                background: "rgba(255, 255, 255, 0.55)",
-                borderRadius: "26px",
-                padding: "18px",
-                boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
-              }}
-            >
+            {/* ── BRANCHES ── */}
+            <div>
               <p style={{
-                fontSize: "22px",
+                fontSize: "16px",
                 fontWeight: 500,
                 letterSpacing: "0.01em",
                 color: "#000000",
-                margin: "0 0 14px 4px",
+                margin: "0 0 12px 4px",
                 fontFamily: "'Raleway', sans-serif",
               }}>
                 Branches.
@@ -212,11 +205,11 @@ const AdminPortal = () => {
                     marginBottom: i < branches.length - 1 ? "10px" : "0",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = "rgba(215, 200, 175, 0.98)";
+                    e.currentTarget.style.background = "hsl(38 22% 88%)";
                     e.currentTarget.style.transform = "scale(1.01)";
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = "rgba(232, 222, 204, 0.95)";
+                    e.currentTarget.style.background = "hsl(38 25% 92%)";
                     e.currentTarget.style.transform = "scale(1)";
                   }}
                 >
@@ -225,13 +218,13 @@ const AdminPortal = () => {
                       width: "32px",
                       height: "32px",
                       borderRadius: "50%",
-                      background: "rgba(255,255,255,0.7)",
+                      background: "rgba(255,255,255,0.6)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
                       marginRight: "12px",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                     }}
                   >
                     {icon}
@@ -256,7 +249,8 @@ const AdminPortal = () => {
             <div
               style={{
                 display: "flex",
-                gap: "12px",
+                flexDirection: "column",
+                gap: "10px",
                 marginTop: "auto",
                 paddingTop: "18px",
               }}
@@ -266,7 +260,7 @@ const AdminPortal = () => {
                 style={actionBox}
                 onMouseEnter={e => {
                   e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "scale(1.02)";
+                  e.currentTarget.style.transform = "scale(1.01)";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.opacity = "1";
@@ -290,7 +284,7 @@ const AdminPortal = () => {
                 style={actionBox}
                 onMouseEnter={e => {
                   e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "scale(1.02)";
+                  e.currentTarget.style.transform = "scale(1.01)";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.opacity = "1";
