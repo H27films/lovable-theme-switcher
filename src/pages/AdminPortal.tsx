@@ -81,7 +81,7 @@ const AdminPortal = () => {
     display: "flex",
     alignItems: "center",
     height: "48px",
-    background: "rgba(232, 222, 204, 0.95)",
+    background: "hsl(38 25% 92%)",
     borderRadius: "16px",
     padding: "0 14px 0 10px",
     cursor: "pointer",
