@@ -88,15 +88,15 @@ const AdminPortal = () => {
       {/* Background SVG */}
        <div
          style={{
-           position: "absolute",
-           right: "-95px",
-           top: "50%",
-           transform: "translateY(calc(-50% + 40px))",
-           width: "700px",
-           height: "700px",
-           zIndex: 1,
-           opacity: 0.05,
-           pointerEvents: "none",
+            position: "absolute",
+            right: "calc(-200px + 15vw)",
+            top: "50%",
+            transform: "translateY(calc(-50% + 40px))",
+            width: "max(600px, min(900px, 70vw))",
+            height: "max(600px, min(900px, 70vw))",
+            zIndex: 1,
+            opacity: 0.05,
+            pointerEvents: "none",
          }}
        >
         <img
