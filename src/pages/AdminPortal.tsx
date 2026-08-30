@@ -11,7 +11,7 @@ const AdminPortal = () => {
   const { tablet } = useTabletMode();
 
   const [activeSection, setActiveSection] = useState<"search" | "order" | null>(null);
-  const [transitionPhase, setTransitionPhase] = useState
+  const [transitionPhase, setTransitionPhase] = useState<
     "at-menu" | "menu-leaving" | "section-entering" | "at-section" | "section-leaving" | "menu-entering"
   >("at-menu");
 
@@ -90,7 +90,7 @@ const AdminPortal = () => {
       }}
     >
       {/* Home button */}
-      
+      <a
         href="/"
         aria-label="Go to main landing page"
         style={{
