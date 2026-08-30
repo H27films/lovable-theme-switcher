@@ -2,7 +2,16 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
-import { Home, Building2, Sparkles, Scissors, User, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Sparkles,
+  Scissors,
+  User,
+  ChevronRight,
+  Search as SearchIcon,
+  ClipboardList,
+} from "lucide-react";
 import Search from "./Search";
 import Order from "./Order";
 
@@ -54,10 +63,10 @@ const AdminPortal = () => {
   };
 
   const branches = [
-    { label: "Office",   key: "office"  as const, icon: <Building2 size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
-    { label: "Boudoir",  key: "boudoir" as const, icon: <Sparkles  size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
-    { label: "Chic",     key: "chic"    as const, icon: <Scissors  size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
-    { label: "Nur Yadi", key: "nuryadi" as const, icon: <User      size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+    { label: "Office",   key: "office"  as const, icon: <Building2 size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
+    { label: "Boudoir",  key: "boudoir" as const, icon: <Sparkles  size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
+    { label: "Chic",     key: "chic"    as const, icon: <Scissors  size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
+    { label: "Nur Yadi", key: "nuryadi" as const, icon: <User      size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
   ];
 
   const handleBranch = (key: "office" | "boudoir" | "chic" | "nuryadi") => {
@@ -71,12 +80,25 @@ const AdminPortal = () => {
   const pillRow: React.CSSProperties = {
     display: "flex",
     alignItems: "center",
-    height: "42px",
-    background: "rgba(240,240,240,0.85)",
+    height: "48px",
+    background: "rgba(232, 222, 204, 0.95)",
     borderRadius: "16px",
-    padding: "0 14px 0 8px",
+    padding: "0 14px 0 10px",
     cursor: "pointer",
-    transition: "background 0.15s ease",
+    transition: "background 0.15s ease, transform 0.15s ease",
+  };
+
+  const actionBox: React.CSSProperties = {
+    flex: 1,
+    height: "54px",
+    background: "#1a1a1a",
+    borderRadius: "18px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    cursor: "pointer",
+    transition: "opacity 0.15s ease, transform 0.15s ease",
   };
 
   return (
@@ -87,25 +109,46 @@ const AdminPortal = () => {
         color: "hsl(var(--foreground))",
         fontFamily: "'Raleway', sans-serif",
         position: "relative",
+        overflow: "hidden",
       }}
     >
-      {/* Home button */}
+      {/* Admin Portal label */}
+      <div
+        style={{
+          position: "fixed",
+          left: "20px",
+          top: "calc(env(safe-area-inset-top, 0px) + 24px)",
+          zIndex: 60,
+          display: activeSection !== null ? "none" : "block",
+          fontSize: "13px",
+          fontWeight: 400,
+          color: "rgba(0,0,0,0.28)",
+          letterSpacing: "0.02em",
+        }}
+      >
+        Admin Portal
+      </div>
+
+      {/* Back arrow */}
       <a
         href="/"
         aria-label="Go to main landing page"
         style={{
           position: "fixed",
-          left: "20px",
-          top: "calc(env(safe-area-inset-top, 0px) + 24px)",
+          right: "20px",
+          top: "calc(env(safe-area-inset-top, 0px) + 20px)",
           zIndex: 60,
           display: activeSection !== null ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "hsl(var(--muted-foreground))",
           textDecoration: "none",
+          transition: "opacity 0.15s ease",
         }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = "0.6")}
+        onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
       >
-        <Home size={18} strokeWidth={1.4} />
+        <ArrowLeft size={26} strokeWidth={1.4} />
       </a>
 
       {/* Main menu */}
@@ -117,32 +160,47 @@ const AdminPortal = () => {
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "stretch",
-            padding: "0 20px",
+            padding: "70px 18px 34px",
             transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
             ...menuTransitionStyle,
           }}
         >
-          <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "14px" }}>
-
+          {/* Main transparent box */}
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "420px",
+              minHeight: tablet ? "72dvh" : "78dvh",
+              margin: "0 auto",
+              background: "rgba(255, 255, 255, 0.10)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              borderRadius: "32px",
+              padding: "22px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
+            }}
+          >
             {/* ── BRANCHES CARD ── */}
             <div
               style={{
-                background: "#ffffff",
-                borderRadius: "28px",
-                padding: "16px",
-                boxShadow: "0 2px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
+                background: "rgba(255, 255, 255, 0.55)",
+                borderRadius: "26px",
+                padding: "18px",
+                boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
               }}
             >
               <p style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                color: "rgba(0,0,0,0.35)",
-                textTransform: "uppercase",
-                margin: "0 0 12px 6px",
+                fontSize: "22px",
+                fontWeight: 500,
+                letterSpacing: "0.01em",
+                color: "#000000",
+                margin: "0 0 14px 4px",
                 fontFamily: "'Raleway', sans-serif",
               }}>
-                Branches
+                Branches.
               </p>
 
               {branches.map(({ label, key, icon }, i) => (
@@ -151,23 +209,29 @@ const AdminPortal = () => {
                   onClick={() => handleBranch(key)}
                   style={{
                     ...pillRow,
-                    marginBottom: i < branches.length - 1 ? "8px" : "0",
+                    marginBottom: i < branches.length - 1 ? "10px" : "0",
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.07)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(240,240,240,0.85)")}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "rgba(215, 200, 175, 0.98)";
+                    e.currentTarget.style.transform = "scale(1.01)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "rgba(232, 222, 204, 0.95)";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
                 >
                   <div
                     style={{
-                      width: "30px",
-                      height: "30px",
+                      width: "32px",
+                      height: "32px",
                       borderRadius: "50%",
-                      background: "white",
+                      background: "rgba(255,255,255,0.7)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
                       marginRight: "12px",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
                     }}
                   >
                     {icon}
@@ -176,109 +240,75 @@ const AdminPortal = () => {
                   <span style={{
                     fontSize: "15px",
                     fontWeight: 500,
-                    color: "rgb(50,50,50)",
+                    color: "rgb(50,45,40)",
                     fontFamily: "'Raleway', sans-serif",
                     letterSpacing: "0.01em",
                   }}>
                     {label}
                   </span>
 
-                  <ChevronRight size={14} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.2)" }} />
+                  <ChevronRight size={15} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.25)" }} />
                 </div>
               ))}
             </div>
 
-            {/* ── SEARCH & ORDER CARD ── */}
+            {/* ── SEARCH & ORDER BOXES ── */}
             <div
               style={{
-                background: "#1e1e1e",
-                borderRadius: "28px",
-                padding: "22px 24px",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+                display: "flex",
+                gap: "12px",
+                marginTop: "auto",
+                paddingTop: "18px",
               }}
             >
-              {/* SEARCH */}
               <div
                 onClick={() => navigateTo("search")}
-                style={{ cursor: "pointer", padding: "4px 0 12px", transition: "opacity 0.15s ease" }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
-                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                style={actionBox}
+                onMouseEnter={e => {
+                  e.currentTarget.style.opacity = "0.85";
+                  e.currentTarget.style.transform = "scale(1.02)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                  <div>
-                    <h3 style={{
-                      fontSize: "18px",
-                      fontWeight: 400,
-                      color: "#ffffff",
-                      margin: "0 0 2px 0",
-                      fontFamily: "'Raleway', sans-serif",
-                      lineHeight: 1.1,
-                    }}>
-                      Search
-                    </h3>
-                    <p style={{
-                      fontSize: "15px",
-                      color: "rgba(255,255,255,0.4)",
-                      margin: 0,
-                      fontFamily: "'Raleway', sans-serif",
-                    }}>
-                      Find products across branches
-                    </p>
-                  </div>
-                  <span style={{
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: "rgba(255,255,255,0.5)",
-                    letterSpacing: "0.02em",
-                  }}>
-                    Open
-                  </span>
-                </div>
+                <SearchIcon size={17} color="#ffffff" strokeWidth={1.6} />
+                <span style={{
+                  fontSize: "15px",
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  fontFamily: "'Raleway', sans-serif",
+                  letterSpacing: "0.01em",
+                }}>
+                  Search
+                </span>
               </div>
 
-              {/* Divider */}
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", margin: "0 0 12px 0" }} />
-
-              {/* ORDER */}
               <div
                 onClick={() => navigateTo("order")}
-                style={{ cursor: "pointer", padding: "4px 0 0", transition: "opacity 0.15s ease" }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
-                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                style={actionBox}
+                onMouseEnter={e => {
+                  e.currentTarget.style.opacity = "0.85";
+                  e.currentTarget.style.transform = "scale(1.02)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                  <div>
-                    <h3 style={{
-                      fontSize: "18px",
-                      fontWeight: 400,
-                      color: "#ffffff",
-                      margin: "0 0 2px 0",
-                      fontFamily: "'Raleway', sans-serif",
-                      lineHeight: 1.1,
-                    }}>
-                      Order
-                    </h3>
-                    <p style={{
-                      fontSize: "15px",
-                      color: "rgba(255,255,255,0.4)",
-                      margin: 0,
-                      fontFamily: "'Raleway', sans-serif",
-                    }}>
-                      Place and manage orders for Office
-                    </p>
-                  </div>
-                  <span style={{
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: "rgba(255,255,255,0.5)",
-                    letterSpacing: "0.02em",
-                  }}>
-                    Open
-                  </span>
-                </div>
+                <ClipboardList size={17} color="#ffffff" strokeWidth={1.6} />
+                <span style={{
+                  fontSize: "15px",
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  fontFamily: "'Raleway', sans-serif",
+                  letterSpacing: "0.01em",
+                }}>
+                  Order
+                </span>
               </div>
             </div>
-
           </div>
         </div>
       )}
