@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import {
+  ArrowLeft,
   Building2,
   User,
   ChevronRight,
@@ -74,28 +75,6 @@ const AdminPortal = () => {
     }
   };
 
-  const pillRow: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    height: tablet ? "44px" : "48px",
-    background: "hsl(38 25% 92%)",
-    borderRadius: "9999px",
-    padding: "0 12px 0 8px",
-    cursor: "pointer",
-    transition: "background 0.15s ease, transform 0.15s ease",
-    margin: "0 -4px",
-  };
-
-  const actionRow: React.CSSProperties = {
-    height: tablet ? "46px" : "50px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 18px",
-    cursor: "pointer",
-    transition: "opacity 0.15s ease, transform 0.15s ease, background 0.15s ease",
-  };
-
   return (
     <div
       style={{
@@ -107,6 +86,26 @@ const AdminPortal = () => {
         overflow: "hidden",
       }}
     >
+      {/* Background SVG */}
+      <div
+        style={{
+          position: "absolute",
+          right: "-150px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "800px",
+          height: "800px",
+          zIndex: 1,
+          opacity: 0.08,
+        }}
+      >
+        <img
+          src="/Hand.svg"
+          alt="background"
+          style={{ width: "100%", height: "100%" }}
+        />
+      </div>
+
       {/* Admin Portal label */}
       <div
         style={{
@@ -123,7 +122,8 @@ const AdminPortal = () => {
       >
         Admin Portal
       </div>
-      {/* Back arrow — matches the Sync component back-button style */}
+
+      {/* Back arrow */}
       <a
         href="/"
         aria-label="Go to main landing page"
@@ -135,18 +135,14 @@ const AdminPortal = () => {
           display: activeSection !== null ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "hsl(var(--foreground))",
+          color: "rgba(0,0,0,0.75)",
           textDecoration: "none",
-          padding: "4px",
           transition: "opacity 0.15s ease",
         }}
         onMouseEnter={e => (e.currentTarget.style.opacity = "0.55")}
         onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
       >
-        <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="30" y1="8" x2="1" y2="8" />
-          <polyline points="9,1 1,8 9,15" />
-        </svg>
+        <ArrowLeft size={32} strokeWidth={1.8} />
       </a>
 
       {/* Main menu */}
@@ -156,19 +152,17 @@ const AdminPortal = () => {
             minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "54px 10px 10px",
-            transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
+            justifyContent: "flex-start",
+            alignItems: "flex-start",
+            padding: "0 10px 10px",
             ...menuTransitionStyle,
           }}
         >
-          {/* Main container box */}
+          {/* Main container box - LEFT HALF - FULL HEIGHT */}
           <div
             style={{
-              width: "100%",
-              maxWidth: tablet ? "min(90%, 500px)" : "calc(100% - 20px)",
-              flex: 1,
+              width: tablet ? "45%" : "48%",
+              height: tablet ? TABLET_FIT_HEIGHT : "100dvh",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(8px)",
               WebkitBackdropFilter: "blur(8px)",
@@ -177,13 +171,16 @@ const AdminPortal = () => {
               flexDirection: "column",
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
               overflow: "hidden",
+              zIndex: 10,
+              marginLeft: tablet ? "2%" : "1%",
+              marginTop: "0",
             }}
           >
             {/* Branches section */}
             <div
               style={{
                 flex: 1,
-                padding: tablet ? "18px" : "22px",
+                padding: tablet ? "16px" : "20px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "flex-start",
@@ -191,7 +188,7 @@ const AdminPortal = () => {
             >
               {/* ── BRANCHES ── */}
               <p style={{
-                fontSize: tablet ? "15px" : "16px",
+                fontSize: tablet ? "14px" : "15px",
                 fontWeight: 500,
                 letterSpacing: "0.01em",
                 color: "#000000",
@@ -206,8 +203,16 @@ const AdminPortal = () => {
                   key={key}
                   onClick={() => handleBranch(key)}
                   style={{
-                    ...pillRow,
-                    marginBottom: i < branches.length - 1 ? "14px" : "0",
+                    display: "flex",
+                    alignItems: "center",
+                    height: tablet ? "42px" : "46px",
+                    background: "hsl(38 25% 92%)",
+                    borderRadius: "9999px",
+                    padding: "0 12px 0 8px",
+                    cursor: "pointer",
+                    transition: "background 0.15s ease, transform 0.15s ease",
+                    margin: "0 -2px",
+                    marginBottom: i < branches.length - 1 ? "12px" : "0",
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.background = "hsl(38 22% 88%)";
@@ -236,7 +241,7 @@ const AdminPortal = () => {
                   </div>
 
                   <span style={{
-                    fontSize: tablet ? "14px" : "15px",
+                    fontSize: tablet ? "13px" : "14px",
                     fontWeight: 500,
                     color: "rgb(50,45,40)",
                     fontFamily: "'Raleway', sans-serif",
@@ -250,82 +255,128 @@ const AdminPortal = () => {
               ))}
             </div>
 
-            {/* ── SEARCH & ORDER PANEL ── */}
+            {/* Admin Portal at bottom */}
             <div
               style={{
-                width: "calc(100% - 32px)",
-                margin: "0 16px 16px 16px",
-                background: "hsl(38 25% 92%)",
-                borderRadius: "18px",
-                padding: tablet ? "12px 14px" : "14px 16px",
                 display: "flex",
                 flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "20px 16px",
+                borderTop: "1px solid rgba(0,0,0,0.08)",
               }}
             >
-              <div
-                onClick={() => navigateTo("search")}
-                style={{
-                  ...actionRow,
-                  padding: "0 8px",
-                  justifyContent: "space-between",
-                  height: tablet ? "40px" : "44px",
-                  borderRadius: "12px",
-                  transition: "background 0.15s ease, transform 0.15s ease",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "hsl(38 22% 88%)";
-                  e.currentTarget.style.transform = "scale(1.01)";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#1a1a1a"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginBottom: "8px" }}
               >
-                <span style={{
-                  fontSize: tablet ? "14px" : "15px",
-                  fontWeight: 500,
-                  color: "#000000",
-                  fontFamily: "'Raleway', sans-serif",
-                  letterSpacing: "0.01em",
-                }}>
-                  Search
-                </span>
-                <SearchIcon size={17} color="#000000" strokeWidth={1.6} />
-              </div>
-
-              <div style={{ borderTop: "1px solid rgba(0,0,0,0.10)", margin: "0" }} />
-
-              <div
-                onClick={() => navigateTo("order")}
-                style={{
-                  ...actionRow,
-                  padding: "0 8px",
-                  justifyContent: "space-between",
-                  height: tablet ? "40px" : "44px",
-                  borderRadius: "12px",
-                  transition: "background 0.15s ease, transform 0.15s ease",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "hsl(38 22% 88%)";
-                  e.currentTarget.style.transform = "scale(1.01)";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
-              >
-                <span style={{
-                  fontSize: tablet ? "14px" : "15px",
-                  fontWeight: 500,
-                  color: "#000000",
-                  fontFamily: "'Raleway', sans-serif",
-                  letterSpacing: "0.01em",
-                }}>
-                  Order
-                </span>
-                <ClipboardList size={17} color="#000000" strokeWidth={1.6} />
-              </div>
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="12" cy="5" r="1" />
+                <circle cx="19" cy="12" r="1" />
+                <circle cx="12" cy="19" r="1" />
+                <circle cx="5" cy="12" r="1" />
+                <path d="M12 6v6" />
+                <path d="M12 12v6" />
+                <path d="M6 12h6" />
+                <path d="M12 12h6" />
+              </svg>
+              <p style={{
+                fontSize: "12px",
+                fontWeight: 300,
+                letterSpacing: "0.02em",
+                color: "#1a1a1a",
+                margin: "0",
+                fontFamily: "'Raleway', sans-serif",
+              }}>
+                Admin Portal
+              </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search & Order Black Box - BOTTOM RIGHT */}
+      {activeSection === null && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+            zIndex: 50,
+            display: activeSection !== null ? "none" : "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          {/* Order Pill */}
+          <div
+            onClick={() => navigateTo("order")}
+            style={{
+              height: "44px",
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              background: "#1a1a1a",
+              borderRadius: "9999px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "background 0.15s ease, transform 0.15s ease",
+              gap: "8px",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "rgba(0,0,0,0.85)";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "#1a1a1a";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            <span style={{
+              fontSize: "14px",
+              fontWeight: 500,
+              color: "#ffffff",
+              fontFamily: "'Raleway', sans-serif",
+              letterSpacing: "0.01em",
+            }}>
+              Order
+            </span>
+            <ChevronRight size={14} color="#ffffff" strokeWidth={1.6} />
+          </div>
+
+          {/* Search Circle */}
+          <div
+            onClick={() => navigateTo("search")}
+            style={{
+              width: "44px",
+              height: "44px",
+              background: "#1a1a1a",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "background 0.15s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "rgba(0,0,0,0.85)";
+              e.currentTarget.style.transform = "scale(1.08)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "#1a1a1a";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            <SearchIcon size={18} color="#ffffff" strokeWidth={1.6} />
           </div>
         </div>
       )}
