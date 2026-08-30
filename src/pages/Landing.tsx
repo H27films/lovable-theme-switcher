@@ -68,7 +68,8 @@ export default function Landing() {
 
         @media (max-width: 480px) {
           .ls-topbar  { padding: 22px 16px 0 !important; }
-          .ls-hero    { padding: 14vh 16px !important; }
+          .ls-hero    { padding: 14vh 16px !important; flex-direction: column; align-items: stretch; }
+          .ls-hero > div:nth-child(2) { width: 100%; max-height: 40vh; margin-top: 24px; }
           .ls-bottom  { padding: 22px 16px !important; }
         }
       `}</style>
@@ -112,81 +113,87 @@ export default function Landing() {
         </div>
 
 {/* ── Hero title ── */}
-         <div
-           className="ls-hero"
-           style={{
-             flex: 1,
-             display: "flex",
-             flexDirection: "column",
-             alignItems: "flex-start",
-             padding: "14vh 16px",
-           }}
-         >
-           <h1
-             style={{
-               fontSize: "clamp(44px, 10vw, 60px)",
-               fontWeight: 205,
-               letterSpacing: "-0.02em",
-               lineHeight: 0.9,
-               margin: 0,
-               opacity: visible ? 1 : 0,
-               transform: visible ? "translateY(0)" : "translateY(24px)",
-               transition:
-                 "opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s",
-               userSelect: "none",
-             }}
-           >
-             <span
-               className="ls-title-line"
-               style={{ color: "hsl(var(--foreground))" }}
-             >
-               Product
-             </span>
-             <span
-               className="ls-title-line"
-               style={{ color: "hsl(var(--muted-foreground))" }}
-             >
-               Database.
-             </span>
-</h1>
-            
-{/* Branch buttons */}
-<div style={{ marginTop: "100px", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "22px", alignItems: "flex-start" }}>
-              {[
-                { name: "Boudoir", path: "/simple/boudoir" },
-                { name: "Chic Nailspa", path: "/simple/chic" },
-                { name: "Nur Yadi", path: "/simple/nuryadi" },
-              ].map((b, i) => (
-                <div
-                  key={b.name}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "14px",
-                    opacity: visible ? 1 : 0,
-                    transform: visible ? "translateY(0)" : "translateY(24px)",
-                    transition: `opacity 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s, transform 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s`,
-                  }}
+<div
+            className="ls-hero"
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "flex-start",
+              padding: "14vh 16px",
+              gap: "32px",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1
+                style={{
+                  fontSize: "clamp(44px, 10vw, 60px)",
+                  fontWeight: 205,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 0.9,
+                  margin: 0,
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? "translateY(0)" : "translateY(24px)",
+                  transition:
+                    "opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.4s",
+                  userSelect: "none",
+                }}
+              >
+                <span
+                  className="ls-title-line"
+                  style={{ color: "hsl(var(--foreground))" }}
                 >
-                  <CircularButton onClick={() => navigate(b.path, { state: { from: "landing" } })} />
-                  <span
-                    onClick={() => navigate(b.path, { state: { from: "landing" } })}
-                    style={{
-                      fontSize: "clamp(15px, 2.6vw, 20px)",
-                      fontWeight: 300,
-                      letterSpacing: "2px",
-                      color: "hsl(var(--foreground))",
-                      textTransform: "capitalize",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {b.name}
-                  </span>
-                </div>
-              ))}
+                  Product
+                </span>
+                <span
+                  className="ls-title-line"
+                  style={{ color: "hsl(var(--muted-foreground))" }}
+                >
+                  Database.
+                </span>
+</h1>
+               
+                {/* Branch buttons */}
+                <div style={{ marginTop: "100px", paddingLeft: "12px", display: "flex", flexDirection: "column", gap: "22px", alignItems: "flex-start" }}>
+                   {[
+                     { name: "Boudoir", path: "/simple/boudoir" },
+                     { name: "Chic Nailspa", path: "/simple/chic" },
+                     { name: "Nur Yadi", path: "/simple/nuryadi" },
+                   ].map((b, i) => (
+                     <div
+                       key={b.name}
+                       style={{
+                         display: "flex",
+                         alignItems: "center",
+                         gap: "14px",
+                         opacity: visible ? 1 : 0,
+                         transform: visible ? "translateY(0)" : "translateY(24px)",
+                         transition: `opacity 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s, transform 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s`,
+                       }}
+                     >
+                       <CircularButton onClick={() => navigate(b.path, { state: { from: "landing" } })} />
+                       <span
+                         onClick={() => navigate(b.path, { state: { from: "landing" } })}
+                         style={{
+                           fontSize: "clamp(15px, 2.6vw, 20px)",
+                           fontWeight: 300,
+                           letterSpacing: "2px",
+                           color: "hsl(var(--foreground))",
+                           textTransform: "capitalize",
+                           cursor: "pointer",
+                         }}
+                       >
+                         {b.name}
+                       </span>
+                     </div>
+                   ))}
+                 </div>
             </div>
+            <div style={{ flex: 0, width: "300px", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "lightblue" }}>
+              <img src="/Landingicon.svg" alt="Landing" style={{ maxHeight: "80vh", width: "auto" }} />
+            </div>
+          </div>
 
-         </div>
 
         {/* ── Bottom bar ── */}
         <div

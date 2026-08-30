@@ -89,7 +89,7 @@ const AdminPortal = () => {
        <div
          style={{
             position: "absolute",
-            right: "calc(-200px + 15vw)",
+            right: "calc(-220px + 20vw)",
             top: "50%",
             transform: "translateY(calc(-50% + 40px))",
             width: "max(600px, min(900px, 70vw))",
