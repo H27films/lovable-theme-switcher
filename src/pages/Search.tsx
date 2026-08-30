@@ -532,7 +532,7 @@ const handleSelectProduct = (p: Product) => {
 
         {/* PRODUCT RESULT */}
         {searchMode === "result" && selectedProduct && !showDropdown && (
-          <div style={{ paddingTop: "20px", paddingBottom: "40px" }}>
+          <div style={{ paddingTop: "4px", paddingBottom: "40px" }}>
             {/* Product name + balance + favorite */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
               <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, lineHeight: 1.3, color: fg }}>
