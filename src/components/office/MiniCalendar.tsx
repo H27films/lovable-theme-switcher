@@ -46,7 +46,8 @@ const MiniCalendar = ({ value, onChange, placeholder = "Select date" }: {
       <button
         onClick={() => setOpen(o => !o)}
         style={{
-          width: "100%", background: "none", border: "0.5px solid hsl(var(--border))",
+          width: "100%", background: parsed ? "hsl(var(--card))" : "none",
+          border: parsed ? "none" : "0.5px solid hsl(var(--border))",
           borderRadius: "6px", padding: "9px 12px", cursor: "pointer", textAlign: "left",
           fontSize: "13px", fontFamily: "Raleway, inherit",
           color: parsed ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
