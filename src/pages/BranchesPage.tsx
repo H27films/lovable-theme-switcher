@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTabletMode } from "@/hooks/useTabletMode";
+import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 
 interface BranchesPageProps {
   onBack?: () => void;
@@ -8,6 +10,7 @@ interface BranchesPageProps {
 
 export default function BranchesPage({ onBack, onSelectBranch }: BranchesPageProps) {
   const navigate = useNavigate();
+  const { tablet } = useTabletMode();
 
   const handleBack = onBack ?? (() => navigate("/simple/branches/admin"));
   const handleSelectBranch = onSelectBranch ?? ((branch: "office" | "boudoir" | "chic" | "nuryadi") =>
@@ -17,11 +20,11 @@ export default function BranchesPage({ onBack, onSelectBranch }: BranchesPagePro
   );
 
   return (
-    <div style={{ minHeight: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))", fontFamily: "'Raleway', sans-serif", position: "relative", overflow: "hidden" }}>
 
       {/* Branch list */}
       <div style={{ position: "absolute", inset: 0 }}>
-        <div style={{ display: "flex", position: "relative", minHeight: "100dvh", overflow: "hidden" }}>
+        <div style={{ display: "flex", position: "relative", minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", overflow: "hidden", transform: tablet ? "translateY(-5dvh)" : "translateY(0)" }}>
           {/* Ghost menu on left */}
           <div
             onClick={handleBack}

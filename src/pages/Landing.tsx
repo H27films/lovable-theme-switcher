@@ -205,7 +205,7 @@ export default function Landing() {
           {/* Admin Portal button */}
           <div
             className="ls-enter-btn"
-            onClick={() => navigate("/simple/branches/admin")}
+            onClick={() => navigate("/simple/admin")}
             style={{
               fontSize: "clamp(17px, 2.0vw, 50px)",
               fontWeight: 300,

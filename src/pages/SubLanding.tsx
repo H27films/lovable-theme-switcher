@@ -7,6 +7,8 @@ import Boudoir from "@/pages/Boudoir";
 import Chic from "@/pages/Chic";
 import NurYadi from "@/pages/NurYadi";
 import { X, Search as SearchIcon, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
+import { useTabletMode } from "@/hooks/useTabletMode";
+import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 
 const hdrStyle: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
@@ -40,6 +42,7 @@ import { useNavigate } from "react-router-dom";
 
 const SubLanding = () => {
   const navigate = useNavigate();
+  const { tablet } = useTabletMode();
 
   const [products, setProducts] = useState<OfficeProduct[]>([]);
 
@@ -124,7 +127,13 @@ const SubLanding = () => {
   };
 
   return (
-    <div className="min-h-[100dvh]" style={{ background: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
+    <div
+      style={{
+        minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh",
+        background: "hsl(var(--background))",
+        color: "hsl(var(--foreground))",
+      }}
+    >
       {/* Fixed Home button (top left) - only show on home menu */}
       <a
         href="/"
@@ -148,7 +157,7 @@ const SubLanding = () => {
       <div className="max-w-full mx-auto px-3">
         {/* Home Menu */}
         {activeSection === null && (
-          <div style={{ position: "relative", minHeight: "100dvh", overflow: "hidden", ...menuTransitionStyle }}>
+          <div style={{ position: "relative", minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", overflow: "hidden", ...menuTransitionStyle }}>
             {/* Idle: 3 items centered */}
             <div style={{
               position: "absolute",
@@ -158,7 +167,9 @@ const SubLanding = () => {
               justifyContent: "center",
               paddingLeft: "12px",
               opacity: 1,
-              transform: "translateY(0)",
+              // In tablet mode the zoomed page fills exactly the viewport, so
+              // give the centered items a gentle lift so they sit slightly above centre.
+              transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
               transition: "opacity 0.38s ease, transform 0.38s ease",
               pointerEvents: "auto",
             }}>

@@ -242,7 +242,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 {/* Branch name header row */}
 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
   <button
-    onClick={() => navigate("/simple/branches/admin")}
+    onClick={() => navigate("/simple/admin")}
     style={{
       display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
       letterSpacing: "0.08em", color: "hsl(var(--foreground))",

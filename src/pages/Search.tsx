@@ -6,6 +6,8 @@ import { sortLogByBalance, isYes } from "@/lib/branchSimpleUtils";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
 import { ProductImage } from "@/components/branch/ProductImage";
+import { useTabletMode } from "@/hooks/useTabletMode";
+import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 
 interface Product {
   id: number;
@@ -58,6 +60,7 @@ export default function Search({ onBack }: SearchProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from;
+  const { tablet } = useTabletMode();
   
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -318,7 +321,7 @@ const handleSelectProduct = (p: Product) => {
     });
 
   return (
-    <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", background: "hsl(var(--background))", color: fg, fontFamily: "'Raleway', sans-serif" }}>
+    <div style={{ minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", display: "flex", flexDirection: "column", background: "hsl(var(--background))", color: fg, fontFamily: "'Raleway', sans-serif" }}>
       {/* TOP BAR — with back button */}
       <div style={{
         display: "flex",

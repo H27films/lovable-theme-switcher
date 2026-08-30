@@ -29,7 +29,7 @@ const NurYadi = ({ onBack, onBackToMain, products: propProducts }: NurYadiProps)
 
   const navigate = useNavigate();
   const location = useLocation();
-  // Origin of this visit ("landing" | "sublanding" | "branches") – set via router state at navigation time
+  // Origin of this visit ("landing" | "adminportal" | "branches") – set via router state at navigation time
   const cameFrom = (location.state as { from?: string } | null)?.from;
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
@@ -256,15 +256,15 @@ const handleHeaderBack = () => {
     } else if (cameFrom === "landing") {
         // Arrived directly from Landing -> back to Landing
         navigate("/");
-    } else if (cameFrom === "sublanding") {
-        // Arrived via Admin Portal (SubLanding) -> back to SubLanding
-        navigate("/simple/branches/admin");
+    } else if (cameFrom === "adminportal") {
+        // Arrived via Admin Portal -> back to Admin Portal
+        navigate("/simple/admin");
     } else if (cameFrom === "branches") {
         // Arrived via Admin Portal > Branches -> back to Branches page
         navigate("/simple/branches");
     } else {
-        // Fallback (e.g. direct deep link) -> Admin Portal
-        navigate("/simple/branches/admin");
+        // Fallback (e.g. direct deep link or old sublanding flow) -> Admin Portal
+        navigate("/simple/admin");
     }
 };
 

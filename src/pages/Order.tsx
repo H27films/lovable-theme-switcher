@@ -5,6 +5,8 @@ import { ResultRow } from "@/components/branch/ResultRow";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
+import { useTabletMode } from "@/hooks/useTabletMode";
+import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 
 interface OrderProps {
   onBack?: () => void;
@@ -153,6 +155,7 @@ export default function Order({ onBack }: OrderProps) {
   const location = useLocation();
   // Origin of this visit ("office" when navigated here from Office) – set via router state at navigation time
   const from = location.state?.from;
+  const { tablet } = useTabletMode();
   const [products, setProducts] = useState<OfficeProduct[]>([]);
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
@@ -352,7 +355,7 @@ export default function Order({ onBack }: OrderProps) {
 
   return (
     <div style={{
-      height: "100dvh", overflow: "hidden",
+      height: tablet ? TABLET_FIT_HEIGHT : "100dvh", overflow: "hidden",
       background: "hsl(var(--background))", color: fg,
       fontFamily: "Raleway, inherit",
       display: "flex", flexDirection: "column",
