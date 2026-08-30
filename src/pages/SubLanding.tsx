@@ -1,77 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import Search from "./Search";
-import Order from "./Order";
-import Office from "./Office";
-import Boudoir from "@/pages/Boudoir";
-import Chic from "@/pages/Chic";
-import NurYadi from "@/pages/NurYadi";
-import { X, Search as SearchIcon, Building2, ChevronDown, ChevronUp, Star, Home } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
+import { Home, Building2, Sparkles, Scissors, User, Search as SearchIcon, ClipboardList, ChevronRight } from "lucide-react";
+import Search from "./Search";
+import Order from "./Order";
 
-const hdrStyle: React.CSSProperties = {
-  fontSize: "10px", fontWeight: 700, fontFamily: "Raleway, inherit",
-  color: "hsl(var(--muted-foreground))", textTransform: "uppercase" as const,
-  letterSpacing: "0.08em",
-};
-
-interface OfficeProduct {
-  id: number;
-  "PRODUCT NAME": string;
-  "SUPPLIER": string | null;
-  "SUPPLIER PRICE": number | null;
-  "BRANCH PRICE": number | null;
-  "STAFF PRICE": number | null;
-  "CUSTOMER PRICE": number | null;
-  "OFFICE BALANCE": number | null;
-  "OFFICE SECTION": string | null;
-  "UNITS/ORDER": number | null;
-  "BOUDOIR BALANCE": number | null;
-  "CHIC NAILSPA BALANCE": number | null;
-  "NUR YADI BALANCE": number | null;
-  "Colour": string | null;
-  "OFFICE FAVOURITE": string | null;
-  "PAR": number | null;
-  "BOUDOIR FAVOURITE": string | boolean | null;
-  "CHIC NAILSPA FAVOURITE": string | boolean | null;
-  "NUR YADI FAVOURITE": string | boolean | null;
-}
-
-import { useNavigate } from "react-router-dom";
-
-const SubLanding = () => {
+const AdminPortal = () => {
   const navigate = useNavigate();
   const { tablet } = useTabletMode();
 
-  const [products, setProducts] = useState<OfficeProduct[]>([]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      let allData: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      while (true) {
-        const { data, error } = await (supabase as any)
-          .from("AllFileProducts")
-          .select("*")
-          .range(from, from + batchSize - 1);
-        if (error || !data?.length) break;
-        allData = allData.concat(data);
-        if (data.length < batchSize) break;
-        from += batchSize;
-      }
-      setProducts(allData);
-    };
-    fetchProducts();
-  }, []);
-
-  const [activeSection, setActiveSection] = useState<"search" | "branches" | "order" | null>(null);
+  const [activeSection, setActiveSection] = useState<"search" | "order" | null>(null);
   const [transitionPhase, setTransitionPhase] = useState<
     "at-menu" | "menu-leaving" | "section-entering" | "at-section" | "section-leaving" | "menu-entering"
   >("at-menu");
 
-  const navigateTo = (section: "search" | "branches" | "order") => {
+  const navigateTo = (section: "search" | "order") => {
     setTransitionPhase("menu-leaving");
     setTimeout(() => {
       setActiveSection(section);
@@ -87,23 +31,6 @@ const SubLanding = () => {
       setTransitionPhase("menu-entering");
       requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
     }, 280);
-  };
-
-  const navigateToBranch = (branch: "office" | "boudoir" | "chic" | "nuryadi") => {
-    if (branch === "office") {
-      navigate("/simple/office");
-    } else {
-      // Pass origin so the branch page's header title knows where to navigate back to
-      navigate(`/simple/${branch}`, { state: { from: "sublanding" } });
-    }
-  };
-
-  const navigateBackToBranches = () => {
-    navigate("/simple/branches/admin");
-  };
-
-  const navigateBackToMain = () => {
-    navigate("/");
   };
 
   const menuTransitionStyle: React.CSSProperties = {
@@ -126,19 +53,48 @@ const SubLanding = () => {
     opacity: transitionPhase === "section-entering" || transitionPhase === "section-leaving" ? 0 : 1,
   };
 
+  const branches = [
+    { label: "Office",   key: "office"   as const, icon: <Building2 size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+    { label: "Boudoir",  key: "boudoir"  as const, icon: <Sparkles   size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+    { label: "Chic",     key: "chic"     as const, icon: <Scissors   size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+    { label: "Nur Yadi", key: "nuryadi"  as const, icon: <User       size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+  ];
+
+  const handleBranch = (key: "office" | "boudoir" | "chic" | "nuryadi") => {
+    if (key === "office") {
+      navigate("/simple/office");
+    } else {
+      navigate(`/simple/${key}`, { state: { from: "adminportal" } });
+    }
+  };
+
+  // Pill row style — fully rounded, light grey, exactly like the email/password rows
+  const pillRow: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    height: "54px",
+    background: "rgba(255,255,255,0.55)",
+    borderRadius: "9999px",          // ← fully pill-shaped, not square corners
+    padding: "0 14px 0 8px",
+    border: "1px solid rgba(0,0,0,0.06)",
+    cursor: "pointer",
+    transition: "background 0.15s ease",
+  };
+
   return (
     <div
       style={{
         minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh",
         background: "hsl(var(--background))",
         color: "hsl(var(--foreground))",
+        fontFamily: "'Raleway', sans-serif",
+        position: "relative",
       }}
     >
-      {/* Fixed Home button (top left) - only show on home menu */}
+      {/* Home button */}
       <a
         href="/"
         aria-label="Go to main landing page"
-        title="Home"
         style={{
           position: "fixed",
           left: "20px",
@@ -154,75 +110,182 @@ const SubLanding = () => {
         <Home size={18} strokeWidth={1.4} />
       </a>
 
-      <div className="max-w-full mx-auto px-3">
-        {/* Home Menu */}
-        {activeSection === null && (
-          <div style={{ position: "relative", minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", overflow: "hidden", ...menuTransitionStyle }}>
-            {/* Idle: 3 items centered */}
-            <div style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              paddingLeft: "12px",
-              opacity: 1,
-              // In tablet mode the zoomed page fills exactly the viewport, so
-              // give the centered items a gentle lift so they sit slightly above centre.
-              transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
-              transition: "opacity 0.38s ease, transform 0.38s ease",
-              pointerEvents: "auto",
-            }}>
-              {(["BRANCHES", "SEARCH", "ORDER"] as const).map((item) => (
-                <button
-                  key={item}
-                  onClick={() => {
-                    if (item === "SEARCH") { navigateTo("search"); }
-                    else if (item === "ORDER") { navigateTo("order"); }
-                    else { navigate("/simple/branches"); }
-                  }}
+      {/* Main menu */}
+      {activeSection === null && (
+        <div
+          style={{
+            minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "stretch",
+            padding: "0 20px",
+            transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
+            ...menuTransitionStyle,
+          }}
+        >
+          <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "14px" }}>
+
+            {/* ── BRANCHES CARD — white card, pill rows inside ── */}
+            <div
+              style={{
+                background: "#ffffff",
+                borderRadius: "28px",
+                padding: "16px",
+                boxShadow: "0 2px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
+              }}
+            >
+              {branches.map(({ label, key, icon }, i) => (
+                <div
+                  key={key}
+                  onClick={() => handleBranch(key)}
                   style={{
-                    display: "block",
-                    textAlign: "left",
-                    padding: "2px 0",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    fontSize: "clamp(26px, 8vw, 44px)",
-                    fontWeight: 300,
-                    letterSpacing: "0.05em",
-                    color: "hsl(var(--foreground))",
-                    lineHeight: 1,
-                    transition: "opacity 0.2s ease",
-                    overflow: "hidden",
-                    width: "100%",
+                    ...pillRow,
+                    marginBottom: i < branches.length - 1 ? "10px" : "0",
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.5")}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.05)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.55)")}
                 >
-                  <div style={{ display: "flex", alignItems: "baseline", whiteSpace: "nowrap" }}>
-                    <span style={{ flexShrink: 0 }}>{item}</span>
-                    <span style={{ fontSize: "clamp(26px, 8vw, 44px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.07, marginLeft: "0.25em" }}>{item}</span>
-                    <span style={{ fontSize: "clamp(26px, 8vw, 44px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.05, marginLeft: "0.25em" }}>{item}</span>
-                    <span style={{ fontSize: "clamp(26px, 8vw, 44px)", fontWeight: 300, letterSpacing: "0.05em", opacity: 0.03, marginLeft: "0.25em" }}>{item}</span>
+                  {/* White circle — exactly like the email/password icon circle */}
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      marginRight: "12px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+                    }}
+                  >
+                    {icon}
                   </div>
-                </button>
+
+                  <span style={{
+                    fontSize: "15px",
+                    fontWeight: 500,
+                    color: "rgb(50,50,50)",
+                    fontFamily: "'Raleway', sans-serif",
+                    letterSpacing: "0.01em",
+                  }}>
+                    {label}
+                  </span>
+
+                  <ChevronRight size={14} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.2)" }} />
+                </div>
               ))}
             </div>
-          </div>
-        )}
 
-        {/* Section pages */}
-        {activeSection !== null && (
-          <div style={sectionTransitionStyle}>
-            {activeSection === "search" && <Search onBack={navigateBack} />}
-            {activeSection === "order" && <Order onBack={navigateBack} />}
+            {/* ── SEARCH & ORDER — dark card, exactly like "New in / C.Lab Joints" ── */}
+            <div
+              style={{
+                background: "#1e1e1e",
+                borderRadius: "28px",
+                padding: "22px 24px",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+              }}
+            >
+              {/* SEARCH — styled like "New in" block */}
+              <div
+                onClick={() => navigateTo("search")}
+                style={{ cursor: "pointer", padding: "4px 0 12px", transition: "opacity 0.15s ease" }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <div>
+                    {/* "New in" equivalent */}
+                    <h3 style={{
+                      fontSize: "22px",
+                      fontWeight: 500,
+                      color: "#ffffff",
+                      margin: "0 0 2px 0",
+                      fontFamily: "'Raleway', sans-serif",
+                      lineHeight: 1.1,
+                    }}>
+                      Search
+                    </h3>
+                    {/* "C.Lab Joints" equivalent */}
+                    <p style={{
+                      fontSize: "15px",
+                      color: "rgba(255,255,255,0.4)",
+                      margin: 0,
+                      fontFamily: "'Raleway', sans-serif",
+                    }}>
+                      Find products across branches
+                    </p>
+                  </div>
+                  {/* "Discover" equivalent */}
+                  <span style={{
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.5)",
+                    letterSpacing: "0.02em",
+                  }}>
+                    Open
+                  </span>
+                </div>
+              </div>
+
+              {/* Thin divider */}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", margin: "0 0 12px 0" }} />
+
+              {/* ORDER — same layout */}
+              <div
+                onClick={() => navigateTo("order")}
+                style={{ cursor: "pointer", padding: "4px 0 0", transition: "opacity 0.15s ease" }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <div>
+                    <h3 style={{
+                      fontSize: "22px",
+                      fontWeight: 500,
+                      color: "#ffffff",
+                      margin: "0 0 2px 0",
+                      fontFamily: "'Raleway', sans-serif",
+                      lineHeight: 1.1,
+                    }}>
+                      Order
+                    </h3>
+                    <p style={{
+                      fontSize: "15px",
+                      color: "rgba(255,255,255,0.4)",
+                      margin: 0,
+                      fontFamily: "'Raleway', sans-serif",
+                    }}>
+                      Place and manage orders
+                    </p>
+                  </div>
+                  <span style={{
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.5)",
+                    letterSpacing: "0.02em",
+                  }}>
+                    Open
+                  </span>
+                </div>
+              </div>
+            </div>
+
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Section pages */}
+      {activeSection !== null && (
+        <div style={sectionTransitionStyle}>
+          {activeSection === "search" && <Search onBack={navigateBack} />}
+          {activeSection === "order" && <Order onBack={navigateBack} />}
+        </div>
+      )}
     </div>
   );
 };
 
-export default SubLanding;
+export default AdminPortal;

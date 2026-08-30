@@ -1,35 +1,21 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Home,
-  Building2,
-  Sparkles,
-  Scissors,
-  User,
-  Search as SearchIcon,
-  ClipboardList,
-  type LucideIcon,
-} from "lucide-react";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
+import { Home, Building2, Sparkles, Scissors, User, ChevronRight } from "lucide-react";
 import Search from "./Search";
 import Order from "./Order";
 
-type BranchKey = "office" | "boudoir" | "chic" | "nuryadi";
-type ToolKey = "search" | "order";
-
-/** Unified Admin Portal entry: Branches + Search + Order on a single screen. */
 const AdminPortal = () => {
   const navigate = useNavigate();
   const { tablet } = useTabletMode();
 
-  const [activeSection, setActiveSection] = useState<ToolKey | null>(null);
-  const [transitionPhase, setTransitionPhase] = useState<
+  const [activeSection, setActiveSection] = useState<"search" | "order" | null>(null);
+  const [transitionPhase, setTransitionPhase] = useState
     "at-menu" | "menu-leaving" | "section-entering" | "at-section" | "section-leaving" | "menu-entering"
   >("at-menu");
 
-  // ── Inline section transitions (same slide + blur logic as SubLanding) ──
-  const navigateTo = (section: ToolKey) => {
+  const navigateTo = (section: "search" | "order") => {
     setTransitionPhase("menu-leaving");
     setTimeout(() => {
       setActiveSection(section);
@@ -45,16 +31,6 @@ const AdminPortal = () => {
       setTransitionPhase("menu-entering");
       requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
     }, 280);
-  };
-
-  // ── Branch navigation (react-router, leaves the portal) ──
-  const navigateToBranch = (branch: BranchKey) => {
-    if (branch === "office") {
-      navigate("/simple/office");
-    } else {
-      // Pass origin so the branch page's header title knows where to navigate back to
-      navigate(`/simple/${branch}`, { state: { from: "adminportal" } });
-    }
   };
 
   const menuTransitionStyle: React.CSSProperties = {
@@ -77,6 +53,32 @@ const AdminPortal = () => {
     opacity: transitionPhase === "section-entering" || transitionPhase === "section-leaving" ? 0 : 1,
   };
 
+  const branches = [
+    { label: "Office",   key: "office"  as const, icon: <Building2 size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+    { label: "Boudoir",  key: "boudoir" as const, icon: <Sparkles  size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+    { label: "Chic",     key: "chic"    as const, icon: <Scissors  size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+    { label: "Nur Yadi", key: "nuryadi" as const, icon: <User      size={15} color="rgb(110,110,110)" strokeWidth={1.5} /> },
+  ];
+
+  const handleBranch = (key: "office" | "boudoir" | "chic" | "nuryadi") => {
+    if (key === "office") {
+      navigate("/simple/office");
+    } else {
+      navigate(`/simple/${key}`, { state: { from: "adminportal" } });
+    }
+  };
+
+  const pillRow: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    height: "42px",
+    background: "rgba(240,240,240,0.85)",
+    borderRadius: "16px",
+    padding: "0 14px 0 8px",
+    cursor: "pointer",
+    transition: "background 0.15s ease",
+  };
+
   return (
     <div
       style={{
@@ -84,13 +86,13 @@ const AdminPortal = () => {
         background: "hsl(var(--background))",
         color: "hsl(var(--foreground))",
         fontFamily: "'Raleway', sans-serif",
+        position: "relative",
       }}
     >
-      {/* Fixed Home button (top left) - only show on the portal home */}
-      <a
+      {/* Home button */}
+      
         href="/"
         aria-label="Go to main landing page"
-        title="Home"
         style={{
           position: "fixed",
           left: "20px",
@@ -106,157 +108,190 @@ const AdminPortal = () => {
         <Home size={18} strokeWidth={1.4} />
       </a>
 
-      <div className="max-w-full mx-auto px-3">
-        {/* Portal menu (Branches card + Tools card) */}
-        {activeSection === null && (
-          <div style={{ position: "relative", minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", overflow: "hidden", ...menuTransitionStyle }}>
+      {/* Main menu */}
+      {activeSection === null && (
+        <div
+          style={{
+            minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "stretch",
+            padding: "0 20px",
+            transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
+            ...menuTransitionStyle,
+          }}
+        >
+          <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "14px" }}>
+
+            {/* ── BRANCHES CARD ── */}
             <div
               style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
+                background: "#ffffff",
+                borderRadius: "28px",
                 padding: "16px",
-                // In tablet mode the zoomed page fills exactly the viewport, so
-                // give the centered cards a gentle lift so they sit slightly above centre.
-                transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
-                transition: "opacity 0.38s ease, transform 0.38s ease",
+                boxShadow: "0 2px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", maxWidth: "420px" }}>
-                {/* Section 1 — Branches card */}
-                <div style={cardStyle}>
-                  <div style={cardListStyle}>
-                    {BRANCHES.map(({ key, label, icon }) => (
-                      <PillRow key={key} icon={icon} label={label} onPress={() => navigateToBranch(key)} />
-                    ))}
-                  </div>
-                </div>
+              <p style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                color: "rgba(0,0,0,0.35)",
+                textTransform: "uppercase",
+                margin: "0 0 12px 6px",
+                fontFamily: "'Raleway', sans-serif",
+              }}>
+                Branches
+              </p>
 
-                {/* Section 2 — Tools card */}
-                <div style={cardStyle}>
-                  <div style={cardListStyle}>
-                    {TOOLS.map(({ key, label, icon }) => (
-                      <PillRow key={key} icon={icon} label={label} onPress={() => navigateTo(key)} />
-                    ))}
+              {branches.map(({ label, key, icon }, i) => (
+                <div
+                  key={key}
+                  onClick={() => handleBranch(key)}
+                  style={{
+                    ...pillRow,
+                    marginBottom: i < branches.length - 1 ? "8px" : "0",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.07)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(240,240,240,0.85)")}
+                >
+                  <div
+                    style={{
+                      width: "30px",
+                      height: "30px",
+                      borderRadius: "50%",
+                      background: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      marginRight: "12px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+                    }}
+                  >
+                    {icon}
                   </div>
+
+                  <span style={{
+                    fontSize: "15px",
+                    fontWeight: 500,
+                    color: "rgb(50,50,50)",
+                    fontFamily: "'Raleway', sans-serif",
+                    letterSpacing: "0.01em",
+                  }}>
+                    {label}
+                  </span>
+
+                  <ChevronRight size={14} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.2)" }} />
+                </div>
+              ))}
+            </div>
+
+            {/* ── SEARCH & ORDER CARD ── */}
+            <div
+              style={{
+                background: "#1e1e1e",
+                borderRadius: "28px",
+                padding: "22px 24px",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+              }}
+            >
+              {/* SEARCH */}
+              <div
+                onClick={() => navigateTo("search")}
+                style={{ cursor: "pointer", padding: "4px 0 12px", transition: "opacity 0.15s ease" }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <div>
+                    <h3 style={{
+                      fontSize: "18px",
+                      fontWeight: 400,
+                      color: "#ffffff",
+                      margin: "0 0 2px 0",
+                      fontFamily: "'Raleway', sans-serif",
+                      lineHeight: 1.1,
+                    }}>
+                      Search
+                    </h3>
+                    <p style={{
+                      fontSize: "15px",
+                      color: "rgba(255,255,255,0.4)",
+                      margin: 0,
+                      fontFamily: "'Raleway', sans-serif",
+                    }}>
+                      Find products across branches
+                    </p>
+                  </div>
+                  <span style={{
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.5)",
+                    letterSpacing: "0.02em",
+                  }}>
+                    Open
+                  </span>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", margin: "0 0 12px 0" }} />
+
+              {/* ORDER */}
+              <div
+                onClick={() => navigateTo("order")}
+                style={{ cursor: "pointer", padding: "4px 0 0", transition: "opacity 0.15s ease" }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.75")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <div>
+                    <h3 style={{
+                      fontSize: "18px",
+                      fontWeight: 400,
+                      color: "#ffffff",
+                      margin: "0 0 2px 0",
+                      fontFamily: "'Raleway', sans-serif",
+                      lineHeight: 1.1,
+                    }}>
+                      Order
+                    </h3>
+                    <p style={{
+                      fontSize: "15px",
+                      color: "rgba(255,255,255,0.4)",
+                      margin: 0,
+                      fontFamily: "'Raleway', sans-serif",
+                    }}>
+                      Place and manage orders for Office
+                    </p>
+                  </div>
+                  <span style={{
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.5)",
+                    letterSpacing: "0.02em",
+                  }}>
+                    Open
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Inline section pages */}
-        {activeSection !== null && (
-          <div style={sectionTransitionStyle}>
-            {activeSection === "search" && <Search onBack={navigateBack} />}
-            {activeSection === "order" && <Order onBack={navigateBack} />}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Section pages */}
+      {activeSection !== null && (
+        <div style={sectionTransitionStyle}>
+          {activeSection === "search" && <Search onBack={navigateBack} />}
+          {activeSection === "order" && <Order onBack={navigateBack} />}
+        </div>
+      )}
     </div>
   );
 };
-
-/* ── Styling ───────────────────────────────────────────────────────────── */
-
-const cardStyle: React.CSSProperties = {
-  background: "#ffffff",
-  borderRadius: "20px",
-  padding: "16px",
-  border: "1px solid hsl(var(--border))",
-  boxShadow: "0 10px 30px -14px hsla(0, 0%, 0%, 0.16)",
-};
-
-const cardListStyle: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-};
-
-const pillStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  width: "100%",
-  padding: "14px 16px",
-  background: "hsl(var(--muted))",
-  border: "none",
-  borderRadius: "14px",
-  cursor: "pointer",
-  fontFamily: "inherit",
-  color: "hsl(var(--foreground))",
-  textAlign: "left",
-  WebkitTapHighlightColor: "transparent",
-  transition: "opacity 0.18s ease, transform 0.18s ease",
-};
-
-const iconBoxStyle: React.CSSProperties = {
-  width: "34px",
-  height: "34px",
-  flexShrink: 0,
-  borderRadius: "10px",
-  background: "hsl(var(--foreground))",
-  color: "#ffffff",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-const pillLabelStyle: React.CSSProperties = {
-  fontSize: "clamp(14px, 3.5vw, 17px)",
-  fontWeight: 400,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  color: "hsl(var(--foreground))",
-  fontFamily: "'Raleway', inherit",
-};
-
-interface PillRowProps {
-  icon: LucideIcon;
-  label: string;
-  onPress: () => void;
-}
-
-const PillRow = ({ icon: Icon, label, onPress }: PillRowProps) => {
-  const dim = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.opacity = "0.75"; };
-  const restore = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.opacity = "1";
-    e.currentTarget.style.transform = "scale(1)";
-  };
-  const press = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.transform = "scale(0.985)"; };
-
-  return (
-    <button
-      onClick={onPress}
-      style={pillStyle}
-      onMouseEnter={dim}
-      onMouseLeave={restore}
-      onMouseDown={press}
-      onMouseUp={restore}
-    >
-      <span style={iconBoxStyle}>
-        <Icon size={18} strokeWidth={1.5} />
-      </span>
-      <span style={pillLabelStyle}>{label}</span>
-    </button>
-  );
-};
-
-/* ── Menu data ─────────────────────────────────────────────────────────── */
-
-const BRANCHES: { key: BranchKey; label: string; icon: LucideIcon }[] = [
-  { key: "office", label: "Office", icon: Building2 },
-  { key: "boudoir", label: "Boudoir", icon: Sparkles },
-  { key: "chic", label: "Chic", icon: Scissors },
-  { key: "nuryadi", label: "Nur Yadi", icon: User },
-];
-
-const TOOLS: { key: ToolKey; label: string; icon: LucideIcon }[] = [
-  { key: "search", label: "Search", icon: SearchIcon },
-  { key: "order", label: "Order", icon: ClipboardList },
-];
 
 export default AdminPortal;
