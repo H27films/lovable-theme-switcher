@@ -93,8 +93,8 @@ const AdminPortal = () => {
           right: "-150px",
           top: "50%",
           transform: "translateY(-50%)",
-          width: "800px",
-          height: "800px",
+          width: "700px",
+          height: "700px",
           zIndex: 1,
           opacity: 0.08,
         }}
@@ -172,7 +172,7 @@ const AdminPortal = () => {
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
               overflow: "hidden",
               zIndex: 10,
-              marginLeft: "4%",
+              marginLeft: "4px",
               marginTop: "16px",
               marginBottom: "16px",
             }}
@@ -181,7 +181,7 @@ const AdminPortal = () => {
             <div
               style={{
                 flex: 1,
-                padding: tablet ? "16px" : "20px",
+                padding: tablet ? "12px" : "16px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "flex-start",
