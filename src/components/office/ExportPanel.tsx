@@ -5,10 +5,12 @@ import MiniCalendar from "./MiniCalendar";
 
 interface ExportPanelProps {
   onClose: () => void;
+  /** Optional: start directly at a specific export sub-screen instead of the type menu. */
+  initialType?: "log" | "cash" | "order";
 }
 
-const ExportPanel = ({ onClose }: ExportPanelProps) => {
-  const [exportType, setExportType] = useState<"log" | "cash" | "order" | null>(null);
+const ExportPanel = ({ onClose, initialType = null }: ExportPanelProps) => {
+  const [exportType, setExportType] = useState<"log" | "cash" | "order" | null>(initialType);
   const [exportDateFrom, setExportDateFrom] = useState<string>("");
   const [exportDateTo, setExportDateTo] = useState<string>("");
   const [quickSelect, setQuickSelect] = useState<"7d"|"month"|null>(null);

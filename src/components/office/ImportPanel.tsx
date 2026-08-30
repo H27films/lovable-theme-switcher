@@ -6,10 +6,12 @@ import * as XLSX from "xlsx";
 interface ImportPanelProps {
   onClose: () => void;
   onProductsUpdated: () => Promise<void>;
+  /** Optional: start directly at a specific import sub-screen instead of the type menu. */
+  initialType?: "balance" | "log" | "cash";
 }
 
-const ImportPanel = ({ onClose, onProductsUpdated }: ImportPanelProps) => {
-  const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(null);
+const ImportPanel = ({ onClose, onProductsUpdated, initialType = null }: ImportPanelProps) => {
+  const [importType, setImportType] = useState<"balance" | "log" | "cash" | null>(initialType);
   const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);

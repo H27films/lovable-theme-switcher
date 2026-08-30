@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import ImportPanel from "@/components/office/ImportPanel";
-import ExportPanel from "@/components/office/ExportPanel";
+import Sync from "@/components/office/Sync";
 import OfficeLogTable from "@/components/office/OfficeLogTable";
 import { OfficeHeader } from "@/components/office/OfficeHeader";
 
@@ -54,8 +53,8 @@ const LeftAlignedYTick = ({ y, payload }: any) => {
 const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const navigate = useNavigate();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  // ── IMPORT PANEL STATE ────────────────────────────────────
-  const [showImportPanel, setShowImportPanel] = useState(false);
+  // ── SYNC PANEL STATE ────────────────────────────────────
+  const [showSyncPanel, setShowSyncPanel] = useState(false);
   const [showSalesPanel, setShowSalesPanel] = useState(false);
   const [salesData, setSalesData] = useState<{ Branch: string; Date: string; "Total GST": number }[]>([]);
   const [salesLoading, setSalesLoading] = useState(false);
@@ -69,9 +68,6 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const [tappedBar, setTappedBar] = useState<{ branchKey: string; label: string; total: number } | null>(null);
   const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
   const [salesYearDropdownOpen, setSalesYearDropdownOpen] = useState(false);
-  // ── EXPORT PANEL STATE ────────────────────────────────────
-  const [showExportPanel, setShowExportPanel] = useState(false);
-
 
   const BRANCH_NAME = "OFFICE";
 
@@ -306,41 +302,22 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             )}
           </button>
 
-          {/* Import */}
+          {/* Sync */}
           <button
-            onClick={() => setShowImportPanel(true)}
-            title="Import"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "import" ? 1 : 0.7, transform: hoveredTab === "import" ? "scale(1.03)" : "scale(1)" }}
-            onMouseEnter={() => setHoveredTab("import")}
+            onClick={() => setShowSyncPanel(true)}
+            title="Sync"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "sync" ? 1 : 0.7, transform: hoveredTab === "sync" ? "scale(1.03)" : "scale(1)" }}
+            onMouseEnter={() => setHoveredTab("sync")}
             onMouseLeave={() => setHoveredTab(null)}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Import</span>
-            {hoveredTab === "import" && (
+            <RefreshCw size={18} />
+            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Sync</span>
+            {hoveredTab === "sync" && (
               <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
             )}
           </button>
 
-          {/* Export */}
-          <button
-            onClick={() => setShowExportPanel(true)}
-            title="Export"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "export" ? 1 : 0.7, transform: hoveredTab === "export" ? "scale(1.03)" : "scale(1)" }}
-            onMouseEnter={() => setHoveredTab("export")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Export</span>
-            {hoveredTab === "export" && (
-              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
-            )}
-          </button>
-
-          {/* Search — icon only, next to Export */}
+          {/* Search — icon only, next to Sync */}
           <button
             onClick={() => navigate("/simple/search", { state: { from: "office" } })}
             title="Search"
@@ -629,19 +606,14 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           </div>
         )}
 
-        {/* ═ IMPORT PANEL ══════════════════════════════ */}
-        {showImportPanel && (
-          <ImportPanel
-            onClose={() => {
-              setShowImportPanel(false);
-              setLogRefreshTrigger(prev => prev + 1);
-            }}
+        {/* ═ SYNC PANEL ══════════════════════════════ */}
+        {showSyncPanel && (
+          <Sync
+            onClose={() => setShowSyncPanel(false)}
+            onImportPanelClosed={() => setLogRefreshTrigger(prev => prev + 1)}
             onProductsUpdated={refreshLocalProducts}
           />
         )}
-
-        {/* ═ EXPORT PANEL ══════════════════════════════ */}
-        {showExportPanel && <ExportPanel onClose={() => setShowExportPanel(false)} />}
 
     </div>
   );
