@@ -82,17 +82,21 @@ const AdminPortal = () => {
     alignItems: "center",
     height: "48px",
     background: "hsl(38 25% 92%)",
-    borderRadius: "16px",
-    padding: "0 14px 0 10px",
+    borderRadius: "9999px",
+    padding: "0 16px 0 10px",
     cursor: "pointer",
     transition: "background 0.15s ease, transform 0.15s ease",
   };
 
-  const actionBox: React.CSSProperties = {
-    flex: 1,
-    height: "54px",
+  const actionPanel: React.CSSProperties = {
     background: "#1a1a1a",
-    borderRadius: "18px",
+    borderRadius: "22px",
+    overflow: "hidden",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+  };
+
+  const actionRow: React.CSSProperties = {
+    height: "50px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
