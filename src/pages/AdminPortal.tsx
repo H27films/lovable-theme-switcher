@@ -129,7 +129,7 @@ const AdminPortal = () => {
         style={{
           position: "fixed",
           right: "20px",
-          top: "calc(env(safe-area-inset-top, 0px) + 16px)",
+          top: "calc(env(safe-area-inset-top, 0px) + 32px)",
           zIndex: 60,
           display: activeSection !== null ? "none" : "flex",
           alignItems: "center",
@@ -280,27 +280,11 @@ const AdminPortal = () => {
                 borderTop: "1px solid rgba(0,0,0,0.08)",
               }}
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#1a1a1a"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ marginBottom: "8px" }}
-              >
-                <circle cx="12" cy="12" r="1" />
-                <circle cx="12" cy="5" r="1" />
-                <circle cx="19" cy="12" r="1" />
-                <circle cx="12" cy="19" r="1" />
-                <circle cx="5" cy="12" r="1" />
-                <path d="M12 6v6" />
-                <path d="M12 12v6" />
-                <path d="M6 12h6" />
-                <path d="M12 12h6" />
-              </svg>
+              <img
+                src="/AdminIcon.svg"
+                alt="Admin Portal"
+                style={{ width: "40px", height: "40px", marginBottom: "8px" }}
+              />
               <p style={{
                 fontSize: "12px",
                 fontWeight: 300,
