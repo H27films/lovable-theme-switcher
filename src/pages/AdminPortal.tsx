@@ -89,6 +89,9 @@ const AdminPortal = () => {
   };
 
   const actionPanel: React.CSSProperties = {
+    width: "100%",
+    maxWidth: "420px",
+    margin: "0 auto",
     background: "#1a1a1a",
     borderRadius: "22px",
     overflow: "hidden",
@@ -99,8 +102,8 @@ const AdminPortal = () => {
     height: "50px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    gap: "10px",
+    justifyContent: "space-between",
+    padding: "0 18px",
     cursor: "pointer",
     transition: "opacity 0.15s ease, transform 0.15s ease",
   };
