@@ -120,7 +120,7 @@ const AdminPortal = () => {
           letterSpacing: "0.02em",
         }}
       >
-        Admin Portal
+        
       </div>
 
       {/* Back arrow */}
@@ -162,7 +162,7 @@ const AdminPortal = () => {
           <div
             style={{
               width: tablet ? "45%" : "48%",
-              height: tablet ? TABLET_FIT_HEIGHT : "100dvh",
+              height: tablet ? `calc(${TABLET_FIT_HEIGHT} - 32px)` : "calc(100dvh - 32px)",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(8px)",
               WebkitBackdropFilter: "blur(8px)",
@@ -173,7 +173,8 @@ const AdminPortal = () => {
               overflow: "hidden",
               zIndex: 10,
               marginLeft: tablet ? "2%" : "1%",
-              marginTop: "0",
+              marginTop: "16px",
+              marginBottom: "16px",
             }}
           >
             {/* Branches section */}
@@ -198,6 +199,7 @@ const AdminPortal = () => {
                 Branches
               </p>
 
+              <div style={{ marginTop: tablet ? "24px" : "32px" }}>
               {branches.map(({ label, key, icon }, i) => (
                 <div
                   key={key}
@@ -253,6 +255,7 @@ const AdminPortal = () => {
                   <ChevronRight size={15} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.25)" }} />
                 </div>
               ))}
+              </div>
             </div>
 
             {/* Admin Portal at bottom */}
