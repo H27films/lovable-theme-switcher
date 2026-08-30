@@ -90,13 +90,13 @@ const AdminPortal = () => {
       <div
         style={{
           position: "absolute",
-          right: "-150px",
+          right: "-95px",
           top: "50%",
-          transform: "translateY(-50%)",
+          transform: "translateY(calc(-50% + 40px))",
           width: "700px",
           height: "700px",
           zIndex: 1,
-          opacity: 0.08,
+          opacity: 0.05,
         }}
       >
         <img
@@ -164,8 +164,8 @@ const AdminPortal = () => {
               width: "58%",
               height: tablet ? `calc(${TABLET_FIT_HEIGHT} - 32px)` : "calc(100dvh - 32px)",
               background: "rgba(255, 255, 255, 0.25)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
               borderRadius: "32px",
               display: "flex",
               flexDirection: "column",
