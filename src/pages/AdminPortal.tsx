@@ -164,7 +164,7 @@ const AdminPortal = () => {
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "stretch",
-            padding: "70px 18px 34px",
+            padding: "54px 14px 14px",
             transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
             ...menuTransitionStyle,
           }}
@@ -174,7 +174,7 @@ const AdminPortal = () => {
             style={{
               width: "100%",
               maxWidth: "420px",
-              minHeight: tablet ? "72dvh" : "78dvh",
+              minHeight: tablet ? "86dvh" : "calc(100dvh - 70px)",
               margin: "0 auto",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(8px)",
