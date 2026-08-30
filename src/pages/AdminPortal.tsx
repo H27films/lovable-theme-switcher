@@ -3,10 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import {
-  ArrowLeft,
   Building2,
-  Sparkles,
-  Scissors,
   User,
   ChevronRight,
   Search as SearchIcon,
@@ -64,8 +61,8 @@ const AdminPortal = () => {
 
   const branches = [
     { label: "Office",   key: "office"  as const, icon: <Building2 size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
-    { label: "Boudoir",  key: "boudoir" as const, icon: <Sparkles  size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
-    { label: "Chic",     key: "chic"    as const, icon: <Scissors  size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
+    { label: "Boudoir",  key: "boudoir" as const, icon: <User      size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
+    { label: "Chic",     key: "chic"    as const, icon: <User      size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
     { label: "Nur Yadi", key: "nuryadi" as const, icon: <User      size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
   ];
 
@@ -80,39 +77,30 @@ const AdminPortal = () => {
   const pillRow: React.CSSProperties = {
     display: "flex",
     alignItems: "center",
-    height: "48px",
+    height: tablet ? "44px" : "48px",
     background: "hsl(38 25% 92%)",
     borderRadius: "9999px",
-    padding: "0 16px 0 10px",
+    padding: "0 12px 0 8px",
     cursor: "pointer",
     transition: "background 0.15s ease, transform 0.15s ease",
-  };
-
-  const actionPanel: React.CSSProperties = {
-    width: "100%",
-    maxWidth: "420px",
-    margin: "0 auto",
-    background: "#1a1a1a",
-    borderRadius: "22px",
-    overflow: "hidden",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+    margin: "0 -4px",
   };
 
   const actionRow: React.CSSProperties = {
-    height: "50px",
+    height: tablet ? "46px" : "50px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     padding: "0 18px",
     cursor: "pointer",
-    transition: "opacity 0.15s ease, transform 0.15s ease",
+    transition: "opacity 0.15s ease, transform 0.15s ease, background 0.15s ease",
   };
 
   return (
     <div
       style={{
         minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh",
-        background: "hsl(var(--background))",
+        background: "linear-gradient(135deg, #f5f1eb 0%, #f2ede5 100%)",
         color: "hsl(var(--foreground))",
         fontFamily: "'Raleway', sans-serif",
         position: "relative",
@@ -127,35 +115,38 @@ const AdminPortal = () => {
           top: "calc(env(safe-area-inset-top, 0px) + 24px)",
           zIndex: 60,
           display: activeSection !== null ? "none" : "block",
-          fontSize: "13px",
+          fontSize: tablet ? "12px" : "13px",
           fontWeight: 400,
-          color: "rgba(0,0,0,0.28)",
+          color: "rgba(0,0,0,0.45)",
           letterSpacing: "0.02em",
         }}
       >
         Admin Portal
       </div>
-
-      {/* Back arrow */}
+      {/* Back arrow — matches the Sync component back-button style */}
       <a
         href="/"
         aria-label="Go to main landing page"
         style={{
           position: "fixed",
           right: "20px",
-          top: "calc(env(safe-area-inset-top, 0px) + 20px)",
+          top: "calc(env(safe-area-inset-top, 0px) + 16px)",
           zIndex: 60,
           display: activeSection !== null ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "hsl(var(--muted-foreground))",
+          color: "hsl(var(--foreground))",
           textDecoration: "none",
+          padding: "4px",
           transition: "opacity 0.15s ease",
         }}
-        onMouseEnter={e => (e.currentTarget.style.opacity = "0.6")}
+        onMouseEnter={e => (e.currentTarget.style.opacity = "0.55")}
         onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
       >
-        <ArrowLeft size={26} strokeWidth={1.4} />
+        <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="30" y1="8" x2="1" y2="8" />
+          <polyline points="9,1 1,8 9,15" />
+        </svg>
       </a>
 
       {/* Main menu */}
@@ -166,141 +157,174 @@ const AdminPortal = () => {
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            alignItems: "stretch",
-            padding: "54px 14px 14px",
+            alignItems: "center",
+            padding: "54px 10px 10px",
             transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
             ...menuTransitionStyle,
           }}
         >
-          {/* Branches translucent box */}
+          {/* Main container box */}
           <div
             style={{
               width: "100%",
-              maxWidth: "420px",
+              maxWidth: tablet ? "min(90%, 500px)" : "calc(100% - 20px)",
               flex: 1,
-              margin: "0 auto",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(8px)",
               WebkitBackdropFilter: "blur(8px)",
               borderRadius: "32px",
-              padding: "22px",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
+              overflow: "hidden",
             }}
           >
-            {/* ── BRANCHES ── */}
-            <p style={{
-              fontSize: "16px",
-              fontWeight: 500,
-              letterSpacing: "0.01em",
-              color: "#000000",
-              margin: "0 0 12px 4px",
-              fontFamily: "'Raleway', sans-serif",
-            }}>
-              Branches.
-            </p>
+            {/* Branches section */}
+            <div
+              style={{
+                flex: 1,
+                padding: tablet ? "18px" : "22px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-start",
+              }}
+            >
+              {/* ── BRANCHES ── */}
+              <p style={{
+                fontSize: tablet ? "15px" : "16px",
+                fontWeight: 500,
+                letterSpacing: "0.01em",
+                color: "#000000",
+                margin: "0 0 12px 4px",
+                fontFamily: "'Raleway', sans-serif",
+              }}>
+                Branches
+              </p>
 
-            {branches.map(({ label, key, icon }, i) => (
+              {branches.map(({ label, key, icon }, i) => (
+                <div
+                  key={key}
+                  onClick={() => handleBranch(key)}
+                  style={{
+                    ...pillRow,
+                    marginBottom: i < branches.length - 1 ? "14px" : "0",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "hsl(38 22% 88%)";
+                    e.currentTarget.style.transform = "scale(1.01)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "hsl(38 25% 92%)";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      background: "rgba(255,255,255,0.6)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      marginRight: "12px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    {icon}
+                  </div>
+
+                  <span style={{
+                    fontSize: tablet ? "14px" : "15px",
+                    fontWeight: 500,
+                    color: "rgb(50,45,40)",
+                    fontFamily: "'Raleway', sans-serif",
+                    letterSpacing: "0.01em",
+                  }}>
+                    {label}
+                  </span>
+
+                  <ChevronRight size={15} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.25)" }} />
+                </div>
+              ))}
+            </div>
+
+            {/* ── SEARCH & ORDER PANEL ── */}
+            <div
+              style={{
+                width: "calc(100% - 32px)",
+                margin: "0 16px 16px 16px",
+                background: "hsl(38 25% 92%)",
+                borderRadius: "18px",
+                padding: tablet ? "12px 14px" : "14px 16px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <div
-                key={key}
-                onClick={() => handleBranch(key)}
+                onClick={() => navigateTo("search")}
                 style={{
-                  ...pillRow,
-                  marginBottom: i < branches.length - 1 ? "10px" : "0",
+                  ...actionRow,
+                  padding: "0 8px",
+                  justifyContent: "space-between",
+                  height: tablet ? "40px" : "44px",
+                  borderRadius: "12px",
+                  transition: "background 0.15s ease, transform 0.15s ease",
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.background = "hsl(38 22% 88%)";
                   e.currentTarget.style.transform = "scale(1.01)";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = "hsl(38 25% 92%)";
+                  e.currentTarget.style.background = "transparent";
                   e.currentTarget.style.transform = "scale(1)";
                 }}
               >
-                <div
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    background: "rgba(255,255,255,0.6)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    marginRight: "12px",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  }}
-                >
-                  {icon}
-                </div>
-
                 <span style={{
-                  fontSize: "15px",
+                  fontSize: tablet ? "14px" : "15px",
                   fontWeight: 500,
-                  color: "rgb(50,45,40)",
+                  color: "#000000",
                   fontFamily: "'Raleway', sans-serif",
                   letterSpacing: "0.01em",
                 }}>
-                  {label}
+                  Search
                 </span>
-
-                <ChevronRight size={15} style={{ marginLeft: "auto", color: "rgba(0,0,0,0.25)" }} />
+                <SearchIcon size={17} color="#000000" strokeWidth={1.6} />
               </div>
-            ))}
-          </div>
 
-          {/* ── SEARCH & ORDER PANEL ── */}
-          <div
-            style={{
-              ...actionPanel,
-              marginTop: "12px",
-            }}
-          >
-            <div
-              onClick={() => navigateTo("search")}
-              style={actionRow}
-              onMouseEnter={e => {
-                e.currentTarget.style.opacity = "0.75";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.opacity = "1";
-              }}
-            >
-              <span style={{
-                fontSize: "15px",
-                fontWeight: 500,
-                color: "#ffffff",
-                fontFamily: "'Raleway', sans-serif",
-                letterSpacing: "0.01em",
-              }}>
-                Search
-              </span>
-              <SearchIcon size={17} color="#ffffff" strokeWidth={1.6} />
-            </div>
+              <div style={{ borderTop: "1px solid rgba(0,0,0,0.10)", margin: "0" }} />
 
-            <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", margin: "0 16px" }} />
-
-            <div
-              onClick={() => navigateTo("order")}
-              style={actionRow}
-              onMouseEnter={e => {
-                e.currentTarget.style.opacity = "0.75";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.opacity = "1";
-              }}
-            >
-              <span style={{
-                fontSize: "15px",
-                fontWeight: 500,
-                color: "#ffffff",
-                fontFamily: "'Raleway', sans-serif",
-                letterSpacing: "0.01em",
-              }}>
-                Order
-              </span>
-              <ClipboardList size={17} color="#ffffff" strokeWidth={1.6} />
+              <div
+                onClick={() => navigateTo("order")}
+                style={{
+                  ...actionRow,
+                  padding: "0 8px",
+                  justifyContent: "space-between",
+                  height: tablet ? "40px" : "44px",
+                  borderRadius: "12px",
+                  transition: "background 0.15s ease, transform 0.15s ease",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "hsl(38 22% 88%)";
+                  e.currentTarget.style.transform = "scale(1.01)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                <span style={{
+                  fontSize: tablet ? "14px" : "15px",
+                  fontWeight: 500,
+                  color: "#000000",
+                  fontFamily: "'Raleway', sans-serif",
+                  letterSpacing: "0.01em",
+                }}>
+                  Order
+                </span>
+                <ClipboardList size={17} color="#000000" strokeWidth={1.6} />
+              </div>
             </div>
           </div>
         </div>
