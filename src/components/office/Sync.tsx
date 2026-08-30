@@ -80,12 +80,14 @@ export default function Sync({ onClose, onImportPanelClosed, onProductsUpdated }
       {/* Export / Import pill toggle */}
       <div
         style={{
-          display: "flex",
+          display: "inline-flex",
+          width: "fit-content",
+          alignSelf: "flex-start",
           background: "hsl(var(--muted))",
           borderRadius: "999px",
-          padding: "4px",
-          gap: "4px",
-          margin: "20px 16px 4px",
+          padding: "3px",
+          gap: "3px",
+          margin: "14px 16px 4px",
           flexShrink: 0,
         }}
       >
@@ -96,14 +98,13 @@ export default function Sync({ onClose, onImportPanelClosed, onProductsUpdated }
               key={m}
               onClick={() => setMode(m)}
               style={{
-                flex: 1,
-                padding: "10px 0",
+                padding: "7px 20px",
                 borderRadius: "999px",
                 border: "none",
                 cursor: "pointer",
                 background: active ? "#000" : "transparent",
                 color: active ? "#fff" : "hsl(var(--muted-foreground))",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: 600,
                 fontFamily: "Raleway, inherit",
                 letterSpacing: "0.12em",
