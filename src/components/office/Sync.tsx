@@ -85,7 +85,7 @@ export default function Sync({ onClose, onImportPanelClosed, onProductsUpdated }
           alignSelf: "flex-start",
           background: "hsl(var(--muted))",
           borderRadius: "999px",
-          padding: "3px",
+          padding: "2px",
           gap: "3px",
           margin: "14px 16px 4px",
           flexShrink: 0,
@@ -98,7 +98,7 @@ export default function Sync({ onClose, onImportPanelClosed, onProductsUpdated }
               key={m}
               onClick={() => setMode(m)}
               style={{
-                padding: "7px 20px",
+                padding: "5px 20px",
                 borderRadius: "999px",
                 border: "none",
                 cursor: "pointer",

@@ -245,9 +245,6 @@ const ExportPanel = ({ onClose, initialType = null }: ExportPanelProps) => {
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 16px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {exportType && (
-                  <button onClick={resetExport} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", fontSize: "18px", lineHeight: 1 }}>‹</button>
-                )}
                 <button
                   onClick={() => { onClose(); resetExport(); }}
                   title="Back to Office"

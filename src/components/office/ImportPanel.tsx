@@ -208,9 +208,6 @@ const ImportPanel = ({ onClose, onProductsUpdated, initialType = null }: ImportP
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 16px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {importType && (
-                  <button onClick={resetImport} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", fontSize: "18px", lineHeight: 1 }}>‹</button>
-                )}
                 <button
                   onClick={() => { onClose(); resetImport(); }}
                   title="Back to Office"
