@@ -25,6 +25,9 @@ const IMPORT_OPTIONS: { key: ImportOption; label: string; desc: string }[] = [
   { key: "cash", label: "Cash", desc: "Add or update cash entries in the Cash table" },
 ];
 
+// Warm off-white used for the option cards when they are not selected/expanded.
+const OPTION_CARD_BG = "hsl(40 24% 97%)";
+
 export default function Sync({ onClose, onImported, onProductsUpdated }: SyncProps) {
   const [mode, setMode] = useState<"export" | "import">("export");
   const [activeSub, setActiveSub] = useState<{ kind: "export"; type: ExportOption } | null>(null);
@@ -133,7 +136,7 @@ export default function Sync({ onClose, onImported, onProductsUpdated }: SyncPro
                 key={opt.key}
                 onClick={() => setActiveSub({ kind: "export", type: opt.key })}
                 style={{
-                  background: "none", border: "0.5px solid hsl(var(--border))", borderRadius: "10px",
+                  background: OPTION_CARD_BG, border: "0.5px solid hsl(var(--border))", borderRadius: "10px",
                   padding: "16px", cursor: "pointer", textAlign: "left",
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   transition: "border-color 0.2s",
@@ -163,7 +166,7 @@ export default function Sync({ onClose, onImported, onProductsUpdated }: SyncPro
                   style={{
                     border: open ? "none" : "0.5px solid hsl(var(--border))",
                     borderRadius: "10px",
-                    background: open ? "hsl(var(--card))" : "none",
+                    background: open ? "hsl(var(--card))" : OPTION_CARD_BG,
                     overflow: "hidden",
                     transition: "border-color 0.2s, background 0.2s",
                   }}
