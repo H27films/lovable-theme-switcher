@@ -82,17 +82,21 @@ const AdminPortal = () => {
     alignItems: "center",
     height: "48px",
     background: "hsl(38 25% 92%)",
-    borderRadius: "16px",
-    padding: "0 14px 0 10px",
+    borderRadius: "9999px",
+    padding: "0 16px 0 10px",
     cursor: "pointer",
     transition: "background 0.15s ease, transform 0.15s ease",
   };
 
-  const actionBox: React.CSSProperties = {
-    flex: 1,
-    height: "54px",
+  const actionPanel: React.CSSProperties = {
     background: "#1a1a1a",
-    borderRadius: "18px",
+    borderRadius: "22px",
+    overflow: "hidden",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+  };
+
+  const actionRow: React.CSSProperties = {
+    height: "50px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -160,7 +164,7 @@ const AdminPortal = () => {
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "stretch",
-            padding: "70px 18px 34px",
+            padding: "54px 14px 14px",
             transform: tablet ? "translateY(-5dvh)" : "translateY(0)",
             ...menuTransitionStyle,
           }}
@@ -170,7 +174,7 @@ const AdminPortal = () => {
             style={{
               width: "100%",
               maxWidth: "420px",
-              minHeight: tablet ? "72dvh" : "78dvh",
+              minHeight: tablet ? "86dvh" : "calc(100dvh - 70px)",
               margin: "0 auto",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(8px)",
@@ -245,26 +249,22 @@ const AdminPortal = () => {
               ))}
             </div>
 
-            {/* ── SEARCH & ORDER BOXES ── */}
+            {/* ── SEARCH & ORDER PANEL ── */}
             <div
               style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
+                ...actionPanel,
                 marginTop: "auto",
                 paddingTop: "18px",
               }}
             >
               <div
                 onClick={() => navigateTo("search")}
-                style={actionBox}
+                style={actionRow}
                 onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "scale(1.01)";
+                  e.currentTarget.style.opacity = "0.75";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "scale(1)";
                 }}
               >
                 <SearchIcon size={17} color="#ffffff" strokeWidth={1.6} />
@@ -279,16 +279,16 @@ const AdminPortal = () => {
                 </span>
               </div>
 
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", margin: "0 16px" }} />
+
               <div
                 onClick={() => navigateTo("order")}
-                style={actionBox}
+                style={actionRow}
                 onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "scale(1.01)";
+                  e.currentTarget.style.opacity = "0.75";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "scale(1)";
                 }}
               >
                 <ClipboardList size={17} color="#ffffff" strokeWidth={1.6} />
