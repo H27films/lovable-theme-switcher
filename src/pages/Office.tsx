@@ -610,7 +610,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         {showSyncPanel && (
           <Sync
             onClose={() => setShowSyncPanel(false)}
-            onImportPanelClosed={() => setLogRefreshTrigger(prev => prev + 1)}
+            onImported={() => setLogRefreshTrigger(prev => prev + 1)}
             onProductsUpdated={refreshLocalProducts}
           />
         )}

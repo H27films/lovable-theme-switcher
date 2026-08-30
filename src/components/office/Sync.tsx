@@ -1,15 +1,15 @@
 import { useState } from "react";
-import ImportPanel from "./ImportPanel";
 import ExportPanel from "./ExportPanel";
+import { ImportForm, type ImportType } from "./ImportForm";
 
 type ExportOption = "log" | "cash" | "order";
 type ImportOption = "balance" | "log" | "cash";
 
 interface SyncProps {
   onClose: () => void;
-  /** Fired when the Import sub-screen closes (preserves the old ImportPanel close → log refresh behaviour). */
-  onImportPanelClosed: () => void;
-  /** Passed through to ImportPanel so balance imports refresh the product list. */
+  /** Fired after a successful inline import so the office log refreshes. */
+  onImported: () => void;
+  /** Passed through to the inline Balance import so products refresh. */
   onProductsUpdated: () => Promise<void>;
 }
 
@@ -25,15 +25,10 @@ const IMPORT_OPTIONS: { key: ImportOption; label: string; desc: string }[] = [
   { key: "cash", label: "Cash", desc: "Add or update cash entries in the Cash table" },
 ];
 
-export default function Sync({ onClose, onImportPanelClosed, onProductsUpdated }: SyncProps) {
+export default function Sync({ onClose, onImported, onProductsUpdated }: SyncProps) {
   const [mode, setMode] = useState<"export" | "import">("export");
-  const [activeSub, setActiveSub] = useState<
-    | { kind: "export"; type: ExportOption }
-    | { kind: "import"; type: ImportOption }
-    | null
-  >(null);
-
-  const options = mode === "export" ? EXPORT_OPTIONS : IMPORT_OPTIONS;
+  const [activeSub, setActiveSub] = useState<{ kind: "export"; type: ExportOption } | null>(null);
+  const [expandedImport, setExpandedImport] = useState<ImportOption | null>(null);
 
   return (
     <div
@@ -96,7 +91,7 @@ export default function Sync({ onClose, onImportPanelClosed, onProductsUpdated }
           return (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => { setMode(m); if (m === "export") setExpandedImport(null); }}
               style={{
                 padding: "5px 20px",
                 borderRadius: "999px",
@@ -128,53 +123,94 @@ export default function Sync({ onClose, onImportPanelClosed, onProductsUpdated }
         >
           {mode === "export"
             ? "Choose what to export. Select a date range to filter results."
-            : "Choose what to import. Upload a CSV file using the provided templates."}
+            : "Tap an option to expand it, then upload a CSV file."}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "24px" }}>
-          {options.map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setActiveSub({ kind: mode, type: opt.key })}
-              style={{
-                background: "none", border: "0.5px solid hsl(var(--border))", borderRadius: "10px",
-                padding: "16px", cursor: "pointer", textAlign: "left",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                transition: "border-color 0.2s",
-              }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
-            >
-              <div>
+        {mode === "export" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "24px" }}>
+            {EXPORT_OPTIONS.map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setActiveSub({ kind: "export", type: opt.key })}
+                style={{
+                  background: "none", border: "0.5px solid hsl(var(--border))", borderRadius: "10px",
+                  padding: "16px", cursor: "pointer", textAlign: "left",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  transition: "border-color 0.2s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "hsl(var(--foreground))")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "hsl(var(--border))")}
+              >
+                <div>
+                  <div style={{ fontSize: "16px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.06em", marginBottom: "4px" }}>
+                    {opt.label}
+                  </div>
+                  <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                    {opt.desc}
+                  </div>
+                </div>
+                <span style={{ color: "hsl(var(--muted-foreground))", fontSize: "20px", lineHeight: 1 }}>›</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "24px" }}>
+            {IMPORT_OPTIONS.map(opt => {
+              const open = expandedImport === opt.key;
+              return (
                 <div
+                  key={opt.key}
                   style={{
-                    fontSize: "16px", fontWeight: 600, fontFamily: "Raleway, inherit",
-                    color: "hsl(var(--foreground))", letterSpacing: "0.06em", marginBottom: "4px",
+                    border: open ? "0.5px solid hsl(var(--foreground))" : "0.5px solid hsl(var(--border))",
+                    borderRadius: "10px",
+                    background: open ? "hsl(var(--card))" : "none",
+                    overflow: "hidden",
+                    transition: "border-color 0.2s, background 0.2s",
                   }}
+                  onMouseEnter={e => { if (!open) e.currentTarget.style.borderColor = "hsl(var(--foreground))"; }}
+                  onMouseLeave={e => { if (!open) e.currentTarget.style.borderColor = "hsl(var(--border))"; }}
                 >
-                  {opt.label}
+                  <button
+                    onClick={() => setExpandedImport(open ? null : (opt.key as ImportOption))}
+                    style={{
+                      width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left",
+                      padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: "16px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.06em", marginBottom: "4px" }}>
+                        {opt.label}
+                      </div>
+                      <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+                        {opt.desc}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        color: "hsl(var(--muted-foreground))", fontSize: "20px", lineHeight: 1,
+                        transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s",
+                      }}
+                    >
+                      ›
+                    </span>
+                  </button>
+                  {open && (
+                    <div style={{ padding: "2px 16px 16px" }}>
+                      <ImportForm
+                        type={opt.key as ImportType}
+                        onProductsUpdated={onProductsUpdated}
+                        onImported={onImported}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                  {opt.desc}
-                </div>
-              </div>
-              <span style={{ color: "hsl(var(--muted-foreground))", fontSize: "20px", lineHeight: 1 }}>›</span>
-            </button>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Sub-screens — reuse the existing panels, deep-linked to the tapped type */}
-      {activeSub?.kind === "import" && (
-        <ImportPanel
-          initialType={activeSub.type}
-          onClose={() => {
-            setActiveSub(null);
-            onImportPanelClosed();
-          }}
-          onProductsUpdated={onProductsUpdated}
-        />
-      )}
+      {/* Export sub-screen — reuse the existing panel, deep-linked to the tapped type */}
       {activeSub?.kind === "export" && (
         <ExportPanel initialType={activeSub.type} onClose={() => setActiveSub(null)} />
       )}
