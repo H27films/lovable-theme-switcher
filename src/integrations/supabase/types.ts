@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -21,13 +21,17 @@ export type Database = {
           "ENDING BALANCE": number | null
           GRN: string | null
           id: number
+          "LOG ID": string | null
           NOTES: string | null
           "OFFICE BALANCE": number | null
+          "PRODUCT ID": string | null
           "PRODUCT NAME": string | null
           QTY: number | null
+          "SELLING PRICE": number | null
           "STARTING BALANCE": number | null
           SUPPLIER: string | null
           THERAPIST: string | null
+          "TOTAL SALE": number | null
           TYPE: string | null
           "USAGE PILL": string | null
         }
@@ -37,13 +41,17 @@ export type Database = {
           "ENDING BALANCE"?: number | null
           GRN?: string | null
           id?: number
+          "LOG ID"?: string | null
           NOTES?: string | null
           "OFFICE BALANCE"?: number | null
+          "PRODUCT ID"?: string | null
           "PRODUCT NAME"?: string | null
           QTY?: number | null
+          "SELLING PRICE"?: number | null
           "STARTING BALANCE"?: number | null
           SUPPLIER?: string | null
           THERAPIST?: string | null
+          "TOTAL SALE"?: number | null
           TYPE?: string | null
           "USAGE PILL"?: string | null
         }
@@ -53,13 +61,17 @@ export type Database = {
           "ENDING BALANCE"?: number | null
           GRN?: string | null
           id?: number
+          "LOG ID"?: string | null
           NOTES?: string | null
           "OFFICE BALANCE"?: number | null
+          "PRODUCT ID"?: string | null
           "PRODUCT NAME"?: string | null
           QTY?: number | null
+          "SELLING PRICE"?: number | null
           "STARTING BALANCE"?: number | null
           SUPPLIER?: string | null
           THERAPIST?: string | null
+          "TOTAL SALE"?: number | null
           TYPE?: string | null
           "USAGE PILL"?: string | null
         }
@@ -75,6 +87,7 @@ export type Database = {
           COLOUR: string | null
           "CUSTOMER PRICE": number | null
           id: number
+          IMAGES: string | null
           "NUR YADI BALANCE": number | null
           "NUR YADI FAVOURITE": string | null
           "OFFICE BALANCE": number | null
@@ -97,6 +110,7 @@ export type Database = {
           COLOUR?: string | null
           "CUSTOMER PRICE"?: number | null
           id?: number
+          IMAGES?: string | null
           "NUR YADI BALANCE"?: number | null
           "NUR YADI FAVOURITE"?: string | null
           "OFFICE BALANCE"?: number | null
@@ -119,6 +133,7 @@ export type Database = {
           COLOUR?: string | null
           "CUSTOMER PRICE"?: number | null
           id?: number
+          IMAGES?: string | null
           "NUR YADI BALANCE"?: number | null
           "NUR YADI FAVOURITE"?: string | null
           "OFFICE BALANCE"?: number | null
@@ -205,37 +220,52 @@ export type Database = {
       }
       Favourites: {
         Row: {
+          "BOUDOIR BALANCE": number | null
           "BOUDOIR FAVOURITE": string | null
+          "CHIC NAILSPA BALANCE": number | null
           "CHIC NAILSPA FAVOURITE": string | null
           COLOUR: string | null
           DUPLICATE: string | null
           id: number
+          "NUR YADI BALANCE": number | null
           "NUR YADI FAVOURITE": string | null
+          "OFFICE BALANCE": number | null
           "OFFICE FAVOURITE": string | null
           "PRODUCT NAME": string | null
           "SOURCE ID": number | null
+          UOM: string | null
         }
         Insert: {
+          "BOUDOIR BALANCE"?: number | null
           "BOUDOIR FAVOURITE"?: string | null
+          "CHIC NAILSPA BALANCE"?: number | null
           "CHIC NAILSPA FAVOURITE"?: string | null
           COLOUR?: string | null
           DUPLICATE?: string | null
           id?: number
+          "NUR YADI BALANCE"?: number | null
           "NUR YADI FAVOURITE"?: string | null
+          "OFFICE BALANCE"?: number | null
           "OFFICE FAVOURITE"?: string | null
           "PRODUCT NAME"?: string | null
           "SOURCE ID"?: number | null
+          UOM?: string | null
         }
         Update: {
+          "BOUDOIR BALANCE"?: number | null
           "BOUDOIR FAVOURITE"?: string | null
+          "CHIC NAILSPA BALANCE"?: number | null
           "CHIC NAILSPA FAVOURITE"?: string | null
           COLOUR?: string | null
           DUPLICATE?: string | null
           id?: number
+          "NUR YADI BALANCE"?: number | null
           "NUR YADI FAVOURITE"?: string | null
+          "OFFICE BALANCE"?: number | null
           "OFFICE FAVOURITE"?: string | null
           "PRODUCT NAME"?: string | null
           "SOURCE ID"?: number | null
+          UOM?: string | null
         }
         Relationships: [
           {
@@ -418,7 +448,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_product_id: { Args: { product_name: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
