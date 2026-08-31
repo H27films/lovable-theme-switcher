@@ -157,14 +157,21 @@ const AdminPortal = () => {
               }}
             >
               {/* ── BRANCHES ── */}
-              <p style={{
-                fontSize: tablet ? "16px" : "22px",
-                fontWeight: 350,
-                letterSpacing: "0.01em",
-                color: "#000000",
-                margin: "0 0 12px 4px",
-                fontFamily: "'Raleway', sans-serif",
-              }}>
+              <p
+                onClick={() => slideTo("/", undefined, "back")}
+                style={{
+                  fontSize: tablet ? "20px" : "24px",
+                  fontWeight: 350,
+                  letterSpacing: "0.01em",
+                  color: "#000000",
+                  margin: "0 0 12px 4px",
+                  fontFamily: "'Raleway', sans-serif",
+                  cursor: "pointer",
+                  transition: "opacity 0.15s ease",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.55")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+              >
                 Branches
               </p>
 
@@ -267,7 +274,7 @@ const AdminPortal = () => {
           display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            gap: "8px",
+            gap: "2px",
           }}
         >
           {/* Order Pill */}
