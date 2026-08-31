@@ -259,26 +259,27 @@ export default function OrderSummary({ orderLines, setOrderLines, products }: Or
       )}
 
       {/* Footer bar — also the sheet's header when expanded */}
-      <button
-        onClick={() => setExpanded(o => !o)}
-        aria-expanded={expanded}
-        style={{
-          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-          background: "none", border: "none", cursor: "pointer",
-          borderTop: border,
-          padding: "13px 16px", textAlign: "left",
-        }}
-      >
-        <span style={{ fontSize: "clamp(14px, 4vw, 16px)", fontWeight: 500, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: fg, textTransform: "uppercase" }}>
-          Order Summary
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "8px", color: muted }}>
-          <span style={{ fontSize: "12px", fontWeight: 500, fontFamily: "Raleway, inherit" }}>
-            {totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"}
+      <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", borderTop: border }}>
+        <button
+          onClick={() => setExpanded(o => !o)}
+          aria-expanded={expanded}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "none", border: "none", cursor: "pointer",
+            padding: "5px 0",
+            fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em",
+            fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)",
+          }}
+        >
+          <span>Order Summary</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+              {totalItems} {totalItems === 1 ? "Product" : "Products"}
+            </span>
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </span>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </span>
-      </button>
+        </button>
+      </div>
     </div>
   );
 }
