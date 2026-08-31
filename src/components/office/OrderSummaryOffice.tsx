@@ -103,23 +103,35 @@ interface OrderSummaryProps {
   orderLines: OrderLine[];
   setOrderLines: React.Dispatch<React.SetStateAction<OrderLine[]>>;
   products: OfficeProduct[];
+  /** Ref to the page's scrollable content — scrolled to top on expand so the Add product row shows just above the sheet. */
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  /** Ref to the "Add product" search row — the expanded sheet's top edge anchors just below it. */
+  searchRef: React.RefObject<HTMLDivElement | null>;
 }
 
 // "Order Summary" block of the office Order page (extracted from src/pages/Order.tsx).
-// Collapsed by default into a slim footer bar pinned to the bottom of the page.
-// Tapping it expands the full summary as a bottom sheet that rises above the
-// footer (the footer bar becomes the sheet's header); tapping the header row
-// collapses it back down.
-export default function OrderSummary({ orderLines, setOrderLines, products }: OrderSummaryProps) {
+// Collapsed by default into a slim footer bar pinned to the bottom of the page. Tapping it
+// expands the full summary as a bottom sheet that rises from the page bottom up to just below
+// the "Add product" search row; the sheet's own "Order Summary" header collapses it back down.
+export default function OrderSummaryOffice({ orderLines, setOrderLines, products, scrollRef, searchRef }: OrderSummaryProps) {
   const [expanded, setExpanded] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
+  const [panelTop, setPanelTop] = useState(170);
 
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
   const border = "0.5px solid hsl(var(--border))";
-  const hdrStyle: React.CSSProperties = {
-    fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
-    letterSpacing: "0.12em", textTransform: "uppercase", color: muted,
+
+  const toggleExpand = () => {
+    const next = !expanded;
+    if (next) {
+      // Bring the Add product row into view (in case the order list is scrolled), then anchor
+      // the sheet's top edge to just below it.
+      scrollRef.current?.scrollTo({ top: 0 });
+      const el = searchRef.current;
+      if (el) setPanelTop(el.offsetTop + el.offsetHeight + 4);
+    }
+    setExpanded(next);
   };
 
   // Order lines grouped by the chosen / default supplier.
@@ -144,20 +156,41 @@ export default function OrderSummary({ orderLines, setOrderLines, products }: Or
   });
 
   return (
-    <div style={{ position: "relative", flexShrink: 0 }}>
-      {/* Expanded: bottom sheet rising above the footer bar */}
-      {expanded && (
+    <div style={{ flexShrink: 0 }}>
+      {expanded ? (
+        /* Expanded: bottom sheet rising from the page bottom up to just below the Add product row */
         <div style={{
-          position: "absolute", left: 0, right: 0, bottom: "100%",
-          maxHeight: "52vh", overflowY: "auto",
+          position: "absolute", left: 0, right: 0, top: panelTop, bottom: 0,
+          display: "flex", flexDirection: "column",
           background: "hsl(var(--background))",
           borderTop: border,
-          padding: "16px 16px 0",
           boxShadow: "0 -8px 32px rgba(0,0,0,0.10)",
           zIndex: 40,
         }}>
-          <div style={{ paddingTop: "8px" }}>
-            <div style={{ ...hdrStyle, marginBottom: "16px", fontSize: "13px" }}>ORDER SUMMARY</div>
+          {/* Header row — same styling as the collapsed footer; tapping the whole row collapses the sheet */}
+          <button
+            onClick={() => setExpanded(false)}
+            aria-expanded={expanded}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: "none", border: "none", cursor: "pointer",
+              padding: "5px 12px", borderBottom: border,
+              fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em",
+              fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)",
+              flexShrink: 0,
+            }}
+          >
+            <span>Order Summary</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                {totalItems} {totalItems === 1 ? "Product" : "Products"}
+              </span>
+              <ChevronUp size={14} />
+            </span>
+          </button>
+
+          {/* Scrollable summary content */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 16px" }}>
             {supplierGroups.map((group) => {
               const groupTotal = group.lines.reduce((s, { line }) => s + line.qty * (line.product["UNITS/ORDER"] ?? 1) * (line.product["SUPPLIER PRICE"] ?? 0), 0);
               return (
@@ -256,30 +289,30 @@ export default function OrderSummary({ orderLines, setOrderLines, products }: Or
             <div style={{ paddingBottom: "16px" }} />
           </div>
         </div>
-      )}
-
-      {/* Footer bar — also the sheet's header when expanded */}
-      <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", borderTop: border }}>
-        <button
-          onClick={() => setExpanded(o => !o)}
-          aria-expanded={expanded}
-          style={{
-            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "none", border: "none", cursor: "pointer",
-            padding: "5px 0",
-            fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em",
-            fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)",
-          }}
-        >
-          <span>Order Summary</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-              {totalItems} {totalItems === 1 ? "Product" : "Products"}
+      ) : (
+        /* Collapsed footer bar */
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", borderTop: border }}>
+          <button
+            onClick={toggleExpand}
+            aria-expanded={expanded}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: "none", border: "none", cursor: "pointer",
+              padding: "5px 0",
+              fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em",
+              fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)",
+            }}
+          >
+            <span>Order Summary</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                {totalItems} {totalItems === 1 ? "Product" : "Products"}
+              </span>
+              <ChevronDown size={14} />
             </span>
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </span>
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

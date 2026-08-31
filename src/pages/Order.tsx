@@ -7,7 +7,7 @@ import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTra
 import { supabase } from "@/integrations/supabase/client";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
-import OrderSummary, { type OfficeProduct, type OrderLine } from "@/components/office/OrderSummary";
+import OrderSummaryOffice, { type OfficeProduct, type OrderLine } from "@/components/office/OrderSummaryOffice";
 
 interface OrderProps {
   onBack?: () => void;
@@ -77,6 +77,7 @@ export default function Order({ onBack }: OrderProps) {
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
+  const orderScrollRef = useRef<HTMLDivElement>(null);
 
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
@@ -303,7 +304,7 @@ export default function Order({ onBack }: OrderProps) {
       </div>
 
       {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+      <div ref={orderScrollRef} style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
 
         {/* Supplier filter */}
         <div ref={supplierDropdownRef} style={{ marginBottom: "16px" }}>
@@ -492,10 +493,12 @@ export default function Order({ onBack }: OrderProps) {
 
       {/* Order Summary footer — collapsible bottom sheet */}
       {orderLines.length > 0 && (
-        <OrderSummary
+        <OrderSummaryOffice
           orderLines={orderLines}
           setOrderLines={setOrderLines}
           products={products}
+          scrollRef={orderScrollRef}
+          searchRef={orderSearchRef}
         />
       )}
 
