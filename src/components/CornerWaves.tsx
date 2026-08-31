@@ -69,9 +69,12 @@ interface CornerWavesProps {
   color?: string;
   /** Escape hatch to override the corner placement/sizing. */
   style?: CSSProperties;
+  /** Play the fade-in on mount. Pass false when the page enters via a slide
+   *  transition so the waves appear instantly with the rest of the content. */
+  animateIn?: boolean;
 }
 
-export default function CornerWaves({ color, style }: CornerWavesProps) {
+export default function CornerWaves({ color, style, animateIn = true }: CornerWavesProps) {
   // Respect users who prefer reduced motion: render the static resting shape
   // with no morphing and no entrance fade.
   const [reducedMotion] = useState(
@@ -82,26 +85,27 @@ export default function CornerWaves({ color, style }: CornerWavesProps) {
 
   return (
     <>
-      {!reducedMotion && (
+      {animateIn && !reducedMotion && (
         <style>{`
           @keyframes cornerWavesIn {
             from { opacity: 0; }
             to   { opacity: 1; }
           }
           .corner-waves {
-            animation: cornerWavesIn 1.8s ease-out 0.3s both;
+            animation: cornerWavesIn 1.2s ease-out 0.15s both;
           }
         `}</style>
       )}
       <div
         aria-hidden="true"
-        className={reducedMotion ? undefined : "corner-waves"}
+        className={animateIn && !reducedMotion ? "corner-waves" : undefined}
         style={{
           position: "absolute",
           top: 0,
           right: 0,
-          width: "clamp(300px, 58vmin, 780px)",
-          height: "clamp(300px, 58vmin, 780px)",
+          zIndex: -1, // behind all page content — translucent panels reveal it subtly
+          width: "clamp(290px, 85vmin, 1700px)",
+          height: "clamp(290px, 85vmin, 1700px)",
           pointerEvents: "none",
           overflow: "hidden",
           ...style,

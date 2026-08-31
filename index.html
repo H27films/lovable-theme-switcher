@@ -10,6 +10,13 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
 
+    <!-- Preload decorative SVGs so page backgrounds never pop in on first navigation
+         (the service worker does no caching, so first fetch would otherwise wait
+         for the network exactly when the user navigates to that page) -->
+    <link rel="preload" as="image" href="/Hand.svg" />
+    <link rel="preload" as="image" href="/Landingicon.svg" />
+    <link rel="preload" as="image" href="/AdminIcon.svg" />
+
     <!-- Force light colour scheme regardless of the device's OS setting -->
     <meta name="color-scheme" content="light" />
 

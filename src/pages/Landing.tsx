@@ -91,14 +91,15 @@ export default function Landing() {
           height: "100dvh",
           overflow: "hidden",
           position: "relative", // anchors the CornerWaves decoration to this root
+          zIndex: 0, // stacking context so the waves (z-index -1) render behind all content
           display: "flex",
           flexDirection: "column",
           ...enterStyle,
           ...slideExitStyle(exiting),
         }}
       >
-        {/* ── Decorative corner waves (top-right, behind nothing clickable) ── */}
-        <CornerWaves />
+        {/* ── Decorative corner waves (top-right, rendered behind page content) ── */}
+        <CornerWaves animateIn={!enteredViaSlide} />
 
         {/* ── Top bar ── */}
         <div
@@ -203,7 +204,7 @@ export default function Landing() {
                    ))}
                  </div>
             </div>
-            <div style={{ flex: 0, width: "300px", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "lightblue" }}>
+            <div style={{ flex: 0, width: "300px", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(173, 216, 230, 0.55)" /* translucent lightblue — corner waves behind it show through subtly */ }}>
               <img src="/Landingicon.svg" alt="Landing" style={{ maxHeight: "80vh", width: "auto" }} />
             </div>
           </div>
