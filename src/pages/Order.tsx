@@ -486,7 +486,7 @@ export default function Order({ onBack }: OrderProps) {
                   key={p.id}
                   onMouseDown={() => addToOrder(p)}
                   style={{
-                    padding: "10px 14px", cursor: "pointer",
+                    padding: "10px 0", cursor: "pointer",
                     background: i === orderActiveIndex ? "hsl(var(--card))" : "transparent",
                     borderBottom: i < orderDropdownResults.length - 1 ? border : "none",
                     display: "flex", justifyContent: "space-between", alignItems: "center",

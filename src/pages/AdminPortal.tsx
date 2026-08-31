@@ -134,7 +134,7 @@ const AdminPortal = () => {
             style={{
               width: "58%",
               height: tablet ? `calc(${TABLET_FIT_HEIGHT} - 32px)` : "calc(100dvh - 32px)",
-              background: "rgba(255, 255, 255, 0.25)",
+              background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(14px)",
               WebkitBackdropFilter: "blur(14px)",
               borderRadius: "32px",
