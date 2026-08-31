@@ -1,5 +1,6 @@
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
+import FadeInImage from "@/components/FadeInImage";
 import {
   Building2,
   User,
@@ -55,9 +56,11 @@ const AdminPortal = () => {
             pointerEvents: "none",
          }}
        >
-        <img
+        <FadeInImage
           src="/Hand.svg"
-          alt="background"
+          alt=""
+          aria-hidden="true"
+          duration={0.9}
           style={{ width: "100%", height: "100%" }}
         />
       </div>

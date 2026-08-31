@@ -40,10 +40,10 @@ interface WaveLayer {
 // SMIL can interpolate.
 const LAYERS: WaveLayer[] = [
   {
-    // Front layer — hugs the corner most tightly (reaches ~340/600 along the
-    // top edge and ~250/600 down the right side).
-    a: "M600,0 L340,0 C355,50 355,80 390,120 C425,160 500,110 545,145 C585,175 592,215 600,250 Z",
-    b: "M600,0 L340,0 C355,25 415,35 455,60 C495,85 470,175 495,210 C520,245 565,185 600,205 Z",
+    // Front layer — hugs the corner most tightly (reaches ~240/600 along the
+    // top edge and ~150/600 down the right side).
+    a: "M600,0 L240,0 C355,50 355,80 390,120 C425,160 500,110 545,145 C585,175 592,215 600,150 Z",
+    b: "M600,0 L240,0 C355,25 415,35 455,60 C495,85 470,175 495,210 C520,245 565,185 600,150 Z",
     dur: 9,
     opacity: 0.3,
   },
@@ -55,10 +55,10 @@ const LAYERS: WaveLayer[] = [
     opacity: 0.24,
   },
   {
-    // Deepest layer — faintest, sweeping ~130/600 along the top edge and
-    // ~490/600 down the right side for maximum corner coverage.
-    a: "M600,0 L130,0 C160,80 175,160 230,220 C285,280 445,240 490,280 C540,320 580,420 600,490 Z",
-    b: "M600,0 L130,0 C180,35 270,65 330,105 C390,145 340,320 390,370 C440,420 545,380 600,430 Z",
+    // Deepest layer — slightly smaller, sweeping ~170/600 along the top edge and
+    // ~400/600 down the right side.
+    a: "M600,0 L170,0 C160,80 175,160 230,220 C285,280 445,240 490,280 C540,320 580,420 600,400 Z",
+    b: "M600,0 L170,0 C180,35 270,65 330,105 C390,145 340,320 390,370 C440,420 545,380 600,400 Z",
     dur: 17,
     opacity: 0.18,
   },
@@ -112,12 +112,22 @@ export default function CornerWaves({ color, style, animateIn = true }: CornerWa
         }}
       >
         <svg viewBox="0 0 600 600" width="100%" height="100%" focusable="false">
+          <defs>
+            <radialGradient id="cornerGradient" cx="100%" cy="0%">
+              <stop offset="0%" stopColor={color ?? DEFAULT_COLORS[0]} />
+              <stop offset="100%" stopColor={color ?? DEFAULT_COLORS[2]} />
+            </radialGradient>
+            <filter id="cornerBlur">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
+            </filter>
+          </defs>
           {LAYERS.map((layer, i) => (
             <path
               key={i}
               d={layer.a}
-              fill={color ?? DEFAULT_COLORS[i]}
+              fill={i === 0 ? "url(#cornerGradient)" : (color ?? DEFAULT_COLORS[i])}
               fillOpacity={layer.opacity}
+              filter={i === 0 ? "url(#cornerBlur)" : undefined}
             >
               {!reducedMotion && (
                 <animate
