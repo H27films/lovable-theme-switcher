@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import React, { useState, useEffect } from "react";
 import CircularButton from "@/components/CircularButton";
+import CornerWaves from "@/components/CornerWaves";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 
 export default function Landing() {
@@ -89,12 +90,16 @@ export default function Landing() {
           minHeight: "100dvh",
           height: "100dvh",
           overflow: "hidden",
+          position: "relative", // anchors the CornerWaves decoration to this root
           display: "flex",
           flexDirection: "column",
           ...enterStyle,
           ...slideExitStyle(exiting),
         }}
       >
+        {/* ── Decorative corner waves (top-right, behind nothing clickable) ── */}
+        <CornerWaves />
+
         {/* ── Top bar ── */}
         <div
           className="ls-topbar"

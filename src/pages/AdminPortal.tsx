@@ -183,7 +183,7 @@ const AdminPortal = () => {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    height: tablet ? "42px" : "46px",
+                    height: tablet ? "38px" : "46px",
                     background: "hsl(38 25% 92%)",
                     borderRadius: "9999px",
                     padding: "0 12px 0 8px",
@@ -203,8 +203,8 @@ const AdminPortal = () => {
                 >
                   <div
                     style={{
-                      width: "32px",
-                      height: "32px",
+                      width: tablet ? "28px" : "32px",
+                      height: tablet ? "28px" : "32px",
                       borderRadius: "50%",
                       background: "rgba(255,255,255,0.6)",
                       display: "flex",
@@ -219,7 +219,7 @@ const AdminPortal = () => {
                   </div>
 
                   <span style={{
-                    fontSize: tablet ? "13px" : "14px",
+                    fontSize: tablet ? "12px" : "14px",
                     fontWeight: 500,
                     color: "rgb(50,45,40)",
                     fontFamily: "'Raleway', sans-serif",
