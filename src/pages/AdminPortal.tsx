@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
@@ -7,57 +6,11 @@ import {
   User,
   ChevronRight,
   Search as SearchIcon,
-  ClipboardList,
 } from "lucide-react";
-import Search from "./Search";
-import Order from "./Order";
 
 const AdminPortal = () => {
   const navigate = useNavigate();
   const { tablet } = useTabletMode();
-
-  const [activeSection, setActiveSection] = useState<"search" | "order" | null>(null);
-  const [transitionPhase, setTransitionPhase] = useState<
-    "at-menu" | "menu-leaving" | "section-entering" | "at-section" | "section-leaving" | "menu-entering"
-  >("at-menu");
-
-  const navigateTo = (section: "search" | "order") => {
-    setTransitionPhase("menu-leaving");
-    setTimeout(() => {
-      setActiveSection(section);
-      setTransitionPhase("section-entering");
-      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-section")));
-    }, 280);
-  };
-
-  const navigateBack = () => {
-    setTransitionPhase("section-leaving");
-    setTimeout(() => {
-      setActiveSection(null);
-      setTransitionPhase("menu-entering");
-      requestAnimationFrame(() => requestAnimationFrame(() => setTransitionPhase("at-menu")));
-    }, 280);
-  };
-
-  const menuTransitionStyle: React.CSSProperties = {
-    transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
-    transform:
-      transitionPhase === "menu-leaving" ? "translateX(-30%)" :
-      transitionPhase === "menu-entering" ? "translateX(-30%)" : "translateX(0)",
-    filter:
-      transitionPhase === "menu-leaving" || transitionPhase === "menu-entering" ? "blur(6px)" : "blur(0px)",
-    opacity: transitionPhase === "menu-leaving" || transitionPhase === "menu-entering" ? 0 : 1,
-  };
-
-  const sectionTransitionStyle: React.CSSProperties = {
-    transition: "transform 0.3s ease-in-out, filter 0.3s ease-in-out, opacity 0.3s ease-in-out",
-    transform:
-      transitionPhase === "section-entering" ? "translateX(30%)" :
-      transitionPhase === "section-leaving" ? "translateX(30%)" : "translateX(0)",
-    filter:
-      transitionPhase === "section-entering" || transitionPhase === "section-leaving" ? "blur(6px)" : "blur(0px)",
-    opacity: transitionPhase === "section-entering" || transitionPhase === "section-leaving" ? 0 : 1,
-  };
 
   const branches = [
     { label: "Office",   key: "office"  as const, icon: <Building2 size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
@@ -113,7 +66,6 @@ const AdminPortal = () => {
           left: "20px",
           top: "calc(env(safe-area-inset-top, 0px) + 24px)",
           zIndex: 60,
-          display: activeSection !== null ? "none" : "block",
           fontSize: tablet ? "12px" : "13px",
           fontWeight: 400,
           color: "rgba(0,0,0,0.45)",
@@ -132,7 +84,6 @@ const AdminPortal = () => {
           right: "20px",
           top: "calc(env(safe-area-inset-top, 0px) + 32px)",
           zIndex: 60,
-          display: activeSection !== null ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "rgba(0,0,0,0.75)",
@@ -158,8 +109,7 @@ const AdminPortal = () => {
       </a>
 
       {/* Main menu */}
-      {activeSection === null && (
-        <div
+      <div
           style={{
             minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh",
             display: "flex",
@@ -167,7 +117,6 @@ const AdminPortal = () => {
             justifyContent: "flex-start",
             alignItems: "flex-start",
             padding: "0 10px 10px",
-            ...menuTransitionStyle,
           }}
         >
           {/* Main container box - LEFT HALF - FULL HEIGHT */}
@@ -300,17 +249,15 @@ const AdminPortal = () => {
             </div>
           </div>
         </div>
-      )}
 
       {/* Search & Order Black Box - BOTTOM RIGHT */}
-      {activeSection === null && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            zIndex: 50,
-            display: activeSection !== null ? "none" : "flex",
+      <div
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          zIndex: 50,
+          display: "flex",
             flexDirection: "row",
             alignItems: "center",
             gap: "8px",
@@ -318,7 +265,7 @@ const AdminPortal = () => {
         >
           {/* Order Pill */}
           <div
-            onClick={() => navigateTo("order")}
+            onClick={() => navigate("/simple/order", { state: { from: "adminportal" } })}
             style={{
               height: "44px",
               paddingLeft: "16px",
@@ -355,7 +302,7 @@ const AdminPortal = () => {
 
           {/* Search Circle */}
           <div
-            onClick={() => navigateTo("search")}
+            onClick={() => navigate("/simple/search", { state: { from: "adminportal" } })}
             style={{
               width: "44px",
               height: "44px",
@@ -379,15 +326,7 @@ const AdminPortal = () => {
             <SearchIcon size={18} color="#ffffff" strokeWidth={1.6} />
           </div>
         </div>
-      )}
 
-      {/* Section pages */}
-      {activeSection !== null && (
-        <div style={sectionTransitionStyle}>
-          {activeSection === "search" && <Search onBack={navigateBack} />}
-          {activeSection === "order" && <Order onBack={navigateBack} />}
-        </div>
-      )}
     </div>
   );
 };

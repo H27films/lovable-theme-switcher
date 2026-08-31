@@ -153,7 +153,7 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
 export default function Order({ onBack }: OrderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  // Origin of this visit ("office" when navigated here from Office) – set via router state at navigation time
+  // Origin of this visit ("office" | "adminportal") – set via router state at navigation time
   const from = location.state?.from;
   const { tablet } = useTabletMode();
   const [products, setProducts] = useState<OfficeProduct[]>([]);
@@ -370,6 +370,7 @@ export default function Order({ onBack }: OrderProps) {
           <span
             onClick={() => {
               if (from === "office") navigate("/simple/office");
+              else if (from === "adminportal") navigate("/simple/admin");
               else onBack?.();
             }}
             style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}

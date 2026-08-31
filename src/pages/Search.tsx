@@ -336,6 +336,7 @@ const handleSelectProduct = (p: Product) => {
         <button
           onClick={() => {
             if (from === "office") navigate("/simple/office");
+            else if (from === "adminportal") navigate("/simple/admin");
             else onBack?.();
           }}
           title="Back to Office"
@@ -347,6 +348,7 @@ const handleSelectProduct = (p: Product) => {
         <button
           onClick={() => {
             if (from === "office") navigate("/simple/office");
+            else if (from === "adminportal") navigate("/simple/admin");
             else onBack?.();
           }}
           aria-label="Back"
