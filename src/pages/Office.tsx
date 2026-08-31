@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import Sync from "@/components/office/Sync";
 import OfficeLogTable from "@/components/office/OfficeLogTable";
@@ -51,7 +51,8 @@ const LeftAlignedYTick = ({ y, payload }: any) => {
 };
 
 const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
-  const navigate = useNavigate();
+  const { exiting, slideTo } = useSlideExit();
+  const enterStyle = useSlideEnter();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   // ── SYNC PANEL STATE ────────────────────────────────────
   const [showSyncPanel, setShowSyncPanel] = useState(false);
@@ -234,6 +235,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
     <div style={{
       height: "100dvh", background: "hsl(var(--background))", color: "hsl(var(--foreground))",
       fontFamily: "'Raleway', sans-serif", display: "flex", flexDirection: "column", overflow: "hidden",
+      ...enterStyle,
+      ...slideExitStyle(exiting),
     }}>
 
             {/* ── TOP AREA ── */}
@@ -242,7 +245,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 {/* Branch name header row */}
 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
   <button
-    onClick={() => navigate("/simple/admin")}
+    onClick={() => slideTo("/simple/admin", undefined, "back")}
     style={{
       display: "block", fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300,
       letterSpacing: "0.08em", color: "hsl(var(--foreground))",
@@ -270,7 +273,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
           {/* Order */}
           <button
-            onClick={() => navigate("/simple/order", { state: { from: "office" } })}
+            onClick={() => slideTo("/simple/order", { from: "office" }, "forward")}
             title="Order"
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "order" ? 1 : 0.7, transform: hoveredTab === "order" ? "scale(1.03)" : "scale(1)" }}
             onMouseEnter={() => setHoveredTab("order")}
@@ -319,7 +322,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
           {/* Search — icon only, next to Sync */}
           <button
-            onClick={() => navigate("/simple/search", { state: { from: "office" } })}
+            onClick={() => slideTo("/simple/search", { from: "office" }, "forward")}
             title="Search"
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "search" ? 1 : 0.7, transform: hoveredTab === "search" ? "scale(1.03)" : "scale(1)" }}
             onMouseEnter={() => setHoveredTab("search")}

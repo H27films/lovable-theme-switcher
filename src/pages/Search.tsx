@@ -338,7 +338,7 @@ const handleSelectProduct = (p: Product) => {
       }}>
         <button
           onClick={() => {
-            if (from === "office") navigate("/simple/office");
+            if (from === "office") slideTo("/simple/office", undefined, "back");
             else if (from === "adminportal") slideTo("/simple/admin", undefined, "back");
             else onBack?.();
           }}
@@ -350,7 +350,7 @@ const handleSelectProduct = (p: Product) => {
         </button>
         <button
           onClick={() => {
-            if (from === "office") navigate("/simple/office");
+            if (from === "office") slideTo("/simple/office", undefined, "back");
             else if (from === "adminportal") slideTo("/simple/admin", undefined, "back");
             else onBack?.();
           }}

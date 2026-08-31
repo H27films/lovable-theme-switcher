@@ -374,7 +374,7 @@ export default function Order({ onBack }: OrderProps) {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span
             onClick={() => {
-              if (from === "office") navigate("/simple/office");
+              if (from === "office") slideTo("/simple/office", undefined, "back");
               else if (from === "adminportal") slideTo("/simple/admin", undefined, "back");
               else onBack?.();
             }}

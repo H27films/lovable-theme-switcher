@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import {
@@ -10,7 +9,6 @@ import {
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 
 const AdminPortal = () => {
-  const navigate = useNavigate();
   const { tablet } = useTabletMode();
   const { exiting, slideTo } = useSlideExit();
   const enterStyle = useSlideEnter();
@@ -24,7 +22,7 @@ const AdminPortal = () => {
 
   const handleBranch = (key: "office" | "boudoir" | "chic" | "nuryadi") => {
     if (key === "office") {
-      navigate("/simple/office");
+      slideTo("/simple/office", { from: "adminportal" }, "forward");
     } else {
       slideTo(`/simple/${key}`, { from: "adminportal" }, "forward");
     }
