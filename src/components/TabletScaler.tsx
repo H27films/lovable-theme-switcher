@@ -16,7 +16,7 @@ interface TabletScalerProps {
   children: React.ReactNode;
   /**
    * Constrain the zoomed page to exactly one viewport (no vertical/horizontal
-   * scrolling). Use for single-screen menus (SubLanding, BranchesPage) where
+   * scrolling). Use for single-screen menus (BranchesPage, AdminPortal) where
    * a zoomed 100dvh page would otherwise overflow and allow scrolling.
    */
   fitViewport?: boolean;

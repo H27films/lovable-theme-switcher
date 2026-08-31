@@ -97,7 +97,7 @@ export default function Search({ onBack }: SearchProps) {
   const dimColor = "hsl(var(--muted-foreground))";
   const border = "hsl(var(--border))";
 
-  // Fetch all products — simplified like SubLanding
+  // Fetch all products
   const fetchProducts = useCallback(async () => {
     let allData: Product[] = [];
     let from = 0;

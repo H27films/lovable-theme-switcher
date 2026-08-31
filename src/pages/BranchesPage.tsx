@@ -12,7 +12,7 @@ export default function BranchesPage({ onBack, onSelectBranch }: BranchesPagePro
   const navigate = useNavigate();
   const { tablet } = useTabletMode();
 
-  const handleBack = onBack ?? (() => navigate("/simple/branches/admin"));
+  const handleBack = onBack ?? (() => navigate("/simple/admin"));
   const handleSelectBranch = onSelectBranch ?? ((branch: "office" | "boudoir" | "chic" | "nuryadi") =>
     branch === "office"
       ? navigate("/simple/office")

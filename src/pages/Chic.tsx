@@ -266,7 +266,7 @@ const handleHeaderBack = () => {
         // Arrived via Admin Portal > Branches -> back to Branches page
         navigate("/simple/branches");
     } else {
-        // Fallback (e.g. direct deep link or old sublanding flow) -> Admin Portal
+        // Fallback (e.g. direct deep link) -> Admin Portal
         navigate("/simple/admin");
     }
 };

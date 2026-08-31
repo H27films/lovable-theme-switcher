@@ -2,9 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/Landing";
-import SubLanding from "./pages/SubLanding";
 import BranchesPage from "./pages/BranchesPage";
 import AdminPortal from "./pages/AdminPortal";
 import Office from "./pages/Office";
@@ -30,7 +29,8 @@ const App = () => (
           {/* ── Simple / Boss routes (all wrapped in TabletScaler + SafeAreaTop for iOS notch / status bar) ── */}
           <Route path="/simple" element={<SafeAreaTop><Landing /></SafeAreaTop>} />
           <Route path="/simple/branches" element={<SafeAreaTop><TabletScaler fitViewport><BranchesPage /></TabletScaler></SafeAreaTop>} />
-          <Route path="/simple/branches/admin" element={<SafeAreaTop><TabletScaler fitViewport><SubLanding /></TabletScaler></SafeAreaTop>} />
+          {/* Old sub-landing URL -> Admin Portal (keeps saved bookmarks working) */}
+          <Route path="/simple/branches/admin" element={<Navigate to="/simple/admin" replace />} />
           <Route path="/simple/admin" element={<SafeAreaTop><TabletScaler fitViewport><AdminPortal /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/boudoir" element={<SafeAreaTop><TabletScaler><Boudoir /></TabletScaler></SafeAreaTop>} />
           <Route path="/simple/chic" element={<SafeAreaTop><TabletScaler><Chic /></TabletScaler></SafeAreaTop>} />
