@@ -304,7 +304,7 @@ export default function Order({ onBack }: OrderProps) {
       </div>
 
       {/* Scrollable content */}
-      <div ref={orderScrollRef} style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+      <div ref={orderScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px" }}>
 
         {/* Supplier filter */}
         <div ref={supplierDropdownRef} style={{ marginBottom: "16px" }}>
@@ -498,7 +498,6 @@ export default function Order({ onBack }: OrderProps) {
           setOrderLines={setOrderLines}
           products={products}
           scrollRef={orderScrollRef}
-          searchRef={orderSearchRef}
         />
       )}
 

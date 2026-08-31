@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, ChevronUp, ChevronDown } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import jsPDF from "jspdf";
 
 export interface OfficeProduct {
@@ -103,20 +103,18 @@ interface OrderSummaryProps {
   orderLines: OrderLine[];
   setOrderLines: React.Dispatch<React.SetStateAction<OrderLine[]>>;
   products: OfficeProduct[];
-  /** Ref to the page's scrollable content — scrolled to top on expand so the Add product row shows just above the sheet. */
+  /** Ref to the page's scrollable order-lines area — scrolled back to top on expand so the Add product row stays visible above the summary. */
   scrollRef: React.RefObject<HTMLDivElement | null>;
-  /** Ref to the "Add product" search row — the expanded sheet's top edge anchors just below it. */
-  searchRef: React.RefObject<HTMLDivElement | null>;
 }
 
-// "Order Summary" block of the office Order page (extracted from src/pages/Order.tsx).
-// Collapsed by default into a slim footer bar pinned to the bottom of the page. Tapping it
-// expands the full summary as a bottom sheet that rises from the page bottom up to just below
-// the "Add product" search row; the sheet's own "Order Summary" header collapses it back down.
-export default function OrderSummaryOffice({ orderLines, setOrderLines, products, scrollRef, searchRef }: OrderSummaryProps) {
+// "Order Summary" block of the office Order page (extracted from src/pages/Order.tsx). Mirrors the
+// branch OrderSummary behaviour: collapsed by default into a slim footer bar pinned to the bottom of
+// the page; tapping it expands in-flow — the section is a normal flex child that pushes the order list
+// above it up, scrolling internally like part of the page rather than an overlay. Tapping the expanded
+// "Order Summary" header row collapses it back down.
+export default function OrderSummaryOffice({ orderLines, setOrderLines, products, scrollRef }: OrderSummaryProps) {
   const [expanded, setExpanded] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
-  const [panelTop, setPanelTop] = useState(170);
 
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
@@ -124,13 +122,9 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
 
   const toggleExpand = () => {
     const next = !expanded;
-    if (next) {
-      // Bring the Add product row into view (in case the order list is scrolled), then anchor
-      // the sheet's top edge to just below it.
-      scrollRef.current?.scrollTo({ top: 0 });
-      const el = searchRef.current;
-      if (el) setPanelTop(el.offsetTop + el.offsetHeight + 4);
-    }
+    // Keep the Add product row visible: since the summary expands in-flow and compresses the list
+    // above it, scroll the list back to its top so the search row sits right above the summary.
+    if (next) scrollRef.current?.scrollTo({ top: 0 });
     setExpanded(next);
   };
 
@@ -156,41 +150,15 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
   });
 
   return (
-    <div style={{ flexShrink: 0 }}>
+    <div style={expanded ? { flexShrink: 1, minHeight: 0, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", borderTop: border, paddingTop: "20px", paddingBottom: "8px" } : { flexShrink: 0 }}>
       {expanded ? (
-        /* Expanded: bottom sheet rising from the page bottom up to just below the Add product row */
-        <div style={{
-          position: "absolute", left: 0, right: 0, top: panelTop, bottom: 0,
-          display: "flex", flexDirection: "column",
-          background: "hsl(var(--background))",
-          borderTop: border,
-          boxShadow: "0 -8px 32px rgba(0,0,0,0.10)",
-          zIndex: 40,
-        }}>
-          {/* Header row — same styling as the collapsed footer; tapping the whole row collapses the sheet */}
-          <button
-            onClick={() => setExpanded(false)}
-            aria-expanded={expanded}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-              background: "none", border: "none", cursor: "pointer",
-              padding: "5px 12px", borderBottom: border,
-              fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em",
-              fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)",
-              flexShrink: 0,
-            }}
-          >
-            <span>Order Summary</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                {totalItems} {totalItems === 1 ? "Product" : "Products"}
-              </span>
-              <ChevronUp size={14} />
-            </span>
-          </button>
-
-          {/* Scrollable summary content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 16px" }}>
+        /* Expanded — in-flow block mirroring the branch OrderSummary: a normal flex child that pushes
+           the order list above it up, scrolling internally instead of overlaying. */
+        <>
+          <div onClick={() => setExpanded(false)} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px", cursor: "pointer" }}>
+            <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
+            <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, letterSpacing: "0.08em" }}>{totalItems} {totalItems === 1 ? "Product" : "Products"}</div>
+          </div>
             {supplierGroups.map((group) => {
               const groupTotal = group.lines.reduce((s, { line }) => s + line.qty * (line.product["UNITS/ORDER"] ?? 1) * (line.product["SUPPLIER PRICE"] ?? 0), 0);
               return (
@@ -286,9 +254,7 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                 </button>
               </div>
             )}
-            <div style={{ paddingBottom: "16px" }} />
-          </div>
-        </div>
+            </>
       ) : (
         /* Collapsed footer bar */
         <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", borderTop: border }}>
