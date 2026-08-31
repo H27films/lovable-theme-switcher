@@ -20,7 +20,7 @@ import type { CSSProperties } from "react";
  */
 
 /** Light-green triad (front → deep) that harmonises with the cream theme. */
-const DEFAULT_COLORS = ["hsl(152, 45%, 58%)", "hsl(150, 42%, 66%)", "hsl(145, 38%, 74%)"];
+const DEFAULT_COLORS = ["hsl(20, 27%, 49%)", "hsl(20, 32%, 64%)", "hsl(30, 38%, 86%)"];
 
 interface WaveLayer {
   /** Shape A of the morph (also the resting shape for reduced-motion users). */
