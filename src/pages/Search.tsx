@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Building2, Search as SearchIcon, X, Star, ChevronUp, ChevronDown } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { sortLogByBalance, isYes } from "@/lib/branchSimpleUtils";
@@ -58,7 +58,6 @@ const fmtDate = (d: string) => {
 const sortPastData = (rows: ProductLog[]) => sortLogByBalance(rows, r => r["OFFICE BALANCE"]);
 
 export default function Search({ onBack }: SearchProps) {
-  const navigate = useNavigate();
   const location = useLocation();
   const { exiting, slideTo } = useSlideExit();
   const enterStyle = useSlideEnter();

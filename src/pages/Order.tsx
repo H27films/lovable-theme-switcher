@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
@@ -152,7 +152,6 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
 }
 
 export default function Order({ onBack }: OrderProps) {
-  const navigate = useNavigate();
   const location = useLocation();
   const { exiting, slideTo } = useSlideExit();
   const enterStyle = useSlideEnter();
