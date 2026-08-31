@@ -1,17 +1,24 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import React, { useState, useEffect } from "react";
 import CircularButton from "@/components/CircularButton";
+import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 
 export default function Landing() {
-  const navigate = useNavigate();
+  const location = useLocation();
   const { tablet, toggle: toggleTablet } = useTabletMode();
-  const [visible, setVisible] = useState(false);
+  // When sliding back in from another page, skip the staged cold-open fade.
+  const enteredViaSlide = !!(location.state as { enterFrom?: string } | null)?.enterFrom;
+  const [visible, setVisible] = useState(enteredViaSlide);
 
   useEffect(() => {
+    if (enteredViaSlide) return;
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
-  }, []);
+  }, [enteredViaSlide]);
+
+  const { exiting, slideTo } = useSlideExit();
+  const enterStyle = useSlideEnter();
 
   return (
     <>
@@ -84,6 +91,8 @@ export default function Landing() {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
+          ...enterStyle,
+          ...slideExitStyle(exiting),
         }}
       >
         {/* ── Top bar ── */}
@@ -171,9 +180,9 @@ export default function Landing() {
                          transition: `opacity 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s, transform 1.4s cubic-bezier(0.16,1,0.3,1) ${0.7 + i * 0.15}s`,
                        }}
                      >
-                       <CircularButton onClick={() => navigate(b.path, { state: { from: "landing" } })} />
+                       <CircularButton onClick={() => slideTo(b.path, { from: "landing" }, "forward")} />
                        <span
-                         onClick={() => navigate(b.path, { state: { from: "landing" } })}
+                         onClick={() => slideTo(b.path, { from: "landing" }, "forward")}
                          style={{
                            fontSize: "clamp(15px, 2.6vw, 20px)",
                            fontWeight: 300,
@@ -212,7 +221,7 @@ export default function Landing() {
           {/* Admin Portal button */}
           <div
             className="ls-enter-btn"
-            onClick={() => navigate("/simple/admin")}
+            onClick={() => slideTo("/simple/admin", undefined, "forward")}
             style={{
               fontSize: "clamp(17px, 2.0vw, 50px)",
               fontWeight: 300,

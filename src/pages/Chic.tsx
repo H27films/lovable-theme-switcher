@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranchFavourites } from "@/hooks/useBranchFavourites";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
@@ -31,6 +32,8 @@ const Chic = ({ onBack, onBackToMain, products: propProducts }: ChicProps) => {
   const location = useLocation();
   // Origin of this visit ("landing" | "adminportal" | "branches") – set via router state at navigation time
   const cameFrom = (location.state as { from?: string } | null)?.from;
+  const { exiting, slideTo } = useSlideExit();
+  const enterStyle = useSlideEnter();
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
   const [productLog, setProductLog] = useState<LogRow[]>([]);
@@ -255,10 +258,10 @@ const handleHeaderBack = () => {
         goHome();
     } else if (cameFrom === "landing") {
         // Arrived directly from Landing -> back to Landing
-        navigate("/");
+        slideTo("/", undefined, "back");
     } else if (cameFrom === "adminportal") {
         // Arrived via Admin Portal -> back to Admin Portal
-        navigate("/simple/admin");
+        slideTo("/simple/admin", undefined, "back");
     } else if (cameFrom === "branches") {
         // Arrived via Admin Portal > Branches -> back to Branches page
         navigate("/simple/branches");
@@ -338,6 +341,8 @@ const setLogViewToOrders = () => {
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
+      ...enterStyle,
+      ...slideExitStyle(exiting),
     }}>
 {/* Header */}
         <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? chicConfig.displayName : undefined} />

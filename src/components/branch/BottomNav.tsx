@@ -52,6 +52,10 @@ export const BottomNav = ({
         position: "fixed",
         left: "50%",
         transform: "translateX(-50%)",
+        // Follow the page slide transition (vars driven by useSlideExit/useSlideEnter)
+        translate: "var(--page-slide-x, 0vw) 0",
+        opacity: "var(--page-slide-o, 1)",
+        transition: "translate 0.3s ease-in-out, opacity 0.3s ease-in-out",
         bottom: compact ? "env(safe-area-inset-bottom, 0px)" : `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 16}px)`,
         zIndex: 99999,
         display: "flex",

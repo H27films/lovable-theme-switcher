@@ -7,10 +7,13 @@ import {
   ChevronRight,
   Search as SearchIcon,
 } from "lucide-react";
+import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 
 const AdminPortal = () => {
   const navigate = useNavigate();
   const { tablet } = useTabletMode();
+  const { exiting, slideTo } = useSlideExit();
+  const enterStyle = useSlideEnter();
 
   const branches = [
     { label: "Office",   key: "office"  as const, icon: <Building2 size={16} color="rgb(80,70,60)" strokeWidth={1.5} /> },
@@ -23,7 +26,7 @@ const AdminPortal = () => {
     if (key === "office") {
       navigate("/simple/office");
     } else {
-      navigate(`/simple/${key}`, { state: { from: "adminportal" } });
+      slideTo(`/simple/${key}`, { from: "adminportal" }, "forward");
     }
   };
 
@@ -36,6 +39,8 @@ const AdminPortal = () => {
         fontFamily: "'Raleway', sans-serif",
         position: "relative",
         overflow: "hidden",
+        ...enterStyle,
+        ...slideExitStyle(exiting),
       }}
     >
       {/* Background SVG */}
@@ -79,6 +84,10 @@ const AdminPortal = () => {
       <a
         href="/"
         aria-label="Go to main landing page"
+        onClick={(e) => {
+          e.preventDefault();
+          slideTo("/", undefined, "back");
+        }}
         style={{
           position: "fixed",
           right: "20px",
@@ -265,7 +274,7 @@ const AdminPortal = () => {
         >
           {/* Order Pill */}
           <div
-            onClick={() => navigate("/simple/order", { state: { from: "adminportal" } })}
+            onClick={() => slideTo("/simple/order", { from: "adminportal" }, "forward")}
             style={{
               height: "44px",
               paddingLeft: "16px",
@@ -302,7 +311,7 @@ const AdminPortal = () => {
 
           {/* Search Circle */}
           <div
-            onClick={() => navigate("/simple/search", { state: { from: "adminportal" } })}
+            onClick={() => slideTo("/simple/search", { from: "adminportal" }, "forward")}
             style={{
               width: "44px",
               height: "44px",

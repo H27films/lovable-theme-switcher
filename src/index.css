@@ -69,6 +69,13 @@
     font-weight: 300;
   }
 
+  /* Slide transitions between pages translate the page horizontally;
+     clip the horizontal overflow so no scrollbar flashes mid-animation. */
+  html, body {
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
   /* Hide number input spinners */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {

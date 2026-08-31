@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Building2, Search as SearchIcon, X, Star, ChevronUp, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { sortLogByBalance, isYes } from "@/lib/branchSimpleUtils";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
@@ -59,6 +60,8 @@ const sortPastData = (rows: ProductLog[]) => sortLogByBalance(rows, r => r["OFFI
 export default function Search({ onBack }: SearchProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { exiting, slideTo } = useSlideExit();
+  const enterStyle = useSlideEnter();
   const from = location.state?.from;
   const { tablet } = useTabletMode();
   
@@ -321,7 +324,7 @@ const handleSelectProduct = (p: Product) => {
     });
 
   return (
-    <div style={{ minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", display: "flex", flexDirection: "column", background: "hsl(var(--background))", color: fg, fontFamily: "'Raleway', sans-serif" }}>
+    <div style={{ minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", display: "flex", flexDirection: "column", background: "hsl(var(--background))", color: fg, fontFamily: "'Raleway', sans-serif", ...enterStyle, ...slideExitStyle(exiting) }}>
       {/* TOP BAR — with back button */}
       <div style={{
         display: "flex",
@@ -336,7 +339,7 @@ const handleSelectProduct = (p: Product) => {
         <button
           onClick={() => {
             if (from === "office") navigate("/simple/office");
-            else if (from === "adminportal") navigate("/simple/admin");
+            else if (from === "adminportal") slideTo("/simple/admin", undefined, "back");
             else onBack?.();
           }}
           title="Back to Office"
@@ -348,7 +351,7 @@ const handleSelectProduct = (p: Product) => {
         <button
           onClick={() => {
             if (from === "office") navigate("/simple/office");
-            else if (from === "adminportal") navigate("/simple/admin");
+            else if (from === "adminportal") slideTo("/simple/admin", undefined, "back");
             else onBack?.();
           }}
           aria-label="Back"

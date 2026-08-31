@@ -3,6 +3,7 @@ import { Search, Star, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 import { useTabletMode } from "@/hooks/useTabletMode";
@@ -153,6 +154,8 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
 export default function Order({ onBack }: OrderProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { exiting, slideTo } = useSlideExit();
+  const enterStyle = useSlideEnter();
   // Origin of this visit ("office" | "adminportal") – set via router state at navigation time
   const from = location.state?.from;
   const { tablet } = useTabletMode();
@@ -360,6 +363,8 @@ export default function Order({ onBack }: OrderProps) {
       fontFamily: "Raleway, inherit",
       display: "flex", flexDirection: "column",
       position: "relative",
+      ...enterStyle,
+      ...slideExitStyle(exiting),
     }}>
       {/* Top bar */}
       <div style={{
@@ -370,7 +375,7 @@ export default function Order({ onBack }: OrderProps) {
           <span
             onClick={() => {
               if (from === "office") navigate("/simple/office");
-              else if (from === "adminportal") navigate("/simple/admin");
+              else if (from === "adminportal") slideTo("/simple/admin", undefined, "back");
               else onBack?.();
             }}
             style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}
