@@ -40,23 +40,25 @@ interface WaveLayer {
 // SMIL can interpolate.
 const LAYERS: WaveLayer[] = [
   {
-    // Front layer — hugs the corner most tightly.
-    a: "M600,0 L400,0 C420,50 420,70 441,92 C470,120 530,95 553,113 C575,135 590,170 600,200 Z",
-    b: "M600,0 L400,0 C420,20 460,30 486,47 C515,70 490,130 508,158 C530,190 570,175 600,170 Z",
+    // Front layer — hugs the corner most tightly (reaches ~340/600 along the
+    // top edge and ~250/600 down the right side).
+    a: "M600,0 L340,0 C355,50 355,80 390,120 C425,160 500,110 545,145 C585,175 592,215 600,250 Z",
+    b: "M600,0 L340,0 C355,25 415,35 455,60 C495,85 470,175 495,210 C520,245 565,185 600,205 Z",
     dur: 9,
     opacity: 0.3,
   },
   {
-    // Middle layer — reaches a little further into the page.
-    a: "M600,0 L320,0 C340,50 350,75 380,120 C410,165 495,135 527,167 C555,195 580,240 600,280 Z",
-    b: "M600,0 L320,0 C345,25 410,40 438,68 C465,95 455,180 482,212 C510,245 565,215 600,235 Z",
+    // Middle layer — reaches further into the page (~240/600 top, ~370/600 right).
+    a: "M600,0 L240,0 C265,60 275,120 315,175 C355,230 480,180 520,215 C560,250 585,320 600,370 Z",
+    b: "M600,0 L240,0 C270,30 345,50 395,85 C445,120 410,255 440,300 C470,345 555,300 600,330 Z",
     dur: 13,
     opacity: 0.24,
   },
   {
-    // Deepest layer — faintest, reaching furthest along both edges.
-    a: "M600,0 L240,0 C270,60 300,110 330,150 C360,190 475,185 505,215 C540,250 570,310 600,360 Z",
-    b: "M600,0 L240,0 C280,30 360,55 390,90 C420,125 420,235 450,270 C480,305 555,275 600,300 Z",
+    // Deepest layer — faintest, sweeping ~130/600 along the top edge and
+    // ~490/600 down the right side for maximum corner coverage.
+    a: "M600,0 L130,0 C160,80 175,160 230,220 C285,280 445,240 490,280 C540,320 580,420 600,490 Z",
+    b: "M600,0 L130,0 C180,35 270,65 330,105 C390,145 340,320 390,370 C440,420 545,380 600,430 Z",
     dur: 17,
     opacity: 0.18,
   },
@@ -98,8 +100,8 @@ export default function CornerWaves({ color, style }: CornerWavesProps) {
           position: "absolute",
           top: 0,
           right: 0,
-          width: "clamp(280px, 38vmin, 520px)",
-          height: "clamp(280px, 38vmin, 520px)",
+          width: "clamp(300px, 58vmin, 780px)",
+          height: "clamp(300px, 58vmin, 780px)",
           pointerEvents: "none",
           overflow: "hidden",
           ...style,
