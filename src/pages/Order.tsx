@@ -756,7 +756,8 @@ export default function Order({ onBack }: OrderProps) {
           raised={orderLines.length > 0}
           onSelect={(key) => {
             if (key === "order") return; // already on the Order page
-            if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
+            if (key === "home") slideTo("/simple/office", undefined, "back");
+            else if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
             else if (key === "sync") slideTo("/simple/office", { openPanel: "sync" }, "back");
             else if (key === "search") slideTo("/simple/search", { from: "office" }, "forward");
           }}

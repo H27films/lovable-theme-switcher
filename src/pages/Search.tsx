@@ -794,7 +794,8 @@ const handleSelectProduct = (p: Product) => {
           active="search"
           onSelect={(key) => {
             if (key === "search") return; // already on the Search page
-            if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
+            if (key === "home") slideTo("/simple/office", undefined, "back");
+            else if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
             else if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
             else if (key === "sync") slideTo("/simple/office", { openPanel: "sync" }, "back");
           }}

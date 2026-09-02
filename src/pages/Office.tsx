@@ -253,7 +253,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px", flexShrink: 0 }}>
 
 {/* Branch name header row */}
-<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
   <button
     onClick={() => slideTo("/simple/admin", undefined, "back")}
     style={{
@@ -272,7 +272,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         </div> 
         
       {/* ── MIDDLE SCROLLABLE ── */}
-      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}>
+      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "4px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}>
 
         {/* ══ SEARCH + RECENT ══════════════════════════════════════ */}
         <>
@@ -552,11 +552,12 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           />
         )}
 
-        {/* ── BOTTOM NAV (Order / Sales / Sync / Search) ── */}
+        {/* ── BOTTOM NAV (Home / Order / Sales / Sync / Search) ── */}
         <BottomNavOffice
-          active={showSalesPanel ? "sales" : showSyncPanel ? "sync" : null}
+          active={showSalesPanel ? "sales" : showSyncPanel ? "sync" : "home"}
           onSelect={(key) => {
-            if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
+            if (key === "home") { setShowSalesPanel(false); setShowSyncPanel(false); }
+            else if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
             else if (key === "sales") setShowSalesPanel(v => !v);
             else if (key === "sync") setShowSyncPanel(v => !v);
             else if (key === "search") slideTo("/simple/search", { from: "office" }, "forward");

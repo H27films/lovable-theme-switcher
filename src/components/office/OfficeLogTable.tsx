@@ -137,7 +137,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
   };
 
   return (
-    <div style={{ paddingTop: "2px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
 
         {/* Sticky header */}

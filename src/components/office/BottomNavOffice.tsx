@@ -1,8 +1,8 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { ShoppingCart, BarChart3, RefreshCw, Search as SearchIcon } from "lucide-react";
+import { Home, ShoppingCart, BarChart3, RefreshCw, Search as SearchIcon } from "lucide-react";
 
-export type OfficeNavKey = "order" | "sales" | "sync" | "search";
+export type OfficeNavKey = "home" | "order" | "sales" | "sync" | "search";
 
 interface BottomNavOfficeProps {
   /** Which tab is currently active (highlighted pill). */
@@ -14,6 +14,7 @@ interface BottomNavOfficeProps {
 }
 
 const items = [
+  { key: "home", Icon: Home, label: "Home" },
   { key: "order", Icon: ShoppingCart, label: "Order" },
   { key: "sales", Icon: BarChart3, label: "Sales" },
   { key: "sync", Icon: RefreshCw, label: "Sync" },
@@ -23,7 +24,7 @@ const items = [
 /**
  * Office variant of the branch BottomNav (src/components/branch/BottomNav.tsx):
  * same floating pill, same page-slide coupling, same icon button styling — but
- * with the Office tab set (Order / Sales / Sync / Search) and a page-driven
+ * with the Office tab set (Home / Order / Sales / Sync / Search) and a page-driven
  * active/onSelect API, since Sales & Sync are overlays on the Office page while
  * Order & Search are separate routes.
  */
@@ -43,7 +44,7 @@ export const BottomNavOffice = ({ active, onSelect, raised = false }: BottomNavO
         display: "flex",
         alignItems: "center",
         gap: "8px",
-        padding: "8px 14px",
+        padding: "6px 14px",
         borderRadius: "999px",
         background: "hsl(var(--background) / 0.8)",
         backdropFilter: "blur(12px)",
@@ -65,13 +66,13 @@ export const BottomNavOffice = ({ active, onSelect, raised = false }: BottomNavO
               border: "none",
               cursor: "pointer",
               width: 52,
-              height: 44,
+              height: 38,
               borderRadius: "999px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "hsl(var(--foreground))",
-              opacity: isActive ? 1 : 0.55,
+              opacity: isActive ? 1 : 0.7,
               transition: "opacity 0.2s ease, background 0.2s ease, transform 0.2s ease",
             }}
             onMouseEnter={(e) => {
@@ -79,7 +80,7 @@ export const BottomNavOffice = ({ active, onSelect, raised = false }: BottomNavO
               e.currentTarget.style.transform = "scale(1.08)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = isActive ? "1" : "0.55";
+              e.currentTarget.style.opacity = isActive ? "1" : "0.7";
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
