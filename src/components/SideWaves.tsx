@@ -86,7 +86,7 @@ export default function SideWaves({ color, style, animateIn = true }: SideWavesP
                near-even curve (gentle start, gradual settle) so the band is
                already gliding while the page enters instead of starting late
                and then rushing. */
-            animation: sideWavesIn 1.4s cubic-bezier(0.33, 0.3, 0.3, 1) both;
+            animation: sideWavesIn 1.2s cubic-bezier(0.33, 0.3, 0.3, 1) both;
           }
         `}</style>
       )}
