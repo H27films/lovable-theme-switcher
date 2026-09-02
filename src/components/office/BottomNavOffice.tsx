@@ -46,11 +46,13 @@ export const BottomNavOffice = ({ active, onSelect, raised = false }: BottomNavO
         gap: "8px",
         padding: "6px 14px",
         borderRadius: "999px",
-        background: "hsl(var(--background) / 0.8)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        border: "0.5px solid hsl(var(--border))",
-        boxShadow: "0 8px 24px hsl(0 0% 0% / 0.18)",
+        // Glassmorphism: translucent gradient pane, heavy blur + saturation of the
+        // content behind it, a bright top rim (inset highlight) and a soft drop shadow.
+        background: "linear-gradient(135deg, hsl(var(--background) / 0.62), hsl(var(--background) / 0.38))",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+        border: "0.5px solid hsl(var(--foreground) / 0.12)",
+        boxShadow: "0 8px 32px hsl(0 0% 0% / 0.16), inset 0 1px 0 hsl(0 0% 100% / 0.55), inset 0 -1px 0 hsl(0 0% 0% / 0.04)",
       }}
     >
       {items.map(({ key, Icon, label }) => {
