@@ -9,6 +9,7 @@ import { ResultRow } from "@/components/branch/ResultRow";
 import { ProductImage } from "@/components/branch/ProductImage";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
+import { BottomNavOffice } from "@/components/office/BottomNavOffice";
 
 interface Product {
   id: number;
@@ -404,7 +405,7 @@ const handleSelectProduct = (p: Product) => {
       </div>
 
       {/* MIDDLE SCROLLABLE AREA */}
-      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px" }}>
+      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 88px)" : "12px" }}>
 
         {/* DROPDOWN — inline, all results shown, NO limits */}
         {dropdownContent && showDropdown && (() => {
@@ -786,6 +787,19 @@ const handleSelectProduct = (p: Product) => {
         )}
 
       </div>
+
+      {/* ── BOTTOM NAV (Order / Sales / Sync / Search) — Office visits only ── */}
+      {from === "office" && (
+        <BottomNavOffice
+          active="search"
+          onSelect={(key) => {
+            if (key === "search") return; // already on the Search page
+            if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
+            else if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
+            else if (key === "sync") slideTo("/simple/office", { openPanel: "sync" }, "back");
+          }}
+        />
+      )}
     </div>
   );
 }

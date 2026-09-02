@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import Sync from "@/components/office/Sync";
 import OfficeLogTable from "@/components/office/OfficeLogTable";
 import { OfficeHeader } from "@/components/office/OfficeHeader";
+import { BottomNavOffice } from "@/components/office/BottomNavOffice";
 
 interface OfficeProduct {
   id: number;
@@ -53,7 +54,7 @@ const LeftAlignedYTick = ({ y, payload }: any) => {
 const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const { exiting, slideTo } = useSlideExit();
   const enterStyle = useSlideEnter();
-  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const location = useLocation();
   // ── SYNC PANEL STATE ────────────────────────────────────
   const [showSyncPanel, setShowSyncPanel] = useState(false);
   const [showSalesPanel, setShowSalesPanel] = useState(false);
@@ -69,6 +70,15 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const [tappedBar, setTappedBar] = useState<{ branchKey: string; label: string; total: number } | null>(null);
   const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
   const [salesYearDropdownOpen, setSalesYearDropdownOpen] = useState(false);
+
+  // Open Sales / Sync directly when returning from the Order / Search pages via
+  // the bottom nav — they slide back here with { openPanel } router state.
+  useEffect(() => {
+    const openPanel = (location.state as { openPanel?: string } | null)?.openPanel;
+    if (openPanel === "sales") setShowSalesPanel(true);
+    else if (openPanel === "sync") setShowSyncPanel(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const BRANCH_NAME = "OFFICE";
 
@@ -258,87 +268,11 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   <OfficeHeader />
 </div>
 
-        {/* ── Icon tab bar ── */}
-        <div
-          className="office-tab-bar"
-          style={{
-            display: "flex", alignItems: "center", gap: "20px",
-            borderBottom: "0.5px solid hsl(var(--border))",
-            paddingBottom: "12px", marginBottom: "8px",
-            overflowX: "auto", overflowY: "visible",
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "none", msOverflowStyle: "none",
-          }}
-        >
 
-          {/* Order */}
-          <button
-            onClick={() => slideTo("/simple/order", { from: "office" }, "forward")}
-            title="Order"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "order" ? 1 : 0.7, transform: hoveredTab === "order" ? "scale(1.03)" : "scale(1)" }}
-            onMouseEnter={() => setHoveredTab("order")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
-            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Order</span>
-            {hoveredTab === "order" && (
-              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
-            )}
-          </button>
-
-          {/* Sales */}
-          <button
-            onClick={() => setShowSalesPanel(true)}
-            title="Sales"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "sales" ? 1 : 0.7, transform: hoveredTab === "sales" ? "scale(1.03)" : "scale(1)" }}
-            onMouseEnter={() => setHoveredTab("sales")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
-            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Sales</span>
-            {hoveredTab === "sales" && (
-              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
-            )}
-          </button>
-
-          {/* Sync */}
-          <button
-            onClick={() => setShowSyncPanel(true)}
-            title="Sync"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", gap: "5px", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "sync" ? 1 : 0.7, transform: hoveredTab === "sync" ? "scale(1.03)" : "scale(1)" }}
-            onMouseEnter={() => setHoveredTab("sync")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <RefreshCw size={18} />
-            <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase" }}>Sync</span>
-            {hoveredTab === "sync" && (
-              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
-            )}
-          </button>
-
-          {/* Search — icon only, next to Sync */}
-          <button
-            onClick={() => slideTo("/simple/search", { from: "office" }, "forward")}
-            title="Search"
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", position: "relative", flexShrink: 0, transition: "transform 0.15s, opacity 0.2s", opacity: hoveredTab === "search" ? 1 : 0.7, transform: hoveredTab === "search" ? "scale(1.03)" : "scale(1)" }}
-            onMouseEnter={() => setHoveredTab("search")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <Search size={18} />
-            {hoveredTab === "search" && (
-              <div style={{ position: "absolute", bottom: "-12px", left: 0, width: "100%", height: "2px", background: "hsl(var(--foreground))" }} />
-            )}
-          </button>
-
-        </div>
         </div> 
         
       {/* ── MIDDLE SCROLLABLE ── */}
-      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
+      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}>
 
         {/* ══ SEARCH + RECENT ══════════════════════════════════════ */}
         <>
@@ -617,6 +551,17 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             onProductsUpdated={refreshLocalProducts}
           />
         )}
+
+        {/* ── BOTTOM NAV (Order / Sales / Sync / Search) ── */}
+        <BottomNavOffice
+          active={showSalesPanel ? "sales" : showSyncPanel ? "sync" : null}
+          onSelect={(key) => {
+            if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
+            else if (key === "sales") setShowSalesPanel(v => !v);
+            else if (key === "sync") setShowSyncPanel(v => !v);
+            else if (key === "search") slideTo("/simple/search", { from: "office" }, "forward");
+          }}
+        />
 
     </div>
   );

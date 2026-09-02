@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import OrderSummaryOffice, { type OfficeProduct, type OrderLine } from "@/components/office/OrderSummaryOffice";
+import { BottomNavOffice } from "@/components/office/BottomNavOffice";
 
 interface OrderProps {
   onBack?: () => void;
@@ -304,7 +305,7 @@ export default function Order({ onBack }: OrderProps) {
       </div>
 
       {/* Scrollable content */}
-      <div ref={orderScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px" }}>
+      <div ref={orderScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 96px)" : "16px" }}>
 
         {/* Supplier filter */}
         <div ref={supplierDropdownRef} style={{ marginBottom: "16px" }}>
@@ -746,6 +747,20 @@ export default function Order({ onBack }: OrderProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── BOTTOM NAV (Order / Sales / Sync / Search) — Office visits only ── */}
+      {from === "office" && (
+        <BottomNavOffice
+          active="order"
+          raised={orderLines.length > 0}
+          onSelect={(key) => {
+            if (key === "order") return; // already on the Order page
+            if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
+            else if (key === "sync") slideTo("/simple/office", { openPanel: "sync" }, "back");
+            else if (key === "search") slideTo("/simple/search", { from: "office" }, "forward");
+          }}
+        />
       )}
     </div>
   );
