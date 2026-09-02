@@ -1,8 +1,30 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { Home, ShoppingCart, BarChart3, LayoutDashboard, Search as SearchIcon } from "lucide-react";
+import { Home, ShoppingCart, BarChart3, Search as SearchIcon } from "lucide-react";
 
 export type OfficeNavKey = "home" | "order" | "sales" | "admin" | "search";
+
+/**
+ * Admin Portal tab icon — outline person (head + shoulders) matching the thin
+ * lucide look of the other nav icons. Drawn as inline SVG with currentColor so
+ * it picks up the button's foreground colour / opacity states. Rendered size
+ * and strokeWidth come from the shared <Icon /> call below.
+ */
+const AdminIcon = ({ size = 24, strokeWidth = 1.5 }: { size?: number | string; strokeWidth?: number | string }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="7.5" r="4" />
+    <path d="M4.5 21a7.5 7.5 0 0 1 15 0Z" />
+  </svg>
+);
 
 interface BottomNavOfficeProps {
   /** Which tab is currently active (highlighted pill). */
@@ -18,7 +40,7 @@ const items = [
   { key: "order", Icon: ShoppingCart, label: "Order" },
   { key: "sales", Icon: BarChart3, label: "Sales" },
   { key: "search", Icon: SearchIcon, label: "Search" },
-  { key: "admin", Icon: LayoutDashboard, label: "Admin Portal" },
+  { key: "admin", Icon: AdminIcon, label: "Admin Portal" },
 ] as const;
 
 /**
