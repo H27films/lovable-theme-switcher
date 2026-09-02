@@ -136,7 +136,7 @@ const AdminPortal = () => {
           {/* Main container box - LEFT HALF - FULL HEIGHT */}
           <div
             style={{
-              width: "58%",
+              width: "66%",
               height: tablet ? `calc(${TABLET_FIT_HEIGHT} - 32px)` : "calc(100dvh - 32px)",
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(14px)",
@@ -156,7 +156,7 @@ const AdminPortal = () => {
             <div
               style={{
                 flex: 1,
-                padding: tablet ? "12px 12px 12px 28px" : "16px 16px 16px 32px", // extra left indent — title + rows sit inside the glass box, clear of the wave
+                padding: tablet ? "12px 12px 12px 40px" : "16px 16px 16px 44px", // extra left indent — title + rows sit inside the glass box, clear of the wave
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "flex-start",
@@ -247,7 +247,7 @@ const AdminPortal = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "20px 16px",
+                padding: "8px 16px 20px", // small top padding — divider line sits down close to the Admin Portal icon
                 borderTop: "1px solid rgba(0,0,0,0.08)",
               }}
             >

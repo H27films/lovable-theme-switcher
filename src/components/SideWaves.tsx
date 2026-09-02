@@ -28,23 +28,23 @@ interface WaveLayer {
 // a/b shapes of each layer so SMIL can interpolate. Control points sit
 // directly above/below their endpoints (vertical tangents at every joint),
 // keeping the boundary smooth with no kinks or diagonal jumps.
-// The darker gradient core stays slim (x ≈ 30–48) while the lighter layer
-// behind it reaches much further (x ≈ 68–98), so the lighter shade is the
-// dominant visible band. Morph deltas are small (≤10 units) and the cycles
-// slow, so the waves only breathe gently.
+// The darker gradient core stays slim (x ≈ 24–56) while the lighter layer
+// behind it reaches much further (x ≈ 66–112), so the lighter shade is the
+// dominant visible band. The a→b morph swings ~14–18 units over slow cycles
+// (12s / 16s) — a gentle but clearly visible drift.
 const LAYERS: WaveLayer[] = [
   {
     // Front layer — slim darker gradient core, flush to left edge
-    a: "M0,0 L38,0 C38,50 45,50 45,100 C45,150 30,150 30,200 C30,250 48,250 48,300 C48,350 34,350 34,400 C34,450 44,450 44,500 C44,550 36,550 36,600 C36,650 42,650 42,700 C42,750 38,750 38,800 L0,800 Z",
-    b: "M0,0 L45,0 C45,50 38,50 38,100 C38,150 37,150 37,200 C37,250 40,250 40,300 C40,350 42,350 42,400 C42,450 36,450 36,500 C36,550 44,550 44,600 C44,650 33,650 33,700 C33,750 30,750 30,800 L0,800 Z",
-    dur: 14,
+    a: "M0,0 L48,0 C48,50 54,50 54,100 C54,150 40,150 40,200 C40,250 56,250 56,300 C56,350 44,350 44,400 C44,450 54,450 54,500 C54,550 46,550 46,600 C46,650 52,650 52,700 C52,750 48,750 48,800 L0,800 Z",
+    b: "M0,0 L32,0 C32,50 38,50 38,100 C38,150 24,150 24,200 C24,250 40,250 40,300 C40,350 28,350 28,400 C28,450 36,450 36,500 C36,550 30,550 30,600 C30,650 36,650 36,700 C36,750 34,750 34,800 L0,800 Z",
+    dur: 12,
     opacity: 0.35,
   },
   {
     // Deeper layer — lighter shade reaching beyond the dark core
-    a: "M0,0 L75,0 C75,50 95,50 95,100 C95,150 68,150 68,200 C68,250 98,250 98,300 C98,350 72,350 72,400 C72,450 92,450 92,500 C92,550 76,550 76,600 C76,650 90,650 90,700 C90,750 78,750 78,800 L0,800 Z",
-    b: "M0,0 L84,0 C84,50 85,50 85,100 C85,150 76,150 76,200 C76,250 88,250 88,300 C88,350 80,350 80,400 C80,450 82,450 82,500 C82,550 84,550 84,600 C84,650 80,650 80,700 C80,750 70,750 70,800 L0,800 Z",
-    dur: 18,
+    a: "M0,0 L89,0 C89,50 108,50 108,100 C108,150 82,150 82,200 C82,250 112,250 112,300 C112,350 86,350 86,400 C86,450 106,450 106,500 C106,550 90,550 90,600 C90,650 104,650 104,700 C104,750 92,750 92,800 L0,800 Z",
+    b: "M0,0 L74,0 C74,50 92,50 92,100 C92,150 66,150 66,200 C66,250 94,250 94,300 C94,350 70,350 70,400 C70,450 90,450 90,500 C90,550 74,550 74,600 C74,650 88,650 88,700 C88,750 78,750 78,800 L0,800 Z",
+    dur: 16,
     opacity: 0.22,
   },
 ];
