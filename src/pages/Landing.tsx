@@ -216,7 +216,7 @@ export default function Landing() {
           style={{
             flexShrink: 0,
             borderTop: "1px solid hsl(var(--border))",
-            padding: "22px 16px",
+            padding: "12px 16px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -235,7 +235,7 @@ export default function Landing() {
               textTransform: "capitalize",
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              gap: "6px",
               color: "hsl(var(--foreground))",
             }}
           >
