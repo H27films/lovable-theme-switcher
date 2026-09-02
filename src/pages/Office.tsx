@@ -62,7 +62,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesMonthFilter, setSalesMonthFilter] = useState<string>(String(new Date().getMonth() + 1).padStart(2, '0'));
   const [salesYearFilter, setSalesYearFilter] = useState<string>(String(new Date().getFullYear()));
-  const [salesViewMode, setSalesViewMode] = useState<"week" | "day">("week");
+  const [salesViewMode, setSalesViewMode] = useState<"week" | "day">("day");
   // Reset to week view when "All" months is selected
   React.useEffect(() => {
     if (salesMonthFilter === "all") setSalesViewMode("week");
@@ -300,9 +300,6 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 20px 0 20px" }}>
               <div style={{ display: "flex", alignItems: "center" }}>
-                <button onClick={() => setShowSalesPanel(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginRight: "16px" }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
-                </button>
                 <button onClick={() => setShowSalesPanel(false)} title="Back to Office" style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>SALES</button>
               </div>
               {/* Month navigation chevrons */}
