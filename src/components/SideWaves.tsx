@@ -70,11 +70,18 @@ export default function SideWaves({ color, style, animateIn = true }: SideWavesP
       {animateIn && !reducedMotion && (
         <style>{`
           @keyframes sideWavesIn {
-            from { opacity: 0; }
-            to   { opacity: 1; }
+            from {
+              opacity: 0;
+              transform: translateX(-100%); /* sweep in from beyond the left edge */
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
           }
           .side-waves {
-            animation: sideWavesIn 1.2s ease-out 0.3s both;
+            /* starts almost immediately so the sweep stays tight with the page slide */
+            animation: sideWavesIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
           }
         `}</style>
       )}
