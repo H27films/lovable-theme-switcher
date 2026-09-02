@@ -67,6 +67,34 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   React.useEffect(() => {
     if (salesMonthFilter === "all") setSalesViewMode("week");
   }, [salesMonthFilter]);
+  // ── SALES PANEL NAV GESTURE ──────────────────────────────
+  // The bottom nav is hidden while the Sales panel is open: swipe up from the
+  // bottom edge of the screen to reveal it, swipe down to hide it again.
+  const [salesNavVisible, setSalesNavVisible] = useState(false);
+  const salesNavSwipe = useRef<{ startY: number } | null>(null);
+  useEffect(() => {
+    if (!showSalesPanel) { setSalesNavVisible(false); return; }
+    const EDGE_ZONE = 64;  // gesture only starts within this many px of the screen bottom
+    const THRESHOLD = 36;  // swipe distance (px) needed to toggle the nav
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      salesNavSwipe.current = t.clientY > window.innerHeight - EDGE_ZONE ? { startY: t.clientY } : null;
+    };
+    const onMove = (e: TouchEvent) => {
+      const start = salesNavSwipe.current;
+      if (!start) return;
+      const dy = start.startY - e.touches[0].clientY; // positive = swiping up
+      if (dy > THRESHOLD && !salesNavVisible) { setSalesNavVisible(true); salesNavSwipe.current = null; }
+      else if (dy < -THRESHOLD && salesNavVisible) { setSalesNavVisible(false); salesNavSwipe.current = null; }
+    };
+    const opts = { capture: true, passive: true };
+    window.addEventListener("touchstart", onStart, opts);
+    window.addEventListener("touchmove", onMove, opts);
+    return () => {
+      window.removeEventListener("touchstart", onStart, opts);
+      window.removeEventListener("touchmove", onMove, opts);
+    };
+  }, [showSalesPanel, salesNavVisible]);
   const [tappedBar, setTappedBar] = useState<{ branchKey: string; label: string; total: number } | null>(null);
   const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
   const [salesYearDropdownOpen, setSalesYearDropdownOpen] = useState(false);
@@ -552,6 +580,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         {/* ── BOTTOM NAV (Home / Order / Sales / Search / Admin Portal) ── */}
         <BottomNavOffice
           active={showSalesPanel ? "sales" : "home"}
+          hidden={showSalesPanel && !salesNavVisible}
           onSelect={(key) => {
             if (key === "home") { setShowSalesPanel(false); setShowSyncPanel(false); }
             else if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");

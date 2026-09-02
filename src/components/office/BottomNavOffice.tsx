@@ -33,6 +33,8 @@ interface BottomNavOfficeProps {
   onSelect: (key: OfficeNavKey) => void;
   /** Lift the nav above a fixed bottom footer (e.g. the collapsed Order Summary bar). */
   raised?: boolean;
+  /** Slide the nav off-screen (e.g. Sales panel hides it; a bottom-edge swipe reveals it). */
+  hidden?: boolean;
 }
 
 const items = [
@@ -51,16 +53,18 @@ const items = [
  * while Order, Search and Admin Portal are separate routes.
  * (Sync was moved into the OfficeHeader hamburger dropdown.)
  */
-export const BottomNavOffice = ({ active, onSelect, raised = false }: BottomNavOfficeProps) => {
+export const BottomNavOffice = ({ active, onSelect, raised = false, hidden = false }: BottomNavOfficeProps) => {
   return createPortal(
     <nav
       style={{
         position: "fixed",
         left: "50%",
         transform: "translateX(-50%)",
-        // Follow the page slide transition (vars driven by useSlideExit/useSlideEnter)
-        translate: "var(--page-slide-x, 0vw) 0",
-        opacity: "var(--page-slide-o, 1)",
+        // Follow the page slide transition (vars driven by useSlideExit/useSlideEnter);
+        // y component also carries the hide/reveal slide (200% clears the bottom offset).
+        translate: `var(--page-slide-x, 0vw) ${hidden ? "200%" : "0"}`,
+        opacity: hidden ? 0 : "var(--page-slide-o, 1)",
+        pointerEvents: hidden ? "none" : "auto",
         transition: "translate 0.3s ease-in-out, opacity 0.3s ease-in-out",
         bottom: `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 16}px)`,
         zIndex: 99999,
