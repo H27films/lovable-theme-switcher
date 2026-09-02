@@ -164,9 +164,11 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
   // ─── SALES HELPERS ───────────────────────────────────────────────
   const BRANCHES = [
-    { key: "Boudoir", color: "#9CA998", highlight: "#7BC47A" },
-    { key: "Chic Nailspa", color: "#707F84", highlight: "#5BA3B5" },
-    { key: "Nur Yadi", color: "#CAB99E", highlight: "#E09660" },
+    // Design palette: Desert Rock / Soft Sandstone / Creamed Oat.
+    // highlight = tonal step of the same palette, used in Day view for days over 5k.
+    { key: "Boudoir", color: "#A48D78", highlight: "#86705E" },      // Desert Rock (darker step)
+    { key: "Chic Nailspa", color: "#CBB9A4", highlight: "#A48D78" }, // Soft Sandstone (Desert Rock step)
+    { key: "Nur Yadi", color: "#E6DAC8", highlight: "#CBB9A4" },     // Creamed Oat (Soft Sandstone step)
   ];
 
   const fetchSales = React.useCallback(async () => {
