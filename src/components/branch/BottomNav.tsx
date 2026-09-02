@@ -61,13 +61,16 @@ export const BottomNav = ({
         display: "flex",
         alignItems: "center",
         gap: compact ? "5px" : "8px",
-        padding: compact ? "6px 12px" : "8px 14px",
+        padding: compact ? "5px 12px" : "6px 14px",
         borderRadius: compact ? "16px" : "999px",
-        background: "hsl(var(--background) / 0.8)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        border: "0.5px solid hsl(var(--border))",
-        boxShadow: "0 8px 24px hsl(0 0% 0% / 0.18)",
+        // Glassmorphism (matches BottomNavOffice): translucent gradient pane,
+        // blur + saturation of the content behind it, a bright top rim (inset
+        // highlight) and a soft drop shadow.
+        background: "linear-gradient(135deg, hsl(var(--background) / 0.42), hsl(var(--background) / 0.2))",
+        backdropFilter: "blur(14px) saturate(160%)",
+        WebkitBackdropFilter: "blur(14px) saturate(160%)",
+        border: "0.5px solid hsl(var(--foreground) / 0.14)",
+        boxShadow: "0 8px 32px hsl(0 0% 0% / 0.14), inset 0 1px 0 hsl(0 0% 100% / 0.45), inset 0 -1px 0 hsl(0 0% 0% / 0.04)",
       }}
     >
       {items.map(({ key, Icon, label }) => {
@@ -82,13 +85,13 @@ export const BottomNav = ({
               border: "none",
               cursor: "pointer",
               width: compact ? 42 : 52,
-              height: compact ? 34 : 44,
+              height: compact ? 30 : 38,
               borderRadius: "999px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "hsl(var(--foreground))",
-              opacity: active ? 1 : 0.55,
+              opacity: active ? 1 : 0.7,
               transition: "opacity 0.2s ease, background 0.2s ease, transform 0.2s ease",
             }}
             onMouseEnter={(e) => {
@@ -96,7 +99,7 @@ export const BottomNav = ({
               e.currentTarget.style.transform = "scale(1.08)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = active ? "1" : "0.55";
+              e.currentTarget.style.opacity = active ? "1" : "0.7";
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
