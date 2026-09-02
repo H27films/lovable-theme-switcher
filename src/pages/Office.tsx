@@ -298,7 +298,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             fontFamily: "Raleway, inherit",
           }}>
             {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 20px 0 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 0 20px" }}>
               <div style={{ display: "flex", alignItems: "center" }}>
                 <button onClick={() => setShowSalesPanel(false)} title="Back to Office" style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>SALES</button>
               </div>
@@ -319,7 +319,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               </div>
             </div>
             {/* Month + Year filter + View toggle */}
-            <div style={{ padding: "14px 20px 10px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ padding: "10px 20px 8px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
 
               {/* Month dropdown */}
               <div style={{ position: "relative" }}>
@@ -432,7 +432,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             </div>
 
             {/* Charts */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 24px 20px" }} onClick={() => setTappedBar(null)}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 14px 16px" }} onClick={() => setTappedBar(null)}>
               {salesLoading && (
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
@@ -440,8 +440,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                 const data = salesViewMode === "week" ? buildWeeklyData(key) : buildDailyData(key);
                 const total = salesGrandTotal(key);
                 return (
-                  <div key={key} style={{ marginBottom: "20px", background: "#F2EDE6", borderRadius: "18px", padding: "16px 16px 8px 16px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px" }}>
+                  <div key={key} style={{ marginBottom: "12px", background: "#F2EDE6", borderRadius: "18px", padding: "10px 12px 4px 12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
                       <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "#2a2a2a" }}>
                         {({ "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC NAILSPA", "Nur Yadi": "NUR YADI" } as Record<string,string>)[key] ?? key.toUpperCase()}
                       </span>
@@ -486,7 +486,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                               <span style={{ fontSize: "13px", fontWeight: 500, color: "#fff", fontFamily: "Raleway, inherit" }}>RM {tappedBar.total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
                           )}
-                          <ResponsiveContainer width="100%" height={160}>
+                          <ResponsiveContainer width="100%" height={110}>
                           <BarChart data={data} barCategoryGap="10%" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
