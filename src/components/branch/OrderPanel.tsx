@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Star } from "lucide-react";
+import { X, ChevronUp, ChevronDown, Star, Minus, Plus } from "lucide-react";
 import { makeIsFavourite, USAGE_TYPES, THERAPISTS, isYes } from "@/lib/branchSimpleUtils";
 import { type BranchConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { OrderSubmitFooter } from "./OrderSubmitFooter";
@@ -474,10 +474,14 @@ return createPortal(
               <div key={entry.id} style={{ paddingTop: "12px", paddingBottom: "12px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "12px" }}>
                   <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", flex: 1, minWidth: 0 }}>{entry.productName}</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
-                    <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><ChevronLeft size={18} /></button>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                    <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: Math.max(1, e.qty - 1) } : e))} aria-label="Decrease quantity" style={{ background: "hsl(var(--raised, 38 30% 97.5%))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Minus size={14} strokeWidth={2.5} />
+                    </button>
                     <span style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", minWidth: "34px", textAlign: "center" }}>{entry.qty}</span>
-                    <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}><ChevronRight size={18} /></button>
+                    <button onClick={() => setOrderEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} aria-label="Increase quantity" style={{ background: "hsl(var(--raised, 38 30% 97.5%))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Plus size={14} strokeWidth={2.5} />
+                    </button>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
