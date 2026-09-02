@@ -28,19 +28,22 @@ interface WaveLayer {
 // a/b shapes of each layer so SMIL can interpolate. Control points sit
 // directly above/below their endpoints (vertical tangents at every joint),
 // keeping the boundary smooth with no kinks or diagonal jumps.
+// The boundary stays within x ≈ 55–110 (a narrow band close to the edge) and
+// the a→b morph deltas are small (≤13 viewBox units) with slow cycles, so the
+// waves only breathe gently instead of swinging across the band.
 const LAYERS: WaveLayer[] = [
   {
     // Front layer — main visible wave, flush to left edge
-    a: "M0,0 L100,0 C100,50 130,50 130,100 C130,150 80,150 80,200 C80,250 140,250 140,300 C140,350 90,350 90,400 C90,450 150,450 150,500 C150,550 100,550 100,600 C100,650 140,650 140,700 C140,750 90,750 90,800 L0,800 Z",
-    b: "M0,0 L130,0 C130,50 90,50 90,100 C90,150 150,150 150,200 C150,250 100,250 100,300 C100,350 155,350 155,400 C155,450 95,450 95,500 C95,550 145,550 145,600 C145,650 85,650 85,700 C85,750 120,750 120,800 L0,800 Z",
-    dur: 10,
+    a: "M0,0 L85,0 C85,50 105,50 105,100 C105,150 70,150 70,200 C70,250 110,250 110,300 C110,350 75,350 75,400 C75,450 105,450 105,500 C105,550 80,550 80,600 C80,650 100,650 100,700 C100,750 85,750 85,800 L0,800 Z",
+    b: "M0,0 L95,0 C95,50 92,50 92,100 C92,150 82,150 82,200 C82,250 98,250 98,300 C98,350 87,350 87,400 C87,450 93,450 93,500 C93,550 92,550 92,600 C92,650 90,650 90,700 C90,750 78,750 78,800 L0,800 Z",
+    dur: 14,
     opacity: 0.35,
   },
   {
     // Deeper layer — lighter echo that also runs the full height
-    a: "M0,0 L70,0 C70,50 120,50 120,100 C120,150 60,150 60,200 C60,250 125,250 125,300 C125,350 70,350 70,400 C70,450 130,450 130,500 C130,550 75,550 75,600 C75,650 115,650 115,700 C115,750 60,750 60,800 L0,800 Z",
-    b: "M0,0 L95,0 C95,50 55,50 55,100 C55,150 130,150 130,200 C130,250 65,250 65,300 C65,350 135,350 135,400 C135,450 60,450 60,500 C60,550 125,550 125,600 C125,650 70,650 70,700 C70,750 95,750 95,800 L0,800 Z",
-    dur: 13,
+    a: "M0,0 L60,0 C60,50 80,50 80,100 C80,150 55,150 55,200 C55,250 85,250 85,300 C85,350 60,350 60,400 C60,450 82,450 82,500 C82,550 58,550 58,600 C58,650 78,650 78,700 C78,750 62,750 62,800 L0,800 Z",
+    b: "M0,0 L68,0 C68,50 70,50 70,100 C70,150 64,150 64,200 C64,250 74,250 74,300 C74,350 69,350 69,400 C69,450 72,450 72,500 C72,550 66,550 66,600 C66,650 70,650 70,700 C70,750 55,750 55,800 L0,800 Z",
+    dur: 18,
     opacity: 0.22,
   },
 ];
@@ -83,7 +86,7 @@ export default function SideWaves({ color, style, animateIn = true }: SideWavesP
           top: 0,
           bottom: 0, // anchored stretch — parent only sets min-height, so height:100% may not resolve
           zIndex: 15,
-          width: "clamp(120px, 25vw, 200px)",
+          width: "clamp(80px, 14vw, 120px)", // narrow band — stays close to the left edge
           pointerEvents: "none",
           overflow: "hidden",
           ...style,

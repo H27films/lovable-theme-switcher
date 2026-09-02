@@ -130,7 +130,7 @@ const AdminPortal = () => {
             flexDirection: "column",
             justifyContent: "flex-start",
             alignItems: "flex-start",
-            padding: "0 10px 10px",
+            padding: "0 10px 10px 0", // no left padding — branches box sits flush against the screen edge
           }}
         >
           {/* Main container box - LEFT HALF - FULL HEIGHT */}
@@ -141,14 +141,13 @@ const AdminPortal = () => {
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(14px)",
               WebkitBackdropFilter: "blur(14px)",
-              borderRadius: "32px",
+              borderRadius: "0 32px 32px 0", // square left corners — box meets the screen edge with no gap
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
               overflow: "hidden",
               zIndex: 10,
               position: "relative",
-              marginLeft: "4px",
               marginTop: "16px",
               marginBottom: "16px",
             }}
