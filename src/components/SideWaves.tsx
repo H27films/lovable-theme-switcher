@@ -28,21 +28,22 @@ interface WaveLayer {
 // a/b shapes of each layer so SMIL can interpolate. Control points sit
 // directly above/below their endpoints (vertical tangents at every joint),
 // keeping the boundary smooth with no kinks or diagonal jumps.
-// The boundary stays within x ≈ 55–110 (a narrow band close to the edge) and
-// the a→b morph deltas are small (≤13 viewBox units) with slow cycles, so the
-// waves only breathe gently instead of swinging across the band.
+// The darker gradient core stays slim (x ≈ 30–48) while the lighter layer
+// behind it reaches much further (x ≈ 68–98), so the lighter shade is the
+// dominant visible band. Morph deltas are small (≤10 units) and the cycles
+// slow, so the waves only breathe gently.
 const LAYERS: WaveLayer[] = [
   {
-    // Front layer — main visible wave, flush to left edge
-    a: "M0,0 L85,0 C85,50 105,50 105,100 C105,150 70,150 70,200 C70,250 110,250 110,300 C110,350 75,350 75,400 C75,450 105,450 105,500 C105,550 80,550 80,600 C80,650 100,650 100,700 C100,750 85,750 85,800 L0,800 Z",
-    b: "M0,0 L95,0 C95,50 92,50 92,100 C92,150 82,150 82,200 C82,250 98,250 98,300 C98,350 87,350 87,400 C87,450 93,450 93,500 C93,550 92,550 92,600 C92,650 90,650 90,700 C90,750 78,750 78,800 L0,800 Z",
+    // Front layer — slim darker gradient core, flush to left edge
+    a: "M0,0 L38,0 C38,50 45,50 45,100 C45,150 30,150 30,200 C30,250 48,250 48,300 C48,350 34,350 34,400 C34,450 44,450 44,500 C44,550 36,550 36,600 C36,650 42,650 42,700 C42,750 38,750 38,800 L0,800 Z",
+    b: "M0,0 L45,0 C45,50 38,50 38,100 C38,150 37,150 37,200 C37,250 40,250 40,300 C40,350 42,350 42,400 C42,450 36,450 36,500 C36,550 44,550 44,600 C44,650 33,650 33,700 C33,750 30,750 30,800 L0,800 Z",
     dur: 14,
     opacity: 0.35,
   },
   {
-    // Deeper layer — lighter echo that also runs the full height
-    a: "M0,0 L60,0 C60,50 80,50 80,100 C80,150 55,150 55,200 C55,250 85,250 85,300 C85,350 60,350 60,400 C60,450 82,450 82,500 C82,550 58,550 58,600 C58,650 78,650 78,700 C78,750 62,750 62,800 L0,800 Z",
-    b: "M0,0 L68,0 C68,50 70,50 70,100 C70,150 64,150 64,200 C64,250 74,250 74,300 C74,350 69,350 69,400 C69,450 72,450 72,500 C72,550 66,550 66,600 C66,650 70,650 70,700 C70,750 55,750 55,800 L0,800 Z",
+    // Deeper layer — lighter shade reaching beyond the dark core
+    a: "M0,0 L75,0 C75,50 95,50 95,100 C95,150 68,150 68,200 C68,250 98,250 98,300 C98,350 72,350 72,400 C72,450 92,450 92,500 C92,550 76,550 76,600 C76,650 90,650 90,700 C90,750 78,750 78,800 L0,800 Z",
+    b: "M0,0 L84,0 C84,50 85,50 85,100 C85,150 76,150 76,200 C76,250 88,250 88,300 C88,350 80,350 80,400 C80,450 82,450 82,500 C82,550 84,550 84,600 C84,650 80,650 80,700 C80,750 70,750 70,800 L0,800 Z",
     dur: 18,
     opacity: 0.22,
   },
