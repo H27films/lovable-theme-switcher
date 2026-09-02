@@ -74,7 +74,7 @@ export default function SideWaves({ color, style, animateIn = true }: SideWavesP
           @keyframes sideWavesIn {
             from {
               opacity: 0;
-              transform: translateX(-100%); /* sweep in from beyond the left edge */
+              transform: translateX(-100%); /* most minimum position — fully collapsed beyond the left edge */
             }
             to {
               opacity: 1;
@@ -82,8 +82,11 @@ export default function SideWaves({ color, style, animateIn = true }: SideWavesP
             }
           }
           .side-waves {
-            /* starts almost immediately so the sweep stays tight with the page slide */
-            animation: sideWavesIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+            /* Expand in step with the page slide: no delay, and a soft
+               near-even curve (gentle start, gradual settle) so the band is
+               already gliding while the page enters instead of starting late
+               and then rushing. */
+            animation: sideWavesIn 1.4s cubic-bezier(0.33, 0.3, 0.3, 1) both;
           }
         `}</style>
       )}
