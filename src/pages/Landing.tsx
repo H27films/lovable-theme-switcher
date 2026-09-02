@@ -78,7 +78,7 @@ export default function Landing() {
           .ls-topbar  { padding: 22px 16px 0 !important; }
           .ls-hero    { padding: 14vh 16px !important; flex-direction: column; align-items: stretch; }
           .ls-hero > div:nth-child(2) { width: 100%; max-height: 40vh; margin-top: 24px; }
-          .ls-bottom  { padding: 22px 16px !important; }
+          .ls-bottom  { padding: 10px 16px !important; }
         }
       `}</style>
 
@@ -216,7 +216,7 @@ export default function Landing() {
           style={{
             flexShrink: 0,
             borderTop: "1px solid hsl(var(--border))",
-            padding: "12px 16px",
+            padding: "10px 16px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
