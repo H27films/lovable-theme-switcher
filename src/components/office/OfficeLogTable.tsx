@@ -146,7 +146,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
           background: "hsl(var(--background))",
           zIndex: 10, display: "flex", flexDirection: "column", width: "100%",
         }}>
-          <div style={{ display: "flex", gap: "12px", alignItems: "baseline", marginBottom: "12px" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "baseline", marginBottom: "18px" }}>
             {renderViewTab("all", "All Data")}
             {renderViewTab("branches", "Branches")}
             {renderViewTab("supplier", "Supplier")}
