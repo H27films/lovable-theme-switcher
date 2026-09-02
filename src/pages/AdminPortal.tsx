@@ -1,6 +1,7 @@
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import FadeInImage from "@/components/FadeInImage";
+import SideWaves from "@/components/SideWaves"; // ← ADD THIS IMPORT
 import {
   Building2,
   User,
@@ -42,6 +43,9 @@ const AdminPortal = () => {
         ...slideExitStyle(exiting),
       }}
     >
+      {/* SideWaves Animation - flows from left */}
+      <SideWaves animateIn={!exiting} />
+
       {/* Background SVG */}
        <div
          style={{
