@@ -1,8 +1,8 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { Home, ShoppingCart, BarChart3, RefreshCw, Search as SearchIcon } from "lucide-react";
+import { Home, ShoppingCart, BarChart3, LayoutDashboard, Search as SearchIcon } from "lucide-react";
 
-export type OfficeNavKey = "home" | "order" | "sales" | "sync" | "search";
+export type OfficeNavKey = "home" | "order" | "sales" | "admin" | "search";
 
 interface BottomNavOfficeProps {
   /** Which tab is currently active (highlighted pill). */
@@ -17,16 +17,17 @@ const items = [
   { key: "home", Icon: Home, label: "Home" },
   { key: "order", Icon: ShoppingCart, label: "Order" },
   { key: "sales", Icon: BarChart3, label: "Sales" },
-  { key: "sync", Icon: RefreshCw, label: "Sync" },
   { key: "search", Icon: SearchIcon, label: "Search" },
+  { key: "admin", Icon: LayoutDashboard, label: "Admin Portal" },
 ] as const;
 
 /**
  * Office variant of the branch BottomNav (src/components/branch/BottomNav.tsx):
  * same floating pill, same page-slide coupling, same icon button styling — but
- * with the Office tab set (Home / Order / Sales / Sync / Search) and a page-driven
- * active/onSelect API, since Sales & Sync are overlays on the Office page while
- * Order & Search are separate routes.
+ * with the Office tab set (Home / Order / Sales / Search / Admin Portal) and a
+ * page-driven active/onSelect API, since Sales is an overlay on the Office page
+ * while Order, Search and Admin Portal are separate routes.
+ * (Sync was moved into the OfficeHeader hamburger dropdown.)
  */
 export const BottomNavOffice = ({ active, onSelect, raised = false }: BottomNavOfficeProps) => {
   return createPortal(

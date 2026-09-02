@@ -265,7 +265,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   >
     {BRANCH_NAME}
   </button>
-  <OfficeHeader />
+  <OfficeHeader onOpenSync={() => setShowSyncPanel(true)} />
 </div>
 
 
@@ -552,15 +552,15 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
           />
         )}
 
-        {/* ── BOTTOM NAV (Home / Order / Sales / Sync / Search) ── */}
+        {/* ── BOTTOM NAV (Home / Order / Sales / Search / Admin Portal) ── */}
         <BottomNavOffice
-          active={showSalesPanel ? "sales" : showSyncPanel ? "sync" : "home"}
+          active={showSalesPanel ? "sales" : "home"}
           onSelect={(key) => {
             if (key === "home") { setShowSalesPanel(false); setShowSyncPanel(false); }
             else if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
             else if (key === "sales") setShowSalesPanel(v => !v);
-            else if (key === "sync") setShowSyncPanel(v => !v);
             else if (key === "search") slideTo("/simple/search", { from: "office" }, "forward");
+            else if (key === "admin") slideTo("/simple/admin", undefined, "back");
           }}
         />
 

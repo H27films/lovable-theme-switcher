@@ -788,7 +788,7 @@ const handleSelectProduct = (p: Product) => {
 
       </div>
 
-      {/* ── BOTTOM NAV (Order / Sales / Sync / Search) — Office visits only ── */}
+      {/* ── BOTTOM NAV (Home / Order / Sales / Search / Admin Portal) — Office visits only ── */}
       {from === "office" && (
         <BottomNavOffice
           active="search"
@@ -797,7 +797,7 @@ const handleSelectProduct = (p: Product) => {
             if (key === "home") slideTo("/simple/office", undefined, "back");
             else if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
             else if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
-            else if (key === "sync") slideTo("/simple/office", { openPanel: "sync" }, "back");
+            else if (key === "admin") slideTo("/simple/admin", undefined, "back");
           }}
         />
       )}

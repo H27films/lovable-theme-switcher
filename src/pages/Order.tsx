@@ -749,7 +749,7 @@ export default function Order({ onBack }: OrderProps) {
         </div>
       )}
 
-      {/* ── BOTTOM NAV (Order / Sales / Sync / Search) — Office visits only ── */}
+      {/* ── BOTTOM NAV (Home / Order / Sales / Search / Admin Portal) — Office visits only ── */}
       {from === "office" && (
         <BottomNavOffice
           active="order"
@@ -758,7 +758,7 @@ export default function Order({ onBack }: OrderProps) {
             if (key === "order") return; // already on the Order page
             if (key === "home") slideTo("/simple/office", undefined, "back");
             else if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
-            else if (key === "sync") slideTo("/simple/office", { openPanel: "sync" }, "back");
+            else if (key === "admin") slideTo("/simple/admin", undefined, "back");
             else if (key === "search") slideTo("/simple/search", { from: "office" }, "forward");
           }}
         />
