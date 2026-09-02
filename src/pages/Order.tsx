@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Star, X, ChevronDown } from "lucide-react";
+import { Search, Star, X, ChevronDown, Minus, Plus } from "lucide-react";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
 import { useLocation } from "react-router-dom";
@@ -476,10 +476,14 @@ export default function Order({ onBack }: OrderProps) {
                         </div>
                       )}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} style={{ width: "28px", height: "28px", border: "none", background: "none", cursor: "pointer", fontSize: "20px", color: fg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>−</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} aria-label="Decrease quantity" style={{ background: "hsl(var(--raised, 38 30% 97.5%))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Minus size={14} strokeWidth={2.5} />
+                      </button>
                       <span style={{ minWidth: "20px", textAlign: "center", fontSize: "14px", fontFamily: "Raleway, inherit", color: fg }}>{line.qty}</span>
-                      <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} style={{ width: "28px", height: "28px", border: "none", background: "none", cursor: "pointer", fontSize: "20px", color: fg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>+</button>
+                      <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} aria-label="Increase quantity" style={{ background: "hsl(var(--raised, 38 30% 97.5%))", border: "0.5px solid hsl(var(--border))", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Plus size={14} strokeWidth={2.5} />
+                      </button>
                       {units > 1 && <span style={{ fontSize: "10px", fontFamily: "Raleway, inherit", color: muted }}>= {line.qty * units}</span>}
                     </div>
                   </div>

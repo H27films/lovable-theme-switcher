@@ -489,7 +489,7 @@ return createPortal(
                     <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textTransform: "uppercase" }}>Balance</span>
                     <span style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: balance != null && Number(balance) <= 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground, 0 0% 100%))" }}>{balance ?? "—"}</span>
                   </div>
-                  <button onClick={() => setOrderEntries(prev => prev.filter(e => e.id !== entry.id))} style={{ background: "#ffffff", border: "0.5px solid hsl(var(--border, 0 0% 50%))", cursor: "pointer", padding: 0, color: "hsl(0 60% 35%)", flexShrink: 0, width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <button onClick={() => setOrderEntries(prev => prev.filter(e => e.id !== entry.id))} aria-label="Remove product" style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "hsl(0 60% 35%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <X size={16} />
                   </button>
                 </div>
