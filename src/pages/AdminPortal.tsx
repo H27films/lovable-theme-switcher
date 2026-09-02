@@ -130,26 +130,25 @@ const AdminPortal = () => {
             flexDirection: "column",
             justifyContent: "flex-start",
             alignItems: "flex-start",
-            padding: "0 10px 10px 0", // no left padding — branches box sits flush against the screen edge
+            padding: "0 10px 0 0", // no left/bottom padding — box flush left and to the bottom of the page
           }}
         >
           {/* Main container box - LEFT HALF - FULL HEIGHT */}
           <div
             style={{
               width: "66%",
-              height: tablet ? `calc(${TABLET_FIT_HEIGHT} - 32px)` : "calc(100dvh - 32px)",
+              height: tablet ? `calc(${TABLET_FIT_HEIGHT} - 16px)` : "calc(100dvh - 16px)", // only the 16px top gap — box reaches the bottom of the page
               background: "rgba(255, 255, 255, 0.10)",
               backdropFilter: "blur(14px)",
               WebkitBackdropFilter: "blur(14px)",
-              borderRadius: "0 32px 32px 0", // square left corners — box meets the screen edge with no gap
+              borderRadius: "0 32px 0 0", // square left + bottom-right corners — box meets screen edge and page bottom flat
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 4px 30px rgba(0,0,0,0.10)",
               overflow: "hidden",
               zIndex: 10,
               position: "relative",
-              marginTop: "16px",
-              marginBottom: "16px",
+              marginTop: "16px", // the only gap — at the top
             }}
           >
             {/* Branches section */}
@@ -280,7 +279,7 @@ const AdminPortal = () => {
           display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            gap: "2px",
+            gap: "0px", // shapes touch — pill and circle joined edge to edge
           }}
         >
           {/* Order Pill */}
