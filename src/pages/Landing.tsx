@@ -239,19 +239,12 @@ export default function Landing() {
               color: "hsl(var(--foreground))",
             }}
           >
+            <img
+              src="/AdminIcon.svg"
+              alt=""
+              style={{ width: "40px", height: "40px", objectFit: "contain" }}
+            />
             Admin Portal
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
           </div>
 
           {/* Phone / Tablet toggle */}
