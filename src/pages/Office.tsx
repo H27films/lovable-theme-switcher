@@ -164,11 +164,11 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
   // ─── SALES HELPERS ───────────────────────────────────────────────
   const BRANCHES = [
-    // Design palette: Desert Rock / Soft Sandstone / Creamed Oat.
+    // Design palette: Desert Rock / Soft Sandstone / Mocha.
     // highlight = tonal step of the same palette, used in Day view for days over 5k.
-    { key: "Boudoir", color: "#A48D78", highlight: "#86705E" },      // Desert Rock (darker step)
+    { key: "Boudoir", color: "#A48D78", highlight: "#6B5545" },      // Desert Rock (deep dark step)
     { key: "Chic Nailspa", color: "#CBB9A4", highlight: "#A48D78" }, // Soft Sandstone (Desert Rock step)
-    { key: "Nur Yadi", color: "#E6DAC8", highlight: "#CBB9A4" },     // Creamed Oat (Soft Sandstone step)
+    { key: "Nur Yadi", color: "#B7A49C", highlight: "#9A867E" },     // Mocha (darkened step)
   ];
 
   const fetchSales = React.useCallback(async () => {
@@ -233,20 +233,25 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
       return true;
     });
     // Group into fixed date bands: 1-7, 8-14, 15-21, 22-end
-    const bandMap: Record<string, { total: number; sortKey: string }> = {};
+    const bandMap: Record<string, { total: number; sortKey: string; period: string }> = {};
     filtered.forEach(r => {
       const d = new Date(r.Date + "T00:00:00");
       const day = d.getDate();
       const bandStart = day <= 7 ? 1 : day <= 14 ? 8 : day <= 21 ? 15 : 22;
+      // Full period covered by the band (e.g. "22-31 Aug"): bands end at
+      // bandStart+6, except the last band which runs to the month's final day.
+      const lastDayOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      const bandEnd = bandStart === 22 ? lastDayOfMonth : bandStart + 6;
       const startDate = new Date(d.getFullYear(), d.getMonth(), bandStart);
       const label = startDate.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
+      const period = `${bandStart}-${bandEnd} ${monthNameShort(r.Date.slice(5, 7))}`;
       const sortKey = r.Date.slice(0, 7) + "-" + String(bandStart).padStart(2, "0");
-      if (!bandMap[label]) bandMap[label] = { total: 0, sortKey };
+      if (!bandMap[label]) bandMap[label] = { total: 0, sortKey, period };
       bandMap[label].total += Number(r["Total GST"]) || 0;
     });
     return Object.entries(bandMap)
       .sort((a, b) => a[1].sortKey.localeCompare(b[1].sortKey))
-      .map(([week, { total }]) => ({ week, total }));
+      .map(([week, { total, period }]) => ({ week, total, period }));
   };
 
   const buildDailyData = (branch: string) => {
@@ -542,10 +547,13 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                               cursor="pointer"
                               shape={makeRoundedBar(color, highlight, salesViewMode === "day")}
                               onClick={(barData: any) => {
-                                if (tappedBar?.branchKey === key && tappedBar?.label === barData.week) {
+                                // Weekly bars carry a full "period" label (e.g. "22-31 Aug");
+                                // daily bars fall back to their own label.
+                                const barLabel = barData.period ?? barData.week;
+                                if (tappedBar?.branchKey === key && tappedBar?.label === barLabel) {
                                   setTappedBar(null);
                                 } else {
-                                  setTappedBar({ branchKey: key, label: barData.week, total: barData.total });
+                                  setTappedBar({ branchKey: key, label: barLabel, total: barData.total });
                                 }
                               }}
                             />
