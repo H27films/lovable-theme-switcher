@@ -487,7 +487,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             </div>
                           )}
                           <ResponsiveContainer width="100%" height={160}>
-                          <BarChart data={data} barCategoryGap="25%" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                          <BarChart data={data} barCategoryGap="10%" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
                               dataKey="week"
@@ -503,12 +503,12 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                               axisLine={false}
                               tickLine={false}
                               tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`}
-                              width={36}
+                              width={30}
                             />
                             <Bar
                               dataKey="total"
                               isAnimationActive={false}
-                              maxBarSize={40}
+                              maxBarSize={52}
                               cursor="pointer"
                               shape={makeRoundedBar(color, highlight, salesViewMode === "day")}
                               onClick={(barData: any) => {
