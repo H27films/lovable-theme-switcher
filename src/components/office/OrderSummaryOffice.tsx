@@ -105,16 +105,31 @@ interface OrderSummaryProps {
   products: OfficeProduct[];
   /** Ref to the page's scrollable order-lines area — scrolled back to top on expand so the Add product row stays visible above the summary. */
   scrollRef: React.RefObject<HTMLDivElement | null>;
+  /** Controlled expanded state — when provided, the page owns expand/collapse (it hides the bottom nav while the sheet is open). */
+  expanded?: boolean;
+  /** Fired on every expand/collapse so the page can react (hide/reveal the bottom nav). */
+  onExpandedChange?: (expanded: boolean) => void;
+  /** Overlay mode: the expanded summary renders as a full-height sheet covering the page below `overlayTop` px instead of expanding in-flow. */
+  overlay?: boolean;
+  /** Top offset (px) for the overlay sheet — pass the measured ORDER top bar height so the sheet starts just below the header. */
+  overlayTop?: number;
 }
 
 // "Order Summary" block of the office Order page (extracted from src/pages/Order.tsx). Mirrors the
 // branch OrderSummary behaviour: collapsed by default into a slim footer bar pinned to the bottom of
-// the page; tapping it expands in-flow — the section is a normal flex child that pushes the order list
-// above it up, scrolling internally like part of the page rather than an overlay. Tapping the expanded
-// "Order Summary" header row collapses it back down.
-export default function OrderSummaryOffice({ orderLines, setOrderLines, products, scrollRef }: OrderSummaryProps) {
-  const [expanded, setExpanded] = useState(false);
+// the page; tapping it expands (overlay mode: a full-height sheet starting just below the ORDER top
+// bar so it covers the supplier filter / Add product rows; otherwise in-flow, pushing the order list
+// above it up). Tapping the expanded "Order Summary" header row collapses it back down.
+export default function OrderSummaryOffice({ orderLines, setOrderLines, products, scrollRef, expanded: expandedProp, onExpandedChange, overlay = false, overlayTop = 0 }: OrderSummaryProps) {
+  const [expandedInternal, setExpandedInternal] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
+  // Controlled when the page passes `expanded` (so it can hide the bottom nav while
+  // the sheet is open); falls back to internal state when uncontrolled.
+  const expanded = expandedProp ?? expandedInternal;
+  const changeExpanded = (next: boolean) => {
+    if (expandedProp === undefined) setExpandedInternal(next);
+    onExpandedChange?.(next);
+  };
 
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
@@ -125,7 +140,7 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
     // Keep the Add product row visible: since the summary expands in-flow and compresses the list
     // above it, scroll the list back to its top so the search row sits right above the summary.
     if (next) scrollRef.current?.scrollTo({ top: 0 });
-    setExpanded(next);
+    changeExpanded(next);
   };
 
   // Order lines grouped by the chosen / default supplier.
@@ -150,12 +165,21 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
   });
 
   return (
-    <div style={expanded ? { flexShrink: 1, minHeight: 0, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", borderTop: border, paddingTop: "20px", paddingBottom: "8px" } : { flexShrink: 0 }}>
+    <div style={expanded ? (overlay ? {
+      /* Overlay sheet mode: absolutely positioned full-height sheet anchored just below
+         the ORDER top bar (overlayTop) with an opaque page background, so it covers the
+         supplier filter and Add product rows. Scrolling happens inside the sheet. */
+      position: "absolute", top: overlayTop, left: 0, right: 0, bottom: 0, zIndex: 60,
+      background: "hsl(var(--background))",
+      overflowY: "auto", paddingLeft: "12px", paddingRight: "12px",
+      borderTop: border, paddingTop: "20px",
+      paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
+    } : { flexShrink: 1, minHeight: 0, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", borderTop: border, paddingTop: "20px", paddingBottom: "8px" }) : { flexShrink: 0 }}>
       {expanded ? (
-        /* Expanded — in-flow block mirroring the branch OrderSummary: a normal flex child that pushes
-           the order list above it up, scrolling internally instead of overlaying. */
+        /* Expanded — overlay sheet (default) covering the page from just below the ORDER
+           header down, or in-flow block pushing the order list up when overlay is off. */
         <>
-          <div onClick={() => setExpanded(false)} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px", cursor: "pointer" }}>
+          <div onClick={() => changeExpanded(false)} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px", cursor: "pointer" }}>
             <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, letterSpacing: "0.08em" }}>{totalItems} {totalItems === 1 ? "Product" : "Products"}</div>
           </div>

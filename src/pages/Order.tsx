@@ -75,10 +75,17 @@ export default function Order({ onBack }: OrderProps) {
   const [belowParList, setBelowParList] = useState<OfficeProduct[]>([]);
   const [editParProduct, setEditParProduct] = useState<OfficeProduct | null>(null);
   const [editParValue, setEditParValue] = useState<string>("");
+  // Expanded Order Summary sheet state + bottom-nav reveal (swipe up from the page bottom).
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [summaryNavVisible, setSummaryNavVisible] = useState(false);
+  // Measured height of the ORDER top bar — the summary sheet starts just below it.
+  const [topBarH, setTopBarH] = useState(0);
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
   const orderScrollRef = useRef<HTMLDivElement>(null);
+  const topBarRef = useRef<HTMLDivElement | null>(null);
+  const summaryNavSwipe = useRef<{ startY: number } | null>(null);
 
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
@@ -88,6 +95,54 @@ export default function Order({ onBack }: OrderProps) {
     fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
     letterSpacing: "0.12em", textTransform: "uppercase", color: muted,
   };
+
+  // ── ORDER SUMMARY SHEET ──────────────────────────────────
+  // Measure the ORDER top bar so the expanded Order Summary sheet starts exactly
+  // below it — covering the ALL SUPPLIERS filter and Add product rows too.
+  // (ResizeObserver keeps the offset correct across widths / font-size clamps.)
+  useEffect(() => {
+    const el = topBarRef.current;
+    if (!el) return;
+    const measure = () => setTopBarH(el.offsetHeight);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Collapse the sheet if the order is emptied while it is open (e.g. Clear Order).
+  useEffect(() => {
+    if (orderLines.length === 0 && summaryExpanded) setSummaryExpanded(false);
+  }, [orderLines.length, summaryExpanded]);
+
+  // ── SUMMARY SHEET NAV GESTURE ────────────────────────────
+  // The bottom nav is hidden while the expanded Order Summary sheet is open:
+  // swipe up from the bottom edge of the screen to reveal it, swipe down to hide
+  // it again. (Same pattern as the Sales panel on the Office page.)
+  useEffect(() => {
+    if (from !== "office" || !summaryExpanded) { setSummaryNavVisible(false); return; }
+    const EDGE_ZONE = 64;  // gesture only starts within this many px of the screen bottom
+    const THRESHOLD = 36;  // swipe distance (px) needed to toggle the nav
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      summaryNavSwipe.current = t.clientY > window.innerHeight - EDGE_ZONE ? { startY: t.clientY } : null;
+    };
+    const onMove = (e: TouchEvent) => {
+      const start = summaryNavSwipe.current;
+      if (!start) return;
+      const dy = start.startY - e.touches[0].clientY; // positive = swiping up
+      if (dy > THRESHOLD && !summaryNavVisible) { setSummaryNavVisible(true); summaryNavSwipe.current = null; }
+      else if (dy < -THRESHOLD && summaryNavVisible) { setSummaryNavVisible(false); summaryNavSwipe.current = null; }
+    };
+    const opts = { capture: true, passive: true };
+    window.addEventListener("touchstart", onStart, opts);
+    window.addEventListener("touchmove", onMove, opts);
+    return () => {
+      window.removeEventListener("touchstart", onStart, opts);
+      window.removeEventListener("touchmove", onMove, opts);
+    };
+  }, [from, summaryExpanded, summaryNavVisible]);
 
   // Load products — paginated to fetch ALL rows
   useEffect(() => {
@@ -266,7 +321,7 @@ export default function Order({ onBack }: OrderProps) {
       ...slideExitStyle(exiting),
     }}>
       {/* Top bar */}
-      <div style={{
+      <div ref={topBarRef} style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
       }}>
@@ -496,13 +551,18 @@ export default function Order({ onBack }: OrderProps) {
         )}
       </div>
 
-      {/* Order Summary footer — collapsible bottom sheet */}
+      {/* Order Summary footer — collapsible bottom sheet (overlay mode: expands into a
+          full-height sheet starting just below the ORDER header, covering everything below it) */}
       {orderLines.length > 0 && (
         <OrderSummaryOffice
           orderLines={orderLines}
           setOrderLines={setOrderLines}
           products={products}
           scrollRef={orderScrollRef}
+          expanded={summaryExpanded}
+          onExpandedChange={setSummaryExpanded}
+          overlay
+          overlayTop={topBarH}
         />
       )}
 
@@ -757,7 +817,10 @@ export default function Order({ onBack }: OrderProps) {
       {from === "office" && (
         <BottomNavOffice
           active="order"
-          raised={orderLines.length > 0}
+          raised={orderLines.length > 0 && !summaryExpanded}
+          // Hidden while the expanded Order Summary sheet is open; swipe up from the
+          // bottom edge of the page reveals it (swipe down hides it again).
+          hidden={summaryExpanded && !summaryNavVisible}
           onSelect={(key) => {
             if (key === "order") return; // already on the Order page
             if (key === "home") slideTo("/simple/office", undefined, "back");
