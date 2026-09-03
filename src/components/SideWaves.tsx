@@ -111,7 +111,7 @@ export default function SideWaves({ color, style, animateIn = true, backdropColo
           top: 0,
           bottom: 0, // anchored stretch — parent only sets min-height, so height:100% may not resolve
           zIndex: 15,
-          width: "clamp(80px, 14vw, 120px)", // narrow band — stays close to the left edge
+          width: "80px", // FIXED width — deliberately does not grow with the viewport (14vw made the band widen on wide pages / tablet zoom, riding over the Branches text and pills). Max wave reach = 56% × 80px ≈ 45px, clear of the 44px content indent.
           pointerEvents: "none",
           overflow: "hidden",
           ...style,

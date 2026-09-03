@@ -157,7 +157,7 @@ const AdminPortal = () => {
             <div
               style={{
                 flex: 1,
-                padding: tablet ? "12px 12px 12px 40px" : "16px 16px 16px 44px", // extra left indent — title + rows sit inside the glass box, clear of the wave
+                padding: tablet ? "12px 12px 12px 44px" : "16px 16px 16px 44px", // extra left indent (44px both modes) — title + rows sit inside the glass box, clear of the wave band's fixed ~45px max reach
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "flex-start",
