@@ -173,7 +173,8 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
         {!loadingLog && grnGroups.length === 0 && (
           <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
         )}
-        {!loadingLog && grnGroups.map(group => {
+        {!loadingLog && grnGroups.map((group, idx) => {
+          const showDate = idx === 0 || grnGroups[idx - 1].date !== group.date;
           const isOpen = expandedGRNs.has(group.grn);
           const isOfficeGRN = group.grn.startsWith("OFFICE");
           const groupTotal = isOfficeGRN && isOpen
@@ -189,7 +190,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
                 onClick={() => toggleGRN(group.grn)}
                 style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "9px 0", borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)", cursor: "pointer", alignItems: "center" }}
               >
-                <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDate(group.date)}</div>
+                <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", visibility: showDate ? "visible" : "hidden" }}>{fmtDate(group.date)}</div>
                 <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{group.grn}</div>
                 <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {group.supplier}{groupTotal !== null ? ` — RM ${groupTotal.toFixed(2)}` : ""}
