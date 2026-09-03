@@ -51,6 +51,10 @@ const LAYERS: WaveLayer[] = [
   },
 ];
 
+// The deepest (last) layer's silhouette fully contains every other layer at
+// every point of its morph cycle, so it doubles as the opaque backdrop shape.
+const DEEPEST_LAYER = LAYERS[LAYERS.length - 1];
+
 interface SideWavesProps {
   /** Override the default palette with a single fill colour. */
   color?: string;
@@ -58,9 +62,17 @@ interface SideWavesProps {
   style?: CSSProperties;
   /** Play the fade-in on mount. */
   animateIn?: boolean;
+  /**
+   * Opaque page-background colour painted beneath the wave fills. The waves
+   * are translucent, so content sitting behind the band (e.g. AdminPortal's
+   * glass branches box) shows through them. When set, an opaque silhouette
+   * matching the deepest wave layer is rendered first, hiding whatever is
+   * behind the band while the waves keep their translucent look.
+   */
+  backdropColor?: string;
 }
 
-export default function SideWaves({ color, style, animateIn = true }: SideWavesProps) {
+export default function SideWaves({ color, style, animateIn = true, backdropColor }: SideWavesProps) {
   // Respect users who prefer reduced motion
   const [reducedMotion] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -121,6 +133,27 @@ export default function SideWaves({ color, style, animateIn = true }: SideWavesP
               <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" />
             </filter>
           </defs>
+          {/* Opaque backdrop silhouette (deepest layer's shape) — painted first
+              so both translucent waves render on top of it. When backdropColor
+              is set it erases whatever sits behind the band (e.g. the glass
+              branches box), so the waves read as flowing over the bare page.
+              It morphs in lockstep with the deepest layer, which fully contains
+              the front layer at every point of the a/b cycle. */}
+          {backdropColor && (
+            <path d={DEEPEST_LAYER.a} fill={backdropColor}>
+              {!reducedMotion && (
+                <animate
+                  attributeName="d"
+                  dur={`${DEEPEST_LAYER.dur}s`}
+                  repeatCount="indefinite"
+                  calcMode="spline"
+                  keyTimes="0;0.5;1"
+                  keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+                  values={`${DEEPEST_LAYER.a};${DEEPEST_LAYER.b};${DEEPEST_LAYER.a}`}
+                />
+              )}
+            </path>
+          )}
           {LAYERS.map((layer, i) => (
             <path
               key={i}

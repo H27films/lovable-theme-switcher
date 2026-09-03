@@ -43,8 +43,10 @@ const AdminPortal = () => {
         ...slideExitStyle(exiting),
       }}
     >
-      {/* SideWaves Animation - flows from left */}
-      <SideWaves animateIn={!exiting} />
+      {/* SideWaves Animation - flows from left. backdropColor matches the page
+          gradient so the wave silhouette is opaque over the glass box — the
+          branches box no longer shows through the waves. */}
+      <SideWaves animateIn={!exiting} backdropColor="#f3efe8" />
 
       {/* Background SVG */}
        <div
