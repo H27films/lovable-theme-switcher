@@ -21,7 +21,10 @@ interface OrderPanelProps {
   onBack: () => void;
   onSuccess?: () => void;
   onPastOrdersChange?: (expanded: boolean) => void;
+  /** Branch favourite check (useBranchFavourites.isFav) */
   isFav?: (p: any) => boolean;
+  /** Branch low-balance threshold lookup (useBranchFavourites.lowBalanceOf) — used by the Low Balance overlay. */
+  lowBalanceOf?: (p: any) => number | null;
   isColour?: (p: any) => boolean;
   nameOf?: (p: any) => string;
   allowedIds?: Set<number>;
@@ -31,14 +34,14 @@ interface OrderPanelProps {
 
 export const OrderPanel = ({
   config, products, setProducts, branchLog, refreshBranchLog, onBack, onSuccess, onPastOrdersChange,
-  isFav: propIsFav, isColour: propIsColour, nameOf: propNameOf, allowedIds, toggleFavourite
+  isFav: propIsFav, lowBalanceOf, isColour: propIsColour, nameOf: propNameOf, allowedIds, toggleFavourite
 }: OrderPanelProps) => {
   const checkFav = propIsFav || makeIsFavourite(config.favouriteKey);
   const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
   const getName = propNameOf || ((p: any) => p["PRODUCT NAME"]);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
-  // Count of the branch's favourites for the "LOW BALANCE (n)" button (same rules as the overlay).
-  const lowBalanceCount = getLowBalanceProducts(products, config, { isFav: checkFav }).length;
+  // Count of the Low Balance list (favourites + below-low-balance) for the "LOW BALANCE (n)" button (same rules as the overlay).
+  const lowBalanceCount = getLowBalanceProducts(products, config, { isFav: checkFav, lowBalanceOf }).length;
   const { tablet } = useTabletMode();
 
   const [orderEntries, setOrderEntries] = useState<{ id: number; productName: string; qty: number }[]>([]);
@@ -594,13 +597,14 @@ return createPortal(
         </div>
       )}
 
-      {/* LOW BALANCE overlay panel — the branch's favourites; rows toggle order entries; title/DONE/✕ close it */}
+      {/* LOW BALANCE overlay panel — the branch's favourites + below-low-balance products; rows toggle order entries; title/DONE/✕ close it */}
       {showLowBalance && (
         <LowBalancePanel
           config={config}
           products={products}
           setProducts={setProducts}
           isFav={checkFav}
+          lowBalanceOf={lowBalanceOf}
           toggleFavourite={toggleFavourite}
           isProductInOrder={(productName) => orderEntries.some(e => e.productName === productName)}
           onToggleProduct={(p) => {

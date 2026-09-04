@@ -11,6 +11,8 @@ interface LowBalancePanelProps {
   setProducts: React.Dispatch<React.SetStateAction<OfficeProduct[]>>;
   /** Branch favourite check (useBranchFavourites.isFav) — falls back to the AllFileProducts favourite column. */
   isFav?: (p: any) => boolean;
+  /** Branch low-balance threshold lookup (useBranchFavourites.lowBalanceOf) — Favourites table LOW BALANCE column. */
+  lowBalanceOf?: (p: any) => number | null;
   /** Branch favourite toggle (useBranchFavourites.toggleFavourite) — drives the star button in each row. */
   toggleFavourite?: (p: any) => void | Promise<void>;
   /** Is the product (matched by PRODUCT NAME) currently in the branch order? */
@@ -33,20 +35,34 @@ const hdrStyle: React.CSSProperties = {
 };
 
 /**
- * The branch's favourite products — the Low Balance list. Everything marked TRUE
- * in the branch's Favourites column (Favourites table via isFav; falls back to the
- * AllFileProducts favourite column), shown regardless of PAR level. Rows are deduped
- * by PRODUCT NAME (branch order entries are keyed by name) and sorted A–Z.
+ * The branch's Low Balance list. A product is included when EITHER:
+ *  - it's marked TRUE in the branch's Favourites column (Favourites table via isFav;
+ *    falls back to the AllFileProducts favourite column), OR
+ *  - its branch balance is LOWER than the branch's LOW BALANCE threshold from the
+ *    Favourites table (e.g. BOUDOIR BALANCE < BOUDOIR LOW BALANCE), via `lowBalanceOf`.
+ * A missing/zero balance counts as below any positive threshold. Products without a
+ * Favourites row have no threshold, so only the favourite rule can include them.
+ * Rows are deduped by PRODUCT NAME (branch order entries are keyed by name) and sorted A–Z.
  */
 export const getLowBalanceProducts = (
   products: OfficeProduct[],
   config: BranchConfig,
-  opts?: { isFav?: (p: any) => boolean }
+  opts?: { isFav?: (p: any) => boolean; lowBalanceOf?: (p: any) => number | null }
 ): OfficeProduct[] => {
   const isFav = opts?.isFav || ((p: any) => isYes(p[config.favouriteKey]));
+  const lowBalanceOf = opts?.lowBalanceOf;
+  const balKey = config.balanceKey as string;
   const seen = new Map<string, OfficeProduct>();
   for (const p of products) {
-    if (!isFav(p)) continue;
+    const belowLowBalance = (() => {
+      if (!lowBalanceOf) return false;
+      const threshold = lowBalanceOf(p);
+      if (threshold === null || threshold === undefined) return false;
+      const bal = p?.[balKey];
+      const balNum = bal === null || bal === undefined || bal === "" ? 0 : Number(bal);
+      return !Number.isNaN(balNum) && balNum < threshold;
+    })();
+    if (!isFav(p) && !belowLowBalance) continue;
     const name = p["PRODUCT NAME"];
     if (!name || seen.has(name)) continue;
     seen.set(name, p);
@@ -69,15 +85,15 @@ const balanceCell = (bal: number | null | undefined, par: number | null | undefi
 
 /**
  * "Low Balance" overlay for the branch Order panels (Boudoir / Chic / Nur Yadi).
- * Shows the branch's favourite products (branch Favourites column, regardless of
- * PAR level). Rows are tappable to add/remove the product from the branch order,
- * the branch balance cell is tappable to edit its PAR, and the star toggles the
- * branch's Favourites table entry. The clickable LOW BALANCE title closes the
- * overlay, returning to the order section.
+ * Shows the branch's favourite products plus anything whose branch balance is below
+ * the branch's LOW BALANCE threshold (Favourites table). Rows are tappable to
+ * add/remove the product from the branch order, the branch balance cell is tappable
+ * to edit its PAR, and the star toggles the branch's Favourites table entry. The
+ * clickable LOW BALANCE title closes the overlay, returning to the order section.
  */
 export const LowBalancePanel = ({
   config, products, setProducts,
-  isFav: propIsFav, toggleFavourite,
+  isFav: propIsFav, toggleFavourite, lowBalanceOf,
   isProductInOrder, onToggleProduct, orderItemCount, onClose,
 }: LowBalancePanelProps) => {
   const isFav = propIsFav || ((p: any) => isYes(p[config.favouriteKey]));
@@ -94,7 +110,7 @@ export const LowBalancePanel = ({
     setProducts(prev => prev.map(p => p.id === product.id ? { ...p, "PAR": newPar } : p));
   };
 
-  const lowBalanceProducts = getLowBalanceProducts(products, config, { isFav });
+  const lowBalanceProducts = getLowBalanceProducts(products, config, { isFav, lowBalanceOf });
 
   return (
     <>
@@ -149,7 +165,7 @@ export const LowBalancePanel = ({
         <div style={{ flex: 1, overflowY: "auto" }}>
           {lowBalanceProducts.length === 0 ? (
             <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "24px 16px" }}>
-              All products are above PAR 🎉
+              No favourites and nothing below its low balance 🎉
             </div>
           ) : (
             lowBalanceProducts.map((p, i) => {

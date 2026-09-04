@@ -24,7 +24,7 @@ interface NurYadiProps {
 }
 
 const NurYadi = ({ onBack, onBackToMain, products: propProducts }: NurYadiProps) => {
-  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("nuryadi");
+  const { isFav, isColour, allowedIds, nameOf, lowBalanceOf, toggleFavourite } = useBranchFavourites("nuryadi");
   const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;
 
@@ -550,6 +550,7 @@ const setLogViewToOrders = () => {
           onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
           isFav={isFav}
+          lowBalanceOf={lowBalanceOf}
           isColour={isColour}
           nameOf={nameOf}
           allowedIds={allowedIds}

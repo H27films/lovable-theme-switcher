@@ -25,7 +25,7 @@ interface BoudoirProps {
 }
 
 const Boudoir = ({ onBack, onBackToMain, products: propProducts }: BoudoirProps) => {
-  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("boudoir");
+  const { isFav, isColour, allowedIds, nameOf, lowBalanceOf, toggleFavourite } = useBranchFavourites("boudoir");
   const { tablet } = useTabletMode();
   const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
@@ -618,6 +618,7 @@ const setLogViewToOrders = () => {
           onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
           isFav={isFav}
+          lowBalanceOf={lowBalanceOf}
           isColour={isColour}
           nameOf={nameOf}
           allowedIds={allowedIds}

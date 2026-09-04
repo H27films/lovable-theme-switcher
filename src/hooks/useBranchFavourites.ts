@@ -10,6 +10,10 @@ export interface FavouriteRow {
   "BOUDOIR FAVOURITE": string | null;
   "CHIC NAILSPA FAVOURITE": string | null;
   "NUR YADI FAVOURITE": string | null;
+  /** Low-balance thresholds per branch (live table carries these; types.ts is stale) */
+  "BOUDOIR LOW BALANCE"?: number | null;
+  "CHIC NAILSPA LOW BALANCE"?: number | null;
+  "NUR YADI LOW BALANCE"?: number | null;
 }
 
 /** Favourites table column per branch (verified against the live schema). */
@@ -17,6 +21,13 @@ export const FAVOURITE_COLUMN: Record<BranchKey, string> = {
   boudoir: "BOUDOIR FAVOURITE",
   chic: "CHIC NAILSPA FAVOURITE",
   nuryadi: "NUR YADI FAVOURITE",
+};
+
+/** Favourites table column holding each branch's low-balance threshold. */
+export const LOW_BALANCE_COLUMN: Record<BranchKey, string> = {
+  boudoir: "BOUDOIR LOW BALANCE",
+  chic: "CHIC NAILSPA LOW BALANCE",
+  nuryadi: "NUR YADI LOW BALANCE",
 };
 
 /**
@@ -65,6 +76,15 @@ export const useBranchFavourites = (branch: BranchKey) => {
     return String(row?.["COLOUR"] ?? "").trim().toUpperCase() === "YES";
   }, [bySourceId]);
 
+  /** The branch's low-balance threshold for a product (Favourites table, matched by SOURCE ID). */
+  const lowBalanceOf = useCallback((p: any): number | null => {
+    const row = bySourceId.get(Number(p?.id)) as any;
+    const raw = row?.[LOW_BALANCE_COLUMN[branch]];
+    if (raw === null || raw === undefined || raw === "") return null;
+    const n = Number(raw);
+    return Number.isNaN(n) ? null : n;
+  }, [bySourceId, branch]);
+
   /** Label shown in the dropdown: the Favourites table's PRODUCT NAME. */
   const nameOf = useCallback((p: any) => {
     const row = bySourceId.get(Number(p?.id));
@@ -88,5 +108,5 @@ export const useBranchFavourites = (branch: BranchKey) => {
     }
   }, [bySourceId, column, isFav, refresh]);
 
-  return { favouriteRows: rows, bySourceId, allowedIds, isFav, isColour, nameOf, toggleFavourite, refreshFavourites: refresh };
+  return { favouriteRows: rows, bySourceId, allowedIds, isFav, isColour, nameOf, lowBalanceOf, toggleFavourite, refreshFavourites: refresh };
 };

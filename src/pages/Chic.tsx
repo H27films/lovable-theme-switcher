@@ -24,7 +24,7 @@ interface ChicProps {
 }
 
 const Chic = ({ onBack, onBackToMain, products: propProducts }: ChicProps) => {
-  const { isFav, isColour, allowedIds, nameOf, toggleFavourite } = useBranchFavourites("chic");
+  const { isFav, isColour, allowedIds, nameOf, lowBalanceOf, toggleFavourite } = useBranchFavourites("chic");
   const BALANCE_KEY = chicConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = chicConfig.logBranchName;
 
@@ -550,6 +550,7 @@ const setLogViewToOrders = () => {
           onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
           isFav={isFav}
+          lowBalanceOf={lowBalanceOf}
           isColour={isColour}
           nameOf={nameOf}
           allowedIds={allowedIds}
