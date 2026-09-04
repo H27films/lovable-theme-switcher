@@ -67,7 +67,7 @@ export default function Search({ onBack }: SearchProps) {
   
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(true); // open on landing so the list is visible immediately
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState<"active" | "result" | "supplier">("active");
@@ -266,8 +266,10 @@ const handleSelectProduct = (p: Product) => {
     return fg;
   };
 
-  // Dropdown logic — NO .slice() limits
-  const dropdownContent = search.length > 0 && showDropdown ? (() => {
+  // Dropdown logic — NO .slice() limits.
+  // An empty query matches everything, so the auto-opened dropdown on landing
+  // shows the full Suppliers / Office Favourites / Products / Colours list.
+  const dropdownContent = showDropdown ? (() => {
     const q = search.toLowerCase();
     const allMatched = products.filter(p =>
       p["PRODUCT NAME"]?.toLowerCase().includes(q) &&
