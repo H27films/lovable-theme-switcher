@@ -277,8 +277,8 @@ const handleSelectProduct = (p: Product) => {
     );
 
     const favourites = allMatched.filter(p => isOfficeFav(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-    const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
-    const regular = allMatched.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+const nonColour = allMatched.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
+const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort((a, b) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]));
     
     const matchedSuppliers = Array.from(new Set(
       products
@@ -286,7 +286,7 @@ const handleSelectProduct = (p: Product) => {
         .filter((s): s is string => !!s && s.toLowerCase().includes(q))
     )).sort();
 
-    return { favourites, colours, regular, matchedSuppliers };
+    return { favourites, nonColour, colours, matchedSuppliers };
   })() : null;
 
   // Flat keyboard-navigation targets in visual order:
@@ -294,18 +294,18 @@ const handleSelectProduct = (p: Product) => {
   type DropdownTarget = { kind: "supplier"; supplier: string } | { kind: "product"; product: Product };
   const dropdownTargets: DropdownTarget[] = (() => {
     if (!dropdownContent || !showDropdown) return [];
-    const { favourites, colours, regular, matchedSuppliers } = dropdownContent;
+    const { favourites, colours, nonColour, matchedSuppliers } = dropdownContent;
     return [
       ...matchedSuppliers.map(supplier => ({ kind: "supplier" as const, supplier })),
       ...favourites.map(product => ({ kind: "product" as const, product })),
-      ...regular.map(product => ({ kind: "product" as const, product })),
+      ...nonColour.map(product => ({ kind: "product" as const, product })),
       ...colours.map(product => ({ kind: "product" as const, product })),
     ];
   })();
   const dropdownSectionSizes = {
     suppliers: showDropdown && dropdownContent ? dropdownContent.matchedSuppliers.length : 0,
     favourites: showDropdown && dropdownContent ? dropdownContent.favourites.length : 0,
-    regular: showDropdown && dropdownContent ? dropdownContent.regular.length : 0,
+    nonColour: showDropdown && dropdownContent ? dropdownContent.nonColour.length : 0,
   };
 
   const { activeIndex: resultActiveIdx, handleKeyDown: handleResultKeyNav } =
@@ -411,11 +411,11 @@ const handleSelectProduct = (p: Product) => {
 
         {/* DROPDOWN — inline, all results shown, NO limits */}
         {dropdownContent && showDropdown && (() => {
-          const { favourites, colours, regular, matchedSuppliers } = dropdownContent;
-          const hasResults = favourites.length > 0 || colours.length > 0 || regular.length > 0 || matchedSuppliers.length > 0;
+          const { favourites, colours, nonColour, matchedSuppliers } = dropdownContent;
+          const hasResults = favourites.length > 0 || colours.length > 0 || nonColour.length > 0 || matchedSuppliers.length > 0;
 
           if (!hasResults) {
-            return <div style={{ padding: "20px 0", fontSize: "15px", color: dimColor }}>No results found</div>;
+            return null;
           }
 
           return (
@@ -478,10 +478,10 @@ const handleSelectProduct = (p: Product) => {
               )}
 
               {/* Regular Products */}
-              {regular.length > 0 && (
+              {nonColour.length > 0 && (
                 <>
                   <div style={sectionHeaderBlack}>Products</div>
-                  {regular.map((p, i) => (
+                  {nonColour.map((p, i) => (
                     <ResultRow
                       key={p.id}
                       isActive={resultActiveIdx === dropdownSectionSizes.suppliers + dropdownSectionSizes.favourites + i}
@@ -490,7 +490,7 @@ const handleSelectProduct = (p: Product) => {
                         padding: "12px 20px",
                         marginLeft: "-20px",
                         marginRight: "-20px",
-                        borderBottom: i === regular.length - 1 ? "none" : `1px solid ${border}`,
+                        borderBottom: i === nonColour.length - 1 ? "none" : `1px solid ${border}`,
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -514,7 +514,7 @@ const handleSelectProduct = (p: Product) => {
                   {colours.map((p, i) => (
                     <ResultRow
                       key={p.id}
-                      isActive={resultActiveIdx === dropdownSectionSizes.suppliers + dropdownSectionSizes.favourites + dropdownSectionSizes.regular + i}
+                      isActive={resultActiveIdx === dropdownSectionSizes.suppliers + dropdownSectionSizes.favourites + dropdownSectionSizes.nonColour + i}
                       onSelect={() => handleSelectProduct(p)}
                       style={{
                         padding: "12px 20px",
@@ -759,10 +759,12 @@ const handleSelectProduct = (p: Product) => {
             {products
               .filter(p => p.SUPPLIER === selectedSupplier && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1))
               .sort((a, b) => {
-                // A–Z with non-colour products first, colour products after
-                const aColour = isColourProduct(a) ? 1 : 0;
-                const bColour = isColourProduct(b) ? 1 : 0;
-                if (aColour !== bColour) return aColour - bColour;
+                // Favourites → Non-colour → Colour, A–Z within each group
+                // (mirrors the typed-search dropdown grouping on this page).
+                // Anything not explicitly Colour=YES counts as non-colour.
+                const rank = (p: Product) => (isOfficeFav(p) ? 0 : isColourProduct(p) ? 2 : 1);
+                const byRank = rank(a) - rank(b);
+                if (byRank !== 0) return byRank;
                 return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
               })
               .map((p, i, arr) => (
