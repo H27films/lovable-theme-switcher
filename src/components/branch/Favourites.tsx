@@ -303,7 +303,9 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "24px 16px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
       }}>
-        <div>
+        {/* Title is clickable too — closes the panel back to the branch's default view
+            (same pattern as the clickable LOW BALANCE title on the Order panel) */}
+        <div onClick={onClose} style={{ cursor: "pointer" }}>
           <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: "hsl(var(--foreground))", lineHeight: 1.1 }}>
             FAVOURITES
             <span style={{ fontSize: "0.65em", fontWeight: 300, letterSpacing: "0.06em" }}>
