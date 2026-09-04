@@ -7,6 +7,7 @@ interface OfficeProduct {
   id: number;
   "PRODUCT NAME": string;
   "SUPPLIER PRICE": number | null;
+  "BRANCH PRICE": number | null;
 }
 
 interface LogRow {
@@ -216,11 +217,16 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
         {!loadingLog && grnGroups.map((group, idx) => {
           const showDate = idx === 0 || grnGroups[idx - 1].date !== group.date;
           const isOpen = expandedGRNs.has(group.grn);
-          const isOfficeGRN = group.grn.startsWith("OFFICE");
-          const groupTotal = isOfficeGRN && isOpen
+          // Office = the office's own stock movements (to branches); everything
+          // else is an external supplier delivery. This decides which price each
+          // line is valued at: BRANCH PRICE for Office movements, SUPPLIER PRICE
+          // for supplier deliveries (magnitudes only — qty signs are ignored).
+          const isOfficeSupplier = group.supplier === "Office";
+          const totalValue = isOpen
             ? group.rows.reduce((sum, row) => {
                 const mp = localProducts.find(lp => lp["PRODUCT NAME"] === row["PRODUCT NAME"]);
-                return sum + (mp ? Number(mp["SUPPLIER PRICE"] ?? 0) * Math.abs(row.QTY ?? 0) : 0);
+                const price = mp ? Number(mp[isOfficeSupplier ? "BRANCH PRICE" : "SUPPLIER PRICE"] ?? 0) : 0;
+                return sum + price * Math.abs(row.QTY ?? 0);
               }, 0)
             : null;
 
@@ -233,7 +239,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
                 <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", visibility: showDate ? "visible" : "hidden" }}>{fmtDate(group.date)}</div>
                 <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{group.grn}</div>
                 <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {group.supplier}{groupTotal !== null ? ` — RM ${groupTotal.toFixed(2)}` : ""}
+                  {group.supplier}
                 </div>
                 <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
                 <div />
@@ -246,8 +252,8 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
                 <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
                   {group.rows.map((row, idx) => {
                     const matchedProduct = localProducts.find(lp => lp["PRODUCT NAME"] === row["PRODUCT NAME"]);
-                    const lineTotal = isOfficeGRN && matchedProduct
-                      ? Number(matchedProduct["SUPPLIER PRICE"] ?? 0) * Math.abs(row.QTY ?? 0)
+                    const lineTotal = isOfficeSupplier && matchedProduct
+                      ? Number(matchedProduct["BRANCH PRICE"] ?? 0) * Math.abs(row.QTY ?? 0)
                       : null;
                     return (
                       <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
@@ -255,7 +261,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
                         {/* Product name always spans the GRN + Supplier columns; OFFICE GRNs keep their line price, right-aligned inside the same cell */}
                         <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", whiteSpace: "normal", wordBreak: "break-word", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", minWidth: 0 }}>
                           <span style={{ minWidth: 0 }}>{row["PRODUCT NAME"]}</span>
-                          {isOfficeGRN && (
+                          {isOfficeSupplier && (
                             <span style={{ flexShrink: 0, color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {lineTotal !== null && lineTotal > 0 ? `RM ${lineTotal.toFixed(2)}` : null}
                             </span>
@@ -269,6 +275,15 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
                       </div>
                     );
                   })}
+                  {/* Total value footer — summed line values (abs qty), black text in the GRN column */}
+                  {totalValue !== null && (
+                    <div style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "7px 0 9px 0", borderTop: "0.5px solid hsl(var(--border) / 0.25)", alignItems: "center" }}>
+                      <div />
+                      <div style={{ gridColumn: "2 / 4", fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "#000000" }}>
+                        Total Value: <span style={{ fontWeight: 700 }}>RM {totalValue.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
