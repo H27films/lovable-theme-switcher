@@ -53,7 +53,12 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
   const [logView, setLogView] = useState<LogView>("all");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const moreBusy = useRef(false);
+  // Latest loadMore for the IntersectionObserver (kept in a ref so the
+  // observer effect never needs re-creating every render). Assigned below
+  // right after loadMore is defined.
+  const loadMoreRef = useRef<() => void>(() => {});
 
   // Fetch one page (start..start+PAGE-1) of Order rows, newest first.
   // append=false replaces the list (first load / refresh); append=true merges
@@ -107,12 +112,31 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
     await fetchLog(logRows.length, true);
     moreBusy.current = false;
   };
+  loadMoreRef.current = loadMore;
 
   const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) loadMore();
   };
+
+  // Reliable "near bottom" detection. The Office page (not this component)
+  // is the actual scrolling element, so scrollTop on the inner div never
+  // changes. An IntersectionObserver on a bottom sentinel fires whenever the
+  // sentinel becomes visible in the viewport — no matter which ancestor
+  // scrolls. rootMargin gives ~500px of runway before the very bottom.
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some(e => e.isIntersecting)) loadMoreRef.current();
+      },
+      { rootMargin: "500px 0px 0px 0px", threshold: 0 }
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, []);
 
   // View filter: Branches = office's own stock movements (SUPPLIER = "Office"),
   // Supplier = external supplier movements (SUPPLIER <> "Office").
@@ -278,6 +302,9 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
         {!hasMore && !loadingLog && logRows.length > 0 && (
           <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
         )}
+
+        {/* Bottom sentinel — IntersectionObserver triggers the next page load */}
+        <div ref={sentinelRef} style={{ height: 1 }} />
       </div>
     </div>
   );

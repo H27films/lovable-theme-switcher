@@ -50,6 +50,12 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   // Infinite scroll state (branch log is appended by the host page via onLoadMore)
   const [moreLoading, setMoreLoading] = useState(false);
   const moreBusy = useRef(false);
+  // Bottom sentinels + latest loaders for IntersectionObserver based infinite
+  // scroll (the host page scrolls, not the inner div, so scrollTop won't move).
+  const mainSentinelRef = useRef<HTMLDivElement>(null);
+  const ordersSentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreOrdersRef = useRef<() => void>(() => {});
+  const triggerLoadMoreRef = useRef<() => void>(() => {});
   const branchTherapists = useBranchTherapists(branchDisplayName);
 
   // ── "orders" view state ─────────────────────────────────────────────
@@ -129,6 +135,40 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
       moreBusy.current = false;
     }
   };
+  loadMoreOrdersRef.current = loadMoreOrders;
+  triggerLoadMoreRef.current = triggerLoadMore;
+
+  // IntersectionObserver "near bottom" for the main branch log. Fires when
+  // the bottom sentinel becomes visible in the viewport, no matter which
+  // ancestor is the actual scroll container.
+  useEffect(() => {
+    if (viewType === "orders") return;
+    const sentinel = mainSentinelRef.current;
+    if (!sentinel) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some(e => e.isIntersecting)) triggerLoadMoreRef.current();
+      },
+      { rootMargin: "500px 0px 0px 0px", threshold: 0 }
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, [viewType, onLoadMore, hasMore]);
+
+  // IntersectionObserver "near bottom" for the orders view.
+  useEffect(() => {
+    if (viewType !== "orders") return;
+    const sentinel = ordersSentinelRef.current;
+    if (!sentinel) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some(e => e.isIntersecting)) loadMoreOrdersRef.current();
+      },
+      { rootMargin: "500px 0px 0px 0px", threshold: 0 }
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, [viewType, branchLogName]);
 
   const toggleOrderGRN = (grn: string) => {
     setExpandedOrderGRNs(prev => {
@@ -408,6 +448,8 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
         {!ordersHasMore && !ordersLoading && ordersData.length > 0 && (
           <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
         )}
+        {/* Bottom sentinel — triggers the next page of orders on scroll */}
+        <div ref={ordersSentinelRef} style={{ height: 1 }} />
       </div>
     </div>
   ) : (
@@ -614,6 +656,8 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
         {!hasMore && !moreLoading && onLoadMore && rows.length > 0 && (
           <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
         )}
+        {/* Bottom sentinel — triggers the next page of the branch log on scroll */}
+        <div ref={mainSentinelRef} style={{ height: 1 }} />
       </div>
 
       {editRow && onUpdate && (
