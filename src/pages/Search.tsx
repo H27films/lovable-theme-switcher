@@ -71,6 +71,7 @@ export default function Search({ onBack }: SearchProps) {
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState<"active" | "result" | "supplier">("active");
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Product detail state
   const [productLog, setProductLog] = useState<ProductLog[]>([]);
@@ -224,6 +225,20 @@ const handleSelectProduct = (p: Product) => {
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
+  // Full reset back to the fresh landing state: empty query, full dropdown
+  // reopened, list scrolled to the top and the "Enter Product / Supplier"
+  // line focused. Used by the bottom-nav Search icon (when already on this
+  // page) and by clicking the search line after a product/supplier result.
+  const resetSearch = () => {
+    setSearch("");
+    setSelectedProduct(null);
+    setSelectedSupplier(null);
+    setSearchMode("active");
+    setShowDropdown(true);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
   // Image updates from the ProductImage component: refresh the result view and product list instantly
   const handleProductImageUpdated = (url: string | null) => {
     const id = selectedProduct?.id;
@@ -307,6 +322,21 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
     nonColour: showDropdown && dropdownContent ? dropdownContent.nonColour.length : 0,
   };
 
+  // Supplier result grouping — mirrors the dropdown's FAVOURITES → PRODUCTS →
+  // COLOURS grouping, A–Z within each group (Colour=YES products get their own
+  // COLOURS section instead of blending into the flat list).
+  const supplierGroups = useMemo(() => {
+    const byName = (a: Product, b: Product) => a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
+    const all = selectedSupplier
+      ? products.filter(p => p.SUPPLIER === selectedSupplier && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1))
+      : [];
+    return {
+      favourites: all.filter(p => isOfficeFav(p)).sort(byName),
+      nonColour: all.filter(p => !isOfficeFav(p) && !isColourProduct(p)).sort(byName),
+      colours: all.filter(p => !isOfficeFav(p) && isColourProduct(p)).sort(byName),
+    };
+  }, [products, selectedSupplier, isOfficeFav, isColourProduct]);
+
   const { activeIndex: resultActiveIdx, handleKeyDown: handleResultKeyNav } =
     useDropdownKeyboardNavigation({
       itemCount: dropdownTargets.length,
@@ -385,6 +415,12 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
               setShowDropdown(val.length > 0);
             }}
             onFocus={() => {
+              // Clicking the search line while a product/supplier result is
+              // shown resets back to the beginning: full dropdown, empty input.
+              if (searchMode === "result" || searchMode === "supplier") {
+                resetSearch();
+                return;
+              }
               if (search.length > 0) setShowDropdown(true);
             }}
             placeholder="Enter Product / Supplier"
@@ -406,7 +442,7 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
       </div>
 
       {/* MIDDLE SCROLLABLE AREA */}
-      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 88px)" : "12px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 88px)" : "12px" }}>
 
         {/* DROPDOWN — inline, all results shown, NO limits */}
         {dropdownContent && showDropdown && (() => {
@@ -446,7 +482,7 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
               {/* Office Favourites */}
               {favourites.length > 0 && (
                 <>
-                  <div style={sectionHeaderBlack}>Office Favourites</div>
+                  <div style={sectionHeaderBlack}>FAVOURITES</div>
                   {favourites.map((p, i) => (
                     <ResultRow
                       key={p.id}
@@ -479,7 +515,7 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
               {/* Regular Products */}
               {nonColour.length > 0 && (
                 <>
-                  <div style={sectionHeaderBlack}>Products</div>
+                  <div style={sectionHeaderBlack}>PRODUCTS</div>
                   {nonColour.map((p, i) => (
                     <ResultRow
                       key={p.id}
@@ -509,7 +545,7 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
               {/* Colours */}
               {colours.length > 0 && (
                 <>
-                  <div style={sectionHeader}>Colours</div>
+                  <div style={sectionHeaderBlack}>COLOURS</div>
                   {colours.map((p, i) => (
                     <ResultRow
                       key={p.id}
@@ -755,37 +791,39 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
               <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", minWidth: "64px" }}>Price</div>
               <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", minWidth: "36px" }}>Bal</div>
             </div>
-            {products
-              .filter(p => p.SUPPLIER === selectedSupplier && (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1))
-              .sort((a, b) => {
-                // Favourites → Non-colour → Colour, A–Z within each group
-                // (mirrors the typed-search dropdown grouping on this page).
-                // Anything not explicitly Colour=YES counts as non-colour.
-                const rank = (p: Product) => (isOfficeFav(p) ? 0 : isColourProduct(p) ? 2 : 1);
-                const byRank = rank(a) - rank(b);
-                if (byRank !== 0) return byRank;
-                return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
-              })
-              .map((p, i, arr) => (
-                <div
-                  key={p.id}
-                  onClick={() => handleSelectProduct(p)}
-                  style={{
-                    display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px",
-                    padding: "11px 0",
-                    borderBottom: i < arr.length - 1 ? `0.5px solid ${border}` : "none",
-                    cursor: "pointer", alignItems: "center",
-                  }}
-                >
-                  <div style={{ fontSize: "14px", fontWeight: 300, color: fg }}>{p["PRODUCT NAME"]}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, color: dimColor, textAlign: "center", minWidth: "64px" }}>
-                    {p["SUPPLIER PRICE"] != null ? `RM ${p["SUPPLIER PRICE"].toFixed(2)}` : "—"}
-                  </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, color: p["OFFICE BALANCE"] == null ? dimColor : Number(p["OFFICE BALANCE"]) <= 0 ? "hsl(var(--red))" : "hsl(var(--green))", textAlign: "center", minWidth: "36px" }}>
-                    {p["OFFICE BALANCE"] ?? "—"}
-                  </div>
-                </div>
-              ))}
+            {([
+              { key: "favourites", label: "FAVOURITES" },
+              { key: "nonColour", label: "PRODUCTS" },
+              { key: "colours", label: "COLOURS" },
+            ] as const).map(({ key, label }) => {
+              const rows = supplierGroups[key];
+              if (rows.length === 0) return null;
+              return (
+                <React.Fragment key={key}>
+                  <div style={sectionHeaderBlack}>{label}</div>
+                  {rows.map((p, i, arr) => (
+                    <div
+                      key={p.id}
+                      onClick={() => handleSelectProduct(p)}
+                      style={{
+                        display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px",
+                        padding: "11px 0",
+                        borderBottom: i < arr.length - 1 ? `0.5px solid ${border}` : "none",
+                        cursor: "pointer", alignItems: "center",
+                      }}
+                    >
+                      <div style={{ fontSize: "14px", fontWeight: 300, color: fg }}>{p["PRODUCT NAME"]}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, color: dimColor, textAlign: "center", minWidth: "64px" }}>
+                        {p["SUPPLIER PRICE"] != null ? `RM ${p["SUPPLIER PRICE"].toFixed(2)}` : "—"}
+                      </div>
+                      <div style={{ fontSize: "13px", fontWeight: 300, color: p["OFFICE BALANCE"] == null ? dimColor : Number(p["OFFICE BALANCE"]) <= 0 ? "hsl(var(--red))" : "hsl(var(--green))", textAlign: "center", minWidth: "36px" }}>
+                        {p["OFFICE BALANCE"] ?? "—"}
+                      </div>
+                    </div>
+                  ))}
+                </React.Fragment>
+              );
+            })}
           </div>
         )}
 
@@ -796,7 +834,9 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
         <BottomNavOffice
           active="search"
           onSelect={(key) => {
-            if (key === "search") return; // already on the Search page
+            // Already on the Search page — tapping Search resets back to the
+            // fresh landing state (full dropdown, empty focused input).
+            if (key === "search") { resetSearch(); return; }
             if (key === "home") slideTo("/simple/office", undefined, "back");
             else if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
             else if (key === "sales") slideTo("/simple/office", { openPanel: "sales" }, "back");
