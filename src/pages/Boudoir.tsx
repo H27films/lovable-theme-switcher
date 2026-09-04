@@ -38,6 +38,7 @@ const Boudoir = ({ onBack, onBackToMain, products: propProducts }: BoudoirProps)
   const enterStyle = useSlideEnter();
   const [products, setProducts] = useState<OfficeProduct[]>(propProducts || []);
   const [branchLog, setBranchLog] = useState<LogRow[]>([]);
+  const [branchHasMore, setBranchHasMore] = useState(true);
   const [productLog, setProductLog] = useState<LogRow[]>([]);
 const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(null);
     const [searchMode, setSearchMode] = useState<"idle" | "active" | "result">("idle");
@@ -153,6 +154,23 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
        .order("DATE", { ascending: false })
        .limit(200);
      setBranchLog(sortBranchLog(data || []));
+     setBranchHasMore((data || []).length === 200);
+   };
+
+   // Append the next page of branch log rows when scrolled to the bottom.
+   const loadMoreBranchLog = async () => {
+     const start = branchLog.length;
+     const { data } = await (supabase as any)
+       .from("AllFileLog")
+       .select("*")
+       .eq("BRANCH", BRANCH_LOG_NAME)
+       .order("DATE", { ascending: false })
+       .range(start, start + 199);
+     const batch: LogRow[] = data || [];
+     if (batch.length > 0) {
+       setBranchLog(prev => sortBranchLog([...prev, ...batch.filter(b => !prev.some(p => p.id === b.id))]));
+     }
+     setBranchHasMore(batch.length === 200);
    };
 
 // Product log fetch
@@ -341,7 +359,7 @@ const setLogViewToOrders = () => {
   const alreadyAdded = undefined;
 
   const logTableElement = (
-    <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} />
+    <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} onLoadMore={selectedProduct ? undefined : loadMoreBranchLog} hasMore={!selectedProduct && branchHasMore} />
   );
 
   return (

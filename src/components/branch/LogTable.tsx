@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
@@ -29,9 +29,13 @@ interface LogTableProps {
   scrollWithPage?: boolean;
   /** Show the All / In / Out flow toggle above the column headers (past-data product view). */
   showFlowToggle?: boolean;
+  /** Infinite scroll: called when the user scrolls near the bottom to load the next page of the branch log. */
+  onLoadMore?: () => void;
+  /** Infinite scroll: whether more pages are available from the host page. */
+  hasMore?: boolean;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false, scrollWithPage = false, showFlowToggle = false }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false, scrollWithPage = false, showFlowToggle = false, onLoadMore, hasMore = false }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -43,31 +47,88 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   onTherapistChangeRef.current = onTherapistChange;
   const [editRow, setEditRow] = useState<LogRow | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Infinite scroll state (branch log is appended by the host page via onLoadMore)
+  const [moreLoading, setMoreLoading] = useState(false);
+  const moreBusy = useRef(false);
   const branchTherapists = useBranchTherapists(branchDisplayName);
 
   // ── "orders" view state ─────────────────────────────────────────────
   const [ordersData, setOrdersData] = useState<LogRow[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersMoreLoading, setOrdersMoreLoading] = useState(false);
+  const [ordersHasMore, setOrdersHasMore] = useState(true);
   const [expandedOrderGRNs, setExpandedOrderGRNs] = useState<Set<string>>(new Set());
+  const ordersMoreBusy = useRef(false);
+  const ordersScrollRef = useRef<HTMLDivElement>(null);
+  const ORDERS_PAGE_SIZE = 300;
 
-  useEffect(() => {
-    if (viewType !== "orders" || !branchLogName) return;
-    let cancelled = false;
-    setOrdersLoading(true);
-    (supabase as any)
+  // Fetch one page of this branch's Orders (newest first). The initial page-0
+  // load replaces the list; later pages are appended for infinite scroll.
+  const fetchOrdersPage = useCallback(async (start: number) => {
+    const { data } = await (supabase as any)
       .from("AllFileLog")
       .select("*")
       .eq("TYPE", "Order")
       .eq("BRANCH", branchLogName)
       .order("DATE", { ascending: false })
-      .limit(300)
-      .then(({ data }: { data: LogRow[] | null }) => {
-        if (cancelled) return;
-        setOrdersData(data || []);
-        setOrdersLoading(false);
-      });
+      .range(start, start + ORDERS_PAGE_SIZE - 1);
+    return (data || []) as LogRow[];
+  }, [branchLogName]);
+
+  useEffect(() => {
+    if (viewType !== "orders" || !branchLogName) return;
+    let cancelled = false;
+    setOrdersLoading(true);
+    setOrdersMoreLoading(false);
+    setOrdersHasMore(true);
+    fetchOrdersPage(0).then((batch) => {
+      if (cancelled) return;
+      setOrdersData(batch);
+      setOrdersHasMore(batch.length === ORDERS_PAGE_SIZE);
+      setOrdersLoading(false);
+    });
     return () => { cancelled = true; };
-  }, [viewType, branchLogName]);
+  }, [viewType, branchLogName, fetchOrdersPage]);
+
+  // Append the next page of Orders when the list is scrolled to the bottom.
+  const loadMoreOrders = async () => {
+    if (ordersMoreBusy.current || !ordersHasMore || ordersLoading) return;
+    ordersMoreBusy.current = true;
+    setOrdersMoreLoading(true);
+    const start = ordersData.length;
+    const batch = await fetchOrdersPage(start);
+    if (batch.length > 0) {
+      const seen = new Set(ordersData.map(r => r.id));
+      setOrdersData([...ordersData, ...batch.filter(r => !seen.has(r.id))]);
+    }
+    setOrdersHasMore(batch.length === ORDERS_PAGE_SIZE);
+    setOrdersMoreLoading(false);
+    ordersMoreBusy.current = false;
+  };
+
+  const handleOrdersScroll = () => {
+    const el = ordersScrollRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) loadMoreOrders();
+  };
+
+  // Infinite scroll for the main branch log (host page appends via onLoadMore).
+  const handleMainScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) triggerLoadMore();
+  };
+  const triggerLoadMore = async () => {
+    if (moreBusy.current || moreLoading || !onLoadMore || !hasMore) return;
+    moreBusy.current = true;
+    setMoreLoading(true);
+    try {
+      await onLoadMore();
+    } finally {
+      setMoreLoading(false);
+      moreBusy.current = false;
+    }
+  };
 
   const toggleOrderGRN = (grn: string) => {
     setExpandedOrderGRNs(prev => {
@@ -289,7 +350,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   }, [editRow]);
 
   return viewType === "orders" ? (
-    <div ref={containerRef} style={scrollWithPage ? { width: "100%", minWidth: 0 } : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
+    <div ref={ordersScrollRef} onScroll={handleOrdersScroll} style={scrollWithPage ? { width: "100%", minWidth: 0 } : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {/* Sticky header */}
         <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "54px 1fr 48px 48px 22px", gap: "6px", paddingTop: "8px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
@@ -341,10 +402,16 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             </div>
           );
         })}
+        {ordersMoreLoading && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
+        )}
+        {!ordersHasMore && !ordersLoading && ordersData.length > 0 && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
+        )}
       </div>
     </div>
   ) : (
-    <div ref={containerRef} style={scrollWithPage ? { width: "100%", minWidth: 0 } : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
+    <div ref={containerRef} onScroll={handleMainScroll} style={scrollWithPage ? { width: "100%", minWidth: 0 } : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
         {showFlowToggle && (() => {
           const flowOrder = ["all", "in", "out"] as const;
@@ -541,6 +608,12 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             );
           })}
         </div>
+        {moreLoading && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
+        )}
+        {!hasMore && !moreLoading && onLoadMore && rows.length > 0 && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
+        )}
       </div>
 
       {editRow && onUpdate && (

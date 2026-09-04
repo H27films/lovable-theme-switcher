@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sortLogByBalance } from "@/lib/branchSimpleUtils";
@@ -48,36 +48,76 @@ const allDataHeaderStyle: React.CSSProperties = {
 const fmtDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
+const LOG_PAGE_SIZE = 300;
+
 const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) => {
   const [logRows, setLogRows] = useState<LogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(true);
+  const [moreLoading, setMoreLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [expandedGRNs, setExpandedGRNs] = useState<Set<string>>(new Set());
   const [logView, setLogView] = useState<LogView>("all");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const moreBusy = useRef(false);
 
-  const fetchLog = useCallback(async () => {
-    setLoadingLog(true);
-    (supabase as any)
+  // Fetch one page (start..start+PAGE-1) of Order rows, newest first.
+  // append=false replaces the list (first load / refresh); append=true merges
+  // the next page onto the end (infinite scroll) with dedupe, then re-applies
+  // the canonical balance ordering.
+  const fetchLog = useCallback(async (start: number, append: boolean) => {
+    const { data } = await (supabase as any)
       .from("AllFileLog")
       .select("*")
       .eq("TYPE", "Order")
       .order("DATE", { ascending: false })
-      .limit(300)
-      .then(({ data }: { data: LogRow[] | null }) => {
-        const sorted = sortLogByBalance(data || [], r => r["OFFICE BALANCE"]);
-        setLogRows(sorted);
-        setLoadingLog(false);
-      });
+      .range(start, start + LOG_PAGE_SIZE - 1);
+    const batch: LogRow[] = data || [];
+    const pageHasMore = batch.length === LOG_PAGE_SIZE;
+    if (!append) {
+      setLogRows(sortLogByBalance(batch, r => r["OFFICE BALANCE"]));
+      setHasMore(pageHasMore);
+      setLoadingLog(false);
+      return;
+    }
+    setHasMore(pageHasMore);
+    if (batch.length > 0) {
+      setLogRows(prev =>
+        sortLogByBalance(
+          [...prev, ...batch.filter(b => !prev.some(p => p.id === b.id))],
+          r => r["OFFICE BALANCE"]
+        )
+      );
+    }
+    setMoreLoading(false);
   }, []);
 
   // Initial fetch
   useEffect(() => {
-    fetchLog();
+    fetchLog(0, false);
   }, [fetchLog]);
 
   // Re-fetch when ImportPanel closes (refreshTrigger increments)
   useEffect(() => {
-    if (refreshTrigger !== undefined && refreshTrigger > 0) fetchLog();
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      setHasMore(true);
+      fetchLog(0, false);
+    }
   }, [refreshTrigger, fetchLog]);
+
+  // Append the next page when the user scrolls near the bottom.
+  const loadMore = async () => {
+    if (moreBusy.current || !hasMore || loadingLog) return;
+    moreBusy.current = true;
+    setMoreLoading(true);
+    await fetchLog(logRows.length, true);
+    moreBusy.current = false;
+  };
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) loadMore();
+  };
 
   // View filter: Branches = office's own stock movements (SUPPLIER = "Office"),
   // Supplier = external supplier movements (SUPPLIER <> "Office").
@@ -138,7 +178,7 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+      <div ref={scrollRef} onScroll={handleScroll} style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
 
         {/* Sticky header */}
         <div style={{
@@ -234,6 +274,12 @@ const OfficeLogTable = ({ localProducts, refreshTrigger }: OfficeLogTableProps) 
             </div>
           );
         })}
+        {moreLoading && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
+        )}
+        {!hasMore && !loadingLog && logRows.length > 0 && (
+          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
+        )}
       </div>
     </div>
   );
