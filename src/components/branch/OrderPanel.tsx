@@ -10,6 +10,7 @@ import { OrderSummary, type PersistedPendingOrder } from "./OrderSummary";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "./ResultRow";
 import { useTabletMode } from "@/hooks/useTabletMode";
+import { LowBalancePanel, getLowBalanceProducts } from "./LowBalancePanel";
 
 interface OrderPanelProps {
   config: BranchConfig;
@@ -24,22 +25,28 @@ interface OrderPanelProps {
   isColour?: (p: any) => boolean;
   nameOf?: (p: any) => string;
   allowedIds?: Set<number>;
+  /** Branch favourite toggle (useBranchFavourites.toggleFavourite) — used by the Low Balance overlay star buttons. */
+  toggleFavourite?: (p: any) => void | Promise<void>;
 }
 
 export const OrderPanel = ({
   config, products, setProducts, branchLog, refreshBranchLog, onBack, onSuccess, onPastOrdersChange,
-  isFav: propIsFav, isColour: propIsColour, nameOf: propNameOf, allowedIds
+  isFav: propIsFav, isColour: propIsColour, nameOf: propNameOf, allowedIds, toggleFavourite
 }: OrderPanelProps) => {
   const checkFav = propIsFav || makeIsFavourite(config.favouriteKey);
   const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
   const getName = propNameOf || ((p: any) => p["PRODUCT NAME"]);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
+  // Count of the branch's favourites for the "LOW BALANCE (n)" button (same rules as the overlay).
+  const lowBalanceCount = getLowBalanceProducts(products, config, { isFav: checkFav }).length;
   const { tablet } = useTabletMode();
 
   const [orderEntries, setOrderEntries] = useState<{ id: number; productName: string; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  // "Low Balance" overlay (branch counterpart of the Office Below Par section).
+  const [showLowBalance, setShowLowBalance] = useState(false);
   const orderInputRef = useRef<HTMLInputElement>(null);
 
   const [pendingOrder, setPendingOrder] = useState<PersistedPendingOrder | null>(null);
@@ -325,7 +332,31 @@ return createPortal(
   }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
-          <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
+            {/* LOW BALANCE button — opens the Low Balance overlay (branch Below Par counterpart) */}
+            <button
+              onClick={() => setShowLowBalance(true)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                fontSize: "10px",
+                fontWeight: 600,
+                fontFamily: "Raleway, inherit",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "hsl(var(--foreground, 0 0% 100%))",
+                display: "flex",
+                alignItems: "center",
+                gap: "3px",
+              }}
+            >
+              LOW BALANCE {products.length > 0 && `(${lowBalanceCount})`}
+              <ChevronDown size={11} strokeWidth={2} style={{ color: "hsl(var(--muted-foreground, 0 0% 50%))" }} />
+            </button>
+          </div>
           <button onClick={closePanel} aria-label="Back to menu" title="Back" style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center" }}>
             <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
               <line x1="30" y1="8" x2="1" y2="8" />
@@ -561,6 +592,28 @@ return createPortal(
             <ChevronUp size={14} />
           </button>
         </div>
+      )}
+
+      {/* LOW BALANCE overlay panel — the branch's favourites; rows toggle order entries; title/DONE/✕ close it */}
+      {showLowBalance && (
+        <LowBalancePanel
+          config={config}
+          products={products}
+          setProducts={setProducts}
+          isFav={checkFav}
+          toggleFavourite={toggleFavourite}
+          isProductInOrder={(productName) => orderEntries.some(e => e.productName === productName)}
+          onToggleProduct={(p) => {
+            const name = p["PRODUCT NAME"];
+            setOrderEntries(prev =>
+              prev.some(e => e.productName === name)
+                ? prev.filter(e => e.productName !== name)
+                : [...prev, { id: Date.now(), productName: name, qty: 1 }]
+            );
+          }}
+          orderItemCount={orderEntries.length}
+          onClose={() => setShowLowBalance(false)}
+        />
       )}
     </div>,
     document.body

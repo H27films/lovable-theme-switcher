@@ -553,6 +553,7 @@ const setLogViewToOrders = () => {
           isColour={isColour}
           nameOf={nameOf}
           allowedIds={allowedIds}
+          toggleFavourite={toggleFavourite}
         />,
         document.body
       )}

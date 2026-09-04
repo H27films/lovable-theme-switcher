@@ -7,8 +7,8 @@ import type { BranchKey } from "@/lib/branchSimple";
 /**
  * Row shape of the live `Favourites` Supabase table.
  * NOTE: the generated types.ts is stale — the live table also carries the
- * balance columns below (verified against the database), so reads/writes for
- * those go through the established `(supabase as any)` pattern.
+ * balance / low-balance columns below (verified against the database), so
+ * reads/writes for those go through the established `(supabase as any)` pattern.
  */
 export interface FavouriteProductRow {
   id: number;
@@ -22,6 +22,9 @@ export interface FavouriteProductRow {
   "BOUDOIR BALANCE"?: number | null;
   "CHIC NAILSPA BALANCE"?: number | null;
   "NUR YADI BALANCE"?: number | null;
+  "BOUDOIR LOW BALANCE"?: number | null;
+  "CHIC NAILSPA LOW BALANCE"?: number | null;
+  "NUR YADI LOW BALANCE"?: number | null;
 }
 
 /** Favourites table column holding each branch's favourite flag */
@@ -36,6 +39,13 @@ const BALANCE_COLUMN: Record<BranchKey, string> = {
   boudoir: "BOUDOIR BALANCE",
   chic: "CHIC NAILSPA BALANCE",
   nuryadi: "NUR YADI BALANCE",
+};
+
+/** Favourites table column holding each branch's low-balance threshold */
+const LOW_BALANCE_COLUMN: Record<BranchKey, string> = {
+  boudoir: "BOUDOIR LOW BALANCE",
+  chic: "CHIC NAILSPA LOW BALANCE",
+  nuryadi: "NUR YADI LOW BALANCE",
 };
 
 const BRANCH_LABEL: Record<BranchKey, string> = {
@@ -60,12 +70,15 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  /** Editable low-balance inputs (text as typed), keyed by Favourites row id */
+  const [lowBalValues, setLowBalValues] = useState<Record<number, string>>({});
 
   /** Selection as of last load/save — lets Submit write only what actually changed */
   const baselineRef = useRef<Set<number>>(new Set());
 
   const favCol = FAVOURITE_COLUMN[branch];
   const balCol = BALANCE_COLUMN[branch];
+  const lowCol = LOW_BALANCE_COLUMN[branch];
 
   // Load ALL rows from the Favourites table (paginated, same pattern as the rest of the app)
   const fetchRows = useCallback(async () => {
@@ -91,6 +104,10 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
     list.forEach(r => { if (isTrue((r as any)[FAVOURITE_COLUMN[branch]])) initial.add(r.id); });
     setChecked(initial);
     baselineRef.current = new Set(initial);
+    // Seed the editable low-balance inputs from the freshly loaded rows
+    const initLow: Record<number, string> = {};
+    list.forEach(r => { initLow[r.id] = String((r as any)[LOW_BALANCE_COLUMN[branch]] ?? ""); });
+    setLowBalValues(initLow);
     setLoading(false);
   }, [branch]);
 
@@ -105,6 +122,32 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
       return next;
     });
   }, []);
+
+  /**
+   * Persist a row's low-balance value to the branch's LOW BALANCE column
+   * (Favourites table, matched by row id) — fired on blur / Enter. Saving is
+   * immediate (same pattern as PAR edits / star toggles elsewhere in the app);
+   * clearing the field stores NULL. No-op when the value didn't change.
+   */
+  const commitLowBalance = async (r: FavouriteProductRow, raw: string) => {
+    const text = raw.trim();
+    const parsed = text === "" ? NaN : Number(text);
+    const nextVal = text === "" || isNaN(parsed) ? null : parsed;
+    const prevVal = (((r as any)[lowCol] ?? null) as number | null);
+    if (nextVal === prevVal) return;
+    try {
+      const { error } = await (supabase as any)
+        .from("Favourites")
+        .update({ [lowCol]: nextVal })
+        .eq("id", r.id);
+      if (error) throw error;
+      setRows(prev => prev.map(x => x.id === r.id ? { ...x, [lowCol]: nextVal } as FavouriteProductRow : x));
+    } catch (e: any) {
+      console.error("Low balance save failed:", e);
+      setErrorMsg(e?.message || "Could not save low balance.");
+      setTimeout(() => setErrorMsg(null), 3000);
+    }
+  };
 
   // Filtered view — search matches PRODUCT NAME (same feel as Order's "Add product")
   const visibleRows = (() => {
@@ -251,6 +294,16 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
 
       {/* Product list */}
       <div style={{ flex: 1, overflowY: "auto" }}>
+        {/* Column headers — BAL is read-only stock; LOW BAL is the editable threshold */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          padding: "8px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
+        }}>
+          <div style={{ width: "16px", flexShrink: 0 }} />
+          <div style={{ flex: 1, marginRight: "8px", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>PRODUCT</div>
+          <div style={{ width: "36px", flexShrink: 0, textAlign: "right", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>BAL</div>
+          <div style={{ width: "48px", flexShrink: 0, textAlign: "center", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>LOW BAL</div>
+        </div>
         {loading ? (
           <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", padding: "24px 16px" }}>
             Loading favourites…
@@ -305,11 +358,39 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
 
                 {/* Branch balance — Order.tsx-style colouring */}
                 <div style={{
+                  width: "36px", flexShrink: 0, textAlign: "right",
                   fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit",
-                  color: balanceColour(balance), flexShrink: 0,
+                  color: balanceColour(balance),
                 }}>
                   {balance ?? "—"}
                 </div>
+
+                {/* Low balance — editable threshold; saved to the branch's LOW BALANCE column on blur/Enter */}
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={lowBalValues[r.id] ?? ""}
+                  placeholder="0"
+                  onClick={e => e.stopPropagation()}
+                  onChange={e => setLowBalValues(prev => ({ ...prev, [r.id]: e.target.value }))}
+                  onBlur={e => commitLowBalance(r, e.target.value)}
+                  onKeyDown={e => {
+                    e.stopPropagation();
+                    if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+                    if (e.key === "Escape") {
+                      setLowBalValues(prev => ({ ...prev, [r.id]: String((r as any)[lowCol] ?? "") }));
+                      (e.currentTarget as HTMLInputElement).blur();
+                    }
+                  }}
+                  style={{
+                    width: "48px", flexShrink: 0, textAlign: "center", boxSizing: "border-box",
+                    fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit",
+                    color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))",
+                    background: "hsl(var(--muted))",
+                    border: "0.5px solid hsl(var(--border))",
+                    borderRadius: "6px", outline: "none", padding: "3px 2px",
+                  }}
+                />
               </div>
             );
           })
