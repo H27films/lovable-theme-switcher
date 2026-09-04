@@ -261,18 +261,11 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
               {isOpen && (
                 <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
                   {group.rows.map((row, idx) => {
-                    const lineValue = Number(row["TOTAL VALUE"] ?? 0);
                     return (
                       <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
                         <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
-                        {/* Product name always spans the GRN + Supplier columns; its TOTAL VALUE is right-aligned inside the same cell when present */}
-                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", whiteSpace: "normal", wordBreak: "break-word", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", minWidth: 0 }}>
-                          <span style={{ minWidth: 0 }}>{row["PRODUCT NAME"]}</span>
-                          {lineValue > 0 && (
-                            <span style={{ flexShrink: 0, color: "hsl(var(--muted-foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              RM {lineValue.toFixed(2)}
-                            </span>
-                          )}
+                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", whiteSpace: "normal", wordBreak: "break-word" }}>
+                          {row["PRODUCT NAME"]}
                         </div>
                         <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: (row.BRANCH || "").toLowerCase() === "office" ? "hsl(120 45% 30%)" : "hsl(0 60% 35%)", textAlign: "center" }}>
                           {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
