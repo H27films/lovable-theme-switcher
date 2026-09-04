@@ -72,6 +72,8 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   /** Editable low-balance inputs (text as typed), keyed by Favourites row id */
   const [lowBalValues, setLowBalValues] = useState<Record<number, string>>({});
+  /** Low-balance values as of last load/save — SUBMIT writes only what changed */
+  const lowBalBaselineRef = useRef<Record<number, number | null>>({});
 
   /** Selection as of last load/save — lets Submit write only what actually changed */
   const baselineRef = useRef<Set<number>>(new Set());
@@ -104,10 +106,16 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
     list.forEach(r => { if (isTrue((r as any)[FAVOURITE_COLUMN[branch]])) initial.add(r.id); });
     setChecked(initial);
     baselineRef.current = new Set(initial);
-    // Seed the editable low-balance inputs from the freshly loaded rows
+    // Seed the editable low-balance inputs + baseline (values as of load/save)
     const initLow: Record<number, string> = {};
-    list.forEach(r => { initLow[r.id] = String((r as any)[LOW_BALANCE_COLUMN[branch]] ?? ""); });
+    const initLowBase: Record<number, number | null> = {};
+    list.forEach(r => {
+      const v = ((r as any)[LOW_BALANCE_COLUMN[branch]] ?? null) as number | null;
+      initLow[r.id] = String(v ?? "");
+      initLowBase[r.id] = v;
+    });
     setLowBalValues(initLow);
+    lowBalBaselineRef.current = initLowBase;
     setLoading(false);
   }, [branch]);
 
@@ -122,32 +130,6 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
       return next;
     });
   }, []);
-
-  /**
-   * Persist a row's low-balance value to the branch's LOW BALANCE column
-   * (Favourites table, matched by row id) — fired on blur / Enter. Saving is
-   * immediate (same pattern as PAR edits / star toggles elsewhere in the app);
-   * clearing the field stores NULL. No-op when the value didn't change.
-   */
-  const commitLowBalance = async (r: FavouriteProductRow, raw: string) => {
-    const text = raw.trim();
-    const parsed = text === "" ? NaN : Number(text);
-    const nextVal = text === "" || isNaN(parsed) ? null : parsed;
-    const prevVal = (((r as any)[lowCol] ?? null) as number | null);
-    if (nextVal === prevVal) return;
-    try {
-      const { error } = await (supabase as any)
-        .from("Favourites")
-        .update({ [lowCol]: nextVal })
-        .eq("id", r.id);
-      if (error) throw error;
-      setRows(prev => prev.map(x => x.id === r.id ? { ...x, [lowCol]: nextVal } as FavouriteProductRow : x));
-    } catch (e: any) {
-      console.error("Low balance save failed:", e);
-      setErrorMsg(e?.message || "Could not save low balance.");
-      setTimeout(() => setErrorMsg(null), 3000);
-    }
-  };
 
   // Filtered view — search matches PRODUCT NAME (same feel as Order's "Add product")
   const visibleRows = (() => {
@@ -166,9 +148,10 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
 
   /**
    * Submit: write the branch's favourite column matched by PRODUCT NAME —
-   * checked rows become "TRUE", unchecked become "" (never NULL).
+   * checked rows become "TRUE", unchecked become "" (never NULL) — and the
+   * branch's LOW BALANCE column for every row whose value was edited.
    *
-   * Only rows whose tick state changed since load/save are written, and each
+   * Only rows whose tick/value changed since load/save are written, and each
    * write is chunked into small .in() batches — with ~1,500 products a single
    * all-names request produces an oversized PostgREST URL that fails silently.
    */
@@ -194,14 +177,29 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
         .map(id => nameById.get(id))
         .filter((n): n is string => !!n);
 
-      const totalChanges = addedNames.length + removedNames.length;
-
       const chunk = <T,>(arr: T[], size: number): T[][] => {
         const out: T[][] = [];
         for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
         return out;
       };
       const BATCH = 80; // keeps each PostgREST URL well within limits
+
+      // Low-balance thresholds: only rows whose value changed since load/save,
+      // grouped by value so each distinct value is one .in("id", …) batch.
+      const lowGroups = new Map<string, number[]>();
+      rows.forEach(r => {
+        const text = (lowBalValues[r.id] ?? "").trim();
+        const parsed = text === "" ? NaN : Number(text);
+        const nextVal = text === "" || isNaN(parsed) ? null : parsed;
+        if (nextVal === (lowBalBaselineRef.current[r.id] ?? null)) return;
+        const key = nextVal === null ? "null" : String(nextVal);
+        const ids = lowGroups.get(key) ?? [];
+        ids.push(r.id);
+        lowGroups.set(key, ids);
+      });
+      const lowChanges = Array.from(lowGroups.values()).reduce((sum, ids) => sum + ids.length, 0);
+
+      const totalChanges = addedNames.length + removedNames.length + lowChanges;
 
       for (const batch of chunk(Array.from(new Set(addedNames)), BATCH)) {
         const { error } = await (supabase as any)
@@ -217,10 +215,35 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
           .in("PRODUCT NAME", batch);
         if (error) throw error;
       }
+      for (const [key, ids] of lowGroups) {
+        const val = key === "null" ? null : Number(key);
+        for (const batch of chunk(ids, BATCH)) {
+          const { error } = await (supabase as any)
+            .from("Favourites")
+            .update({ [lowCol]: val })
+            .in("id", batch);
+          if (error) throw error;
+        }
+      }
 
-      // Sync local state + baseline so re-saving only sends new changes
+      // Sync local state + baselines so re-saving only sends new changes
       baselineRef.current = new Set(checked);
-      setRows(prev => prev.map(r => ({ ...r, [favCol]: checked.has(r.id) ? "TRUE" : "" })));
+      const nextLowBase: Record<number, number | null> = { ...lowBalBaselineRef.current };
+      rows.forEach(r => {
+        const text = (lowBalValues[r.id] ?? "").trim();
+        const parsed = text === "" ? NaN : Number(text);
+        nextLowBase[r.id] = text === "" || isNaN(parsed) ? null : parsed;
+      });
+      lowBalBaselineRef.current = nextLowBase;
+      setRows(prev => prev.map(r => {
+        const text = (lowBalValues[r.id] ?? "").trim();
+        const parsed = text === "" ? NaN : Number(text);
+        return {
+          ...r,
+          [favCol]: checked.has(r.id) ? "TRUE" : "",
+          [lowCol]: text === "" || isNaN(parsed) ? null : parsed,
+        } as FavouriteProductRow;
+      }));
       setSuccessMsg(totalChanges === 0 ? "No changes to save" : `Saved · ${totalChanges} ${totalChanges === 1 ? "change" : "changes"}`);
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (e: any) {
@@ -365,7 +388,7 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
                   {balance ?? "—"}
                 </div>
 
-                {/* Low balance — editable threshold; saved to the branch's LOW BALANCE column on blur/Enter */}
+                {/* Low balance — editable threshold; written to the branch's LOW BALANCE column when SUBMIT is pressed */}
                 <input
                   type="number"
                   inputMode="decimal"
@@ -373,12 +396,11 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
                   placeholder="0"
                   onClick={e => e.stopPropagation()}
                   onChange={e => setLowBalValues(prev => ({ ...prev, [r.id]: e.target.value }))}
-                  onBlur={e => commitLowBalance(r, e.target.value)}
                   onKeyDown={e => {
                     e.stopPropagation();
                     if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
                     if (e.key === "Escape") {
-                      setLowBalValues(prev => ({ ...prev, [r.id]: String((r as any)[lowCol] ?? "") }));
+                      setLowBalValues(prev => ({ ...prev, [r.id]: String(lowBalBaselineRef.current[r.id] ?? "") }));
                       (e.currentTarget as HTMLInputElement).blur();
                     }
                   }}
