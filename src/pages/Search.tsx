@@ -812,7 +812,12 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
                         cursor: "pointer", alignItems: "center",
                       }}
                     >
-                      <div style={{ fontSize: "14px", fontWeight: 300, color: fg }}>{p["PRODUCT NAME"]}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 300, color: fg, display: "flex", alignItems: "center", gap: "6px" }}>
+                        {key === "favourites" && (
+                          <Star size={12} fill="currentColor" style={{ color: "#000", flexShrink: 0 }} />
+                        )}
+                        <span>{p["PRODUCT NAME"]}</span>
+                      </div>
                       <div style={{ fontSize: "13px", fontWeight: 300, color: dimColor, textAlign: "center", minWidth: "64px" }}>
                         {p["SUPPLIER PRICE"] != null ? `RM ${p["SUPPLIER PRICE"].toFixed(2)}` : "—"}
                       </div>
