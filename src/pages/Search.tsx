@@ -10,6 +10,7 @@ import { ProductImage } from "@/components/branch/ProductImage";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import { BottomNavOffice } from "@/components/office/BottomNavOffice";
+import { SupplierPast } from "@/components/office/SupplierPast";
 
 interface Product {
   id: number;
@@ -69,6 +70,8 @@ export default function Search({ onBack }: SearchProps) {
   const [showDropdown, setShowDropdown] = useState(true); // open on landing so the list is visible immediately
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
+  // Supplier result sub-view: product dropdown (default) or supplier Past Data box
+  const [supplierView, setSupplierView] = useState<"products" | "past">("products");
   const [searchMode, setSearchMode] = useState<"active" | "result" | "supplier">("active");
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -214,6 +217,7 @@ const handleSelectProduct = (p: Product) => {
     setSelectedProduct(null);
     setShowDropdown(false);
     setSearchMode("supplier");
+    setSupplierView("products"); // each supplier opens on the product dropdown
   };
 
   const handleClear = () => {
@@ -783,9 +787,26 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
         {/* SUPPLIER RESULT */}
         {searchMode === "supplier" && selectedSupplier && !showDropdown && (
           <div style={{ paddingTop: "20px", paddingBottom: "40px" }}>
-            <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, color: fg, marginBottom: "20px" }}>
-              {selectedSupplier}
+            {/* Supplier name + Products / Past Data pill toggle (same style as
+                the product card's Past Data All/In/Out toggle) */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "20px" }}>
+              <div style={{ fontSize: "clamp(20px, 5.5vw, 28px)", fontWeight: 400, color: fg, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {selectedSupplier}
+              </div>
+              <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px", flexShrink: 0 }}>
+                <div style={{ position: "absolute", top: "2px", bottom: "2px", left: "2px", width: "calc((100% - 4px) / 2)", transform: `translateX(${(["products", "past"] as const).indexOf(supplierView) * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
+                {(["products", "past"] as const).map(m => (
+                  <button key={m} onClick={() => setSupplierView(m)} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "64px", padding: "2px 0", fontSize: "8.5px", fontWeight: supplierView === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: supplierView === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
+                    {m === "products" ? "Products" : "Past Data"}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {supplierView === "past" ? (
+              <SupplierPast supplier={selectedSupplier} />
+            ) : (
+              <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "12px", paddingBottom: "8px", borderBottom: `0.5px solid ${border}`, marginBottom: "4px" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em" }}>Product</div>
               <div style={{ fontSize: "11px", fontWeight: 700, color: dimColor, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", minWidth: "64px" }}>Price</div>
@@ -829,6 +850,8 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
                 </React.Fragment>
               );
             })}
+              </>
+            )}
           </div>
         )}
 
