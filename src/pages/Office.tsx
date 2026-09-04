@@ -316,7 +316,6 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
             {/* ══ LOG TABLE ══════════════════════════════════════════════ */}
             <OfficeLogTable
-              localProducts={localProducts}
               refreshTrigger={logRefreshTrigger}
             />
 
