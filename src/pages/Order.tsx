@@ -580,7 +580,14 @@ export default function Order({ onBack }: OrderProps) {
             padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
           }}>
             <div>
-              <div style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg }}>BELOW PAR</div>
+              {/* Title is clickable — closes the overlay and returns to the order section
+                  (same pattern as the clickable ORDER title in the page top bar). */}
+              <div
+                onClick={() => setShowBelowPar(false)}
+                style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}
+              >
+                BELOW PAR
+              </div>
               <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, marginTop: "2px" }}>
                 {belowParList.length} {belowParList.length === 1 ? "product" : "products"} · tap to add/remove from order
               </div>
@@ -818,9 +825,10 @@ export default function Order({ onBack }: OrderProps) {
         <BottomNavOffice
           active="order"
           raised={orderLines.length > 0 && !summaryExpanded}
-          // Hidden while the expanded Order Summary sheet is open; swipe up from the
-          // bottom edge of the page reveals it (swipe down hides it again).
-          hidden={summaryExpanded && !summaryNavVisible}
+          // Hidden while the expanded Order Summary sheet is open (swipe up from the
+          // bottom edge of the page reveals it, swipe down hides it again) and while
+          // the Below Par overlay is open (the nav would otherwise float above it).
+          hidden={(summaryExpanded && !summaryNavVisible) || showBelowPar}
           onSelect={(key) => {
             if (key === "order") return; // already on the Order page
             if (key === "home") slideTo("/simple/office", undefined, "back");
