@@ -9,6 +9,9 @@ import type { BranchKey } from "@/lib/branchSimple";
  * NOTE: the generated types.ts is stale — the live table also carries the
  * balance / low-balance columns below (verified against the database), so
  * reads/writes for those go through the established `(supabase as any)` pattern.
+ * The BALANCE columns are a legacy snapshot nothing updates — the BAL column
+ * displays live AllFileProducts stock instead (see fetchRows), with these
+ * snapshot values only as a fallback when a row has no matching product.
  */
 export interface FavouriteProductRow {
   id: number;
@@ -74,6 +77,13 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
   const [lowBalValues, setLowBalValues] = useState<Record<number, string>>({});
   /** Low-balance values as of last load/save — SUBMIT writes only what changed */
   const lowBalBaselineRef = useRef<Record<number, number | null>>({});
+  /**
+   * Live branch stock from AllFileProducts, keyed by product id (= Favourites.SOURCE ID).
+   * The Favourites table's own BALANCE columns are a stale snapshot nothing updates,
+   * so the BAL column displays the live value instead — the same source the Search
+   * page (and every other balance display in the app) reads from.
+   */
+  const [liveBalances, setLiveBalances] = useState<Map<number, number | null>>(new Map());
 
   /** Selection as of last load/save — lets Submit write only what actually changed */
   const baselineRef = useRef<Set<number>>(new Set());
@@ -99,6 +109,23 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
       if (data.length < batch) break;
       from += batch;
     }
+    // Live branch stock for the BAL column — read from AllFileProducts (the same
+    // source the Search page's product dropdown uses) and matched to each Favourites
+    // row via SOURCE ID (= AllFileProducts.id). The Favourites table's own BALANCE
+    // columns are a stale snapshot nothing updates, so they are not used for display.
+    const balances = new Map<number, number | null>();
+    let pfrom = 0;
+    while (true) {
+      const { data, error } = await (supabase as any)
+        .from("AllFileProducts")
+        .select(`id, "${balCol}"`)
+        .range(pfrom, pfrom + batch - 1);
+      if (error || !data?.length) break;
+      data.forEach((p: any) => balances.set(Number(p.id), (p[balCol] ?? null) as number | null));
+      if (data.length < batch) break;
+      pfrom += batch;
+    }
+    setLiveBalances(balances);
     const list = all as FavouriteProductRow[];
     setRows(list);
     // Pre-tick every product already saved as a favourite for this branch
@@ -338,7 +365,11 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
         ) : (
           visibleRows.map((r, i) => {
             const isChecked = checked.has(r.id);
-            const balance = (r as any)[balCol] as number | null | undefined;
+            // BAL = live AllFileProducts stock (Search-page source) matched via SOURCE ID;
+            // falls back to the row's own snapshot column only when no product matches.
+            const sourceId = r["SOURCE ID"] != null ? Number(r["SOURCE ID"]) : null;
+            const liveBalance = sourceId != null ? liveBalances.get(sourceId) : undefined;
+            const balance = (liveBalance !== undefined ? liveBalance : (r as any)[balCol]) as number | null | undefined;
             return (
               <div
                 key={r.id}
