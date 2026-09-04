@@ -26,9 +26,8 @@ interface Product {
   "NUR YADI BALANCE"?: number | null;
   PAR?: number | null;
   "OFFICE FAVOURITE"?: boolean | string;
-  "Colour"?: boolean | string;
+  "COLOUR"?: string;  // ← Changed from "Colour" to "COLOUR"
   "UNITS/ORDER"?: number | null;
-  /** Public URL of the product image in the PRODUCT_IMAGES storage bucket */
   IMAGES?: string | null;
 }
 
@@ -124,8 +123,8 @@ export default function Search({ onBack }: SearchProps) {
   }, []);
 
   const isColourProduct = useCallback((p: Product) => {
-    // Canonical YES/TRUE detection (any casing) — matches how branch panels read the Colour column
-    return isYes((p as any)["Colour"]);
+    // Check COLOUR column for "YES" / "NO" values
+    return isYes((p as any)["COLOUR"]);
   }, []);
 
 const fetchProductLog = useCallback(async (productName: string) => {
