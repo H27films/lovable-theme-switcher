@@ -10,7 +10,6 @@ import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimp
 import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, sortLogByBalance, sortBranchLogTable, LOG_PAGE_SIZE, LOG_MAX_ROWS, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { BranchHeader } from "@/components/branch/BranchHeader";
-import { BranchHomeHeader } from "@/components/branch/BranchHomeHeader";
 import { BottomNav } from "@/components/branch/BottomNav";
 import { Search } from "@/components/branch/Search";
 import { ProductCard } from "@/components/branch/ProductCard";
@@ -366,9 +365,9 @@ const setLogViewToOrders = () => {
   // Product list already added state (for grey-out) - not used in thin version
   const alreadyAdded = undefined;
 
-  // Log-view tab row (All Data / Salon / Sold / Orders). Rendered inside the
-  // decorated home header on the landing view, or inline above the log table
-  // while a search is active (original layout).
+  // Log-view tab row (All Data / Salon / Sold / Orders). Rendered below the
+  // header on the landing view, or inline above the log table while a search
+  // is active.
   const logViewTabs = (
     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
       <button
@@ -479,12 +478,11 @@ const setLogViewToOrders = () => {
       ...slideExitStyle(exiting),
     }}>
 {/* Header */}
-        {!searchActive && !selectedProduct ? (
-          <BranchHomeHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} onFavouritesSubmitted={goHome}>
-            {logViewTabs}
-          </BranchHomeHeader>
-        ) : (
-          <BranchHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? boudoirConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
+        <BranchHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? boudoirConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
+
+        {/* Log view tabs - below the header on the landing view */}
+        {!searchActive && !selectedProduct && (
+          <div style={{ padding: "2px 12px 0" }}>{logViewTabs}</div>
         )}
 
        
