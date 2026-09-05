@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Menu, Tablet, Laptop, Settings as SettingsIcon, Star } from "lucide-react";
+import { Menu, Tablet, Laptop, Settings as SettingsIcon, Star, KeyRound, type LucideIcon } from "lucide-react";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { SettingsModal } from "./SettingsModal";
@@ -12,6 +12,16 @@ const FAV_BRANCH_BY_NAME: Record<string, BranchKey> = {
   CHIC: "chic",
   "NUR YADI": "nuryadi",
 };
+
+/** One entry in the floating hamburger menu (Apple Books–style segmented pills) */
+interface MenuItem {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  /** "row" = full-width pill bar (default); "grid" = compact square tile in the quick-action grid below the rows */
+  variant?: "row" | "grid";
+  onSelect: () => void;
+}
 
 interface BranchHeaderProps {
   branch: string;
@@ -34,6 +44,39 @@ export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, on
 
   const favBranch = FAV_BRANCH_BY_NAME[(branch ?? "").trim().toUpperCase()];
 
+  // Menu entries — every action/trigger is unchanged; only the layout & styling are new.
+  const menuItems: MenuItem[] = [
+    {
+      key: "view",
+      label: tablet ? "Phone View" : "Tablet View",
+      icon: tablet ? Tablet : Laptop,
+      onSelect: () => { setShowDropdown(false); toggleTablet(); },
+    },
+    {
+      key: "settings",
+      label: "Settings",
+      icon: SettingsIcon,
+      onSelect: () => { setShowDropdown(false); setShowSettingsModal(true); },
+    },
+    ...(favBranch
+      ? [{
+          key: "favourites",
+          label: "Favourites",
+          icon: Star,
+          onSelect: () => { setShowDropdown(false); setShowFavourites(true); },
+        }]
+      : []),
+    {
+      key: "password",
+      label: "Change Password",
+      icon: KeyRound,
+      onSelect: () => { setShowDropdown(false); setShowPasswordModal(true); },
+    },
+  ];
+
+  const rowItems = menuItems.filter((item) => item.variant !== "grid");
+  const gridItems = menuItems.filter((item) => item.variant === "grid");
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -55,26 +98,53 @@ export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, on
         </button>
 
         <div style={{ position: "relative", flexShrink: 0 }} ref={dropdownRef}>
-          <button onClick={() => setShowDropdown(!showDropdown)} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "black" }} aria-label="Menu">
+          <button onClick={() => setShowDropdown(!showDropdown)} aria-label="Menu" aria-expanded={showDropdown} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "black" }}>
             <Menu size={24} color="black" />
           </button>
 
           {showDropdown && (
-            <div style={{ position: "absolute", top: "44px", right: "0px", background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)", zIndex: 1000, minWidth: "160px", padding: "4px" }}>
-              <button onClick={() => { setShowDropdown(false); toggleTablet(); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", fontSize: "14px", fontWeight: 400, letterSpacing: "0.04em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", fontFamily: "Raleway, sans-serif", textAlign: "left" }}>
-                {tablet ? <><Tablet size={16} /> Phone View</> : <><Laptop size={16} /> Tablet View</>}
-              </button>
-              <button onClick={() => { setShowDropdown(false); setShowSettingsModal(true); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", fontSize: "14px", fontWeight: 400, letterSpacing: "0.04em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", fontFamily: "Raleway, sans-serif", textAlign: "left" }}>
-                <SettingsIcon size={16} /> Settings
-              </button>
-              {favBranch && (
-                <button onClick={() => { setShowDropdown(false); setShowFavourites(true); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", fontSize: "14px", fontWeight: 400, letterSpacing: "0.04em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", fontFamily: "Raleway, sans-serif", textAlign: "left" }}>
-                  <Star size={16} /> Favourites
+            /* iOS Apple Books–style segmented floating menu: a stack of
+               individual floating cream pill rows instead of one boxed panel.
+               Rows pop in one after another (staggered menu-pop animation). */
+            <div className="absolute right-0 top-[44px] z-[1000] flex w-52 flex-col gap-1.5">
+              {rowItems.map((item, i) => (
+                <button
+                  key={item.key}
+                  onClick={item.onSelect}
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-4 py-3 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.08)] transition-all duration-150 hover:bg-black/5 active:scale-95 active:bg-black/5 animate-menu-pop"
+                  style={{
+                    fontFamily: "Raleway, sans-serif",
+                    fontSize: "14px",
+                    fontWeight: 400,
+                    letterSpacing: "0.04em",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    WebkitTapHighlightColor: "transparent",
+                    animationDelay: `${i * 50}ms`,
+                  }}
+                >
+                  <span className="font-normal">{item.label}</span>
+                  <item.icon className="h-5 w-5 shrink-0 opacity-80" />
                 </button>
+              ))}
+
+              {/* Optional quick-action grid: secondary compact toggles rendered
+                  side-by-side below the full-width bars (currently unused). */}
+              {gridItems.length > 0 && (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {gridItems.map((item, i) => (
+                    <button
+                      key={item.key}
+                      onClick={item.onSelect}
+                      aria-label={item.label}
+                      className="flex aspect-square items-center justify-center rounded-2xl border border-black/5 bg-card text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.08)] transition-all duration-150 hover:bg-black/5 active:scale-95 active:bg-black/5 animate-menu-pop"
+                      style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent", animationDelay: `${(rowItems.length + i) * 50}ms` }}
+                    >
+                      <item.icon className="h-5 w-5 opacity-80" />
+                    </button>
+                  ))}
+                </div>
               )}
-              <button onClick={() => { setShowDropdown(false); setShowPasswordModal(true); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", fontSize: "14px", fontWeight: 400, letterSpacing: "0.04em", color: "hsl(var(--foreground))", background: "none", border: "none", cursor: "pointer", fontFamily: "Raleway, sans-serif", textAlign: "left" }}>
-                Change Password
-              </button>
             </div>
           )}
         </div>
