@@ -111,7 +111,7 @@ export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, on
                 <button
                   key={item.key}
                   onClick={item.onSelect}
-                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-4 py-3 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.08)] transition-all duration-150 hover:bg-black/5 active:scale-95 active:bg-black/5 animate-menu-pop"
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-black/5 bg-raised px-4 py-3 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.08)] transition-all duration-150 hover:bg-card active:scale-95 active:bg-card animate-menu-pop"
                   style={{
                     fontFamily: "Raleway, sans-serif",
                     fontSize: "14px",
@@ -137,7 +137,7 @@ export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, on
                       key={item.key}
                       onClick={item.onSelect}
                       aria-label={item.label}
-                      className="flex aspect-square items-center justify-center rounded-2xl border border-black/5 bg-card text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.08)] transition-all duration-150 hover:bg-black/5 active:scale-95 active:bg-black/5 animate-menu-pop"
+                      className="flex aspect-square items-center justify-center rounded-2xl border border-black/5 bg-raised text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.08)] transition-all duration-150 hover:bg-card active:scale-95 active:bg-card animate-menu-pop"
                       style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent", animationDelay: `${(rowItems.length + i) * 50}ms` }}
                     >
                       <item.icon className="h-5 w-5 opacity-80" />

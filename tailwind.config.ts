@@ -48,6 +48,7 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         surface: "hsl(var(--surface))",
+        raised: "hsl(var(--raised))",
         "border-active": "hsl(var(--border-active))",
         dim: "hsl(var(--dim))",
         green: "hsl(var(--green))",
