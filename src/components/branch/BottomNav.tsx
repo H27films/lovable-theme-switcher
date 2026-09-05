@@ -84,12 +84,14 @@ export const BottomNav = ({
               background: active ? "hsl(var(--foreground) / 0.08)" : "none",
               border: "none",
               cursor: "pointer",
-              width: compact ? 42 : 52,
-              height: compact ? 30 : 38,
+              width: compact ? 48 : 56,
+              height: compact ? 38 : 46,
               borderRadius: "999px",
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
+              gap: "2px",
               color: "hsl(var(--foreground))",
               opacity: active ? 1 : 0.7,
               transition: "opacity 0.2s ease, background 0.2s ease, transform 0.2s ease",
@@ -103,7 +105,8 @@ export const BottomNav = ({
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
-            <Icon size={compact ? 20 : 24} strokeWidth={1.5} />
+            <Icon size={compact ? 18 : 21} strokeWidth={1.5} />
+            <span style={{ fontSize: "9px", fontWeight: 400, letterSpacing: "0.03em", fontFamily: "Raleway, inherit", lineHeight: 1 }}>{label}</span>
           </button>
         );
       })}

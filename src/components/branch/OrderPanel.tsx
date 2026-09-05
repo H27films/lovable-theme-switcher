@@ -336,7 +336,13 @@ return createPortal(
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
+            {/* Title + today's date on one line (same arrangement/sizing as the Usage panel) */}
+            <span style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+              <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
+              <span style={{ fontSize: "13px", fontWeight: 300, letterSpacing: "0.01em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
+                {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
+              </span>
+            </span>
             {/* LOW BALANCE button — opens the Low Balance overlay (branch Below Par counterpart) */}
             <button
               onClick={() => setShowLowBalance(true)}
@@ -367,24 +373,6 @@ return createPortal(
             </svg>
           </button>
         </div>
-        <div
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", cursor: showOrderDropdown ? "pointer" : "default" }}
-          onClick={() => { 
-            if (showOrderDropdown) {
-              dismissOrderDropdown();
-            } else {
-              setShowOrderDropdown(true);
-              orderInputRef.current?.focus();
-            }
-          }}
-        >
-<span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", textTransform: "uppercase" }}>
-      Enter Today's Order
-    </span>
-<span style={{ fontSize: "15px", fontWeight: 400, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
-      {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase()}
-    </span>
-        </div>
         <div style={{ borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingBottom: "12px", marginBottom: "0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
 <input
@@ -396,8 +384,8 @@ return createPortal(
                 onFocus={() => { setShowOrderDropdown(true); setShowAllOrders(false); }}
                 onClick={e => e.stopPropagation()}
                 onKeyDown={handleOrderListKeyDown}
-                placeholder="Select product..."
-                style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground, 0 0% 100%))", caretColor: "hsl(var(--foreground, 0 0% 100%))" }}
+                placeholder="Select Product..."
+                style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "15px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground, 0 0% 100%))", caretColor: "hsl(var(--foreground, 0 0% 100%))" }}
               />
 <button
                 onMouseDown={e => { e.preventDefault(); e.stopPropagation(); if (showOrderDropdown) dismissOrderDropdown(); else { setShowOrderDropdown(true); orderInputRef.current?.focus(); } }}
