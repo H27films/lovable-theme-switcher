@@ -166,11 +166,16 @@ export const Favourites = ({ open, onClose, branch, onSubmitted }: FavouritesPro
     const matched = q
       ? rows.filter(r => String(r["PRODUCT NAME"] ?? "").toLowerCase().includes(q))
       : rows;
-    // Favourites first, then alphabetical — mirrors Order's list ordering
+    // Favourites first (A–Z), then non-favourites: COLOUR = NO before COLOUR = YES,
+    // A–Z by product name within each group (anything not "YES" counts as NO)
+    const isColourRow = (r: FavouriteProductRow) => String(r["COLOUR"] ?? "").trim().toUpperCase() === "YES";
     return [...matched].sort((a, b) => {
       const af = checked.has(a.id) ? 0 : 1;
       const bf = checked.has(b.id) ? 0 : 1;
       if (af !== bf) return af - bf;
+      const ac = isColourRow(a) ? 1 : 0;
+      const bc = isColourRow(b) ? 1 : 0;
+      if (ac !== bc) return ac - bc;
       return String(a["PRODUCT NAME"] ?? "").localeCompare(String(b["PRODUCT NAME"] ?? ""));
     });
   })();
