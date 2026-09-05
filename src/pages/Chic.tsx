@@ -9,6 +9,7 @@ import { chicConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple"
 import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, sortLogByBalance, sortBranchLogTable, LOG_PAGE_SIZE, LOG_MAX_ROWS, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { BranchHeader } from "@/components/branch/BranchHeader";
+import { BranchHomeHeader } from "@/components/branch/BranchHomeHeader";
 import { BottomNav } from "@/components/branch/BottomNav";
 import { Search } from "@/components/branch/Search";
 import { ProductCard } from "@/components/branch/ProductCard";
@@ -357,6 +358,102 @@ const setLogViewToOrders = () => {
   // Product list already added state (for grey-out) - not used in thin version
   const alreadyAdded = undefined;
 
+  // Log-view tab row (All Data / Salon / Sold / Orders). Rendered inside the
+  // decorated home header on the landing view, or inline above the log table
+  // while a search is active (original layout).
+  const logViewTabs = (
+    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+      <button
+        onClick={setLogViewToAll}
+        style={{
+          background: "none",
+          border: "none",
+          borderBottom: `2px solid ${logView === "all" ? "hsl(var(--foreground))" : "transparent"}`,
+          cursor: "pointer",
+          padding: "0 0 6px 0",
+          fontSize: logView === "all" ? "16px" : "14px",
+          fontWeight: logView === "all" ? 400 : 300,
+          letterSpacing: "0.06em",
+          fontFamily: "Raleway, inherit",
+          color: "hsl(var(--foreground))",
+          opacity: logView === "all" ? 1 : 0.6,
+          marginBottom: "-1px",
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => { if (logView !== "all") e.currentTarget.style.opacity = "0.8"; }}
+        onMouseLeave={(e) => { if (logView !== "all") e.currentTarget.style.opacity = "0.6"; }}
+      >
+        All Data
+      </button>
+      <button
+        onClick={() => setLogViewToUsage()}
+        style={{
+          background: "none",
+          border: "none",
+          borderBottom: `2px solid ${logView === "usage" ? "hsl(var(--foreground))" : "transparent"}`,
+          cursor: "pointer",
+          padding: "0 0 6px 0",
+          fontSize: logView === "usage" ? "16px" : "14px",
+          fontWeight: logView === "usage" ? 400 : 300,
+          letterSpacing: "0.06em",
+          fontFamily: "Raleway, inherit",
+          color: "hsl(var(--foreground))",
+          opacity: logView === "usage" ? 1 : 0.6,
+          marginBottom: "-1px",
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.8"; }}
+        onMouseLeave={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.6"; }}
+      >
+        Salon
+      </button>
+      <button
+        onClick={() => setLogViewToSale()}
+        style={{
+          background: "none",
+          border: "none",
+          borderBottom: `2px solid ${logView === "sale" ? "hsl(var(--foreground))" : "transparent"}`,
+          cursor: "pointer",
+          padding: "0 0 6px 0",
+          fontSize: logView === "sale" ? "16px" : "14px",
+          fontWeight: logView === "sale" ? 400 : 300,
+          letterSpacing: "0.06em",
+          fontFamily: "Raleway, inherit",
+          color: "hsl(var(--foreground))",
+          opacity: logView === "sale" ? 1 : 0.6,
+          marginBottom: "-1px",
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.8"; }}
+        onMouseLeave={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.6"; }}
+      >
+        Sold
+      </button>
+      <button
+        onClick={setLogViewToOrders}
+        style={{
+          background: "none",
+          border: "none",
+          borderBottom: `2px solid ${logView === "orders" ? "hsl(var(--foreground))" : "transparent"}`,
+          cursor: "pointer",
+          padding: "0 0 6px 0",
+          fontSize: logView === "orders" ? "16px" : "14px",
+          fontWeight: logView === "orders" ? 400 : 300,
+          letterSpacing: "0.06em",
+          fontFamily: "Raleway, inherit",
+          color: "hsl(var(--foreground))",
+          opacity: logView === "orders" ? 1 : 0.6,
+          marginBottom: "-1px",
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => { if (logView !== "orders") e.currentTarget.style.opacity = "0.8"; }}
+        onMouseLeave={(e) => { if (logView !== "orders") e.currentTarget.style.opacity = "0.6"; }}
+      >
+        Orders
+      </button>
+    </div>
+  );
+
   return (
     <div style={{
       position: "relative", height: "100dvh",
@@ -370,7 +467,13 @@ const setLogViewToOrders = () => {
       ...slideExitStyle(exiting),
     }}>
 {/* Header */}
-        <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? chicConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
+        {!searchActive && !selectedProduct ? (
+          <BranchHomeHeader branch={chicConfig.displayName} onBack={handleHeaderBack} onFavouritesSubmitted={goHome}>
+            {logViewTabs}
+          </BranchHomeHeader>
+        ) : (
+          <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? chicConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
+        )}
 
        
 {/* Search input - only show when search is active */}
@@ -425,98 +528,7 @@ const setLogViewToOrders = () => {
                 onImageUpdated={handleProductImageUpdated}
               />
             )}
-{!selectedProduct && (
-  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-    <button
-      onClick={setLogViewToAll}
-      style={{
-        background: "none",
-        border: "none",
-        borderBottom: `2px solid ${logView === "all" ? "hsl(var(--foreground))" : "transparent"}`,
-        cursor: "pointer",
-        padding: "0 0 6px 0",
-        fontSize: logView === "all" ? "16px" : "14px",
-        fontWeight: logView === "all" ? 400 : 300,
-        letterSpacing: "0.06em",
-        fontFamily: "Raleway, inherit",
-        color: "hsl(var(--foreground))",
-        opacity: logView === "all" ? 1 : 0.6,
-        marginBottom: "-1px",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => { if (logView !== "all") e.currentTarget.style.opacity = "0.8"; }}
-      onMouseLeave={(e) => { if (logView !== "all") e.currentTarget.style.opacity = "0.6"; }}
-    >
-      All Data
-    </button>
-    <button
-      onClick={() => setLogViewToUsage()}
-      style={{
-        background: "none",
-        border: "none",
-        borderBottom: `2px solid ${logView === "usage" ? "hsl(var(--foreground))" : "transparent"}`,
-        cursor: "pointer",
-        padding: "0 0 6px 0",
-        fontSize: logView === "usage" ? "16px" : "14px",
-        fontWeight: logView === "usage" ? 400 : 300,
-        letterSpacing: "0.06em",
-        fontFamily: "Raleway, inherit",
-        color: "hsl(var(--foreground))",
-        opacity: logView === "usage" ? 1 : 0.6,
-        marginBottom: "-1px",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.8"; }}
-      onMouseLeave={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.6"; }}
-    >
-      Salon
-    </button>
-    <button
-      onClick={() => setLogViewToSale()}
-      style={{
-        background: "none",
-        border: "none",
-        borderBottom: `2px solid ${logView === "sale" ? "hsl(var(--foreground))" : "transparent"}`,
-        cursor: "pointer",
-        padding: "0 0 6px 0",
-        fontSize: logView === "sale" ? "16px" : "14px",
-        fontWeight: logView === "sale" ? 400 : 300,
-        letterSpacing: "0.06em",
-        fontFamily: "Raleway, inherit",
-        color: "hsl(var(--foreground))",
-        opacity: logView === "sale" ? 1 : 0.6,
-        marginBottom: "-1px",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.8"; }}
-      onMouseLeave={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.6"; }}
-    >
-      Sold
-    </button>
-    <button
-      onClick={setLogViewToOrders}
-      style={{
-        background: "none",
-        border: "none",
-        borderBottom: `2px solid ${logView === "orders" ? "hsl(var(--foreground))" : "transparent"}`,
-        cursor: "pointer",
-        padding: "0 0 6px 0",
-        fontSize: logView === "orders" ? "16px" : "14px",
-        fontWeight: logView === "orders" ? 400 : 300,
-        letterSpacing: "0.06em",
-        fontFamily: "Raleway, inherit",
-        color: "hsl(var(--foreground))",
-        opacity: logView === "orders" ? 1 : 0.6,
-        marginBottom: "-1px",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => { if (logView !== "orders") e.currentTarget.style.opacity = "0.8"; }}
-      onMouseLeave={(e) => { if (logView !== "orders") e.currentTarget.style.opacity = "0.6"; }}
-    >
-      Orders
-    </button>
-  </div>
-)}
+{!selectedProduct && searchActive && logViewTabs}
             <div style={selectedProduct ? { background: "hsl(var(--muted) / 0.3)", borderRadius: "16px", padding: "12px" } : { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
             <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={chicConfig.displayName} branchLogName={BRANCH_LOG_NAME} scrollWithPage={!!selectedProduct} showFlowToggle={!!selectedProduct} onLoadMore={selectedProduct ? undefined : loadMoreBranchLog} hasMore={!selectedProduct && branchHasMore} />
             </div>
