@@ -154,8 +154,9 @@ export const BottomNavQuickAdd = ({
           style={{
             ...glassSurface,
             position: "fixed",
+            // Circle's LEFT edge sits `gap` px clear of the nav pill's right edge
+            // (no centering margin — centering it caused the pill overlap).
             left: `calc(50% + ${navHalf + gap}px)`,
-            marginLeft: -(side / 2),
             bottom: bottomOffset,
             zIndex: 99999,
             width: side,

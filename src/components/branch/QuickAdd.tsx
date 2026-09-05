@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { type BranchConfig, type OfficeProduct } from "@/lib/branchSimple";
-import { isYes } from "@/lib/branchSimpleUtils";
-import { QUICK_ADD_PRODUCTS } from "@/lib/quickAdd";
+import { QUICK_ADD_PRODUCTS, FAVOURITES_TABLE_COLUMN } from "@/lib/quickAdd";
 
 interface QuickAddProps {
   config: BranchConfig;
@@ -49,35 +48,64 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
     savedTimersRef.current.forEach(t => window.clearTimeout(t));
   }, []);
 
+  // Branch favourites from the live `Favourites` Supabase table — the popup's
+  // default content until the curated QUICK_ADD_PRODUCTS list is filled in.
+  // Same source/pattern as the Favourites panel (paginated reads, client-side
+  // "TRUE" check on the branch's favourite column).
+  const [favNames, setFavNames] = useState<string[]>([]);
+  const [favsLoading, setFavsLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setFavsLoading(true);
+      try {
+        const favCol = FAVOURITES_TABLE_COLUMN[config.key];
+        const rows: any[] = [];
+        let from = 0;
+        const batch = 1000;
+        while (true) {
+          const { data, error } = await (supabase as any)
+            .from("Favourites")
+            .select(`id, "PRODUCT NAME", "${favCol}"`)
+            .range(from, from + batch - 1);
+          if (error || !data?.length) break;
+          rows.push(...data);
+          if (data.length < batch) break;
+          from += batch;
+        }
+        if (cancelled) return;
+        const isTrue = (v: unknown) => String(v ?? "").trim().toUpperCase() === "TRUE";
+        const names = Array.from(new Set(
+          rows
+            .filter((r: any) => isTrue(r[favCol]))
+            .map((r: any) => String(r["PRODUCT NAME"] ?? "").trim())
+            .filter(n => n)
+        )).sort((a, b) => a.localeCompare(b));
+        setFavNames(names);
+      } catch {
+        if (!cancelled) setFavNames([]);
+      } finally {
+        if (!cancelled) setFavsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [config.key]);
+
   const items = useMemo(() => {
-    const byName = new Map<string, OfficeProduct>();
-    products.forEach(p => {
-      const name = p["PRODUCT NAME"];
-      if (name && !byName.has(name)) byName.set(name, p);
-    });
+    // Curated list (once filled in) takes precedence, shown in configured order;
+    // otherwise the branch's favourites from the Favourites table, A→Z.
     const curated = QUICK_ADD_PRODUCTS[config.key] ?? [];
-    let names: string[];
-    if (curated.length > 0) {
-      // Curated list: shown exactly in the configured order.
-      names = curated;
-    } else {
-      // Temporary fallback until the curated list is filled in: the branch's
-      // favourites, A→Z, restricted to the products the UsageTable picker offers
-      // (UNITS/ORDER null or ≤ 1).
-      names = Array.from(byName.values())
-        .filter(p => (p["UNITS/ORDER"] == null || p["UNITS/ORDER"] <= 1) && isYes(p[config.favouriteKey]))
-        .map(p => p["PRODUCT NAME"])
-        .sort((a, b) => a.localeCompare(b));
-    }
+    const names = curated.length > 0 ? curated : favNames;
     const seen = new Set<string>();
-    const out: OfficeProduct[] = [];
-    for (const name of names) {
-      if (seen.has(name)) continue;
-      const p = byName.get(name);
-      if (p) { seen.add(name); out.push(p); }
+    const out: string[] = [];
+    for (const raw of names) {
+      const name = String(raw ?? "").trim();
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      out.push(name);
     }
     return out;
-  }, [products, config]);
+  }, [config.key, favNames]);
 
   const logProduct = (productName: string) => {
     const now = Date.now();
@@ -161,15 +189,14 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         </button>
       </div>
 
-      {/* Curated product rows — one tap = one -1 "Salon Use" log entry */}
+      {/* Favourite product rows — one tap = one -1 "Salon Use" log entry */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain" }}>
         {items.length === 0 && (
           <div style={{ padding: "18px 0 10px", textAlign: "center", fontSize: "11px", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-            NO QUICK ADD PRODUCTS SET
+            {favsLoading ? "LOADING…" : "NO QUICK ADD PRODUCTS SET"}
           </div>
         )}
-        {items.map(p => {
-          const name = p["PRODUCT NAME"];
+        {items.map(name => {
           const saved = savedRows.has(name);
           return (
             <button
@@ -190,13 +217,9 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
               }}
             >
               <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}>{name}</span>
-              {saved ? (
+              {saved && (
                 <span style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--green, 120 60% 40%))" }}>
                   <Check size={12} strokeWidth={2.5} /> Saved
-                </span>
-              ) : (
-                <span style={{ flexShrink: 0, fontSize: "11px", letterSpacing: "0.04em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
-                  −1 · {TYPE_VALUE}
                 </span>
               )}
             </button>

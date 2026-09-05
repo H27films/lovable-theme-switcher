@@ -545,13 +545,16 @@ const setLogViewToOrders = () => {
             goHome={goHome}
             isHome={!activePanel && !searchActive && !selectedProduct}
           />
-          <BottomNavQuickAdd
-            config={nuryadiConfig}
-            products={products}
-            setProducts={setProducts}
-            refreshBranchLog={refreshBranchLog}
-            setSelectedProduct={setSelectedProduct}
-          />
+          {/* Quick Add lives on the branch home view only */}
+          {!activePanel && !searchActive && !selectedProduct && (
+            <BottomNavQuickAdd
+              config={nuryadiConfig}
+              products={products}
+              setProducts={setProducts}
+              refreshBranchLog={refreshBranchLog}
+              setSelectedProduct={setSelectedProduct}
+            />
+          )}
         </>
       )}
 
@@ -564,14 +567,6 @@ const setLogViewToOrders = () => {
             toggleSearch={toggleSearch}
             goHome={goHome}
             isHome={!activePanel && !searchActive && !selectedProduct}
-            compact
-          />
-          <BottomNavQuickAdd
-            config={nuryadiConfig}
-            products={products}
-            setProducts={setProducts}
-            refreshBranchLog={refreshBranchLog}
-            setSelectedProduct={setSelectedProduct}
             compact
           />
         </>
