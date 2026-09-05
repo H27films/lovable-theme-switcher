@@ -377,7 +377,7 @@ return createPortal(
       </div>
 
       {showOrderDropdown && (
-        <div style={{ flexShrink: 0, background: "hsl(var(--background, 0 0% 0%))", maxHeight: "55vh", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px" }}>
+        <div style={{ flex: 1, minHeight: 0, background: "hsl(var(--background, 0 0% 0%))", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px" }}>
           {(() => {
             const sectionLabel = (label: string) => (
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
@@ -444,7 +444,7 @@ return createPortal(
       )}
 
       {!showAllOrders && (
-        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => { setShowOrderDropdown(false); setShowAllOrders(false); }}>
+        <div style={{ flex: showOrderDropdown ? "0 0 0%" : 1, overflowY: showOrderDropdown ? "hidden" : "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => { setShowOrderDropdown(false); setShowAllOrders(false); }}>
         {orderEntries.length === 0 && !pendingOrder && !confirmSuccess && null}
         {confirmSuccess && lastConfirmedEntries && (() => {
           const d = new Date();
@@ -553,7 +553,7 @@ return createPortal(
       )}
 
           <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0" }}>
-            <button onClick={() => setShowAllOrders(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)" }}>
+            <button onClick={() => { setShowAllOrders(true); setShowOrderDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)" }}>
               Past Orders
             </button>
             <button onClick={() => setShowLowBalance(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)" }}>
