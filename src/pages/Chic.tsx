@@ -559,6 +559,9 @@ const setLogViewToOrders = () => {
           onBack={() => setActivePanel(null)}
           onSuccess={goHome}
           onUsageEntriesChange={setUsageEntriesCount}
+          isFav={isFav}
+          isColour={isColour}
+          nameOf={nameOf}
         />,
         document.body
       )}
