@@ -505,7 +505,7 @@ const setLogViewToOrders = () => {
         )}
 
       {/* MIDDLE SCROLLABLE */}
-       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
+       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", marginTop: !searchActive && !selectedProduct ? "-36px" : undefined }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
