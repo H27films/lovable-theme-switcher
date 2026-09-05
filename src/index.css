@@ -222,9 +222,11 @@
 /* Office icon tab bar: hide horizontal scrollbar (WebKit/Blink) */
 .office-tab-bar::-webkit-scrollbar { display: none; }
 
-/* Branch header floating menu: skip the staggered pop-in for reduced-motion users */
+/* Branch/office header floating menu: skip the pop-in / collapse-out
+   animations for reduced-motion users (the components also close instantly). */
 @media (prefers-reduced-motion: reduce) {
-  .animate-menu-pop {
+  .animate-menu-pop,
+  .animate-menu-pop-out {
     animation: none;
   }
 }

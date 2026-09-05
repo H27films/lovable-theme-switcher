@@ -82,7 +82,7 @@ export default {
           from: { transform: "translateY(10px)", opacity: "0" },
           to: { transform: "translateY(0)", opacity: "1" },
         },
-        /* Branch header floating menu: rows pop in one after another
+        /* Branch/office header floating menu: rows pop in one after another
            (stagger via inline animation-delay). "backwards" fill keeps each
            row hidden during its delay and releases the transform afterwards
            so active:scale-95 press states still work once settled. */
@@ -90,12 +90,19 @@ export default {
           from: { opacity: "0", transform: "translateY(-6px) scale(0.97)" },
           to: { opacity: "1", transform: "translateY(0) scale(1)" },
         },
+        /* Reverse collapse: pills fade back out bottom-to-top; "forwards"
+           holds them hidden until the menu unmounts. */
+        "menu-pop-out": {
+          from: { opacity: "1", transform: "translateY(0) scale(1)" },
+          to: { opacity: "0", transform: "translateY(-6px) scale(0.97)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "slide-in": "slide-in 0.4s ease-out",
         "menu-pop": "menu-pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards",
+        "menu-pop-out": "menu-pop-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards",
       },
     },
   },
