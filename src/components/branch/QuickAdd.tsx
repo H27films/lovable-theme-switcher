@@ -40,14 +40,12 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
   const lastEndingRef = useRef<Map<string, number>>(new Map());
   // Serializes submissions so concurrent taps still write (and balance) in order.
   const queueRef = useRef<Promise<void>>(Promise.resolve());
-  // Per-product tap-cooldown timestamps + row confirm / auto-close timers.
+  // Per-product tap-cooldown timestamps + row confirm timer.
   const lastTapRef = useRef<Map<string, number>>(new Map());
   const saveTimerRef = useRef<number | null>(null);
-  const closeTimerRef = useRef<number | null>(null);
 
   useEffect(() => () => {
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
   }, []);
 
   // Branch favourites from the live `Favourites` Supabase table — the popup's
@@ -163,7 +161,8 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
   };
 
   // Row-tap flow: log the product, run the row confirm animation (name swipes
-  // right → "Saved" → name reappears from the left), then close the popup.
+  // right → "Saved" → name reappears from the left), then leave the box open so
+  // the user can keep selecting more products.
   const handleRowTap = (productName: string) => {
     if (savedName) return;
     const now = Date.now();
@@ -174,14 +173,12 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
     logProduct(productName).then((ok: boolean) => {
       if (!ok) return;
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
       setSavedName(productName);
-      // Leave time for: name exit right (0.22s) + "Saved" enter (0.22s) + hold.
+      // Leave time for: name exit right (0.22s) + "Saved" enter (0.22s) + hold,
+      // then the name re-enters from the left. Box stays open.
       saveTimerRef.current = window.setTimeout(() => {
         setSavedName(null);
-        // After "Saved" exits and the name re-enters from the left, close the box.
-        closeTimerRef.current = window.setTimeout(onClose, 600);
       }, 900);
     });
   };
