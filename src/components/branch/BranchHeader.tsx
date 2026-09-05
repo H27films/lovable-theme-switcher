@@ -20,9 +20,11 @@ interface BranchHeaderProps {
   titleOverride?: string;
   /** Small lighter label shown to the right of the title (e.g. branch name on the search view) */
   secondaryLabel?: string;
+  /** Called after the Favourites panel saves + confirms: closes Favourites and lets the branch reset to its default page */
+  onFavouritesSubmitted?: () => void;
 }
 
-export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel }: BranchHeaderProps) => {
+export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, onFavouritesSubmitted }: BranchHeaderProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { tablet, toggle: toggleTablet } = useTabletMode();
@@ -81,7 +83,12 @@ export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel }: 
       <ChangePasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
       <SettingsModal open={showSettingsModal} onClose={() => setShowSettingsModal(false)} branch={branch} />
       {favBranch && (
-        <Favourites open={showFavourites} onClose={() => setShowFavourites(false)} branch={favBranch} />
+        <Favourites
+          open={showFavourites}
+          onClose={() => setShowFavourites(false)}
+          onSubmitted={onFavouritesSubmitted ? () => { setShowFavourites(false); onFavouritesSubmitted(); } : undefined}
+          branch={favBranch}
+        />
       )}
     </>
   );

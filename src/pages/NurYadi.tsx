@@ -370,7 +370,7 @@ const setLogViewToOrders = () => {
       ...slideExitStyle(exiting),
     }}>
 {/* Header */}
-        <BranchHeader branch={nuryadiConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? nuryadiConfig.displayName : undefined} />
+        <BranchHeader branch={nuryadiConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? nuryadiConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
 
        
 {/* Search input - only show when search is active */}

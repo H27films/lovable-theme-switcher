@@ -382,7 +382,7 @@ const setLogViewToOrders = () => {
       ...slideExitStyle(exiting),
     }}>
 {/* Header */}
-        <BranchHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? boudoirConfig.displayName : undefined} />
+        <BranchHeader branch={boudoirConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? boudoirConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
 
        
 {/* Search input - only show when search is active */}

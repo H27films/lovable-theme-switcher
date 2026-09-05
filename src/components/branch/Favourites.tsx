@@ -61,11 +61,13 @@ interface FavouritesProps {
   open: boolean;
   onClose: () => void;
   branch: BranchKey;
+  /** Called after a successful submit + brief ✓ confirmation — closes the panel and lets the branch page reset to its default view */
+  onSubmitted?: () => void;
 }
 
 const isTrue = (v: unknown) => String(v ?? "").trim().toUpperCase() === "TRUE";
 
-export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
+export const Favourites = ({ open, onClose, branch, onSubmitted }: FavouritesProps) => {
   const [rows, setRows] = useState<FavouriteProductRow[]>([]);
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [search, setSearch] = useState("");
@@ -272,7 +274,12 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
         } as FavouriteProductRow;
       }));
       setSuccessMsg(totalChanges === 0 ? "No changes to save" : `Saved · ${totalChanges} ${totalChanges === 1 ? "change" : "changes"}`);
-      setTimeout(() => setSuccessMsg(null), 3000);
+      // Keep the ✓ confirmation visible briefly, then close the panel and let the
+      // branch page reset to its default view (onSubmitted is wired by BranchHeader).
+      setTimeout(() => {
+        setSuccessMsg(null);
+        (onSubmitted ?? onClose)();
+      }, 1200);
     } catch (e: any) {
       console.error("Favourites save failed:", e);
       setErrorMsg(e?.message || "Could not save favourites.");
@@ -301,7 +308,7 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
       {/* Top bar — title block left, long back arrow right (mirrors ORDER header) */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "24px 16px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
+        padding: "24px 16px 16px", flexShrink: 0,
       }}>
         {/* Title is clickable too — closes the panel back to the branch's default view
             (same pattern as the clickable LOW BALANCE title on the Order panel) */}
@@ -349,10 +356,10 @@ export const Favourites = ({ open, onClose, branch }: FavouritesProps) => {
         {/* Column headers — BAL is read-only stock; LOW BAL is the editable threshold */}
         <div style={{
           display: "flex", alignItems: "center", gap: "10px",
-          padding: "8px 16px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
+          padding: "16px 16px 8px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
         }}>
           <div style={{ width: "16px", flexShrink: 0 }} />
-          <div style={{ flex: 1, marginRight: "8px", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>PRODUCT</div>
+          <div style={{ flex: 1, marginRight: "8px" }} />
           <div style={{ width: "36px", flexShrink: 0, textAlign: "right", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>BAL</div>
           <div style={{ width: "48px", flexShrink: 0, textAlign: "center", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>LOW BAL</div>
         </div>
