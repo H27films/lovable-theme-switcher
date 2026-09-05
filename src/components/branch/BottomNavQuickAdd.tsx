@@ -45,6 +45,9 @@ export const BottomNavQuickAdd = ({
   const [open, setOpen] = useState(false);
   // Measured bounds the popup morphs from (the BottomNav pill) to (the card).
   const [bounds, setBounds] = useState<{ origin: MorphRect; final: MorphRect } | null>(null);
+  // Extra rightward px the control circle shifts while the popup is open so it
+  // clears the card; returns to 0 (original position) on close.
+  const [xShift, setXShift] = useState(0);
 
   // Sit flush to the right of the BottomNav pill: measure its live width.
   const [navHalf, setNavHalf] = useState(compact ? FALLBACK_NAV_HALF.compact : FALLBACK_NAV_HALF.normal);
@@ -61,10 +64,10 @@ export const BottomNavQuickAdd = ({
     return () => ro.disconnect();
   }, [compact]);
 
-  // Esc collapses the popup back into the circle.
+  // Esc collapses the popup back into the close circle.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); setXShift(0); } };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
@@ -110,7 +113,16 @@ export const BottomNavQuickAdd = ({
         height: cardH,
       },
     });
+    // Shift the control circle right just enough to clear the expanded card.
+    const controlLeft = viewW / 2 + navHalf + gap;
+    const cardRight = (viewW + cardW) / 2;
+    setXShift(Math.max(0, cardRight + 10 - controlLeft));
     setOpen(true);
+  };
+
+  const closePopup = () => {
+    setOpen(false);
+    setXShift(0);
   };
 
   return createPortal(
@@ -122,7 +134,7 @@ export const BottomNavQuickAdd = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          onClick={() => setOpen(false)}
+          onClick={closePopup}
           style={{
             position: "fixed",
             top: 0,
@@ -146,6 +158,7 @@ export const BottomNavQuickAdd = ({
             width: bounds.origin.width,
             height: bounds.origin.height,
             borderRadius: 999,
+            opacity: 0,
           }}
           animate={{
             left: bounds.final.left,
@@ -153,6 +166,7 @@ export const BottomNavQuickAdd = ({
             width: bounds.final.width,
             height: bounds.final.height,
             borderRadius: 24,
+            opacity: 1,
           }}
           exit={{
             left: bounds.origin.left,
@@ -160,8 +174,13 @@ export const BottomNavQuickAdd = ({
             width: bounds.origin.width,
             height: bounds.origin.height,
             borderRadius: 999,
+            // Fade the content out quickly while the box springs back to the nav.
+            opacity: 0,
           }}
-          transition={{ type: "spring", stiffness: 350, damping: 28 }}
+          transition={{
+            default: { type: "spring", stiffness: 350, damping: 28 },
+            opacity: { duration: 0.12, ease: "easeIn" },
+          }}
           style={{
             position: "fixed",
             zIndex: 100000,
@@ -184,73 +203,68 @@ export const BottomNavQuickAdd = ({
             setProducts={setProducts}
             refreshBranchLog={refreshBranchLog}
             setSelectedProduct={setSelectedProduct}
-            onClose={() => setOpen(false)}
+            onClose={closePopup}
           />
         </motion.div>
       )}
-      {open ? (
-        <motion.button
-          key="quickadd-x"
-          onClick={() => setOpen(false)}
-          aria-label="Close quick add"
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            ...glassSurface,
-            position: "fixed",
-            left: `calc(50% + ${navHalf + gap}px)`,
-            bottom: bottomOffset,
-            zIndex: 100001,
-            width: side,
-            height: side,
-            borderRadius: 999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "hsl(var(--foreground))",
-            cursor: "pointer",
-            padding: 0,
-            translate: "var(--page-slide-x, 0vw) 0",
-            opacity: "var(--page-slide-o, 1)",
-          }}
-        >
-          <X size={compact ? 17 : 20} strokeWidth={1.5} />
-        </motion.button>
-      ) : (
-        <motion.button
-          key="quickadd-fab"
-          onClick={openPopup}
-          aria-label="Quick add"
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.9 }}
-          style={{
-            ...glassSurface,
-            position: "fixed",
-            // Circle's LEFT edge sits `gap` px clear of the nav pill's right edge
-            // (no centering margin — centering it caused the pill overlap).
-            left: `calc(50% + ${navHalf + gap}px)`,
-            bottom: bottomOffset,
-            zIndex: 99999,
-            width: side,
-            height: side,
-            borderRadius: 999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "2px",
-            color: "hsl(var(--foreground))",
-            cursor: "pointer",
-            padding: 0,
-            // Follow the page slide transition, like the BottomNav does.
-            translate: "var(--page-slide-x, 0vw) 0",
-            opacity: "var(--page-slide-o, 1)",
-          }}
-        >
-          <Plus size={compact ? 17 : 20} strokeWidth={1.5} />
-          <span style={{ fontSize: "9px", fontWeight: 400, letterSpacing: "0.03em", fontFamily: "Raleway, inherit", lineHeight: 1 }}>Add</span>
-        </motion.button>
-      )}
+      {/* Persistent control: "+ Add" FAB ↔ ✕ close circle. Slides right while the
+          popup is open so it clears the card, then springs home on close. */}
+      <motion.button
+        key="quickadd-control"
+        onClick={() => (open ? closePopup() : openPopup())}
+        aria-label={open ? "Close quick add" : "Quick add"}
+        animate={{ x: open ? xShift : 0 }}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.9 }}
+        style={{
+          ...glassSurface,
+          position: "fixed",
+          // Circle's LEFT edge sits `gap` px clear of the nav pill's right edge
+          // (no centering margin — centering it caused the pill overlap).
+          left: `calc(50% + ${navHalf + gap}px)`,
+          bottom: bottomOffset,
+          zIndex: open ? 100001 : 99999,
+          width: side,
+          height: side,
+          borderRadius: 999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "hsl(var(--foreground))",
+          cursor: "pointer",
+          padding: 0,
+          // Follow the page slide transition, like the BottomNav does.
+          translate: "var(--page-slide-x, 0vw) 0",
+          opacity: "var(--page-slide-o, 1)",
+        }}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {open ? (
+            <motion.span
+              key="quickadd-x"
+              initial={{ opacity: 0, scale: 0.6, rotate: -90 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.6, rotate: 90 }}
+              transition={{ duration: 0.15 }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <X size={compact ? 17 : 20} strokeWidth={1.5} />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="quickadd-plus"
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.4 }}
+              transition={{ duration: 0.15 }}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px" }}
+            >
+              <Plus size={compact ? 17 : 20} strokeWidth={1.5} />
+              <span style={{ fontSize: "9px", fontWeight: 400, letterSpacing: "0.03em", fontFamily: "Raleway, inherit", lineHeight: 1 }}>Add</span>
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
     </AnimatePresence>,
     document.body
   );
