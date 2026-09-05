@@ -17,6 +17,7 @@ import { ProductList } from "@/components/branch/ProductList";
 import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
+import { BottomNavQuickAdd } from "@/components/branch/BottomNavQuickAdd";
 
 interface BoudoirProps {
   onBack?: () => void;
@@ -599,27 +600,47 @@ const setLogViewToOrders = () => {
         ||
         (isSearchProduct && !pastDataExpanded)
       ) && (
-        <BottomNav
-          activePanel={activePanel}
-          setActivePanel={setActivePanel}
-          isSearchActive={searchActive || !!selectedProduct}
-          toggleSearch={toggleSearch}
-          goHome={goHome}
-          isHome={!activePanel && !searchActive && !selectedProduct}
-          raised={isSearchProduct && !pastDataExpanded}
-        />
+        <>
+          <BottomNav
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+            isSearchActive={searchActive || !!selectedProduct}
+            toggleSearch={toggleSearch}
+            goHome={goHome}
+            isHome={!activePanel && !searchActive && !selectedProduct}
+            raised={isSearchProduct && !pastDataExpanded}
+          />
+          <BottomNavQuickAdd
+            config={boudoirConfig}
+            products={products}
+            setProducts={setProducts}
+            refreshBranchLog={refreshBranchLog}
+            setSelectedProduct={setSelectedProduct}
+            raised={isSearchProduct && !pastDataExpanded}
+          />
+        </>
       )}
 
       {!editModalOpen && ((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct && pastDataExpanded)) && (
-        <BottomNav
-          activePanel={activePanel}
-          setActivePanel={setActivePanel}
-          isSearchActive={searchActive || !!selectedProduct}
-          toggleSearch={toggleSearch}
-          goHome={goHome}
-          isHome={!activePanel && !searchActive && !selectedProduct}
-          compact
-        />
+        <>
+          <BottomNav
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+            isSearchActive={searchActive || !!selectedProduct}
+            toggleSearch={toggleSearch}
+            goHome={goHome}
+            isHome={!activePanel && !searchActive && !selectedProduct}
+            compact
+          />
+          <BottomNavQuickAdd
+            config={boudoirConfig}
+            products={products}
+            setProducts={setProducts}
+            refreshBranchLog={refreshBranchLog}
+            setSelectedProduct={setSelectedProduct}
+            compact
+          />
+        </>
       )}
 
       {/* USAGE Panel */}

@@ -48,7 +48,10 @@ export const BottomNav = ({
 
   return createPortal(
     <nav
- style={{
+      // Stable hook for BottomNavQuickAdd to measure this pill's live width
+      // so the standalone Quick Add circle can sit flush to its right.
+      data-branch-bottom-nav
+      style={{
         position: "fixed",
         left: "50%",
         transform: "translateX(-50%)",

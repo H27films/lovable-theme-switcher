@@ -16,6 +16,7 @@ import { ProductList } from "@/components/branch/ProductList";
 import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
+import { BottomNavQuickAdd } from "@/components/branch/BottomNavQuickAdd";
 
 interface ChicProps {
   onBack?: () => void;
@@ -535,26 +536,45 @@ const setLogViewToOrders = () => {
       </div>
 
       {!editModalOpen && (activePanel !== "ORDER" && !isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0)))) && (
-        <BottomNav
-          activePanel={activePanel}
-          setActivePanel={setActivePanel}
-          isSearchActive={searchActive || !!selectedProduct}
-          toggleSearch={toggleSearch}
-          goHome={goHome}
-          isHome={!activePanel && !searchActive && !selectedProduct}
-        />
+        <>
+          <BottomNav
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+            isSearchActive={searchActive || !!selectedProduct}
+            toggleSearch={toggleSearch}
+            goHome={goHome}
+            isHome={!activePanel && !searchActive && !selectedProduct}
+          />
+          <BottomNavQuickAdd
+            config={chicConfig}
+            products={products}
+            setProducts={setProducts}
+            refreshBranchLog={refreshBranchLog}
+            setSelectedProduct={setSelectedProduct}
+          />
+        </>
       )}
 
       {!editModalOpen && ((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct)) && (
-        <BottomNav
-          activePanel={activePanel}
-          setActivePanel={setActivePanel}
-          isSearchActive={searchActive || !!selectedProduct}
-          toggleSearch={toggleSearch}
-          goHome={goHome}
-          isHome={!activePanel && !searchActive && !selectedProduct}
-          compact
-        />
+        <>
+          <BottomNav
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+            isSearchActive={searchActive || !!selectedProduct}
+            toggleSearch={toggleSearch}
+            goHome={goHome}
+            isHome={!activePanel && !searchActive && !selectedProduct}
+            compact
+          />
+          <BottomNavQuickAdd
+            config={chicConfig}
+            products={products}
+            setProducts={setProducts}
+            refreshBranchLog={refreshBranchLog}
+            setSelectedProduct={setSelectedProduct}
+            compact
+          />
+        </>
       )}
 
       {/* USAGE Panel */}
