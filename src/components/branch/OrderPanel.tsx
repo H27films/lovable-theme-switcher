@@ -10,7 +10,7 @@ import { OrderSummary, type PersistedPendingOrder } from "./OrderSummary";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "./ResultRow";
 import { useTabletMode } from "@/hooks/useTabletMode";
-import { LowBalancePanel, getLowBalanceProducts } from "./LowBalancePanel";
+import { LowBalancePanel } from "./LowBalancePanel";
 
 interface OrderPanelProps {
   config: BranchConfig;
@@ -40,8 +40,6 @@ export const OrderPanel = ({
   const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
   const getName = propNameOf || ((p: any) => p["PRODUCT NAME"]);
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
-  // Count of the Low Balance list (favourites + below-low-balance) for the "LOW BALANCE (n)" button (same rules as the overlay).
-  const lowBalanceCount = getLowBalanceProducts(products, config, { isFav: checkFav, lowBalanceOf }).length;
   const { tablet } = useTabletMode();
 
   const [orderEntries, setOrderEntries] = useState<{ id: number; productName: string; qty: number }[]>([]);
@@ -335,37 +333,13 @@ return createPortal(
   }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            {/* Title + today's date on one line (same arrangement/sizing as the Usage panel) */}
-            <span style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-              <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
-              <span style={{ fontSize: "13px", fontWeight: 300, letterSpacing: "0.01em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
-                {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
-              </span>
+          {/* Title + today's date on one line (same arrangement/sizing as the Usage panel) */}
+          <span style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+            <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
+            <span style={{ fontSize: "13px", fontWeight: 300, letterSpacing: "0.01em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>
+              {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
             </span>
-            {/* LOW BALANCE button — opens the Low Balance overlay (branch Below Par counterpart) */}
-            <button
-              onClick={() => setShowLowBalance(true)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                fontSize: "10px",
-                fontWeight: 600,
-                fontFamily: "Raleway, inherit",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "hsl(var(--foreground, 0 0% 100%))",
-                display: "flex",
-                alignItems: "center",
-                gap: "3px",
-              }}
-            >
-              LOW BALANCE {products.length > 0 && `(${lowBalanceCount})`}
-              <ChevronDown size={11} strokeWidth={2} style={{ color: "hsl(var(--muted-foreground, 0 0% 50%))" }} />
-            </button>
-          </div>
+          </span>
           <button onClick={closePanel} aria-label="Back to menu" title="Back" style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--foreground))", display: "flex", alignItems: "center" }}>
             <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
               <line x1="30" y1="8" x2="1" y2="8" />
@@ -458,7 +432,7 @@ return createPortal(
               </div>
               {expandedGRNs.has(group.key) && group.rows.map(row => (
                 <div key={row.id} style={{ display: "grid", gridTemplateColumns: "52px 1fr 40px 32px", gap: "4px", borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", padding: "8px 0", alignItems: "center", background: "hsl(var(--card, 0 0% 10%))" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", paddingLeft: "8px" }}>—</div>
+                  <div style={{ paddingLeft: "8px" }} />
                   <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", textAlign: "center" }}>{row["PRODUCT NAME"]}</div>
                   <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(120 60% 40%)", textAlign: "center" }}>+{row.QTY}</div>
                   <div style={{ fontSize: "12px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textAlign: "center" }}>{row["ENDING BALANCE"]}</div>
@@ -578,10 +552,14 @@ return createPortal(
         document.body
       )}
 
-          <button onClick={() => setShowAllOrders(true)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "5px 0", fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span>Past Orders</span>
-            <ChevronUp size={14} />
-          </button>
+          <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0" }}>
+            <button onClick={() => setShowAllOrders(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)" }}>
+              Past Orders
+            </button>
+            <button onClick={() => setShowLowBalance(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)" }}>
+              Low Balance
+            </button>
+          </div>
         </div>
       )}
 
