@@ -469,7 +469,7 @@ const setLogViewToOrders = () => {
       onMouseEnter={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.8"; }}
       onMouseLeave={(e) => { if (logView !== "usage") e.currentTarget.style.opacity = "0.6"; }}
     >
-      Usage
+      Salon
     </button>
     <button
       onClick={() => setLogViewToSale()}
@@ -491,7 +491,7 @@ const setLogViewToOrders = () => {
       onMouseEnter={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.8"; }}
       onMouseLeave={(e) => { if (logView !== "sale") e.currentTarget.style.opacity = "0.6"; }}
     >
-      Sales
+      Sold
     </button>
     <button
       onClick={setLogViewToOrders}
