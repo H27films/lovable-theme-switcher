@@ -240,10 +240,10 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
                       animate={{ x: 0, opacity: 1 }}
                       exit={{ x: 40, opacity: 0 }}
                       transition={{ duration: 0.22, ease: "easeOut" }}
-                      style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--green,120 60% 40%))", letterSpacing: "0.04em" }}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.04em" }}
                     >
-                      <Check size={14} strokeWidth={2.5} />
                       Saved
+                      <Check size={14} strokeWidth={2.5} />
                     </motion.span>
                   ) : (
                     <motion.span
@@ -252,7 +252,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
                       animate={{ x: 0, opacity: 1 }}
                       exit={{ x: 40, opacity: 0 }}
                       transition={{ duration: 0.22, ease: "easeOut" }}
-                      style={{ display: "block", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}
+                      style={{ display: "block", fontSize: "14.5px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}
                     >
                       {name}
                     </motion.span>
