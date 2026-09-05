@@ -83,12 +83,7 @@ export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, on
       <ChangePasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
       <SettingsModal open={showSettingsModal} onClose={() => setShowSettingsModal(false)} branch={branch} />
       {favBranch && (
-        <Favourites
-          open={showFavourites}
-          onClose={() => setShowFavourites(false)}
-          onSubmitted={onFavouritesSubmitted ? () => { setShowFavourites(false); onFavouritesSubmitted(); } : undefined}
-          branch={favBranch}
-        />
+        <Favourites open={showFavourites} onClose={() => setShowFavourites(false)} branch={favBranch} />
       )}
     </>
   );

@@ -1,13 +1,5 @@
-import { useId } from "react";
 import type { ReactNode } from "react";
 import { BranchHeader } from "./BranchHeader";
-
-/** Branch tint sets: lighter warm terracotta / tan inspired colors */
-const TINTS: Record<string, { top: string; bottom: string }> = {
-  BOUDOIR: { top: "hsl(20, 32%, 85%)", bottom: "hsl(30, 38%, 90%)" },
-  CHIC: { top: "hsl(20, 32%, 85%)", bottom: "hsl(30, 38%, 90%)" },
-  "NUR YADI": { top: "hsl(20, 32%, 85%)", bottom: "hsl(30, 38%, 90%)" },
-};
 
 interface BranchHomeHeaderProps {
   branch: string;
@@ -17,28 +9,26 @@ interface BranchHomeHeaderProps {
 }
 
 export const BranchHomeHeader = ({ branch, onBack, onFavouritesSubmitted, children }: BranchHomeHeaderProps) => {
-  const tint = TINTS[(branch ?? "").trim().toUpperCase()] ?? TINTS.BOUDOIR;
-  const clipPathId = useId();
-
   return (
     <div style={{ flexShrink: 0, position: "relative" }}>
-      <svg style={{ position: "absolute", width: 0, height: 0 }}>
-        <defs>
-          <clipPath id={clipPathId} clipPathUnits="objectBoundingBox">
-            <path d="M0,0 L1,0 L1,0.7 C1,0.75 0.85,0.88 0.5,0.88 C0.15,0.88 0,0.75 0,0.7 L0,0 Z" />
-          </clipPath>
-        </defs>
+      {/* Decorative tinted wave behind the home header: a single-colour band
+          whose bottom edge is a soft organic curve (peak left-of-centre,
+          easing back down to both edges). z-index -1 keeps it behind all page
+          content; the page root's stacking context keeps it above the page
+          background. Home view only — search uses plain BranchHeader. */}
+      <svg
+        viewBox="0 0 660 260"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "120px", zIndex: -1, pointerEvents: "none" }}
+      >
+        <path
+          d="M0,0 L660,0 L660,206 C 620,204 560,196 510,175 C 450,150 410,118 372,120 C 340,122 310,162 260,180 C 180,208 90,212 0,210 Z"
+          fill="hsl(20, 32%, 88%)"
+        />
       </svg>
-
-      <div style={{ 
-        background: `linear-gradient(180deg, ${tint.top} 0%, ${tint.bottom} 60%, transparent 100%)`,
-        paddingBottom: "24px",
-        clipPath: `url(#${clipPathId})`
-      }}>
-        <BranchHeader branch={branch} onBack={onBack} onFavouritesSubmitted={onFavouritesSubmitted} />
-        {children && <div style={{ padding: "2px 12px 0" }}>{children}</div>}
-        <div style={{ height: "12px" }} />
-      </div>
+      <BranchHeader branch={branch} onBack={onBack} onFavouritesSubmitted={onFavouritesSubmitted} />
+      {children && <div style={{ padding: "2px 12px 0" }}>{children}</div>}
     </div>
   );
 };

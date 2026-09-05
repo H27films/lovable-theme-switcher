@@ -468,7 +468,7 @@ const setLogViewToOrders = () => {
 
   return (
     <div style={{
-      position: "relative", height: "100dvh",
+      position: "relative", zIndex: 0, height: "100dvh",
       background: "hsl(var(--background))",
       color: "hsl(var(--foreground))",
       fontFamily: "'Raleway', sans-serif",
@@ -505,7 +505,7 @@ const setLogViewToOrders = () => {
         )}
 
       {/* MIDDLE SCROLLABLE */}
-       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", marginTop: !searchActive && !selectedProduct ? "-36px" : undefined }}>
+       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
