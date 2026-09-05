@@ -7,7 +7,7 @@ import { useBranchFavourites } from "@/hooks/useBranchFavourites";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
-import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, sortLogByBalance, sortBranchLogTable, type UsageType } from "@/lib/branchSimpleUtils";
+import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, sortLogByBalance, sortBranchLogTable, LOG_PAGE_SIZE, LOG_MAX_ROWS, type UsageType } from "@/lib/branchSimpleUtils";
 // Generic components
 import { BranchHeader } from "@/components/branch/BranchHeader";
 import { BottomNav } from "@/components/branch/BottomNav";
@@ -152,25 +152,32 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
        .select("*")
        .eq("BRANCH", BRANCH_LOG_NAME)
        .order("DATE", { ascending: false })
-       .limit(200);
+       .limit(LOG_PAGE_SIZE);
      setBranchLog(sortBranchLog(data || []));
-     setBranchHasMore((data || []).length === 200);
+     // Full first page = more history exists (page 1 can never reach the 900-row cap).
+     setBranchHasMore((data || []).length === LOG_PAGE_SIZE);
    };
 
    // Append the next page of branch log rows when scrolled to the bottom.
+   // History is capped at LOG_MAX_ROWS (900) rows — deeper history is never loaded.
    const loadMoreBranchLog = async () => {
      const start = branchLog.length;
+     if (start >= LOG_MAX_ROWS) {
+       setBranchHasMore(false);
+       return;
+     }
      const { data } = await (supabase as any)
        .from("AllFileLog")
        .select("*")
        .eq("BRANCH", BRANCH_LOG_NAME)
        .order("DATE", { ascending: false })
-       .range(start, start + 199);
+       .range(start, start + LOG_PAGE_SIZE - 1);
      const batch: LogRow[] = data || [];
      if (batch.length > 0) {
        setBranchLog(prev => sortBranchLog([...prev, ...batch.filter(b => !prev.some(p => p.id === b.id))]));
      }
-     setBranchHasMore(batch.length === 200);
+     // Stop when the page comes back short (end of table) or the cap is reached.
+     setBranchHasMore(batch.length === LOG_PAGE_SIZE && start + batch.length < LOG_MAX_ROWS);
    };
 
 // Product log fetch

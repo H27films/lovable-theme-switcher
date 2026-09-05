@@ -1,3 +1,11 @@
+// ── Paginated log table paging ─────────────────────────────────
+// Rows per page (initial load + each "load more" on scroll) for the branch
+// log tables and the office log table.
+export const LOG_PAGE_SIZE = 300;
+// Hard cap on total rows loaded per table — history deeper than this is
+// never fetched, no matter how far the user scrolls.
+export const LOG_MAX_ROWS = 900;
+
 export const USAGE_TYPES = ["Salon Use", "Staff", "Customer", "FOC", "Transfer"] as const;
 
 // Alphabetical order for cycling through the therapist pill

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
 import { supabase } from "@/integrations/supabase/client";
-import { therapistPillStyle, THERAPISTS } from "@/lib/branchSimpleUtils";
+import { therapistPillStyle, THERAPISTS, LOG_PAGE_SIZE, LOG_MAX_ROWS } from "@/lib/branchSimpleUtils";
 import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { EditEntryModal, type EditEntryUpdates } from "./EditEntryModal";
 
@@ -66,7 +66,6 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   const [expandedOrderGRNs, setExpandedOrderGRNs] = useState<Set<string>>(new Set());
   const ordersMoreBusy = useRef(false);
   const ordersScrollRef = useRef<HTMLDivElement>(null);
-  const ORDERS_PAGE_SIZE = 300;
 
   // Fetch one page of this branch's Orders (newest first). The initial page-0
   // load replaces the list; later pages are appended for infinite scroll.
@@ -77,7 +76,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
       .eq("TYPE", "Order")
       .eq("BRANCH", branchLogName)
       .order("DATE", { ascending: false })
-      .range(start, start + ORDERS_PAGE_SIZE - 1);
+      .range(start, start + LOG_PAGE_SIZE - 1);
     return (data || []) as LogRow[];
   }, [branchLogName]);
 
@@ -90,7 +89,8 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
     fetchOrdersPage(0).then((batch) => {
       if (cancelled) return;
       setOrdersData(batch);
-      setOrdersHasMore(batch.length === ORDERS_PAGE_SIZE);
+      // Full first page = more history exists (page 1 can never reach the 900-row cap).
+      setOrdersHasMore(batch.length === LOG_PAGE_SIZE);
       setOrdersLoading(false);
     });
     return () => { cancelled = true; };
@@ -102,12 +102,18 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
     ordersMoreBusy.current = true;
     setOrdersMoreLoading(true);
     const start = ordersData.length;
+    // History cap: never load past LOG_MAX_ROWS (900) rows in total.
+    if (start >= LOG_MAX_ROWS) {
+      setOrdersHasMore(false);
+      return;
+    }
     const batch = await fetchOrdersPage(start);
     if (batch.length > 0) {
       const seen = new Set(ordersData.map(r => r.id));
       setOrdersData([...ordersData, ...batch.filter(r => !seen.has(r.id))]);
     }
-    setOrdersHasMore(batch.length === ORDERS_PAGE_SIZE);
+    // Stop when the page comes back short (end of table) or the cap is reached.
+    setOrdersHasMore(batch.length === LOG_PAGE_SIZE && start + batch.length < LOG_MAX_ROWS);
     setOrdersMoreLoading(false);
     ordersMoreBusy.current = false;
   };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { sortLogByBalance } from "@/lib/branchSimpleUtils";
+import { sortLogByBalance, LOG_PAGE_SIZE, LOG_MAX_ROWS } from "@/lib/branchSimpleUtils";
 
 interface LogRow {
   id: number;
@@ -43,8 +43,6 @@ const allDataHeaderStyle: React.CSSProperties = {
 const fmtDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
-const LOG_PAGE_SIZE = 300;
-
 const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
   const [logRows, setLogRows] = useState<LogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(true);
@@ -72,7 +70,9 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
       .order("DATE", { ascending: false })
       .range(start, start + LOG_PAGE_SIZE - 1);
     const batch: LogRow[] = data || [];
-    const pageHasMore = batch.length === LOG_PAGE_SIZE;
+    // Full page = more rows likely exist — but never page past the LOG_MAX_ROWS
+    // cap (history deeper than 900 rows is never fetched).
+    const pageHasMore = batch.length === LOG_PAGE_SIZE && start + batch.length < LOG_MAX_ROWS;
     if (!append) {
       setLogRows(sortLogByBalance(batch, r => r["OFFICE BALANCE"]));
       setHasMore(pageHasMore);
