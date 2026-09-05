@@ -34,10 +34,6 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
   const [savedName, setSavedName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Branch balances for products this popup has already written, mirroring the
-  // DB so rapid consecutive taps compute correct STARTING/ENDING balances even
-  // before the optimistic products-state update has round-tripped.
-  const lastEndingRef = useRef<Map<string, number>>(new Map());
   // Serializes submissions so concurrent taps still write (and balance) in order.
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   // Per-product tap-cooldown timestamps + row confirm timer.
@@ -111,9 +107,17 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
     return queueRef.current.then(async () => {
       try {
         const product = products.find(p => p["PRODUCT NAME"] === productName);
-        const startingBalance = lastEndingRef.current.get(productName) ?? Number(product?.[BALANCE_KEY] ?? 0);
+        // Read the live balance from AllFileProducts right before writing so we
+        // never build on stale React state (prevents drift after deletes, etc).
+        const { data: liveRows } = await (supabase as any)
+          .from("AllFileProducts")
+          .select(`"${BALANCE_KEY}", "OFFICE BALANCE"`)
+          .eq("PRODUCT NAME", productName)
+          .limit(1);
+        const live = liveRows?.[0];
+        const startingBalance = Number(live?.[BALANCE_KEY] ?? product?.[BALANCE_KEY] ?? 0);
         const endingBalance = startingBalance + QTY;
-        lastEndingRef.current.set(productName, endingBalance);
+        const officeBalance = Number(live?.["OFFICE BALANCE"] ?? product?.["OFFICE BALANCE"] ?? 0);
 
         const today = new Date().toISOString().split("T")[0];
         const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
@@ -129,7 +133,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           "QTY": QTY,
           "ENDING BALANCE": endingBalance,
           "GRN": null,
-          "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
+          "OFFICE BALANCE": officeBalance,
         });
         if (logErr) throw new Error(logErr.message || "Write failed");
 
@@ -137,15 +141,15 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           .update({ [BALANCE_KEY]: endingBalance })
           .eq("PRODUCT NAME", productName);
 
-        // Optimistic state updates so the home page reflects the new balance instantly.
+        // Optimistic state updates — use the authoritative ending balance.
         setProducts(prev => prev.map(p =>
           p["PRODUCT NAME"] === productName
-            ? { ...p, [BALANCE_KEY]: Number(p[BALANCE_KEY] ?? 0) + QTY }
+            ? { ...p, [BALANCE_KEY]: endingBalance }
             : p
         ));
         setSelectedProduct(prev =>
           prev && prev["PRODUCT NAME"] === productName
-            ? { ...prev, [BALANCE_KEY]: Number(prev[BALANCE_KEY] ?? 0) + QTY }
+            ? { ...prev, [BALANCE_KEY]: endingBalance }
             : prev
         );
 
@@ -153,7 +157,6 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         refreshBranchLog();
         return true;
       } catch (err: any) {
-        lastEndingRef.current.delete(productName);
         setError(err?.message || "Unknown error");
         return false;
       }

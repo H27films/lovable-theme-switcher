@@ -240,7 +240,17 @@ export const OrderPanel = ({
     try {
       for (const entry of pendingOrder.entries) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentOfficeBalance = Number(product?.["OFFICE BALANCE"] ?? 0);
+        // Read live balances straight from AllFileProducts so we never build on
+        // stale state (prevents drift after deletes / other writes on the page).
+        const { data: liveRows } = await (supabase as any)
+          .from("AllFileProducts")
+          .select(`"${BALANCE_KEY}", "OFFICE BALANCE"`)
+          .eq("PRODUCT NAME", entry.productName)
+          .limit(1);
+        const live = liveRows?.[0];
+        const currentBranchBalance = Number(live?.[BALANCE_KEY] ?? product?.[BALANCE_KEY] ?? 0);
+        const currentOfficeBalance = Number(live?.["OFFICE BALANCE"] ?? product?.["OFFICE BALANCE"] ?? 0);
+        const endingBalance = currentBranchBalance + entry.qty;
         const endingOfficeBalance = currentOfficeBalance - entry.qty;
         const { error: logErr } = await (supabase as any).from("AllFileLog").insert({
           "DATE": pendingOrder.date,
@@ -249,22 +259,22 @@ export const OrderPanel = ({
           "SUPPLIER": "Office",
           "TYPE": "Order",
           "THERAPIST": "Hamza",
-          "STARTING BALANCE": entry.starting,
+          "STARTING BALANCE": currentBranchBalance,
           "QTY": entry.qty,
-          "ENDING BALANCE": entry.ending,
+          "ENDING BALANCE": endingBalance,
           "GRN": pendingOrder.grn,
           "OFFICE BALANCE": endingOfficeBalance,
         });
         if (logErr) { setOrderError(logErr.message || "Write failed"); hasError = true; break; }
         await (supabase as any).from("AllFileProducts")
-          .update({ [BALANCE_KEY]: entry.ending })
+          .update({ [BALANCE_KEY]: endingBalance })
           .eq("PRODUCT NAME", entry.productName);
         await (supabase as any).from("AllFileProducts")
           .update({ "OFFICE BALANCE": endingOfficeBalance })
           .eq("PRODUCT NAME", entry.productName);
         setProducts(prev => prev.map(p =>
           p["PRODUCT NAME"] === entry.productName
-            ? { ...p, [BALANCE_KEY]: entry.ending, "OFFICE BALANCE": endingOfficeBalance }
+            ? { ...p, [BALANCE_KEY]: endingBalance, "OFFICE BALANCE": endingOfficeBalance }
             : p
         ));
       }

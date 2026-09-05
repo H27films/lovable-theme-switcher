@@ -205,42 +205,46 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
      refreshBranchLog();
    }, [logView]);
 
-  const reverseRow = async (row: LogRow) => {
+    const reverseRow = async (row: LogRow) => {
     try {
-      // The deletion and product balance restoration is now handled inside LogTable.tsx's handleConfirm
-      // to ensure multi-column resync (like Office Balance).
-      // We only need to delete the log row here if handleConfirm didn't do it, 
-      // but usually onReverse is called FIRST.
+      // The deletion and product balance restoration is handled inside
+      // LogTable.tsx's handleConfirm (multi-column resync incl. Office Balance).
+      // onRestoreComplete (refreshAfterDelete) refreshes product state AFTER the
+      // balance write completes, so it's safe to read authoritative values there.
       await (supabase as any).from("AllFileLog").delete().eq("id", row.id);
-      
-      // We don't perform the balance update here anymore because handleConfirm in LogTable.tsx
-      // does a more comprehensive update (handling both Branch and Office balances).
-      
       // Refresh branch log to reflect deletion
       await refreshBranchLog();
-      
-      // If a product is selected, refresh its specific log and state
-      if (selectedProduct && selectedProduct["PRODUCT NAME"] === row["PRODUCT NAME"]) {
-        const { data: freshProd } = await supabase
-          .from("AllFileProducts")
-          .select("*")
-          .eq("PRODUCT NAME", row["PRODUCT NAME"])
-          .single();
-        
-        if (freshProd) {
-          setProducts(prev => prev.map(p => p["PRODUCT NAME"] === row["PRODUCT NAME"] ? (freshProd as unknown as OfficeProduct) : p));
-          setSelectedProduct(freshProd as unknown as OfficeProduct);
-        }
+    } catch (err) {
+      console.error("Reverse row error:", err);
+    }
+  };
 
+  // Runs AFTER the delete + balance restore completes (via LogTable's
+  // onRestoreComplete), so the on-screen balance matches the DB without needing
+  // a manual page refresh.
+  const refreshAfterDelete = async (row: LogRow) => {
+    try {
+      const prodName = row["PRODUCT NAME"];
+      const { data: freshProd } = await (supabase as any)
+        .from("AllFileProducts")
+        .select("*")
+        .eq("PRODUCT NAME", prodName)
+        .limit(1);
+      if (freshProd && freshProd.length > 0) {
+        const fp = freshProd[0] as unknown as OfficeProduct;
+        setProducts(prev => prev.map(p => p["PRODUCT NAME"] === prodName ? fp : p));
+        setSelectedProduct(prev => (prev && prev["PRODUCT NAME"] === prodName ? fp : prev));
+      }
+      if (selectedProduct && selectedProduct["PRODUCT NAME"] === prodName) {
         const { data: freshPLog } = await (supabase as any)
           .from("AllFileLog").select("*")
-          .eq("PRODUCT NAME", row["PRODUCT NAME"])
+          .eq("PRODUCT NAME", prodName)
           .eq("BRANCH", BRANCH_LOG_NAME)
           .order("DATE", { ascending: false }).limit(50);
         setProductLog(sortLog(freshPLog || []));
       }
     } catch (err) {
-      console.error("Reverse row error:", err);
+      console.error("Refresh after delete error:", err);
     }
   };
 
@@ -463,7 +467,7 @@ const setLogViewToOrders = () => {
   );
 
   const logTableElement = (
-    <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} onLoadMore={selectedProduct ? undefined : loadMoreBranchLog} hasMore={!selectedProduct && branchHasMore} />
+    <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={boudoirConfig.displayName} branchLogName={BRANCH_LOG_NAME} onRestoreComplete={refreshAfterDelete} onLoadMore={selectedProduct ? undefined : loadMoreBranchLog} hasMore={!selectedProduct && branchHasMore} />
   );
 
   return (

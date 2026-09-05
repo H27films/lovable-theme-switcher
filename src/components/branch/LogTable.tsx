@@ -14,6 +14,8 @@ interface LogTableProps {
   onUpdate?: (row: LogRow, updates: EditEntryUpdates) => void | Promise<void>;
   /** Called to change a row's therapist directly from the expanded row (pill cycling). */
   onTherapistChange?: (row: LogRow, therapist: string | null) => void | Promise<void>;
+  /** Called AFTER the delete + balance restore completes so the host page can refresh product state in the correct order. */
+  onRestoreComplete?: (row: LogRow) => void | Promise<void>;
   viewType?: "all" | "usage" | "sale" | "orders";
   /** Called when the edit-entry modal opens (true) or closes (false). */
   onEditModalChange?: (open: boolean) => void;
@@ -35,7 +37,7 @@ interface LogTableProps {
   hasMore?: boolean;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false, scrollWithPage = false, showFlowToggle = false, onLoadMore, hasMore = false }: LogTableProps) => {
+export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, onRestoreComplete, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false, scrollWithPage = false, showFlowToggle = false, onLoadMore, hasMore = false }: LogTableProps) => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
@@ -319,23 +321,25 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
           ? `"${balanceKey}", "PRODUCT NAME", "OFFICE BALANCE"` 
           : `"${balanceKey}", "PRODUCT NAME"`;
 
-        // Fetch the current product record from AllFileProducts
-        const { data, error } = await supabase
+        // Fetch the current product balance(s). Uses limit(1) instead of
+        // .single() so duplicate "PRODUCT NAME" rows can never fail the whole
+        // restore — .single() errors when more than one row matches.
+        const { data, error } = await (supabase as any)
           .from("AllFileProducts")
           .select(selectFields)
           .eq("PRODUCT NAME", productName)
-          .single();
+          .limit(1);
 
         if (error) {
           console.error("Error fetching product for balance update:", error);
-        } else if (data) {
-          const currentBalance = data[balanceKey] ?? 0;
+        } else if (data && data.length > 0) {
+          const currentBalance = data[0][balanceKey] ?? 0;
           const newBalance = (currentBalance as number) - quantity;
           
           const updates: any = { [balanceKey]: newBalance };
 
           if (needsOfficeUpdate) {
-            const currentOfficeBalance = data["OFFICE BALANCE"] ?? 0;
+            const currentOfficeBalance = data[0]["OFFICE BALANCE"] ?? 0;
             const newOfficeBalance = (currentOfficeBalance as number) + quantity;
             updates["OFFICE BALANCE"] = newOfficeBalance;
           }
@@ -356,6 +360,12 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
       }
       // --- End of new Supabase update logic ---
 
+      // The balance write above has now completed, so it's safe for the host
+      // page to refetch this product and refresh its on-screen state (ordering
+      // fix — previously the page could read the balance before this update).
+      if (onRestoreComplete) {
+        await onRestoreComplete(r);
+      }
     } finally {
       setDeleting(null);
     }

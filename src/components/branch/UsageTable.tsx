@@ -205,10 +205,22 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
     let hadError = false;
     try {
       const today = new Date().toISOString().split("T")[0];
+      // Authoritative ending balance per product (computed from live DB reads).
+      const endingByProduct: Record<string, number> = {};
       for (const entry of valid) {
         const product = products.find(p => p["PRODUCT NAME"] === entry.productName);
-        const currentBalance = Number((product as any)?.[BALANCE_KEY] ?? 0);
+        // Read the live balance straight from AllFileProducts so we never build
+        // on stale React state (prevents drift after deletes / other writes).
+        const { data: liveRows } = await (supabase as any)
+          .from("AllFileProducts")
+          .select(`"${BALANCE_KEY}", "OFFICE BALANCE"`)
+          .eq("PRODUCT NAME", entry.productName)
+          .limit(1);
+        const live = liveRows?.[0];
+        const currentBalance = Number(live?.[BALANCE_KEY] ?? product?.[BALANCE_KEY] ?? 0);
         const endingBalance = currentBalance + entry.qty;
+        endingByProduct[entry.productName] = endingBalance;
+        const officeBalance = Number(live?.["OFFICE BALANCE"] ?? product?.["OFFICE BALANCE"] ?? 0);
         const isSale = entry.type === "Customer" || entry.type === "Staff";
         const parsedPrice = Number.parseFloat(entry.sellingPrice);
         const sellingPrice = isSale && Number.isFinite(parsedPrice) ? Number(parsedPrice.toFixed(2)) : null;
@@ -225,7 +237,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
           "QTY": entry.qty,
           "ENDING BALANCE": endingBalance,
           "GRN": null,
-          "OFFICE BALANCE": Number(product?.["OFFICE BALANCE"] ?? 0),
+          "OFFICE BALANCE": officeBalance,
           ...(sellingPrice != null ? { "SELLING PRICE": sellingPrice } : {}),
         });
         if (logErr) { setUsageError(logErr.message || "Write failed"); hadError = true; break; }
@@ -240,17 +252,18 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         const { data } = await (supabase as any)
           .from("AllFileLog").select("*").eq("BRANCH", config.logBranchName)
           .order("DATE", { ascending: false }).limit(50);
+        // Push the authoritative ending balances into state (not stale-relative maths).
         setProducts(prev => prev.map(p => {
-          const entry = valid.find(e => e.productName === p["PRODUCT NAME"]);
-          if (!entry) return p;
-          const cur = Number((p as any)?.[BALANCE_KEY] ?? 0);
-          return { ...p, [BALANCE_KEY]: cur + entry.qty };
+          const ending = endingByProduct[p["PRODUCT NAME"]];
+          if (ending == null) return p;
+          return { ...p, [BALANCE_KEY]: ending };
         }));
         if (selectedProduct) {
-          const entry = valid.find(e => e.productName === selectedProduct["PRODUCT NAME"]);
-          if (entry) {
-            const cur = Number((selectedProduct as any)?.[BALANCE_KEY] ?? 0);
-            setSelectedProduct({ ...selectedProduct, [BALANCE_KEY]: cur - entry.qty });
+          const ending = endingByProduct[selectedProduct["PRODUCT NAME"]];
+          if (ending != null) {
+            // Previously this used `cur - entry.qty` (wrong direction); now it
+            // uses the authoritative ending value computed from the live DB.
+            setSelectedProduct({ ...selectedProduct, [BALANCE_KEY]: ending });
           }
         }
         refreshBranchLog();
