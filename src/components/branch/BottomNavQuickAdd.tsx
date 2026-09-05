@@ -165,7 +165,7 @@ export const BottomNavQuickAdd = ({
             top: bounds.final.top,
             width: bounds.final.width,
             height: bounds.final.height,
-            borderRadius: 24,
+            borderRadius: 16,
             opacity: 1,
           }}
           exit={{
@@ -189,11 +189,12 @@ export const BottomNavQuickAdd = ({
             overflow: "hidden",
             padding: "12px 16px",
             paddingBottom: "14px",
-            background: "linear-gradient(135deg, hsl(var(--background) / 0.85), hsl(var(--background) / 0.75))",
-            backdropFilter: "blur(16px) saturate(170%)",
-            WebkitBackdropFilter: "blur(16px) saturate(170%)",
-            border: "0.5px solid hsl(var(--foreground) / 0.14)",
-            boxShadow: "0 18px 50px hsl(0 0% 0% / 0.22), inset 0 1px 0 hsl(0 0% 100% / 0.45)",
+            // Same colour + edges as the hamburger menu pills in the branch
+            // header: raised cream surface, border-black/5, rounded-2xl, soft shadow.
+            background: "hsl(var(--raised))",
+            border: "1px solid hsl(0 0% 0% / 0.05)",
+            borderRadius: 16,
+            boxShadow: "0 2px 10px hsl(0 0% 0% / 0.08)",
             translate: "var(--page-slide-x, 0vw) 0",
           }}
         >

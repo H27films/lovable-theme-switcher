@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { type BranchConfig, type OfficeProduct } from "@/lib/branchSimple";
@@ -31,7 +31,7 @@ const TAP_COOLDOWN_MS = 500;
  */
 export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setSelectedProduct, onClose }: QuickAddProps) => {
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
-  const [savedRows, setSavedRows] = useState<Set<string>>(() => new Set());
+  const [savedName, setSavedName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Branch balances for products this popup has already written, mirroring the
@@ -40,12 +40,14 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
   const lastEndingRef = useRef<Map<string, number>>(new Map());
   // Serializes submissions so concurrent taps still write (and balance) in order.
   const queueRef = useRef<Promise<void>>(Promise.resolve());
-  // Per-product tap-cooldown timestamps + "✓ Saved" feedback timers.
+  // Per-product tap-cooldown timestamps + row confirm / auto-close timers.
   const lastTapRef = useRef<Map<string, number>>(new Map());
-  const savedTimersRef = useRef<Map<string, number>>(new Map());
+  const saveTimerRef = useRef<number | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
 
   useEffect(() => () => {
-    savedTimersRef.current.forEach(t => window.clearTimeout(t));
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
   }, []);
 
   // Branch favourites from the live `Favourites` Supabase table — the popup's
@@ -107,13 +109,8 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
     return out;
   }, [config.key, favNames]);
 
-  const logProduct = (productName: string) => {
-    const now = Date.now();
-    const last = lastTapRef.current.get(productName) ?? 0;
-    if (now - last < TAP_COOLDOWN_MS) return;
-    lastTapRef.current.set(productName, now);
-
-    queueRef.current = queueRef.current.then(async () => {
+  const logProduct = (productName: string): Promise<boolean> => {
+    return queueRef.current.then(async () => {
       try {
         const product = products.find(p => p["PRODUCT NAME"] === productName);
         const startingBalance = lastEndingRef.current.get(productName) ?? Number(product?.[BALANCE_KEY] ?? 0);
@@ -156,17 +153,36 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
 
         setError(null);
         refreshBranchLog();
-
-        setSavedRows(prev => { const n = new Set(prev); n.add(productName); return n; });
-        const t = window.setTimeout(() => {
-          savedTimersRef.current.delete(productName);
-          setSavedRows(prev => { const n = new Set(prev); n.delete(productName); return n; });
-        }, 2500);
-        savedTimersRef.current.set(productName, t);
+        return true;
       } catch (err: any) {
         lastEndingRef.current.delete(productName);
         setError(err?.message || "Unknown error");
+        return false;
       }
+    });
+  };
+
+  // Row-tap flow: log the product, run the row confirm animation (name swipes
+  // right → "Saved" → name reappears from the left), then close the popup.
+  const handleRowTap = (productName: string) => {
+    if (savedName) return;
+    const now = Date.now();
+    const last = lastTapRef.current.get(productName) ?? 0;
+    if (now - last < TAP_COOLDOWN_MS) return;
+    lastTapRef.current.set(productName, now);
+
+    logProduct(productName).then((ok: boolean) => {
+      if (!ok) return;
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+
+      setSavedName(productName);
+      // Leave time for: name exit right (0.22s) + "Saved" enter (0.22s) + hold.
+      saveTimerRef.current = window.setTimeout(() => {
+        setSavedName(null);
+        // After "Saved" exits and the name re-enters from the left, close the box.
+        closeTimerRef.current = window.setTimeout(onClose, 600);
+      }, 900);
     });
   };
 
@@ -175,7 +191,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.12, duration: 0.25, ease: "easeOut" }}
-      style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+      style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
     >
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "8px", flexShrink: 0 }}>
@@ -197,16 +213,15 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           </div>
         )}
         {items.map(name => {
-          const saved = savedRows.has(name);
+          const saved = savedName === name;
           return (
             <button
               key={name}
-              onClick={() => logProduct(name)}
+              onClick={() => handleRowTap(name)}
               style={{
                 width: "100%",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
                 gap: "10px",
                 padding: "12px 2px",
                 background: "none",
@@ -214,14 +229,39 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
                 borderBottom: "0.5px solid hsl(var(--border))",
                 cursor: "pointer",
                 textAlign: "left",
+                overflow: "hidden",
               }}
             >
-              <span style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}>{name}</span>
-              {saved && (
-                <span style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--green, 120 60% 40%))" }}>
-                  <Check size={12} strokeWidth={2.5} /> Saved
-                </span>
-              )}
+              {/* Row confirm: on tap the name swipes right out, "Saved" shows,
+                  then the name reappears from the left. */}
+              <span style={{ flex: 1, minWidth: 0, display: "block", overflow: "hidden", textAlign: "left" }}>
+                <AnimatePresence mode="wait" initial={false}>
+                  {saved ? (
+                    <motion.span
+                      key="saved"
+                      initial={{ x: 28, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: 40, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeOut" }}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--green,120 60% 40%))", letterSpacing: "0.04em" }}
+                    >
+                      <Check size={14} strokeWidth={2.5} />
+                      Saved
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="name"
+                      initial={{ x: -40, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: 40, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeOut" }}
+                      style={{ display: "block", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}
+                    >
+                      {name}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </span>
             </button>
           );
         })}
