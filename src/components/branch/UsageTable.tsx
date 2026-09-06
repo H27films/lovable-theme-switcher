@@ -492,8 +492,6 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
         <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", paddingBottom: "max(env(safe-area-inset-bottom, 14px), 14px)", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ position: "relative" }}>
-              {/* Outer chromatic diffusion — soft iridescent aura bleeding past the pill */}
-              <motion.span aria-hidden style={{ position: "absolute", inset: -1, borderRadius: "999px", opacity: 0.4, filter: "blur(1px)", pointerEvents: "none", background: "conic-gradient(from 0deg, transparent, #e8e8e8, #ffffff, #a6a6a6, transparent)" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }} />
               <motion.button onClick={handleUsageSubmit} disabled={usageSubmitting} whileHover={usageSubmitting ? undefined : { scale: 1.02 }} whileTap={usageSubmitting ? undefined : { scale: 0.98 }} style={{ position: "relative", background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "7px 20px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1, borderRadius: "999px", overflow: "hidden" }}>
                 {/* Animated iridescent border — static pill-ring mask with a rotating conic gradient behind it.
                     The gradient spins in an oversized inner span so the pill outline itself never rotates. */}
