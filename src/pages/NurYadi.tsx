@@ -475,7 +475,7 @@ const setLogViewToOrders = () => {
 
         {/* Log view tabs - below the header on the landing view */}
         {!searchActive && !selectedProduct && (
-          <div style={{ padding: "2px 12px 0" }}>{logViewTabs}</div>
+          <div style={{ padding: "4px 12px 14px" }}>{logViewTabs}</div>
         )}
 
        
@@ -496,7 +496,7 @@ const setLogViewToOrders = () => {
         )}
 
       {/* MIDDLE SCROLLABLE */}
-       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
+       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "4px" }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
@@ -531,7 +531,7 @@ const setLogViewToOrders = () => {
                 onImageUpdated={handleProductImageUpdated}
               />
             )}
-{!selectedProduct && searchActive && logViewTabs}
+{!selectedProduct && searchActive && (<div style={{ marginBottom: "18px" }}>{logViewTabs}</div>)}
             <div style={selectedProduct ? { background: "hsl(var(--muted) / 0.3)", borderRadius: "16px", padding: "12px" } : { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
             <LogTable rows={activeLog} selectedProduct={selectedProduct} onReverse={reverseRow} onUpdate={updateLogRow} onTherapistChange={changeRowTherapist} viewType={selectedProduct ? "all" : logView} onEditModalChange={setEditModalOpen} branchDisplayName={nuryadiConfig.displayName} branchLogName={BRANCH_LOG_NAME} onRestoreComplete={refreshAfterDelete} scrollWithPage={!!selectedProduct} showFlowToggle={!!selectedProduct} onLoadMore={selectedProduct ? undefined : loadMoreBranchLog} hasMore={!selectedProduct && branchHasMore} />
             </div>

@@ -487,7 +487,7 @@ const setLogViewToOrders = () => {
 
         {/* Log view tabs - below the header on the landing view */}
         {!searchActive && !selectedProduct && (
-          <div style={{ padding: "2px 12px 0" }}>{logViewTabs}</div>
+          <div style={{ padding: "4px 12px 14px" }}>{logViewTabs}</div>
         )}
 
        
@@ -508,7 +508,7 @@ const setLogViewToOrders = () => {
         )}
 
       {/* MIDDLE SCROLLABLE */}
-       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px" }}>
+       <div style={{ flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "4px" }}>
         {showDropdown && searchMode !== "result" && (
           <ProductList
             products={products}
@@ -593,7 +593,7 @@ const setLogViewToOrders = () => {
                 )
               )
             )}
-{!selectedProduct && searchActive && logViewTabs}
+{!selectedProduct && searchActive && (<div style={{ marginBottom: "18px" }}>{logViewTabs}</div>)}
             {!selectedProduct && logTableElement}
           </div>
         )}
