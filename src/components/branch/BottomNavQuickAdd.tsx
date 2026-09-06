@@ -62,11 +62,16 @@ export const BottomNavQuickAdd = ({
   raised = false,
 }: BottomNavQuickAddProps) => {
   const [open, setOpen] = useState(false);
-  // Measured bounds the popup morphs from (the BottomNav pill) to (the card).
-  const [bounds, setBounds] = useState<{ origin: MorphRect; final: MorphRect } | null>(null);
+  // Measured bounds the popup morphs from (the BottomNav pill) to (the card),
+  // plus the card's collapsed rect (icons + chevron, no favourites list).
+  const [bounds, setBounds] = useState<{ origin: MorphRect; final: MorphRect; finalCollapsed: MorphRect } | null>(null);
   // Extra rightward px the control circle shifts while the popup is open so it
   // clears the card; returns to 0 (original position) on close.
   const [xShift, setXShift] = useState(0);
+  // Popup starts collapsed (icons + chevron only); the chevron grows the card
+  // upward to reveal the favourites list. Reset on every open so the popup
+  // always first shows just the icons with their names and balances.
+  const [expanded, setExpanded] = useState(false);
 
   // Sit flush to the right of the BottomNav pill: measure its live width.
   const [navHalf, setNavHalf] = useState(compact ? FALLBACK_NAV_HALF.compact : FALLBACK_NAV_HALF.normal);
@@ -134,6 +139,8 @@ export const BottomNavQuickAdd = ({
     const viewH = window.innerHeight;
     const cardW = Math.min(Math.max(QUICK_ADD_CARD_MIN, viewW * QUICK_ADD_CARD_FRACTION), QUICK_ADD_CARD_MAX);
     const cardH = Math.min(viewH * 0.58, 440);
+    // Collapsed height: header + icon row + chevron only (no favourites list).
+    const collapsedH = Math.min(216, Math.round(viewH * 0.32));
     const navEl = document.querySelector<HTMLElement>("[data-branch-bottom-nav]");
     let origin: MorphRect;
     let gapBottom: number;
@@ -155,6 +162,12 @@ export const BottomNavQuickAdd = ({
         width: cardW,
         height: cardH,
       },
+      finalCollapsed: {
+        left: centerX - cardW / 2,
+        top: Math.max(64, viewH - gapBottom - collapsedH),
+        width: cardW,
+        height: collapsedH,
+      },
     });
     // Shift the control circle right just enough to clear the expanded card,
     // capped so the ✕ never slides past the right edge of the viewport on
@@ -167,6 +180,7 @@ export const BottomNavQuickAdd = ({
 
   const openPopup = () => {
     computePopupLayout();
+    setExpanded(false); // every open starts collapsed: icons + chevron only
     setOpen(true);
   };
 
@@ -183,6 +197,10 @@ export const BottomNavQuickAdd = ({
     setOpen(false);
     setXShift(0);
   };
+
+  // The card springs between its collapsed (icons + chevron) and expanded
+  // (favourites list visible) rects — growing upward, bottom edge anchored.
+  const cardTarget = bounds ? (expanded ? bounds.final : bounds.finalCollapsed) : null;
 
   return createPortal(
     <AnimatePresence>
@@ -208,7 +226,7 @@ export const BottomNavQuickAdd = ({
           }}
         />
       )}
-      {open && bounds && (
+      {open && cardTarget && (
         <motion.div
           key="quickadd-card"
           initial={{
@@ -220,10 +238,10 @@ export const BottomNavQuickAdd = ({
             opacity: 0,
           }}
           animate={{
-            left: bounds.final.left,
-            top: bounds.final.top,
-            width: bounds.final.width,
-            height: bounds.final.height,
+            left: cardTarget.left,
+            top: cardTarget.top,
+            width: cardTarget.width,
+            height: cardTarget.height,
             borderRadius: 16,
             opacity: 1,
           }}
@@ -264,6 +282,8 @@ export const BottomNavQuickAdd = ({
             refreshBranchLog={refreshBranchLog}
             setSelectedProduct={setSelectedProduct}
             onClose={closePopup}
+            expanded={expanded}
+            onToggleExpanded={() => setExpanded(v => !v)}
           />
         </motion.div>
       )}

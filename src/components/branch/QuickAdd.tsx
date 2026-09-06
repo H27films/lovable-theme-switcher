@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import { TfiHandStop } from "react-icons/tfi";
 import { FaToiletPaper } from "react-icons/fa";
 import { FaWineBottle } from "react-icons/fa6";
@@ -17,6 +17,10 @@ interface QuickAddProps {
   refreshBranchLog: () => void | Promise<void>;
   setSelectedProduct: React.Dispatch<React.SetStateAction<OfficeProduct | null>>;
   onClose: () => void;
+  /** Whether the favourites list below the icons is expanded (card grows upward). */
+  expanded: boolean;
+  /** Fired by the chevron between the icons and the favourites list. */
+  onToggleExpanded: () => void;
 }
 
 // Fixed defaults for every Quick Add entry — each tap writes one UsageTable-style
@@ -34,7 +38,7 @@ const TAP_COOLDOWN_MS = 500;
  * one AllFileLog row plus the AllFileProducts balance update — while staying
  * on the branch page (no navigation, no draft entries).
  */
-export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setSelectedProduct, onClose }: QuickAddProps) => {
+export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setSelectedProduct, onClose, expanded, onToggleExpanded }: QuickAddProps) => {
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const [savedName, setSavedName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -283,6 +287,44 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
     );
   })}
 </div>
+
+      {/* Chevron: expands/collapses the favourites list — the card itself grows
+          upward (bottom edge anchored) to make room for the list. */}
+      <button
+        onClick={onToggleExpanded}
+        aria-label={expanded ? "Hide favourites" : "Show favourites"}
+        style={{
+          flexShrink: 0,
+          alignSelf: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "4px 16px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "hsl(var(--muted-foreground))",
+        }}
+      >
+        <motion.span
+          animate={{ rotate: expanded ? 180 : 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          style={{ display: "flex" }}
+        >
+          <ChevronDown size={20} strokeWidth={1.5} />
+        </motion.span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+        <motion.div
+          key="fav-list-wrap"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}
+        >
       {/* Favourite product rows — one tap = one -1 "Salon Use" log entry */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain" }}>
         {items.length === 0 && (
@@ -377,6 +419,9 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           ✗ {error}
         </div>
       )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
