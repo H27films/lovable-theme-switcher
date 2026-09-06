@@ -215,7 +215,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
       </div>
 
  {/* ⬇️ TOP 4 QUICK ACCESS ICONS ⬇️ */}
-<div style={{ display: "flex", gap: "10px", paddingBottom: "12px", flexShrink: 0 }}>
+<div style={{ display: "flex", gap: "10px", paddingBottom: expanded ? "12px" : "6px", flexShrink: 0 }}>
   {[
     { productName: "Hand Gloves (M - China)", displayText: "Gloves" },
     { productName: "Kitchen Roll", displayText: "Tissue" },
@@ -287,33 +287,6 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
     );
   })}
 </div>
-
-      {/* Chevron: expands/collapses the favourites list — the card itself grows
-          upward (bottom edge anchored) to make room for the list. */}
-      <button
-        onClick={onToggleExpanded}
-        aria-label={expanded ? "Hide favourites" : "Show favourites"}
-        style={{
-          flexShrink: 0,
-          alignSelf: "center",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "4px 16px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          color: "hsl(var(--muted-foreground))",
-        }}
-      >
-        <motion.span
-          animate={{ rotate: expanded ? 180 : 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          style={{ display: "flex" }}
-        >
-          <ChevronDown size={20} strokeWidth={1.5} />
-        </motion.span>
-      </button>
 
       <AnimatePresence initial={false}>
         {expanded && (
@@ -422,6 +395,35 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Chevron pinned to the BOTTOM of the card (the favourites list flexes
+          above it in the expanded view). Collapsed shows an UP chevron — the
+          card grows upward when tapped; expanded shows a DOWN chevron —
+          tapping collapses the card back down. */}
+      <button
+        onClick={onToggleExpanded}
+        aria-label={expanded ? "Hide favourites" : "Show favourites"}
+        style={{
+          flexShrink: 0,
+          alignSelf: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0px 16px 2px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "hsl(var(--muted-foreground))",
+        }}
+      >
+        <motion.span
+          animate={{ rotate: expanded ? 0 : 180 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          style={{ display: "flex" }}
+        >
+          <ChevronDown size={20} strokeWidth={1.5} />
+        </motion.span>
+      </button>
     </motion.div>
   );
 };
