@@ -473,7 +473,7 @@ const setLogViewToOrders = () => {
   return (
     <div style={{
       position: "relative", zIndex: 0, height: "100dvh",
-      background: "linear-gradient(to bottom, hsl(38 30% 93.5%) 0%, hsl(var(--background)) 72px)",
+      background: "linear-gradient(to bottom, hsl(38 30% 90%) 0%, hsl(var(--background)) 140px)",
       color: "hsl(var(--foreground))",
       fontFamily: "'Raleway', sans-serif",
       display: "flex",
