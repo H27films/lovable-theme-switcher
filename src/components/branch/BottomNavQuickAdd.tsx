@@ -140,7 +140,9 @@ export const BottomNavQuickAdd = ({
     const cardW = Math.min(Math.max(QUICK_ADD_CARD_MIN, viewW * QUICK_ADD_CARD_FRACTION), QUICK_ADD_CARD_MAX);
     const cardH = Math.min(viewH * 0.58, 440);
     // Collapsed height: header + icon row + chevron only (no favourites list).
-    const collapsedH = Math.min(216, Math.round(viewH * 0.32));
+    // Sized to hug that content so the chevron lands centred in the bottom
+    // strip instead of floating high above empty space.
+    const collapsedH = Math.min(180, Math.round(viewH * 0.32));
     const navEl = document.querySelector<HTMLElement>("[data-branch-bottom-nav]");
     let origin: MorphRect;
     let gapBottom: number;
@@ -265,7 +267,7 @@ export const BottomNavQuickAdd = ({
             flexDirection: "column",
             overflow: "hidden",
             padding: "12px 16px",
-            paddingBottom: "14px",
+            paddingBottom: "6px",
             // Same colour + edges as the hamburger menu pills in the branch
             // header: raised cream surface, border-black/5, rounded-2xl, soft shadow.
             background: "hsl(var(--raised))",

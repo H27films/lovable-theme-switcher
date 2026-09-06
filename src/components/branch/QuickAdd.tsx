@@ -406,10 +406,13 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         style={{
           flexShrink: 0,
           alignSelf: "center",
+          // Absorb any leftover collapsed-view slack ABOVE the chevron so it
+          // sits centred in the bottom strip (pinned low, not floating high).
+          marginTop: "auto",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "0px 16px 2px",
+          padding: "10px 16px 4px",
           background: "none",
           border: "none",
           cursor: "pointer",
