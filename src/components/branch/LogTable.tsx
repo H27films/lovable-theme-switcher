@@ -518,278 +518,290 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
           {showFlowToggle && flowRows.length === 0 && (
             <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
           )}
-          {flowRows.map((row, idx) => {
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
-            const dateStr = formatDate(row.DATE);
-            // Compare against the DISPLAYED list (flowRows) so date grouping stays correct
-            // in the filtered usage/sale views, not just in the unfiltered all view.
-            const prevDateStr = idx > 0 ? formatDate(flowRows[idx - 1].DATE) : null;
-            const showDate = dateStr !== prevDateStr;
-            const dateSeparator = showDate && idx > 0;
-            const nextDateStr = idx < flowRows.length - 1 ? formatDate(flowRows[idx + 1].DATE) : null;
-            const isLastRowBeforeDateChange = nextDateStr !== null && nextDateStr !== dateStr;
-            const isDeleting = deleting === row.id;
-            const expanded = expandedId === row.id;
-            const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
-            const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
-            const canCycleTherapist = !!onTherapistChange && withinCutoff;
-            // Cycled therapist is staged locally until the row collapses; show it immediately on the pill
-            const pillTherapist = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist.value : row.THERAPIST;
+{flowRows.map((row, idx) => {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
+  const dateStr = formatDate(row.DATE);
+  const prevDateStr = idx > 0 ? formatDate(flowRows[idx - 1].DATE) : null;
+  const showDate = dateStr !== prevDateStr;
+  const dateSeparator = showDate && idx > 0;
+  const nextDateStr = idx < flowRows.length - 1 ? formatDate(flowRows[idx + 1].DATE) : null;
+  const isLastRowBeforeDateChange = nextDateStr !== null && nextDateStr !== dateStr;
+  const isDeleting = deleting === row.id;
+  const expanded = expandedId === row.id;
+  const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
+  const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
+  const canCycleTherapist = !!onTherapistChange && withinCutoff;
+  const pillTherapist = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist.value : row.THERAPIST;
 
-            return (
-              <div key={row.id} style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}>
-                                <AnimatePresence initial={false} mode="wait">
-                  {!expanded || readOnly ? (
-                    <motion.div
-                      key="collapsed"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: "easeInOut" }}
-                      style={{ overflow: "hidden" }}
-                    >
-                  <div
-                  onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(row.id); }}
-                  style={{ 
-                    display: "grid", 
-                    gridTemplateColumns: gridCols, 
-                    gap: "4px", 
-                    padding: "8px 0", 
-                    borderTop: dateSeparator ? (scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)") : "none", 
-                    borderBottom: "none",
-                    marginTop: dateSeparator ? "4px" : "0",  
-                    alignItems: "start", 
-                    cursor: readOnly ? "default" : "pointer" 
-                  }}
-                >
-                  {selectedProduct ? (
-                    <>
-                      <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                      <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-                        {row.THERAPIST ? (
-                          <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "2px 5px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
-                        ) : (
-                          <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
-                        )}
+  return (
+    <motion.div
+      key={row.id}
+      layout
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}
+    >
+      <AnimatePresence initial={false} mode="wait">
+        {!expanded || readOnly ? (
+          <motion.div
+            key="collapsed"
+            layout
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              duration: 0.22,
+              ease: "easeInOut",
+              layout: { type: "spring", stiffness: 300, damping: 30 }
+            }}
+            style={{ overflow: "hidden" }}
+          >
+            <div
+              onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(row.id); }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: gridCols,
+                gap: "4px",
+                padding: "8px 0",
+                borderTop: dateSeparator ? (scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)") : "none",
+                borderBottom: "none",
+                marginTop: dateSeparator ? "4px" : "0",
+                alignItems: "start",
+                cursor: readOnly ? "default" : "pointer"
+              }}
+            >
+              {selectedProduct ? (
+                <>
+                  <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                  <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
+                    {row.THERAPIST ? (
+                      <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "2px 5px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
+                    ) : (
+                      <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
+                        {row["PRODUCT NAME"] || "—"}
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                          <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
-                            {row["PRODUCT NAME"] || "—"}
-                          </div>
-                          {!expanded && (row as any)["THERAPIST"] && (
-                            <span style={{
-                              ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists),
-                              padding: "2px 6px",
-                              borderRadius: "999px",
-                              fontSize: "8px",
-                              fontWeight: 600,
-                              fontFamily: "Raleway, inherit",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.02em"
-                            }}>
-                              {(row as any)["THERAPIST"]}
-                            </span>
-                          )}
+                      {!expanded && (row as any)["THERAPIST"] && (
+                        <span style={{
+                          ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists),
+                          padding: "2px 6px",
+                          borderRadius: "999px",
+                          fontSize: "8px",
+                          fontWeight: 600,
+                          fontFamily: "Raleway, inherit",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.02em"
+                        }}>
+                          {(row as any)["THERAPIST"]}
+                        </span>
+                      )}
+                    </div>
+                    {!expanded && (row as any)["NOTES"] && (
+                      <span style={{
+                        fontSize: "11px",
+                        fontWeight: 400,
+                        fontFamily: "Raleway, inherit",
+                        color: "hsl(var(--muted-foreground))",
+                        lineHeight: 1.2
+                      }}>
+                        {(row as any)["NOTES"]}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="expanded"
+            layout
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              duration: 0.22,
+              ease: "easeInOut",
+              layout: { type: "spring", stiffness: 300, damping: 30 }
+            }}
+            style={{ overflow: "hidden" }}
+          >
+            <motion.div
+              layout
+              style={{
+                margin: "2px 0 0",
+                padding: "8px 6px 12px 6px",
+                background: "hsl(var(--muted) / 0.35)",
+                borderRadius: "12px"
+              }}
+            >
+              {/* Main data row — clickable to collapse */}
+              <div
+                onClick={() => changeExpandedRow(null)}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: gridCols,
+                  gap: "4px",
+                  padding: "0 0 8px",
+                  alignItems: "start",
+                  cursor: "pointer"
+                }}
+              >
+                {selectedProduct ? (
+                  <>
+                    <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                    <div />
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
+                          {row["PRODUCT NAME"] || "—"}
                         </div>
-                        {!expanded && (row as any)["NOTES"] && (
-                          <span style={{ 
-                            fontSize: "11px", 
-                            fontWeight: 400, 
-                            fontFamily: "Raleway, inherit", 
-                            color: "hsl(var(--muted-foreground))",
-                            lineHeight: 1.2
-                          }}>
-                            {(row as any)["NOTES"]}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                    </>
-                  )}
-                                </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="expanded"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: "easeInOut" }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      {/* Tinted box wraps BOTH data row + controls */}
-                      <div style={{ margin: "2px 0 0", padding: "8px 0", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}>
-                        {/* Main data row — clickable to collapse */}
-                        <div
-                          onClick={() => changeExpandedRow(null)}
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: gridCols,
-                            gap: "4px",
-                            padding: "0 0 8px",
-                            alignItems: "start",
-                            cursor: "pointer"
-                          }}
-                        >
-                          {selectedProduct ? (
-                            <>
-                              <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                              <div />
-                            </>
-                          ) : (
-                            <>
-                              <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
-                                    {row["PRODUCT NAME"] || "—"}
-                                  </div>
-                                </div>
-                              </div>
-                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                            </>
-                          )}
-                        </div>
-                        {/* Controls row: Edit / Delete + therapist cycling */}
-                        <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
-                                            {/* Day name sits in the Date column of the expanded row, level with the Edit / Delete pills */}
-                      <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDayName(row.DATE)}</div>
-                      {/* Edit / Delete buttons sit under the content columns (after the Date col): product view aligns under Qty (col 2), home view under Product (col 2) */}
-                      <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
-                        {onUpdate && withinCutoff && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Open the modal from the staged therapist (if one was cycled), then commit it
-                              const stagedPending = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist : null;
-                              commitPendingTherapist();
-                              setEditRow(stagedPending ? { ...row, THERAPIST: stagedPending.value } : row);
-                            }}
-                            style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}
-                          >
-                            Edit
-                          </button>
-                        )}
-                        {withinCutoff && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setConfirmPos({ top: rect.top, left: rect.left });
-                              setConfirmRow(row);
-                            }}
-                            disabled={isDeleting}
-                            style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}
-                          >
-                            {isDeleting ? "Deleting..." : "Delete"}
-                          </button>
-                        )}
-                      </div>
-                      {/* Colour-coded therapist pill, aligned under the Type column (col 4 on product view, col 5 on home view).
-                          Click it to cycle therapists (… → NONE → first therapist → …) directly — same edit window as Edit / Delete. */}
-                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                        {canCycleTherapist && therapistCycleList.length > 0 ? (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); cycleRowTherapist(row); }}
-                            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}
-                          >
-                            <span style={{ ...(pillTherapist ? therapistPillStyle(pillTherapist, therapistCycleList) : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist ? pillTherapist : "NONE"}</span>
-                          </button>
-                        ) : pillTherapist ? (
-                          <span style={{ ...therapistPillStyle(pillTherapist, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist}</span>
-                        ) : (
-                                                    <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
-                        )}
                       </div>
                     </div>
-                  </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                  </>
+                )}
               </div>
-            );
-          })}
+
+              {/* Controls row: Edit / Delete + therapist cycling */}
+              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", paddingTop: "8px", borderTop: "0.5px solid hsl(var(--border) / 0.2)", alignItems: "center" }}>
+                <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDayName(row.DATE)}</div>
+                <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
+                  {onUpdate && withinCutoff && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const stagedPending = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist : null;
+                        commitPendingTherapist();
+                        setEditRow(stagedPending ? { ...row, THERAPIST: stagedPending.value } : row);
+                      }}
+                      style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {withinCutoff && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setConfirmPos({ top: rect.top, left: rect.left });
+                        setConfirmRow(row);
+                      }}
+                      disabled={isDeleting}
+                      style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}
+                    >
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </button>
+                  )}
+                </div>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                  {canCycleTherapist && therapistCycleList.length > 0 ? (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); cycleRowTherapist(row); }}
+                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}
+                    >
+                      <span style={{ ...(pillTherapist ? therapistPillStyle(pillTherapist, therapistCycleList) : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist ? pillTherapist : "NONE"}</span>
+                    </button>
+                  ) : pillTherapist ? (
+                    <span style={{ ...therapistPillStyle(pillTherapist, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist}</span>
+                  ) : (
+                    <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
+                  )}
+                </div>
+                </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+})}
+          {moreLoading && (
+            <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
+          )}
+          {!hasMore && !moreLoading && onLoadMore && rows.length > 0 && (
+            <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
+          )}
+          {/* Bottom sentinel — triggers the next page of the branch log on scroll */}
+          <div ref={mainSentinelRef} style={{ height: 1 }} />
         </div>
-        {moreLoading && (
-          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
-        )}
-        {!hasMore && !moreLoading && onLoadMore && rows.length > 0 && (
-          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
-        )}
-        {/* Bottom sentinel — triggers the next page of the branch log on scroll */}
-        <div ref={mainSentinelRef} style={{ height: 1 }} />
       </div>
 
       {editRow && onUpdate && (
-        <EditEntryModal
-          row={editRow}
-          branchDisplayName={branchDisplayName}
-          onSave={async (updates) => {
-            await onUpdate(editRow, updates);
-            setEditRow(null);
-          }}
-          onClose={() => setEditRow(null)}
-        />
-      )}
+<EditEntryModal
+  row={editRow}
+  branchDisplayName={branchDisplayName}
+  onSave={async (updates) => {
+    await onUpdate(editRow, updates);
+    setEditRow(null);
+  }}
+  onClose={() => setEditRow(null)}
+/>
+)}
 
-      {confirmRow && confirmPos && createPortal(
-        <div 
-          onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
-          style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 1000, background: "rgba(0,0,0,0.1)" }}
-        >
-          <div 
-            onClick={e => e.stopPropagation()}
-            style={{ 
-              position: "fixed", 
-              top: Math.max(10, confirmPos.top - 40), 
-              left: Math.min(window.innerWidth - 160, confirmPos.left), 
-              background: "hsl(var(--background))", 
-              border: "1px solid hsl(var(--border))", 
-              borderRadius: "12px", 
-              padding: "8px", 
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              zIndex: 1001
-            }}
-          >
-            <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit" }}>Are you sure?</span>
-            <button 
-              onClick={() => handleConfirm(confirmRow)}
-              style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <Check size={14} />
-            </button>
-            <button 
-              onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
-              style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
-  );
+{confirmRow && confirmPos && createPortal(
+<div 
+  onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
+  style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 1000, background: "rgba(0,0,0,0.1)" }}
+>
+  <div 
+    onClick={e => e.stopPropagation()}
+    style={{ 
+      position: "fixed", 
+      top: Math.max(10, confirmPos.top - 40), 
+      left: Math.min(window.innerWidth - 160, confirmPos.left), 
+      background: "hsl(var(--background))", 
+      border: "1px solid hsl(var(--border))", 
+      borderRadius: "12px", 
+      padding: "8px", 
+      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      zIndex: 1001
+    }}
+  >
+    <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit" }}>Are you sure?</span>
+    <button 
+      onClick={() => handleConfirm(confirmRow)}
+      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+    >
+      <Check size={14} />
+    </button>
+    <button 
+      onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
+      style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+    >
+      <X size={14} />
+    </button>
+  </div>
+</div>,
+document.body
+)}
+</div>
+);
 };
-
-
-
