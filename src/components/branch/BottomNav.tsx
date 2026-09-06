@@ -31,7 +31,7 @@ const items = [
 // of centring the pill alone — which pushed the circle off-screen on phones.
 export const QUICK_ADD_METRICS = {
   side: { normal: 54, compact: 46 },
-  gap: { normal: 10, compact: 8 },
+  gap: { normal: 6, compact: 5 },
 } as const;
 
 /** Half the extra width the Quick Add circle adds to the (nav + circle) group.
