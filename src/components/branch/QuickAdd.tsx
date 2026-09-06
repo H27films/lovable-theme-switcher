@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X, Hand, Package, Droplets } from "lucide-react";
+import { Check, X } from "lucide-react";
+import { TfiHandStop } from "react-icons/tfi";
+import { FaToiletPaper } from "react-icons/fa";
+import { FaWineBottle } from "react-icons/fa6";
+import { RiAttachmentLine } from "react-icons/ri";
 import { supabase } from "@/integrations/supabase/client";
 import { type BranchConfig, type OfficeProduct } from "@/lib/branchSimple";
 import { QUICK_ADD_PRODUCTS, FAVOURITES_TABLE_COLUMN } from "@/lib/quickAdd";
@@ -234,26 +238,26 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
       >
         {/* Icon box with balance inside below icon */}
         <div style={{
-          width: "56px",
-          height: "64px",
+          width: "64px",
+          height: "72px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "8px 0",
-          borderRadius: "6px",
+          padding: "10px 0",
+          borderRadius: "8px",
           background: "hsl(var(--muted))",
           border: "1px solid hsl(var(--border))",
         }}>
           {/* Simple black icon */}
-          {displayText === "Gloves" && <Hand size={20} strokeWidth={1.5} color="#000" />}
-          {displayText === "Kitchen Roll" && <Package size={20} strokeWidth={1.5} color="#000" />}
-          {displayText === "Remover" && <Droplets size={20} strokeWidth={1.5} color="#000" />}
+          {displayText === "Gloves" && <TfiHandStop size={24} color="#000" />}
+          {displayText === "Kitchen Roll" && <FaToiletPaper size={24} color="#000" />}
+          {displayText === "Remover" && <FaWineBottle size={24} color="#000" />}
           
           {/* Balance inside box below icon */}
           <span style={{
-            fontSize: "11px",
-            fontWeight: 300,
+            fontSize: "12px",
+            fontWeight: 400,
             fontFamily: "Raleway, inherit",
             color: balanceColor,
           }}>
@@ -263,13 +267,13 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         
         {/* Text label below box */}
         <span style={{
-          fontSize: "11px",
+          fontSize: "12px",
           fontWeight: 300,
           fontFamily: "Raleway, inherit",
           color: "hsl(var(--foreground))",
           textAlign: "center",
           lineHeight: 1.2,
-          maxWidth: "60px",
+          maxWidth: "68px",
         }}>
           {displayText}
         </span>
@@ -280,7 +284,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
       {/* Favourite product rows — one tap = one -1 "Salon Use" log entry */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain" }}>
         {items.length === 0 && (
-          <div style={{ padding: "18px 0 10px", textAlign: "center", fontSize: "11px", letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+          <div style={{ padding: "18px 0 10px", textAlign: "center", fontSize: "12px", letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
             {favsLoading ? "LOADING…" : "NO QUICK ADD PRODUCTS SET"}
           </div>
         )}
@@ -299,7 +303,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         display: "flex",
         alignItems: "center",
         gap: "10px",
-        padding: "12px 2px",
+                 padding: "14px 2px",
         background: "none",
         border: "none",
         borderBottom: "0.5px solid hsl(var(--border))",
@@ -318,7 +322,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 40, opacity: 0 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.04em" }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.04em" }}
             >
               <div style={{ 
                 width: "16px", 
@@ -330,7 +334,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
                 justifyContent: "center",
                 flexShrink: 0
               }}>
-                <Check size={12} strokeWidth={3} color="white" />
+              <RiAttachmentLine size={14} color="#fff" />
               </div>
               Saved
             </motion.span>
@@ -341,7 +345,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 40, opacity: 0 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              style={{ display: "block", fontSize: "14.5px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}
+              style={{ display: "block", fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.4 }}
             >
               {name}
             </motion.span>
@@ -351,9 +355,9 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
 
       {/* Balance display on the right */}
 <span style={{
-  flexShrink: 0,
-  fontSize: "14px",
-  fontWeight: 400,
+    flexShrink: 0,
+    fontSize: "15px",
+    fontWeight: 300,
   fontFamily: "Raleway, inherit",
   color: balanceColor,
   minWidth: "40px",
@@ -366,8 +370,8 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
 })}
       </div>
 
-      {error && (
-        <div style={{ flexShrink: 0, paddingTop: "8px", fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", fontFamily: "Raleway, inherit" }}>
+            {error && (
+        <div style={{ flexShrink: 0, paddingTop: "8px", fontSize: "12px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", fontFamily: "Raleway, inherit" }}>
           ✗ {error}
         </div>
       )}
