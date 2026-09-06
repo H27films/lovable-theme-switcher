@@ -213,58 +213,85 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           </div>
         )}
         {items.map(name => {
-          const saved = savedName === name;
-          return (
-            <button
-              key={name}
-              onClick={() => handleRowTap(name)}
-              style={{
-                width: "100%",
+  const saved = savedName === name;
+  const product = products.find(p => p["PRODUCT NAME"] === name);
+  const balance = Number(product?.[BALANCE_KEY] ?? 0);
+  const balanceColor = balance > 0 ? "#15803d" : "#991b1b"; // darker green : dark red
+
+  return (
+    <button
+      key={name}
+      onClick={() => handleRowTap(name)}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        padding: "12px 2px",
+        background: "none",
+        border: "none",
+        borderBottom: "0.5px solid hsl(var(--border))",
+        cursor: "pointer",
+        textAlign: "left",
+        overflow: "hidden",
+      }}
+    >
+      {/* Row confirm animation */}
+      <span style={{ flex: 1, minWidth: 0, display: "block", overflow: "hidden", textAlign: "left" }}>
+        <AnimatePresence mode="wait" initial={false}>
+          {saved ? (
+            <motion.span
+              key="saved"
+              initial={{ x: 28, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 40, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.04em" }}
+            >
+              <div style={{ 
+                width: "16px", 
+                height: "16px", 
+                backgroundColor: "#000", 
+                borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
-                padding: "12px 2px",
-                background: "none",
-                border: "none",
-                borderBottom: "0.5px solid hsl(var(--border))",
-                cursor: "pointer",
-                textAlign: "left",
-                overflow: "hidden",
-              }}
+                justifyContent: "center",
+                flexShrink: 0
+              }}>
+                <Check size={12} strokeWidth={3} color="white" />
+              </div>
+              Saved
+            </motion.span>
+          ) : (
+            <motion.span
+              key="name"
+              initial={{ x: -40, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 40, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              style={{ display: "block", fontSize: "14.5px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}
             >
-              {/* Row confirm: on tap the name swipes right out, "Saved" shows,
-                  then the name reappears from the left. */}
-              <span style={{ flex: 1, minWidth: 0, display: "block", overflow: "hidden", textAlign: "left" }}>
-                <AnimatePresence mode="wait" initial={false}>
-                  {saved ? (
-                    <motion.span
-                      key="saved"
-                      initial={{ x: 28, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: 40, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: "easeOut" }}
-                      style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.04em" }}
-                    >
-                      Saved
-                      <Check size={14} strokeWidth={2.5} />
-                    </motion.span>
-                  ) : (
-                    <motion.span
-                      key="name"
-                      initial={{ x: -40, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: 40, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: "easeOut" }}
-                      style={{ display: "block", fontSize: "14.5px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.35 }}
-                    >
-                      {name}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </span>
-            </button>
-          );
-        })}
+              {name}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </span>
+
+      {/* Balance display on the right */}
+<span style={{
+  flexShrink: 0,
+  fontSize: "14px",
+  fontWeight: 400,
+  fontFamily: "Raleway, inherit",
+  color: balanceColor,
+  minWidth: "40px",
+  textAlign: "right",
+}}>
+  {balance}
+</span>
+    </button>
+  );
+})}
       </div>
 
       {error && (
