@@ -12,6 +12,11 @@ interface BottomNavProps {
   compact?: boolean;
   /** Lift the nav above a fixed bottom bar (e.g. the collapsed past-data footer). */
   raised?: boolean;
+  /** True while the BottomNavQuickAdd circle is mounted beside this nav: the
+   *  pill offsets itself left by quickAddGroupShift so the (nav + Quick Add
+   *  circle) GROUP is what gets centred on screen, keeping the circle inside
+   *  the viewport on narrow phones instead of spilling off the right edge. */
+  withQuickAdd?: boolean;
 }
 
 const items = [
@@ -20,6 +25,23 @@ const items = [
   { key: "ORDER", Icon: ShoppingCart, label: "Order" },
   { key: "SEARCH", Icon: SearchIcon, label: "Search" },
 ] as const;
+
+// Shared geometry of the Quick Add circle (BottomNavQuickAdd). Both components
+// read these so the nav pill + gap + circle can be centred as ONE group instead
+// of centring the pill alone — which pushed the circle off-screen on phones.
+export const QUICK_ADD_METRICS = {
+  side: { normal: 54, compact: 46 },
+  gap: { normal: 10, compact: 8 },
+} as const;
+
+/** Half the extra width the Quick Add circle adds to the (nav + circle) group.
+ *  The BottomNav shifts itself this far LEFT when withQuickAdd is set, and
+ *  BottomNavQuickAdd mirrors the same offset so the circle stays flush. */
+export const quickAddGroupShift = (compact: boolean): number => {
+  const side = compact ? QUICK_ADD_METRICS.side.compact : QUICK_ADD_METRICS.side.normal;
+  const gap = compact ? QUICK_ADD_METRICS.gap.compact : QUICK_ADD_METRICS.gap.normal;
+  return (side + gap) / 2;
+};
 
 export const BottomNav = ({
   activePanel,
@@ -30,6 +52,7 @@ export const BottomNav = ({
   isHome,
   compact = false,
   raised = false,
+  withQuickAdd = false,
 }: BottomNavProps) => {
   const isActive = (key: string) => {
     if (key === "HOME") return isHome;
@@ -49,11 +72,13 @@ export const BottomNav = ({
   return createPortal(
     <nav
       // Stable hook for BottomNavQuickAdd to measure this pill's live width
-      // so the standalone Quick Add circle can sit flush to its right.
+      // so the standalone Quick Add circle can sit flush to its right. When
+      // withQuickAdd is set, the pill shifts left by quickAddGroupShift so the
+      // (pill + circle) group — not the pill alone — is centred on screen.
       data-branch-bottom-nav
       style={{
         position: "fixed",
-        left: "50%",
+        left: withQuickAdd ? `calc(50% - ${quickAddGroupShift(compact)}px)` : "50%",
         transform: "translateX(-50%)",
         // Follow the page slide transition (vars driven by useSlideExit/useSlideEnter)
         translate: "var(--page-slide-x, 0vw) 0",

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Plus, X } from "lucide-react";
 import { type BranchConfig, type OfficeProduct } from "@/lib/branchSimple";
 import { QuickAdd } from "./QuickAdd";
+import { QUICK_ADD_METRICS, quickAddGroupShift } from "./BottomNav";
 
 interface BottomNavQuickAddProps {
   config: BranchConfig;
@@ -32,6 +33,11 @@ const FALLBACK_NAV_HALF = { normal: 138, compact: 116 };
  * pill itself (Framer Motion spring, measured from the nav's live bounds) so the
  * user never leaves the branch page. While open the button becomes a circular ✕
  * close control. Backdrop tap, Esc, ✕ or the card's close button collapse it.
+ *
+ * The nav pill and this circle are treated as ONE group: the paired BottomNav
+ * (rendered with withQuickAdd) shifts left by quickAddGroupShift and this
+ * component mirrors the same offset, so the group as a whole is centred and
+ * the circle never spills off the right edge on narrow phones.
  */
 export const BottomNavQuickAdd = ({
   config,
@@ -72,8 +78,11 @@ export const BottomNavQuickAdd = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const gap = compact ? 8 : 10;
-  const side = compact ? 46 : 54;
+  const gap = compact ? QUICK_ADD_METRICS.gap.compact : QUICK_ADD_METRICS.gap.normal;
+  const side = compact ? QUICK_ADD_METRICS.side.compact : QUICK_ADD_METRICS.side.normal;
+  // The paired BottomNav shifts this far left so the (nav + circle) GROUP is
+  // centred; mirror it so the circle stays flush to the pill's right edge.
+  const groupShift = quickAddGroupShift(compact);
   const bottomOffset = compact
     ? "env(safe-area-inset-bottom, 0px)"
     : `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 16}px)`;
@@ -113,10 +122,13 @@ export const BottomNavQuickAdd = ({
         height: cardH,
       },
     });
-    // Shift the control circle right just enough to clear the expanded card.
-    const controlLeft = viewW / 2 + navHalf + gap;
+    // Shift the control circle right just enough to clear the expanded card,
+    // capped so the ✕ never slides past the right edge of the viewport on
+    // small phones (it simply rests on the card's corner instead).
+    const controlLeft = viewW / 2 + navHalf + gap - groupShift;
     const cardRight = (viewW + cardW) / 2;
-    setXShift(Math.max(0, cardRight + 10 - controlLeft));
+    const maxLeft = viewW - side - 10;
+    setXShift(Math.max(0, Math.min(cardRight + 10, maxLeft) - controlLeft));
     setOpen(true);
   };
 
@@ -220,9 +232,10 @@ export const BottomNavQuickAdd = ({
         style={{
           ...glassSurface,
           position: "fixed",
-          // Circle's LEFT edge sits `gap` px clear of the nav pill's right edge
-          // (no centering margin — centering it caused the pill overlap).
-          left: `calc(50% + ${navHalf + gap}px)`,
+          // Circle's LEFT edge sits `gap` px clear of the nav pill's right edge.
+          // Both pill and circle are offset by -groupShift so the combined
+          // group centres on screen instead of the pill alone.
+          left: `calc(50% + ${navHalf + gap - groupShift}px)`,
           bottom: bottomOffset,
           zIndex: open ? 100001 : 99999,
           width: side,

@@ -612,6 +612,7 @@ const setLogViewToOrders = () => {
             toggleSearch={toggleSearch}
             goHome={goHome}
             isHome={!activePanel && !searchActive && !selectedProduct}
+            withQuickAdd={!activePanel && !searchActive && !selectedProduct}
             raised={isSearchProduct && !pastDataExpanded}
           />
           {/* Quick Add lives on the branch home view only */}
