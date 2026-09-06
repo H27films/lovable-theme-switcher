@@ -606,10 +606,10 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             style={{ overflow: "hidden" }}
           >
             <motion.div
-              layout
-              style={{ margin: "2px 0 0", padding: "8px 6px 12px 6px", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}
-            >
-              <div onClick={() => changeExpandedRow(null)} style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "0 0 8px", alignItems: "start", cursor: "pointer" }}>
+  layout
+  style={{ margin: "2px -6px 0 -6px", padding: "8px 6px 12px 6px", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}
+>
+  <div onClick={() => changeExpandedRow(null)} style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "0 0 8px 0", alignItems: "start", cursor: "pointer" }}>
                 {selectedProduct ? (
                   <>
                     <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
@@ -635,7 +635,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                 )}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", paddingTop: "8px", borderTop: "0.5px solid hsl(var(--border) / 0.2)", alignItems: "center" }}>
+              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "8px 0 0 0", borderTop: "0.5px solid hsl(var(--border) / 0.2)", alignItems: "center" }}>
                 <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDayName(row.DATE)}</div>
                 <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
                   {onUpdate && withinCutoff && (
