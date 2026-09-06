@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { Check, X, Hand, Package, Droplets } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { type BranchConfig, type OfficeProduct } from "@/lib/branchSimple";
 import { QUICK_ADD_PRODUCTS, FAVOURITES_TABLE_COLUMN } from "@/lib/quickAdd";
@@ -205,6 +205,78 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         </button>
       </div>
 
+ {/* ⬇️ TOP 3 QUICK ACCESS ICONS ⬇️ */}
+<div style={{ display: "flex", gap: "12px", paddingBottom: "12px", flexShrink: 0 }}>
+  {[
+    { productName: "Hand Gloves (M - China)", displayText: "Gloves" },
+    { productName: "Kitchen Roll", displayText: "Kitchen Roll" },
+    { productName: "OUSHA Nail polish Removal (Pink)", displayText: "Remover" }
+  ].map(({ productName, displayText }) => {
+    const product = products.find(p => p["PRODUCT NAME"] === productName);
+    const balance = Number(product?.[BALANCE_KEY] ?? 0);
+    const balanceColor = balance > 0 ? "#15803d" : "#991b1b";
+    
+    return (
+      <button
+        key={productName}
+        onClick={() => handleRowTap(productName)}
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "8px",
+          padding: 0,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        {/* Icon box with balance inside below icon */}
+        <div style={{
+          width: "56px",
+          height: "64px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "8px 0",
+          borderRadius: "6px",
+          background: "hsl(var(--muted))",
+          border: "1px solid hsl(var(--border))",
+        }}>
+          {/* Simple black icon */}
+          {displayText === "Gloves" && <Hand size={20} strokeWidth={1.5} color="#000" />}
+          {displayText === "Kitchen Roll" && <Package size={20} strokeWidth={1.5} color="#000" />}
+          {displayText === "Remover" && <Droplets size={20} strokeWidth={1.5} color="#000" />}
+          
+          {/* Balance inside box below icon */}
+          <span style={{
+            fontSize: "11px",
+            fontWeight: 300,
+            fontFamily: "Raleway, inherit",
+            color: balanceColor,
+          }}>
+            {balance}
+          </span>
+        </div>
+        
+        {/* Text label below box */}
+        <span style={{
+          fontSize: "11px",
+          fontWeight: 300,
+          fontFamily: "Raleway, inherit",
+          color: "hsl(var(--foreground))",
+          textAlign: "center",
+          lineHeight: 1.2,
+          maxWidth: "60px",
+        }}>
+          {displayText}
+        </span>
+      </button>
+    );
+  })}
+</div>
       {/* Favourite product rows — one tap = one -1 "Salon Use" log entry */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain" }}>
         {items.length === 0 && (
