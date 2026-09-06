@@ -542,14 +542,17 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
       <AnimatePresence initial={false}>
         {!expanded || readOnly ? (
           <motion.div
-            key="collapsed"
-            layout
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeInOut" }}
-            style={{ overflow: "hidden" }}
-          >
+          key="collapsed"
+          layout
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ 
+            duration: 0.35, 
+            ease: "easeInOut"
+          }}
+          style={{ overflow: "hidden" }}
+        >
             <div
               onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(row.id); }}
               style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "8px 0", borderTop: dateSeparator ? (scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)") : "none", borderBottom: "none", marginTop: dateSeparator ? "4px" : "0", alignItems: "start", cursor: readOnly ? "default" : "pointer" }}
@@ -597,14 +600,17 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
           </motion.div>
         ) : (
           <motion.div
-            key="expanded"
-            layout
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeInOut" }}
-            style={{ overflow: "hidden" }}
-          >
+  key="expanded"
+  layout
+  initial={{ height: 0, opacity: 0 }}
+  animate={{ height: "auto", opacity: 1 }}
+  exit={{ height: 0, opacity: 0 }}
+  transition={{ 
+    duration: 0.35, 
+    ease: "easeInOut"
+  }}
+  style={{ overflow: "hidden" }}
+>
             <motion.div
   layout
   style={{ margin: "2px -6px 0 -6px", padding: "8px 6px 12px 6px", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}
