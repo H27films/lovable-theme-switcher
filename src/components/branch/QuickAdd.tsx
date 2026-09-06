@@ -4,6 +4,7 @@ import { Check, X } from "lucide-react";
 import { TfiHandStop } from "react-icons/tfi";
 import { FaToiletPaper } from "react-icons/fa";
 import { FaWineBottle } from "react-icons/fa6";
+import { HiOutlineRectangleStack } from "react-icons/hi2";
 import { RiAttachmentLine } from "react-icons/ri";
 import { supabase } from "@/integrations/supabase/client";
 import { type BranchConfig, type OfficeProduct } from "@/lib/branchSimple";
@@ -209,12 +210,13 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         </button>
       </div>
 
- {/* ⬇️ TOP 3 QUICK ACCESS ICONS ⬇️ */}
-<div style={{ display: "flex", gap: "12px", paddingBottom: "12px", flexShrink: 0 }}>
+ {/* ⬇️ TOP 4 QUICK ACCESS ICONS ⬇️ */}
+<div style={{ display: "flex", gap: "10px", paddingBottom: "12px", flexShrink: 0 }}>
   {[
     { productName: "Hand Gloves (M - China)", displayText: "Gloves" },
     { productName: "Kitchen Roll", displayText: "Kitchen Roll" },
-    { productName: "OUSHA Nail polish Removal (Pink)", displayText: "Remover" }
+    { productName: "OUSHA Nail polish Removal (Pink)", displayText: "Remover" },
+    { productName: "Pumice Stone", displayText: "Pumice Stone" }
   ].map(({ productName, displayText }) => {
     const product = products.find(p => p["PRODUCT NAME"] === productName);
     const balance = Number(product?.[BALANCE_KEY] ?? 0);
@@ -236,9 +238,11 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           cursor: "pointer",
         }}
       >
-        {/* Icon box with balance inside below icon */}
+        {/* Icon box with balance inside below icon (shrinks slightly on narrow
+            phones so all four boxes fit the popup card without overflow) */}
         <div style={{
-          width: "64px",
+          width: "100%",
+          maxWidth: "64px",
           height: "72px",
           display: "flex",
           flexDirection: "column",
@@ -253,6 +257,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           {displayText === "Gloves" && <TfiHandStop size={24} color="#000" />}
           {displayText === "Kitchen Roll" && <FaToiletPaper size={24} color="#000" />}
           {displayText === "Remover" && <FaWineBottle size={24} color="#000" />}
+          {displayText === "Pumice Stone" && <HiOutlineRectangleStack size={24} color="#000" />}
           
           {/* Balance inside box below icon */}
           <span style={{
