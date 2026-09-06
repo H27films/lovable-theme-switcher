@@ -214,9 +214,9 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
 <div style={{ display: "flex", gap: "10px", paddingBottom: "12px", flexShrink: 0 }}>
   {[
     { productName: "Hand Gloves (M - China)", displayText: "Gloves" },
-    { productName: "Kitchen Roll", displayText: "Kitchen Roll" },
+    { productName: "Kitchen Roll", displayText: "Tissue" },
     { productName: "OUSHA Nail polish Removal (Pink)", displayText: "Remover" },
-    { productName: "Pumice Stone", displayText: "Pumice Stone" }
+    { productName: "Pumice Stone", displayText: "Pumice" }
   ].map(({ productName, displayText }) => {
     const product = products.find(p => p["PRODUCT NAME"] === productName);
     const balance = Number(product?.[BALANCE_KEY] ?? 0);
@@ -251,9 +251,9 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
         }}>
           {/* Simple black icon */}
           {displayText === "Gloves" && <TfiHandStop size={24} color="#000" />}
-          {displayText === "Kitchen Roll" && <FaToiletPaper size={24} color="#000" />}
+          {displayText === "Tissue" && <FaToiletPaper size={24} color="#000" />}
           {displayText === "Remover" && <FaWineBottle size={24} color="#000" />}
-          {displayText === "Pumice Stone" && <HiOutlineRectangleStack size={24} color="#000" />}
+          {displayText === "Pumice" && <HiOutlineRectangleStack size={24} color="#000" />}
         </div>
         
         {/* Text label below box */}

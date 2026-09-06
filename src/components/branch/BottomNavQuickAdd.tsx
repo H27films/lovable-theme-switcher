@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, X } from "lucide-react";
@@ -29,9 +29,11 @@ const FALLBACK_NAV_HALF = { normal: 138, compact: 116 };
 
 // QuickAdd popup card width: fully dynamic — grows with the viewport at
 // QUICK_ADD_CARD_FRACTION of its width, clamped between the floor and cap.
+// Phones sit at/near the floor; widening the page keeps scaling the card up
+// to the cap instead of flattening out.
 // (Tune any of these: e.g. FRACTION 0.88 keeps phones at 88% of the screen.)
 const QUICK_ADD_CARD_MIN = 300;
-const QUICK_ADD_CARD_MAX = 400;
+const QUICK_ADD_CARD_MAX = 480;
 const QUICK_ADD_CARD_FRACTION = 0.78;
 
 /**
@@ -39,7 +41,11 @@ const QUICK_ADD_CARD_FRACTION = 0.78;
  * BottomNav. Tapping it opens a QuickAdd popup that morphs out of the BottomNav
  * pill itself (Framer Motion spring, measured from the nav's live bounds) so the
  * user never leaves the branch page. While open the button becomes a circular ✕
- * close control. Backdrop tap, Esc, ✕ or the card's close button collapse it.
+ * close control, slightly shrunk. While the popup is open the BottomNav fades
+ * out completely, so only the card — parked over where the bar was, scaling
+ * with the page width — and the ✕ circle remain. Backdrop tap, Esc, ✕ or the
+ * card's close button collapse it: the card springs back into the pill and the
+ * nav fades back in.
  *
  * The nav pill and this circle are treated as ONE group: the paired BottomNav
  * (rendered with withQuickAdd) shifts left by quickAddGroupShift and this
@@ -85,6 +91,21 @@ export const BottomNavQuickAdd = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // While the popup is open the BottomNav fades out completely — only the card
+  // (parked over where the bar was) and the ✕ circle remain visible. The nav
+  // carries its own 0.3s opacity transition, so it melts away as the card
+  // springs out of it and fades back in as the card collapses home.
+  useEffect(() => {
+    const el = document.querySelector<HTMLElement>("[data-branch-bottom-nav]");
+    if (!el) return;
+    el.style.opacity = open ? "0" : "var(--page-slide-o, 1)";
+    el.style.pointerEvents = open ? "none" : "";
+    return () => {
+      el.style.opacity = "var(--page-slide-o, 1)";
+      el.style.pointerEvents = "";
+    };
+  }, [open]);
+
   const gap = compact ? QUICK_ADD_METRICS.gap.compact : QUICK_ADD_METRICS.gap.normal;
   const side = compact ? QUICK_ADD_METRICS.side.compact : QUICK_ADD_METRICS.side.normal;
   // The paired BottomNav shifts this far left so the (nav + circle) GROUP is
@@ -104,7 +125,11 @@ export const BottomNavQuickAdd = ({
     boxShadow: "0 8px 32px hsl(0 0% 0% / 0.14), inset 0 1px 0 hsl(0 0% 100% / 0.45), inset 0 -1px 0 hsl(0 0% 0% / 0.04)",
   };
 
-  const openPopup = () => {
+  // Computes the popup geometry: morph origin (the BottomNav pill's live rect)
+  // and the card's resting rect. The card parks horizontally centred ON the
+  // (hidden) nav bar, bottom-anchored just above it, so it reads as growing
+  // out of the bar; re-running it on resize keeps the card tracking the page.
+  const computePopupLayout = useCallback(() => {
     const viewW = window.innerWidth;
     const viewH = window.innerHeight;
     const cardW = Math.min(Math.max(QUICK_ADD_CARD_MIN, viewW * QUICK_ADD_CARD_FRACTION), QUICK_ADD_CARD_MAX);
@@ -120,10 +145,12 @@ export const BottomNavQuickAdd = ({
       origin = { left: viewW - 74, top: viewH - 70, width: 54, height: 54 };
       gapBottom = 16;
     }
+    // Card centre follows the nav bar's centre (viewport centre as fallback).
+    const centerX = navEl ? origin.left + origin.width / 2 : viewW / 2;
     setBounds({
       origin,
       final: {
-        left: (viewW - cardW) / 2,
+        left: centerX - cardW / 2,
         top: Math.max(64, viewH - gapBottom - cardH),
         width: cardW,
         height: cardH,
@@ -133,11 +160,24 @@ export const BottomNavQuickAdd = ({
     // capped so the ✕ never slides past the right edge of the viewport on
     // small phones (it simply rests on the card's corner instead).
     const controlLeft = viewW / 2 + navHalf + gap - groupShift;
-    const cardRight = (viewW + cardW) / 2;
+    const cardRight = centerX + cardW / 2;
     const maxLeft = viewW - side - 10;
     setXShift(Math.max(0, Math.min(cardRight + 10, maxLeft) - controlLeft));
+  }, [navHalf, gap, groupShift, side]);
+
+  const openPopup = () => {
+    computePopupLayout();
     setOpen(true);
   };
+
+  // While open, widening/narrowing the page rescales and repositions the card
+  // live (framer-motion springs to the updated bounds) instead of freezing.
+  useEffect(() => {
+    if (!open) return;
+    const onResize = () => computePopupLayout();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [open, computePopupLayout]);
 
   const closePopup = () => {
     setOpen(false);
@@ -164,7 +204,7 @@ export const BottomNavQuickAdd = ({
             background: "hsl(0 0% 0% / 0.15)",
             backdropFilter: "blur(2px)",
             WebkitBackdropFilter: "blur(2px)",
-            zIndex: 99998, // below the BottomNav (99999) so the bar stays bright
+            zIndex: 99998, // below the card (100000) and the ✕ circle (100001)
           }}
         />
       )}
@@ -227,13 +267,14 @@ export const BottomNavQuickAdd = ({
           />
         </motion.div>
       )}
-      {/* Persistent control: "+ Add" FAB ↔ ✕ close circle. Slides right while the
-          popup is open so it clears the card, then springs home on close. */}
+      {/* Persistent control: "+ Add" FAB ↔ ✕ close circle. Slides right and
+          shrinks slightly while the popup is open so it reads as a compact
+          close handle beside the card, then springs home on close. */}
       <motion.button
         key="quickadd-control"
         onClick={() => (open ? closePopup() : openPopup())}
         aria-label={open ? "Close quick add" : "Quick add"}
-        animate={{ x: open ? xShift : 0 }}
+        animate={{ x: open ? xShift : 0, width: open ? side - 8 : side, height: open ? side - 8 : side }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.9 }}
         style={{
