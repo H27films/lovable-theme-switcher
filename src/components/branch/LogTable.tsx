@@ -537,11 +537,9 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
   return (
     <motion.div
       key={row.id}
-      layout
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}
     >
-      <AnimatePresence initial={false} mode="wait">
+      <AnimatePresence initial={false}>
         {!expanded || readOnly ? (
           <motion.div
             key="collapsed"
@@ -549,26 +547,12 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{
-              duration: 0.22,
-              ease: "easeInOut",
-              layout: { type: "spring", stiffness: 300, damping: 30 }
-            }}
+            transition={{ duration: 0.22, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
             <div
               onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(row.id); }}
-              style={{
-                display: "grid",
-                gridTemplateColumns: gridCols,
-                gap: "4px",
-                padding: "8px 0",
-                borderTop: dateSeparator ? (scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)") : "none",
-                borderBottom: "none",
-                marginTop: dateSeparator ? "4px" : "0",
-                alignItems: "start",
-                cursor: readOnly ? "default" : "pointer"
-              }}
+              style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "8px 0", borderTop: dateSeparator ? (scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)") : "none", borderBottom: "none", marginTop: dateSeparator ? "4px" : "0", alignItems: "start", cursor: readOnly ? "default" : "pointer" }}
             >
               {selectedProduct ? (
                 <>
@@ -593,28 +577,13 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                         {row["PRODUCT NAME"] || "—"}
                       </div>
                       {!expanded && (row as any)["THERAPIST"] && (
-                        <span style={{
-                          ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists),
-                          padding: "2px 6px",
-                          borderRadius: "999px",
-                          fontSize: "8px",
-                          fontWeight: 600,
-                          fontFamily: "Raleway, inherit",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.02em"
-                        }}>
+                        <span style={{ ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists), padding: "2px 6px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em" }}>
                           {(row as any)["THERAPIST"]}
                         </span>
                       )}
                     </div>
                     {!expanded && (row as any)["NOTES"] && (
-                      <span style={{
-                        fontSize: "11px",
-                        fontWeight: 400,
-                        fontFamily: "Raleway, inherit",
-                        color: "hsl(var(--muted-foreground))",
-                        lineHeight: 1.2
-                      }}>
+                      <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", lineHeight: 1.2 }}>
                         {(row as any)["NOTES"]}
                       </span>
                     )}
@@ -633,34 +602,14 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{
-              duration: 0.22,
-              ease: "easeInOut",
-              layout: { type: "spring", stiffness: 300, damping: 30 }
-            }}
+            transition={{ duration: 0.22, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
             <motion.div
               layout
-              style={{
-                margin: "2px 0 0",
-                padding: "8px 6px 12px 6px",
-                background: "hsl(var(--muted) / 0.35)",
-                borderRadius: "12px"
-              }}
+              style={{ margin: "2px 0 0", padding: "8px 6px 12px 6px", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}
             >
-              {/* Main data row — clickable to collapse */}
-              <div
-                onClick={() => changeExpandedRow(null)}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: gridCols,
-                  gap: "4px",
-                  padding: "0 0 8px",
-                  alignItems: "start",
-                  cursor: "pointer"
-                }}
-              >
+              <div onClick={() => changeExpandedRow(null)} style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "0 0 8px", alignItems: "start", cursor: "pointer" }}>
                 {selectedProduct ? (
                   <>
                     <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
@@ -686,44 +635,23 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                 )}
               </div>
 
-              {/* Controls row: Edit / Delete + therapist cycling */}
               <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", paddingTop: "8px", borderTop: "0.5px solid hsl(var(--border) / 0.2)", alignItems: "center" }}>
                 <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDayName(row.DATE)}</div>
                 <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
                   {onUpdate && withinCutoff && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const stagedPending = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist : null;
-                        commitPendingTherapist();
-                        setEditRow(stagedPending ? { ...row, THERAPIST: stagedPending.value } : row);
-                      }}
-                      style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); const stagedPending = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist : null; commitPendingTherapist(); setEditRow(stagedPending ? { ...row, THERAPIST: stagedPending.value } : row); }} style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>
                       Edit
                     </button>
                   )}
                   {withinCutoff && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setConfirmPos({ top: rect.top, left: rect.left });
-                        setConfirmRow(row);
-                      }}
-                      disabled={isDeleting}
-                      style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setConfirmPos({ top: rect.top, left: rect.left }); setConfirmRow(row); }} disabled={isDeleting} style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}>
                       {isDeleting ? "Deleting..." : "Delete"}
                     </button>
                   )}
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                   {canCycleTherapist && therapistCycleList.length > 0 ? (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); cycleRowTherapist(row); }}
-                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); cycleRowTherapist(row); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}>
                       <span style={{ ...(pillTherapist ? therapistPillStyle(pillTherapist, therapistCycleList) : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist ? pillTherapist : "NONE"}</span>
                     </button>
                   ) : pillTherapist ? (
@@ -732,7 +660,7 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                     <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                   )}
                 </div>
-                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
