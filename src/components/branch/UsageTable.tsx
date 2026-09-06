@@ -397,7 +397,11 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
                       <Minus size={14} strokeWidth={2.5} />
                     </button>
                     <span style={{ fontSize: "16px", fontWeight: 400, fontFamily: "Raleway, inherit", minWidth: "34px", textAlign: "center" }}>
-                      <NumberFlow value={entry.qty} format={{ useGrouping: false, signDisplay: "exceptZero" }} willChange />
+                      {/* Spin direction follows the digit's magnitude (|qty|), not the signed
+                          value: NumberFlow's default infers from the signed change, so -1 → -2
+                          is a "decrease" and the digit spins DOWN, wrapping 1 → 0 → 9 → 8… → 2.
+                          Returning 1 = spin up / -1 = spin down keeps every step on the short path. */}
+                      <NumberFlow value={entry.qty} trend={(old, val) => (Math.abs(val) >= Math.abs(old) ? 1 : -1)} format={{ useGrouping: false, signDisplay: "exceptZero" }} willChange />
                     </span>
                     <button onClick={() => setUsageEntries(prev => prev.map(e => e.id === entry.id ? { ...e, qty: e.qty + 1 } : e))} aria-label="Increase quantity" style={{ background: "rgba(222, 214, 207, 0.5)", border: "0.5px solid rgba(180, 165, 152, 0.45)", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Plus size={14} strokeWidth={2.5} />
