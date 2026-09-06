@@ -539,8 +539,18 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
 
             return (
               <div key={row.id} style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}>
-                <div
-                  onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(expanded ? null : row.id); }}
+                                <AnimatePresence initial={false} mode="wait">
+                  {!expanded || readOnly ? (
+                    <motion.div
+                      key="collapsed"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeInOut" }}
+                      style={{ overflow: "hidden" }}
+                    >
+                  <div
+                  onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(row.id); }}
                   style={{ 
                     display: "grid", 
                     gridTemplateColumns: gridCols, 
@@ -607,22 +617,58 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                       <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
                     </>
                   )}
-                </div>
-                <AnimatePresence initial={false}>
-                  {expanded && !readOnly && (
+                                </div>
+                    </motion.div>
+                  ) : (
                     <motion.div
-                      key="row-expanded"
+                      key="expanded"
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.22, ease: "easeInOut" }}
                       style={{ overflow: "hidden" }}
                     >
-                      {/* Selected box — the expanded controls sit in their own tinted, rounded
-                          panel spanning the full date → type width so the open row reads as selected. */}
-                      <div style={{ margin: "2px 0 0", padding: "8px 0 12px", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}>
+                      {/* Tinted box wraps BOTH data row + controls */}
+                      <div style={{ margin: "2px 0 0", padding: "8px 0", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}>
+                        {/* Main data row — clickable to collapse */}
+                        <div
+                          onClick={() => changeExpandedRow(null)}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: gridCols,
+                            gap: "4px",
+                            padding: "0 0 8px",
+                            alignItems: "start",
+                            cursor: "pointer"
+                          }}
+                        >
+                          {selectedProduct ? (
+                            <>
+                              <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                              <div />
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
+                                    {row["PRODUCT NAME"] || "—"}
+                                  </div>
+                                </div>
+                              </div>
+                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
+                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
+                              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
+                            </>
+                          )}
+                        </div>
+                        {/* Controls row: Edit / Delete + therapist cycling */}
                         <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
-                          {/* Day name sits in the Date column of the expanded row, level with the Edit / Delete pills */}
+                                            {/* Day name sits in the Date column of the expanded row, level with the Edit / Delete pills */}
                       <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDayName(row.DATE)}</div>
                       {/* Edit / Delete buttons sit under the content columns (after the Date col): product view aligns under Qty (col 2), home view under Product (col 2) */}
                       <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
@@ -668,14 +714,14 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                         ) : pillTherapist ? (
                           <span style={{ ...therapistPillStyle(pillTherapist, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist}</span>
                         ) : (
-                          <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
+                                                    <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
                         )}
                       </div>
                     </div>
                   </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
