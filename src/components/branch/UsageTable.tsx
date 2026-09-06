@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronUp, ChevronDown, X, Star, Minus, Plus } from "lucide-react";
 import NumberFlow from "@number-flow/react";
+import { motion } from "framer-motion";
 import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { type BranchConfig, type OfficeProduct, type EntryLine } from "@/lib/branchSimple";
 import { useTabletMode } from "@/hooks/useTabletMode";
@@ -490,7 +491,21 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
       {usageEntries.length > 0 && (
         <div style={{ flexShrink: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "8px", paddingBottom: "max(env(safe-area-inset-bottom, 14px), 14px)", borderTop: "0.5px solid hsl(var(--border))", overflowY: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <button onClick={handleUsageSubmit} disabled={usageSubmitting} style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "7px 20px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1, borderRadius: "999px" }}>{usageSubmitting ? "Saving..." : "Submit"}</button>
+            <div style={{ position: "relative" }}>
+              {/* Outer chromatic diffusion — soft iridescent aura bleeding past the pill */}
+              <motion.span aria-hidden style={{ position: "absolute", inset: -1, borderRadius: "999px", opacity: 0.4, filter: "blur(1px)", pointerEvents: "none", background: "conic-gradient(from 0deg, transparent, #e8e8e8, #ffffff, #a6a6a6, transparent)" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }} />
+              <motion.button onClick={handleUsageSubmit} disabled={usageSubmitting} whileHover={usageSubmitting ? undefined : { scale: 1.02 }} whileTap={usageSubmitting ? undefined : { scale: 0.98 }} style={{ position: "relative", background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", cursor: usageSubmitting ? "default" : "pointer", padding: "7px 20px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: usageSubmitting ? 0.5 : 1, borderRadius: "999px", overflow: "hidden" }}>
+                {/* Animated iridescent border — static pill-ring mask with a rotating conic gradient behind it.
+                    The gradient spins in an oversized inner span so the pill outline itself never rotates. */}
+                <span aria-hidden style={{ position: "absolute", inset: 0, borderRadius: "999px", pointerEvents: "none", padding: "1.5px", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }}>
+                  <motion.span style={{ position: "absolute", inset: "-150%", background: "conic-gradient(from 0deg, transparent 0%, #cfcfcf 25%, #ffffff 50%, #9c9c9c 75%, transparent 100%)" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }} />
+                </span>
+                {/* Shimmering label — cream → white → cream sweep */}
+                <motion.span style={{ position: "relative", display: "inline-block", backgroundImage: "linear-gradient(90deg, hsl(var(--background)) 0%, #ffffff 50%, hsl(var(--background)) 100%)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }} animate={{ backgroundPosition: ["0% center", "200% center"] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>
+                  {usageSubmitting ? "Saving..." : "Submit"}
+                </motion.span>
+              </motion.button>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               {usageSuccess && <span style={{ fontSize: "11px", color: "hsl(var(--green, 120 60% 40%))", letterSpacing: "0.06em" }}>✓ Saved</span>}
               <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{usageEntries.length} {usageEntries.length === 1 ? "Product" : "Products"}</span>
