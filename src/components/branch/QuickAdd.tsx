@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { TfiHandStop } from "react-icons/tfi";
 import { FaToiletPaper } from "react-icons/fa";
 import { FaWineBottle } from "react-icons/fa6";
@@ -16,7 +16,6 @@ interface QuickAddProps {
   setProducts: React.Dispatch<React.SetStateAction<OfficeProduct[]>>;
   refreshBranchLog: () => void | Promise<void>;
   setSelectedProduct: React.Dispatch<React.SetStateAction<OfficeProduct | null>>;
-  onClose: () => void;
   /** Whether the favourites list below the icons is expanded (card grows upward). */
   expanded: boolean;
   /** Fired by the chevron between the icons and the favourites list. */
@@ -38,7 +37,7 @@ const TAP_COOLDOWN_MS = 500;
  * one AllFileLog row plus the AllFileProducts balance update — while staying
  * on the branch page (no navigation, no draft entries).
  */
-export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setSelectedProduct, onClose, expanded, onToggleExpanded }: QuickAddProps) => {
+export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setSelectedProduct, expanded, onToggleExpanded }: QuickAddProps) => {
   const BALANCE_KEY = config.balanceKey as keyof OfficeProduct;
   const [savedName, setSavedName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -202,16 +201,9 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
       transition={{ delay: 0.12, duration: 0.25, ease: "easeOut" }}
       style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
     >
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "8px", flexShrink: 0 }}>
-        <span style={{ fontSize: "20px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>QUICK ADD</span>
-        <button
-          onClick={onClose}
-          aria-label="Close quick add"
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "hsl(var(--muted-foreground))", display: "flex", alignItems: "center" }}
-        >
-          <X size={16} />
-        </button>
+      {/* Header (no close button — the ✕ circle, backdrop tap and Esc close it) */}
+      <div style={{ paddingBottom: "8px", flexShrink: 0 }}>
+        <span style={{ fontSize: "18px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>QUICK ADD</span>
       </div>
 
  {/* ⬇️ TOP 4 QUICK ACCESS ICONS ⬇️ */}
@@ -224,7 +216,8 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
   ].map(({ productName, displayText }) => {
     const product = products.find(p => p["PRODUCT NAME"] === productName);
     const balance = Number(product?.[BALANCE_KEY] ?? 0);
-    
+    const saved = savedName === productName;
+
     return (
       <button
         key={productName}
@@ -253,11 +246,46 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           borderRadius: "16px",
           background: "hsl(var(--muted))",
         }}>
-          {/* Simple black icon */}
-          {displayText === "Gloves" && <TfiHandStop size={24} color="#000" />}
-          {displayText === "Tissue" && <FaToiletPaper size={24} color="#000" />}
-          {displayText === "Remover" && <FaWineBottle size={24} color="#000" />}
-          {displayText === "Pumice" && <HiOutlineRectangleStack size={24} color="#000" />}
+          {/* Icon ↔ black tick circle swap while the write confirms — same
+              spring feel as the ✕/＋ swap in the floating control circle */}
+          <AnimatePresence mode="wait" initial={false}>
+            {saved ? (
+              <motion.span
+                key="tile-tick"
+                initial={{ opacity: 0, scale: 0.4, rotate: -90 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.4, rotate: 90 }}
+                transition={{ duration: 0.15 }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <div style={{
+                  width: "24px",
+                  height: "24px",
+                  backgroundColor: "#000",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <Check size={14} color="#fff" strokeWidth={3} />
+                </div>
+              </motion.span>
+            ) : (
+              <motion.span
+                key="tile-icon"
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.4 }}
+                transition={{ duration: 0.15 }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                {displayText === "Gloves" && <TfiHandStop size={24} color="#000" />}
+                {displayText === "Tissue" && <FaToiletPaper size={24} color="#000" />}
+                {displayText === "Remover" && <FaWineBottle size={24} color="#000" />}
+                {displayText === "Pumice" && <HiOutlineRectangleStack size={24} color="#000" />}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
         
         {/* Text label below box */}
@@ -339,7 +367,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 40, opacity: 0 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-                            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.04em" }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.04em" }}
             >
               <div style={{ 
                 width: "16px", 
@@ -362,7 +390,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 40, opacity: 0 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              style={{ display: "block", fontSize: "15px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.4 }}
+              style={{ display: "block", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", lineHeight: 1.4 }}
             >
               {name}
             </motion.span>
@@ -373,7 +401,7 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
       {/* Balance display on the right */}
 <span style={{
     flexShrink: 0,
-    fontSize: "15px",
+    fontSize: "14px",
     fontWeight: 300,
   fontFamily: "Raleway, inherit",
   color: balanceColor,

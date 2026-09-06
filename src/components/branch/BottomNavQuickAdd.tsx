@@ -283,7 +283,6 @@ export const BottomNavQuickAdd = ({
             setProducts={setProducts}
             refreshBranchLog={refreshBranchLog}
             setSelectedProduct={setSelectedProduct}
-            onClose={closePopup}
             expanded={expanded}
             onToggleExpanded={() => setExpanded(v => !v)}
           />
