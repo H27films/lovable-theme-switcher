@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
 import { supabase } from "@/integrations/supabase/client";
 import { therapistPillStyle, THERAPISTS, LOG_PAGE_SIZE, LOG_MAX_ROWS } from "@/lib/branchSimpleUtils";
@@ -607,10 +608,21 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                     </>
                   )}
                 </div>
-                {expanded && !readOnly && (
-                  <div style={{ padding: "0 0 16px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
-                      {/* Day name sits in the Date column of the expanded row, level with the Edit / Delete pills */}
+                <AnimatePresence initial={false}>
+                  {expanded && !readOnly && (
+                    <motion.div
+                      key="row-expanded"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeInOut" }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      {/* Selected box — the expanded controls sit in their own tinted, rounded
+                          panel spanning the full date → type width so the open row reads as selected. */}
+                      <div style={{ margin: "2px 0 0", padding: "8px 0 12px", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", alignItems: "center" }}>
+                          {/* Day name sits in the Date column of the expanded row, level with the Edit / Delete pills */}
                       <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDayName(row.DATE)}</div>
                       {/* Edit / Delete buttons sit under the content columns (after the Date col): product view aligns under Qty (col 2), home view under Product (col 2) */}
                       <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
@@ -661,7 +673,9 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
                       </div>
                     </div>
                   </div>
+                  </motion.div>
                 )}
+              </AnimatePresence>
               </div>
             );
           })}
