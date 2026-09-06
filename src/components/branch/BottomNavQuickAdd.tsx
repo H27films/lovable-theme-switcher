@@ -27,6 +27,13 @@ interface MorphRect {
 // element has been measured (it reports its live width via ResizeObserver).
 const FALLBACK_NAV_HALF = { normal: 138, compact: 116 };
 
+// QuickAdd popup card width: fully dynamic — grows with the viewport at
+// QUICK_ADD_CARD_FRACTION of its width, clamped between the floor and cap.
+// (Tune any of these: e.g. FRACTION 0.88 keeps phones at 88% of the screen.)
+const QUICK_ADD_CARD_MIN = 300;
+const QUICK_ADD_CARD_MAX = 400;
+const QUICK_ADD_CARD_FRACTION = 0.78;
+
 /**
  * Standalone circular "＋ Add" button sitting flush to the right of the branch
  * BottomNav. Tapping it opens a QuickAdd popup that morphs out of the BottomNav
@@ -100,7 +107,7 @@ export const BottomNavQuickAdd = ({
   const openPopup = () => {
     const viewW = window.innerWidth;
     const viewH = window.innerHeight;
-    const cardW = Math.min(viewW * 0.88, 380);
+    const cardW = Math.min(Math.max(QUICK_ADD_CARD_MIN, viewW * QUICK_ADD_CARD_FRACTION), QUICK_ADD_CARD_MAX);
     const cardH = Math.min(viewH * 0.58, 440);
     const navEl = document.querySelector<HTMLElement>("[data-branch-bottom-nav]");
     let origin: MorphRect;

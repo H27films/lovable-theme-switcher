@@ -220,7 +220,6 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
   ].map(({ productName, displayText }) => {
     const product = products.find(p => p["PRODUCT NAME"] === productName);
     const balance = Number(product?.[BALANCE_KEY] ?? 0);
-    const balanceColor = balance > 0 ? "#15803d" : "#991b1b";
     
     return (
       <button
@@ -238,36 +237,23 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           cursor: "pointer",
         }}
       >
-        {/* Icon box with balance inside below icon (shrinks slightly on narrow
-            phones so all four boxes fit the popup card without overflow) */}
+        {/* Icon-only box — soft rounded edges, no border (shrinks slightly on
+            narrow phones so all four boxes fit the popup card without overflow) */}
         <div style={{
           width: "100%",
           maxWidth: "64px",
-          height: "72px",
+          height: "48px",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "space-between",
-          padding: "10px 0",
-          borderRadius: "8px",
+          justifyContent: "center",
+          borderRadius: "16px",
           background: "hsl(var(--muted))",
-          border: "1px solid hsl(var(--border))",
         }}>
           {/* Simple black icon */}
           {displayText === "Gloves" && <TfiHandStop size={24} color="#000" />}
           {displayText === "Kitchen Roll" && <FaToiletPaper size={24} color="#000" />}
           {displayText === "Remover" && <FaWineBottle size={24} color="#000" />}
           {displayText === "Pumice Stone" && <HiOutlineRectangleStack size={24} color="#000" />}
-          
-          {/* Balance inside box below icon */}
-          <span style={{
-            fontSize: "12px",
-            fontWeight: 400,
-            fontFamily: "Raleway, inherit",
-            color: balanceColor,
-          }}>
-            {balance}
-          </span>
         </div>
         
         {/* Text label below box */}
@@ -281,6 +267,17 @@ export const QuickAdd = ({ config, products, setProducts, refreshBranchLog, setS
           maxWidth: "68px",
         }}>
           {displayText}
+        </span>
+
+        {/* Balance under the name, plain black */}
+        <span style={{
+          fontSize: "12px",
+          fontWeight: 400,
+          fontFamily: "Raleway, inherit",
+          color: "hsl(var(--foreground))",
+          lineHeight: 1,
+        }}>
+          {balance}
         </span>
       </button>
     );
