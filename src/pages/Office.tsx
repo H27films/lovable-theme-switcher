@@ -365,6 +365,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
       const y = ym.slice(0, 4);
       const mm = ym.slice(5, 7);
       return {
+        key: ym,
         week: mm === "01" ? `Jan '${y.slice(2)}` : monthNameShort(mm),
         total: sums[ym] || 0,
         period: `${monthNameShort(mm)} ${y}`,
@@ -464,16 +465,19 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             {/* Month + Year filter + View toggle */}
             <div style={{ padding: "10px 20px 8px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
 
+              {/* In Month mode the Month/Year filters don't apply — show a plain label */}
+              {salesViewMode === "month" ? (
+                <span style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.04em" }}>12 Months</span>
+              ) : (
+              <>
               {/* Month dropdown */}
               <div style={{ position: "relative" }}>
                 <button
                   onClick={() => { setSalesDropdownOpen(v => !v); setSalesYearDropdownOpen(false); }}
-                  disabled={salesViewMode === "month"}
                   style={{
                     background: "transparent", border: "none", padding: "0",
                     fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit",
-                    cursor: salesViewMode === "month" ? "default" : "pointer",
-                    color: "hsl(var(--foreground))", opacity: salesViewMode === "month" ? 0.3 : 1,
+                    cursor: "pointer", color: "hsl(var(--foreground))",
                     display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
                   }}
                 >
@@ -512,12 +516,10 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               <div style={{ position: "relative" }}>
                 <button
                   onClick={() => { setSalesYearDropdownOpen(v => !v); setSalesDropdownOpen(false); }}
-                  disabled={salesViewMode === "month"}
                   style={{
                     background: "transparent", border: "none", padding: "0",
                     fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit",
-                    cursor: salesViewMode === "month" ? "default" : "pointer",
-                    color: "hsl(var(--muted-foreground))", opacity: salesViewMode === "month" ? 0.3 : 1,
+                    cursor: "pointer", color: "hsl(var(--muted-foreground))",
                     display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
                   }}
                 >
@@ -551,13 +553,15 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                   </div>
                 )}
               </div>
+              </>
+              )}
 
               {/* Spacer */}
               <div style={{ flex: 1 }} />
 
               {/* Week / Day / Month toggle — always available */}
               <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: "0.5px solid hsl(var(--border))" }}>
-                {(["week", "day", "month"] as const).map(mode => {
+                {(["month", "week", "day"] as const).map(mode => {
                   const dayDisabled = mode === "day" && salesMonthFilter === "all";
                   return (
                     <button
@@ -613,11 +617,13 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                       let yTicks: number[];
                       let domain: [number, number];
                       if (salesViewMode === "month") {
-                        // Month view: dynamic scale in 50k increments across the window.
+                        // Month view: the axis starts at 50k (not 0) with 50k increments;
+                        // months under the floor render as a small bump via the clamped
+                        // "plot" value computed below.
                         const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.total || 0), 0);
-                        topTick = Math.ceil(Math.max(maxVal, 50000) / 50000) * 50000;
-                        yTicks = Array.from({ length: topTick / 50000 + 1 }, (_, i) => i * 50000);
-                        domain = [0, topTick];
+                        topTick = Math.ceil(Math.max(maxVal, 100000) / 50000) * 50000;
+                        yTicks = Array.from({ length: (topTick - 50000) / 50000 + 1 }, (_, i) => 50000 + i * 50000);
+                        domain = [50000, topTick];
                       } else if (salesViewMode === "day") {
                         const vMax = Math.max(...data.map((d: any) => d.total || d.value || 0));
                         if (vMax > 0) {
@@ -645,6 +651,19 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                         const sum2 = filtered2.reduce((s, r) => s + (parseFloat(r["Total GST"] as any) || 0), 0);
                         weeklyAvg = sum2 / days2 * 7;
                       }
+                      // Month view: dotted average line excludes zero months and the current
+                      // (in-progress) month. "plot" clamps sub-50k months to a small uniform
+                      // bump just above the 50k axis floor so they stay visible.
+                      let monthlyAvg: number | null = null;
+                      let chartData = data;
+                      if (salesViewMode === "month") {
+                        const nowKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+                        const avgVals = data.filter((d: any) => d.total > 0 && d.key !== nowKey).map((d: any) => d.total);
+                        if (avgVals.length > 0) monthlyAvg = avgVals.reduce((s: number, v: number) => s + v, 0) / avgVals.length;
+                        if (monthlyAvg !== null && monthlyAvg < 50000) monthlyAvg = null; // below the axis floor
+                        const bump = 50000 + (topTick - 50000) * 0.03;
+                        chartData = data.map((d: any) => ({ ...d, plot: Math.max(d.total, bump) }));
+                      }
                       return (
                         <div style={{ position: "relative", flex: 1, minHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                           {tappedBar?.branchKey === key && (
@@ -660,7 +679,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             </div>
                           )}
                           <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={data} barCategoryGap={salesViewMode === "month" ? "25%" : salesViewMode === "week" ? (salesMonthFilter === "all" ? "8%" : "35%") : "10%"} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                          <BarChart data={chartData} barCategoryGap={salesViewMode === "month" ? "25%" : salesViewMode === "week" ? (salesMonthFilter === "all" ? "8%" : "35%") : "10%"} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
                               dataKey="week"
@@ -680,7 +699,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                               width={30}
                             />
                             <Bar
-                              dataKey="total"
+                              dataKey={salesViewMode === "month" ? "plot" : "total"}
                               isAnimationActive={false}
                               maxBarSize={salesViewMode === "month" ? 34 : salesViewMode === "week" ? (salesMonthFilter === "all" ? 52 : 22) : 52}
                               cursor="pointer"
@@ -698,6 +717,9 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             />
                             {salesViewMode === "week" && weeklyAvg !== null && (
                               <ReferenceLine y={weeklyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
+                            )}
+                            {salesViewMode === "month" && monthlyAvg !== null && (
+                              <ReferenceLine y={monthlyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
                             )}
                           </BarChart>
                         </ResponsiveContainer>
