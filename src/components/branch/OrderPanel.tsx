@@ -369,8 +369,8 @@ return createPortal(
                 onFocus={() => { setShowOrderDropdown(true); setShowAllOrders(false); }}
                 onClick={e => e.stopPropagation()}
                 onKeyDown={handleOrderListKeyDown}
-                placeholder="Select Product..."
-                style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "15px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground, 0 0% 100%))", caretColor: "hsl(var(--foreground, 0 0% 100%))" }}
+                placeholder="Select Product"
+                style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "15px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))", padding: "8px 0" }}
               />
 <button
                 onMouseDown={e => { e.preventDefault(); e.stopPropagation(); if (showOrderDropdown) dismissOrderDropdown(); else { setShowOrderDropdown(true); orderInputRef.current?.focus(); } }}

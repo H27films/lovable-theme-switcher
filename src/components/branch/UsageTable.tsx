@@ -324,8 +324,8 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
                 setUsageKeyboardArmed(true);
                 usageInputRef.current?.blur();
               }}
-              placeholder="Select Product..."
-              style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "15px", fontFamily: "Raleway, inherit", fontWeight: 300, color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))" }}
+              placeholder="Select Product"
+              style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "15px", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", caretColor: "hsl(var(--foreground))", padding: "8px 0" }}
             />
             <button
               onMouseDown={e => { e.preventDefault(); if (showUsageDropdown) { dismissUsageDropdown(); } else { setShowUsageDropdown(true); setUsageKeyboardArmed(true); usageInputRef.current?.focus(); } }}
