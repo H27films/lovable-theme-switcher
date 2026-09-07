@@ -465,8 +465,9 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               )}
             </div>
 
-            {/* Charts */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 14px 16px" }} onClick={() => setTappedBar(null)}>
+            {/* Charts + Total pinned to the bottom (fits one iPhone screen) */}
+            <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 16px 6px 16px", display: "flex", flexDirection: "column", gap: "12px" }} onClick={() => setTappedBar(null)}>
               {salesLoading && (
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
@@ -474,17 +475,17 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                 const data = salesViewMode === "week" ? buildWeeklyData(key) : buildDailyData(key);
                 const total = salesGrandTotal(key);
                 return (
-                  <div key={key} style={{ marginBottom: "12px", background: "#F2EDE6", borderRadius: "18px", padding: "10px 12px 4px 12px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
+                  <div key={key} style={{ flex: 1, minHeight: 110, maxHeight: 210, display: "flex", flexDirection: "column", background: "#F2EDE6", borderRadius: "18px", padding: "10px 12px 8px 12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px", flexShrink: 0 }}>
                       <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "#2a2a2a" }}>
                         {({ "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC NAILSPA", "Nur Yadi": "NUR YADI" } as Record<string,string>)[key] ?? key.toUpperCase()}
                       </span>
-                      <span style={{ fontSize: "14px", fontWeight: 300, color: "#2a2a2a", fontFamily: "Raleway, inherit" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 300, color: "#2a2a2a", fontFamily: "Raleway, inherit", whiteSpace: "nowrap", flexShrink: 0, marginLeft: "8px" }}>
                         RM {total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                     {data.length === 0 ? (
-                      <div style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300, padding: "12px 0" }}>No data</div>
+                      <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300 }}>No data</div>
                     ) : (() => {
                       // Day view: fixed 0-10k; Week view: dynamic 5k increments
                       let topTick: number;
@@ -507,7 +508,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                         weeklyAvg = sum2 / days2 * 7;
                       }
                       return (
-                        <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ position: "relative", flex: 1, minHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                           {tappedBar?.branchKey === key && (
                             <div style={{
                               position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)",
@@ -520,8 +521,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                               <span style={{ fontSize: "13px", fontWeight: 500, color: "#fff", fontFamily: "Raleway, inherit" }}>RM {tappedBar.total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
                           )}
-                          <ResponsiveContainer width="100%" height={110}>
-                          <BarChart data={data} barCategoryGap="10%" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={data} barCategoryGap={salesViewMode === "week" ? "35%" : "10%"} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
                               dataKey="week"
@@ -542,7 +543,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             <Bar
                               dataKey="total"
                               isAnimationActive={false}
-                              maxBarSize={52}
+                              maxBarSize={salesViewMode === "week" ? 22 : 52}
                               cursor="pointer"
                               shape={makeRoundedBar(color, highlight, salesViewMode === "day")}
                               onClick={(barData: any) => {
@@ -567,8 +568,9 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                   </div>
                 );
               })}
-              {/* ── Combined grand total ─────────────────────── */}
-              <div style={{ textAlign: "right", paddingTop: "8px", borderTop: "0.5px solid #d8d0c8" }}>
+              </div>
+              {/* ── Combined grand total — pinned to the bottom of the screen ── */}
+              <div style={{ flexShrink: 0, textAlign: "right", padding: "10px 20px calc(10px + env(safe-area-inset-bottom, 0px)) 20px", borderTop: "0.5px solid #d8d0c8" }}>
                 <span style={{ fontSize: "15px", fontWeight: 700, color: "#2a2a2a", fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
                   Total: RM {BRANCHES.reduce((sum, b) => sum + salesGrandTotal(b.key), 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
