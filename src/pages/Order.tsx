@@ -211,8 +211,12 @@ export default function Order({ onBack }: OrderProps) {
     return v === true || v === "TRUE" || v === "true" || v === 1;
   };
   const isColourProd = (p: OfficeProduct) => {
-    const v = (p as any)["Colour"];
-    return v === true || v === "TRUE" || v === "true" || v === "YES" || v === "yes";
+    // Colour flag lives in the uppercase "COLOUR" column with uppercase "NO"/"YES"
+    // values (same check as the Search page's isYes(p["COLOUR"])). The old code read
+    // the mixed-case "Colour" key, which doesn't exist in the data, so no product was
+    // ever classified as colour and colours blended into the A–Z product list.
+    const v = (p as any)["COLOUR"];
+    return v === true || v === 1 || (typeof v === "string" && v.toUpperCase() === "YES");
   };
 
   // Products below PAR (OFFICE BALANCE only, non-colour products)
@@ -264,6 +268,16 @@ export default function Order({ onBack }: OrderProps) {
       return a["PRODUCT NAME"].localeCompare(b["PRODUCT NAME"]);
     });
   })();
+
+  // Dropdown sections with Search-page style headers: FAVOURITES → PRODUCTS → COLOURS.
+  // Filtering the already-sorted flat list preserves the A–Z order within each section,
+  // and reconstructing flat indices across these sections in this order matches
+  // orderDropdownResults exactly (keyboard navigation stays aligned).
+  const orderDropdownSections = {
+    favourites: orderDropdownResults.filter(p => isOfficeFav(p)),
+    products: orderDropdownResults.filter(p => !isOfficeFav(p) && !isColourProd(p)),
+    colours: orderDropdownResults.filter(p => !isOfficeFav(p) && isColourProd(p)),
+  };
 
   const addToOrder = useCallback((p: OfficeProduct) => {
     setOrderLines(prev => [...prev, { product: p, qty: 1, supplierChoice: null }]);
@@ -502,29 +516,49 @@ export default function Order({ onBack }: OrderProps) {
         </div>
         {showOrderDropdown && orderDropdownResults.length > 0 && (
           <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "hsl(var(--background))", maxHeight: "65vh", overflowY: "auto" }}>
-            {orderDropdownResults.map((p, i) => (
-              <div
-                key={p.id}
-                onMouseDown={() => addToOrder(p)}
-                style={{
-                  padding: "10px 20px", cursor: "pointer",
-                  background: i === orderActiveIndex ? "hsl(var(--card))" : "transparent",
-                  borderBottom: i < orderDropdownResults.length - 1 ? border : "none",
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    {isOfficeFav(p) && <Star size={9} fill="currentColor" style={{ color: fg }} />}
-                    <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: fg }}>{p["PRODUCT NAME"]}</div>
-                  </div>
-                  {p["SUPPLIER"] && <div style={{ fontSize: "11px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
-                </div>
-                <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: getBalanceColor(p["OFFICE BALANCE"], p["PAR"], muted), flexShrink: 0, marginLeft: "8px" }}>
-                  {p["OFFICE BALANCE"] ?? "—"}
-                </div>
-              </div>
-            ))}
+            {(() => {
+              // Sections mirror the Search page (FAVOURITES → PRODUCTS → COLOURS);
+              // flatIdx keeps keyboard-highlight indices aligned with orderDropdownResults.
+              let flatIdx = 0;
+              const sections: [string, OfficeProduct[]][] = [
+                ["FAVOURITES", orderDropdownSections.favourites],
+                ["PRODUCTS", orderDropdownSections.products],
+                ["COLOURS", orderDropdownSections.colours],
+              ];
+              return sections.map(([title, items]) =>
+                items.length === 0 ? null : (
+                  <React.Fragment key={title}>
+                    <div style={{ ...hdrStyle, fontWeight: 700, paddingTop: 14, paddingBottom: 4, paddingLeft: 20, paddingRight: 20 }}>{title}</div>
+                    {items.map((p, j) => {
+                      const i = flatIdx++;
+                      return (
+                        <div
+                          key={p.id}
+                          onMouseDown={() => addToOrder(p)}
+                          style={{
+                            padding: "10px 20px", cursor: "pointer",
+                            background: i === orderActiveIndex ? "hsl(var(--card))" : "transparent",
+                            borderBottom: j < items.length - 1 ? border : "none",
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              {isOfficeFav(p) && <Star size={9} fill="currentColor" style={{ color: fg }} />}
+                              <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: fg }}>{p["PRODUCT NAME"]}</div>
+                            </div>
+                            {p["SUPPLIER"] && <div style={{ fontSize: "11px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
+                          </div>
+                          <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: getBalanceColor(p["OFFICE BALANCE"], p["PAR"], muted), flexShrink: 0, marginLeft: "8px" }}>
+                            {p["OFFICE BALANCE"] ?? "—"}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                )
+              );
+            })()}
           </div>
         )}
       </div>
