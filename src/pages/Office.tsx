@@ -139,16 +139,42 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
-  // Month navigation (chevrons on SALES header)
-  const navigateMonth = (dir: 1 | -1) => {
+  // Month navigation (chevrons on SALES header).
+  // Limited to months that actually have data: the back chevron stops at the
+  // earliest month in the Cash table, the forward chevron at the latest.
+  const salesRange = React.useMemo(() => {
+    if (!salesData.length) return null;
+    let min: string | null = null;
+    let max: string | null = null;
+    for (const r of salesData) {
+      const ym = String(r.Date ?? "").slice(0, 7); // "YYYY-MM"
+      if (ym.length !== 7) continue;
+      if (!min || ym < min) min = ym;
+      if (!max || ym > max) max = ym;
+    }
+    return min && max ? { min, max } : null;
+  }, [salesData]);
+
+  // Month the chevron would land on if pressed (also used for blocked visuals)
+  const prospectiveMonth = (dir: 1 | -1) => {
     let m = salesMonthFilter === "all" ? (dir === -1 ? 13 : 0) : parseInt(salesMonthFilter);
     let y = parseInt(salesYearFilter);
     m += dir;
     if (m > 12) { m = 1; y += 1; }
     if (m < 1)  { m = 12; y -= 1; }
-    setSalesYearFilter(String(y));
-    setSalesMonthFilter(String(m).padStart(2, '0'));
+    return `${y}-${String(m).padStart(2, "0")}`;
   };
+
+  const navigateMonth = (dir: 1 | -1) => {
+    const target = prospectiveMonth(dir);
+    // No data before the earliest / after the latest month — don't move.
+    if (salesRange && (target < salesRange.min || target > salesRange.max)) return;
+    setSalesYearFilter(target.slice(0, 4));
+    setSalesMonthFilter(target.slice(5, 7));
+  };
+
+  const backBlocked = !!salesRange && prospectiveMonth(-1) < salesRange.min;
+  const fwdBlocked = !!salesRange && prospectiveMonth(1) > salesRange.max;
 
   // Custom bar shape: half-circle top, straight bottom
   const makeRoundedBar = (baseColor: string, highlightColor: string, isDay: boolean) =>
@@ -340,13 +366,15 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                 <button
                   onClick={() => navigateMonth(-1)}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: 0.7, lineHeight: 1 }}
+                  disabled={backBlocked}
+                  style={{ background: "none", border: "none", cursor: backBlocked ? "default" : "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: backBlocked ? 0.2 : 0.7, lineHeight: 1 }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
                 <button
                   onClick={() => navigateMonth(1)}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: 0.7, lineHeight: 1 }}
+                  disabled={fwdBlocked}
+                  style={{ background: "none", border: "none", cursor: fwdBlocked ? "default" : "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: fwdBlocked ? 0.2 : 0.7, lineHeight: 1 }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
