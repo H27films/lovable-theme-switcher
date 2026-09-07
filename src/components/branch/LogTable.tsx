@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type LogRow, type OfficeProduct, type BranchConfig, BRANCH_CONFIGS } from "@/lib/branchSimple";
+import { type LogRow, type OfficeProduct, BRANCH_CONFIGS } from "@/lib/branchSimple";
 import { supabase } from "@/integrations/supabase/client";
 import { therapistPillStyle, THERAPISTS, LOG_PAGE_SIZE, LOG_MAX_ROWS } from "@/lib/branchSimpleUtils";
 import { useBranchTherapists } from "@/hooks/useBranchTherapists";
 import { EditEntryModal, type EditEntryUpdates } from "./EditEntryModal";
+import { OrdersView } from "./LogTableSub/OrdersView";
+import { FlowToggle } from "./LogTableSub/FlowToggle";
+import { LogRowItem } from "./LogTableSub/LogRowItem";
 
 interface LogTableProps {
   rows: LogRow[];
@@ -38,214 +41,90 @@ interface LogTableProps {
   hasMore?: boolean;
 }
 
-export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapistChange, onRestoreComplete, viewType = "all", onEditModalChange, branchDisplayName, branchLogName = "", headerAction, readOnly = false, scrollWithPage = false, showFlowToggle = false, onLoadMore, hasMore = false }: LogTableProps) => {
+// ── Helpers ────────────────────────────────────────────────────────────────
+const fmtDayName = (dateString: string) =>
+  new Date(dateString).toLocaleDateString("en-US", { weekday: "short" });
+const fmtDayMonth = (dateString: string) =>
+  new Date(dateString).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+const formatDate = (dateString: string) => fmtDayMonth(dateString);
+
+export const LogTable = ({
+  rows,
+  selectedProduct,
+  onReverse,
+  onUpdate,
+  onTherapistChange,
+  onRestoreComplete,
+  viewType = "all",
+  onEditModalChange,
+  branchDisplayName,
+  branchLogName = "",
+  headerAction,
+  readOnly = false,
+  scrollWithPage = false,
+  showFlowToggle = false,
+  onLoadMore,
+  hasMore = false,
+}: LogTableProps) => {
+  // ── State ────────────────────────────────────────────────────────────────
   const [deleting, setDeleting] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<LogRow | null>(null);
   const [confirmPos, setConfirmPos] = useState<{ top: number; left: number } | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  // Therapist change staged on the expanded row: cycled locally, written to Supabase once on collapse
+  const [editRow, setEditRow] = useState<LogRow | null>(null);
+  const [flowMode, setFlowMode] = useState<"all" | "in" | "out">("all");
+  const [moreLoading, setMoreLoading] = useState(false);
+
+  // Therapist staged change: cycled locally on the expanded row, written once on collapse
   const [pendingTherapist, setPendingTherapist] = useState<{ row: LogRow; value: string | null } | null>(null);
   const pendingTherapistRef = useRef<{ row: LogRow; value: string | null } | null>(null);
   const onTherapistChangeRef = useRef(onTherapistChange);
   onTherapistChangeRef.current = onTherapistChange;
-  const [editRow, setEditRow] = useState<LogRow | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
-  // Infinite scroll state (branch log is appended by the host page via onLoadMore)
-  const [moreLoading, setMoreLoading] = useState(false);
-  const moreBusy = useRef(false);
-  // Bottom sentinels + latest loaders for IntersectionObserver based infinite
-  // scroll (the host page scrolls, not the inner div, so scrollTop won't move).
   const mainSentinelRef = useRef<HTMLDivElement>(null);
-  const ordersSentinelRef = useRef<HTMLDivElement>(null);
-  const loadMoreOrdersRef = useRef<() => void>(() => {});
+  const moreBusy = useRef(false);
+  const flowSwitchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const triggerLoadMoreRef = useRef<() => void>(() => {});
+
   const branchTherapists = useBranchTherapists(branchDisplayName);
+  const therapistCycleList = branchTherapists.length > 0 ? branchTherapists : [...THERAPISTS];
 
-  // ── "orders" view state ─────────────────────────────────────────────
-  const [ordersData, setOrdersData] = useState<LogRow[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const [ordersMoreLoading, setOrdersMoreLoading] = useState(false);
-  const [ordersHasMore, setOrdersHasMore] = useState(true);
-  const [expandedOrderGRNs, setExpandedOrderGRNs] = useState<Set<string>>(new Set());
-  const ordersMoreBusy = useRef(false);
-  const ordersScrollRef = useRef<HTMLDivElement>(null);
-
-  // Fetch one page of this branch's Orders (newest first). The initial page-0
-  // load replaces the list; later pages are appended for infinite scroll.
-  const fetchOrdersPage = useCallback(async (start: number) => {
-    const { data } = await (supabase as any)
-      .from("AllFileLog")
-      .select("*")
-      .eq("TYPE", "Order")
-      .eq("BRANCH", branchLogName)
-      .order("DATE", { ascending: false })
-      .range(start, start + LOG_PAGE_SIZE - 1);
-    return (data || []) as LogRow[];
-  }, [branchLogName]);
-
-  useEffect(() => {
-    if (viewType !== "orders" || !branchLogName) return;
-    let cancelled = false;
-    setOrdersLoading(true);
-    setOrdersMoreLoading(false);
-    setOrdersHasMore(true);
-    fetchOrdersPage(0).then((batch) => {
-      if (cancelled) return;
-      setOrdersData(batch);
-      // Full first page = more history exists (page 1 can never reach the 900-row cap).
-      setOrdersHasMore(batch.length === LOG_PAGE_SIZE);
-      setOrdersLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, [viewType, branchLogName, fetchOrdersPage]);
-
-  // Append the next page of Orders when the list is scrolled to the bottom.
-  const loadMoreOrders = async () => {
-    if (ordersMoreBusy.current || !ordersHasMore || ordersLoading) return;
-    ordersMoreBusy.current = true;
-    setOrdersMoreLoading(true);
-    const start = ordersData.length;
-    // History cap: never load past LOG_MAX_ROWS (900) rows in total.
-    if (start >= LOG_MAX_ROWS) {
-      setOrdersHasMore(false);
-      return;
-    }
-    const batch = await fetchOrdersPage(start);
-    if (batch.length > 0) {
-      const seen = new Set(ordersData.map(r => r.id));
-      setOrdersData([...ordersData, ...batch.filter(r => !seen.has(r.id))]);
-    }
-    // Stop when the page comes back short (end of table) or the cap is reached.
-    setOrdersHasMore(batch.length === LOG_PAGE_SIZE && start + batch.length < LOG_MAX_ROWS);
-    setOrdersMoreLoading(false);
-    ordersMoreBusy.current = false;
-  };
-
-  const handleOrdersScroll = () => {
-    const el = ordersScrollRef.current;
-    if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) loadMoreOrders();
-  };
-
-  // Infinite scroll for the main branch log (host page appends via onLoadMore).
-  const handleMainScroll = () => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) triggerLoadMore();
-  };
-  const triggerLoadMore = async () => {
-    if (moreBusy.current || moreLoading || !onLoadMore || !hasMore) return;
-    moreBusy.current = true;
-    setMoreLoading(true);
-    try {
-      await onLoadMore();
-    } finally {
-      setMoreLoading(false);
-      moreBusy.current = false;
-    }
-  };
-  loadMoreOrdersRef.current = loadMoreOrders;
-  triggerLoadMoreRef.current = triggerLoadMore;
-
-  // IntersectionObserver "near bottom" for the main branch log. Fires when
-  // the bottom sentinel becomes visible in the viewport, no matter which
-  // ancestor is the actual scroll container.
-  useEffect(() => {
-    if (viewType === "orders") return;
-    const sentinel = mainSentinelRef.current;
-    if (!sentinel) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries.some(e => e.isIntersecting)) triggerLoadMoreRef.current();
-      },
-      { rootMargin: "500px 0px 0px 0px", threshold: 0 }
-    );
-    obs.observe(sentinel);
-    return () => obs.disconnect();
-  }, [viewType, onLoadMore, hasMore]);
-
-  // IntersectionObserver "near bottom" for the orders view.
-  useEffect(() => {
-    if (viewType !== "orders") return;
-    const sentinel = ordersSentinelRef.current;
-    if (!sentinel) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries.some(e => e.isIntersecting)) loadMoreOrdersRef.current();
-      },
-      { rootMargin: "500px 0px 0px 0px", threshold: 0 }
-    );
-    obs.observe(sentinel);
-    return () => obs.disconnect();
-  }, [viewType, branchLogName]);
-
-  const toggleOrderGRN = (grn: string) => {
-    setExpandedOrderGRNs(prev => {
-      const next = new Set(prev);
-      next.has(grn) ? next.delete(grn) : next.add(grn);
-      return next;
-    });
-  };
-
-  const orderGroups = (() => {
-    const map = new Map<string, LogRow[]>();
-    for (const row of ordersData) {
-      const grn = row.GRN || `no-grn-${row.id}`;
-      if (!map.has(grn)) map.set(grn, []);
-      map.get(grn)!.push(row);
-    }
-    return Array.from(map.entries());
-  })();
-
-  // Row filtering per view type (rows are provided by the call site):
-  // - "usage": only rows that are NOT a Customer, Staff or Order entry
-  // - "sale":  only Customer or Staff entries
-  // - "all":   no TYPE filtering
-  // - "orders": fetches and renders its own rows above
+  // ── Row filtering ────────────────────────────────────────────────────────
   const displayRows = useMemo(() => {
-    if (viewType === "usage") {
-      return rows.filter(r => r.TYPE !== "Customer" && r.TYPE !== "Staff" && r.TYPE !== "Order");
-    }
-    if (viewType === "sale") {
-      return rows.filter(r => r.TYPE === "Customer" || r.TYPE === "Staff");
-    }
+    if (viewType === "usage") return rows.filter((r) => r.TYPE !== "Customer" && r.TYPE !== "Staff" && r.TYPE !== "Order");
+    if (viewType === "sale") return rows.filter((r) => r.TYPE === "Customer" || r.TYPE === "Staff");
     return rows;
   }, [rows, viewType]);
 
-  // ── Past-data flow toggle (All / In / Out) ────────────────────────────
-  // In  -> Order/Transfer rows with QTY > 0 (stock arriving)
-  // Out -> everything else: rows whose TYPE is neither Order nor Transfer,
-  //        plus Transfers with QTY < 0 (stock leaving)
-  const [flowMode, setFlowMode] = useState<"all" | "in" | "out">("all");
+  // Reset flow mode when the focused product changes
   useEffect(() => { setFlowMode("all"); }, [selectedProduct]);
+
   const flowRows = useMemo(() => {
     if (!showFlowToggle || flowMode === "all") return displayRows;
     if (flowMode === "in") {
-      return displayRows.filter(r => {
+      return displayRows.filter((r) => {
         const type = (r.TYPE || "").trim().toUpperCase();
         return (type === "ORDER" || type === "TRANSFER") && Number(r.QTY) > 0;
       });
     }
-    return displayRows.filter(r => {
+    return displayRows.filter((r) => {
       const type = (r.TYPE || "").trim().toUpperCase();
       return type !== "ORDER" && (type !== "TRANSFER" || Number(r.QTY) < 0);
     });
   }, [displayRows, flowMode, showFlowToggle]);
 
-  // Therapist pill cycling (expanded rows): live therapist list with the same static fallback as the edit modal
-  const therapistCycleList = branchTherapists.length > 0 ? branchTherapists : [...THERAPISTS];
-
+  // ── Therapist cycling ────────────────────────────────────────────────────
   const therapistChanged = (row: LogRow, value: string | null) =>
     (row.THERAPIST || "").trim().toUpperCase() !== (value || "").trim().toUpperCase();
 
-  // NONE → first therapist → … → last therapist → NONE → …
-  // Cycling is local-only: the value is staged and written once when the row collapses.
   const cycleRowTherapist = (row: LogRow) => {
     if (therapistCycleList.length === 0) return;
     const order: (string | null)[] = [null, ...therapistCycleList];
-    const staged = pendingTherapistRef.current && pendingTherapistRef.current.row.id === row.id
-      ? pendingTherapistRef.current.value
-      : row.THERAPIST;
+    const staged =
+      pendingTherapistRef.current && pendingTherapistRef.current.row.id === row.id
+        ? pendingTherapistRef.current.value
+        : row.THERAPIST;
     const current = (staged || "").trim().toUpperCase();
     const idx = current ? order.indexOf(current) : 0;
     const next = order[(idx + 1) % order.length];
@@ -254,7 +133,6 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
     setPendingTherapist(pending);
   };
 
-  // Write the staged therapist (if any) — called when the expanded row collapses
   const commitPendingTherapist = () => {
     const p = pendingTherapistRef.current;
     if (!p) return;
@@ -270,40 +148,98 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
     setPendingTherapist(null);
   };
 
-  // Collapse / switch the expanded row, committing any staged therapist change first
+  // ── Row expansion ────────────────────────────────────────────────────────
   const changeExpandedRow = (id: number | null) => {
     commitPendingTherapist();
     setExpandedId(id);
   };
 
-  const fmtOrderDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  // Auto-collapse when view context switches
+  useEffect(() => {
+    commitPendingTherapist();
+    setExpandedId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProduct, viewType, flowMode]);
 
-  const fmtDayName = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", { weekday: "short" });
-  const fmtDayMonth = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  // Flow mode switch: collapse first, then swap filter after a short beat so
+  // the collapse animation plays before the new list mounts.
+  const changeFlowMode = (m: "all" | "in" | "out") => {
+    if (m === flowMode) return;
+    if (flowSwitchTimer.current) clearTimeout(flowSwitchTimer.current);
+    commitPendingTherapist();
+    setExpandedId(null);
+    flowSwitchTimer.current = setTimeout(() => {
+      flowSwitchTimer.current = null;
+      setFlowMode(m);
+    }, 150);
+  };
 
-  // Date column format for the all/usage/sale views: day + short month ("28 Aug", "3 Jan").
-  // The day name ("Fri") is revealed below the date only when the row is expanded.
-  const formatDate = (dateString: string) => fmtDayMonth(dateString);
+  // Collapse when the user taps outside the table
+  useEffect(() => {
+    if (expandedId === null) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        changeExpandedRow(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [expandedId]);
 
+  // Safety net: commit staged therapist if the component unmounts mid-edit
+  useEffect(() => {
+    return () => {
+      if (flowSwitchTimer.current) clearTimeout(flowSwitchTimer.current);
+      const p = pendingTherapistRef.current;
+      const cb = onTherapistChangeRef.current;
+      if (p && cb && therapistChanged(p.row, p.value)) void cb(p.row, p.value);
+      pendingTherapistRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Notify parent when edit modal opens/closes (hides bottom nav)
+  useEffect(() => {
+    onEditModalChange?.(editRow !== null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editRow]);
+
+  // ── Infinite scroll ──────────────────────────────────────────────────────
+  const triggerLoadMore = async () => {
+    if (moreBusy.current || moreLoading || !onLoadMore || !hasMore) return;
+    moreBusy.current = true;
+    setMoreLoading(true);
+    try { await onLoadMore(); }
+    finally { setMoreLoading(false); moreBusy.current = false; }
+  };
+  triggerLoadMoreRef.current = triggerLoadMore;
+
+  useEffect(() => {
+    if (viewType === "orders") return;
+    const sentinel = mainSentinelRef.current;
+    if (!sentinel) return;
+    const obs = new IntersectionObserver(
+      (entries) => { if (entries.some((e) => e.isIntersecting)) triggerLoadMoreRef.current(); },
+      { rootMargin: "500px 0px 0px 0px", threshold: 0 }
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, [viewType, flowMode, selectedProduct, onLoadMore, hasMore]);
+
+  // ── Delete / restore ─────────────────────────────────────────────────────
   const handleConfirm = async (row: LogRow) => {
-    const r = row;
     setConfirmRow(null);
     setConfirmPos(null);
     setDeleting(row.id);
     discardPendingTherapist();
     setExpandedId(null);
     try {
-      await onReverse(r);
+      await onReverse(row);
 
-      // --- Start of new Supabase update logic ---
-      const productName = r["PRODUCT NAME"];
-      const quantity = r.QTY; // The quantity of the action being reversed
-      const branchName = r.BRANCH;
-
+      const productName = row["PRODUCT NAME"];
+      const branchName = row.BRANCH;
       let balanceKey: keyof OfficeProduct | null = null;
+
       if (branchName === "Office") {
         balanceKey = "OFFICE BALANCE";
       } else {
@@ -316,15 +252,12 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
       }
 
       if (balanceKey) {
-        const isOrder = r.TYPE === "Order";
+        const isOrder = row.TYPE === "Order";
         const needsOfficeUpdate = isOrder && balanceKey !== "OFFICE BALANCE";
-        const selectFields = needsOfficeUpdate 
-          ? `"${balanceKey}", "PRODUCT NAME", "OFFICE BALANCE"` 
+        const selectFields = needsOfficeUpdate
+          ? `"${balanceKey}", "PRODUCT NAME", "OFFICE BALANCE"`
           : `"${balanceKey}", "PRODUCT NAME"`;
 
-        // Fetch the current product balance(s). Uses limit(1) instead of
-        // .single() so duplicate "PRODUCT NAME" rows can never fail the whole
-        // restore — .single() errors when more than one row matches.
         const { data, error } = await (supabase as any)
           .from("AllFileProducts")
           .select(selectFields)
@@ -335,407 +268,255 @@ export const LogTable = ({ rows, selectedProduct, onReverse, onUpdate, onTherapi
           console.error("Error fetching product for balance update:", error);
         } else if (data && data.length > 0) {
           const currentBalance = data[0][balanceKey] ?? 0;
-          const newBalance = (currentBalance as number) - quantity;
-          
-          const updates: any = { [balanceKey]: newBalance };
-
+          const updates: any = { [balanceKey]: (currentBalance as number) - row.QTY };
           if (needsOfficeUpdate) {
-            const currentOfficeBalance = data[0]["OFFICE BALANCE"] ?? 0;
-            const newOfficeBalance = (currentOfficeBalance as number) + quantity;
-            updates["OFFICE BALANCE"] = newOfficeBalance;
+            updates["OFFICE BALANCE"] = ((data[0]["OFFICE BALANCE"] ?? 0) as number) + row.QTY;
           }
-
           const { error: updateError } = await (supabase as any)
             .from("AllFileProducts")
             .update(updates)
             .eq("PRODUCT NAME", productName);
-
-          if (updateError) {
-            console.error("Error updating product balance:", updateError);
-          } else {
-            console.log(`Product balances for ${productName} updated successfully.`);
-          }
+          if (updateError) console.error("Error updating product balance:", updateError);
+          else console.log(`Product balances for ${productName} updated successfully.`);
         }
       } else {
         console.warn(`Could not find balanceKey for branch: ${branchName}`);
       }
-      // --- End of new Supabase update logic ---
 
-      // The balance write above has now completed, so it's safe for the host
-      // page to refetch this product and refresh its on-screen state (ordering
-      // fix — previously the page could read the balance before this update).
-      if (onRestoreComplete) {
-        await onRestoreComplete(r);
-      }
+      if (onRestoreComplete) await onRestoreComplete(row);
     } finally {
       setDeleting(null);
     }
   };
 
-  useEffect(() => {
-    if (expandedId === null) return;
+  // ── View transition key ──────────────────────────────────────────────────
+  const viewKey = viewType === "orders"
+    ? "orders"
+    : `${selectedProduct ? "product" : "log"}:${flowMode}`;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        changeExpandedRow(null);
-      }
-    };
+  // ── Render ───────────────────────────────────────────────────────────────
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={viewKey}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        style={{
+          width: "100%",
+          minWidth: 0,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          flex: scrollWithPage ? undefined : 1,
+          overflow: "hidden",
+        }}
+      >
+        {viewType === "orders" ? (
+          // ── Orders view (fully self-contained) ──────────────────────────
+          <OrdersView branchLogName={branchLogName} scrollWithPage={scrollWithPage} />
+        ) : (
+          // ── Main log view ────────────────────────────────────────────────
+          <div
+            ref={containerRef}
+            style={
+              scrollWithPage
+                ? { width: "100%", minWidth: 0 }
+                : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }
+            }
+          >
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [expandedId]);
+              {/* Flow toggle (past-data panel) */}
+              {showFlowToggle && (
+                <FlowToggle
+                  flowMode={flowMode}
+                  onChange={changeFlowMode}
+                  headerAction={headerAction}
+                />
+              )}
 
-  // Safety net: if the table unmounts while a row is expanded with a staged change, commit it
-  useEffect(() => {
-    return () => {
-      const p = pendingTherapistRef.current;
-      const cb = onTherapistChangeRef.current;
-      if (p && cb && (p.row.THERAPIST || "").trim().toUpperCase() !== (p.value || "").trim().toUpperCase()) {
-        void cb(p.row, p.value);
-      }
-      pendingTherapistRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Notify the parent when the edit modal opens/closes so the bottom nav can be hidden
-  useEffect(() => {
-    onEditModalChange?.(editRow !== null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editRow]);
-
-  return viewType === "orders" ? (
-    <div ref={ordersScrollRef} onScroll={handleOrdersScroll} style={scrollWithPage ? { width: "100%", minWidth: 0 } : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
-        {/* Sticky header */}
-        <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "54px 1fr 48px 48px 22px", gap: "6px", paddingTop: "0px", paddingBottom: "10px", borderBottom: "0.5px solid hsl(var(--border))", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
-          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>GRN</div>
-          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Items</div>
-          <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center", visibility: expandedOrderGRNs.size > 0 ? "visible" : "hidden" }}>Bal</div>
-          <div />
-        </div>
-
-        {ordersLoading && (
-          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading...</div>
-        )}
-        {!ordersLoading && orderGroups.length === 0 && (
-          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
-        )}
-
-        {!ordersLoading && orderGroups.map(([grn, grnRows]) => {
-          const isOpen = expandedOrderGRNs.has(grn);
-          const dateStr = fmtOrderDate(grnRows[0]?.DATE || "");
-          return (
-            <div key={grn}>
-              <div
-                onClick={() => toggleOrderGRN(grn)}
-                style={{ display: "grid", gridTemplateColumns: "54px 1fr 48px 48px 22px", gap: "6px", padding: "9px 0", borderBottom: "0.5px solid hsl(var(--border) / 0.4)", cursor: "pointer", alignItems: "center" }}
-              >
-                <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{dateStr}</div>
-                <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{grn}</div>
-                <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{grnRows.length}</div>
-                <div />
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
-                  {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              {/* Column headers */}
+              {selectedProduct ? (
+                <div
+                  style={{
+                    position: scrollWithPage ? "relative" : "sticky",
+                    top: scrollWithPage ? undefined : 0,
+                    zIndex: scrollWithPage ? undefined : 10,
+                    display: "grid",
+                    gridTemplateColumns: "50px 44px 52px 64px 64px",
+                    gap: "4px",
+                    paddingTop: "8px",
+                    paddingBottom: "10px",
+                    borderBottom: scrollWithPage
+                      ? "0.5px solid hsl(var(--border) / 0.4)"
+                      : "1px solid hsl(var(--border) / 0.9)",
+                    background: scrollWithPage ? "transparent" : "hsl(var(--background))",
+                  }}
+                >
+                  {["Date", "Qty", "Bal", "Type"].map((label) => (
+                    <div key={label} style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: label === "Date" ? undefined : "center" }}>
+                      {label}
+                    </div>
+                  ))}
+                  {!showFlowToggle && headerAction ? (
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{headerAction}</div>
+                  ) : (
+                    <div />
+                  )}
                 </div>
-              </div>
-
-              {isOpen && (
-                <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
-                  {grnRows.map((row, idxRow) => (
-                    <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 48px 48px 22px", gap: "6px", padding: "5px 0", borderTop: idxRow > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
-                      <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{dateStr}</div>
-                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>{row["PRODUCT NAME"]}</div>
-                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(142 65% 38%)", textAlign: "center" }}>+{Math.abs(row.QTY ?? 0)}</div>
-                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                      <div />
+              ) : (
+                <div
+                  style={{
+                    position: scrollWithPage ? "relative" : "sticky",
+                    top: scrollWithPage ? undefined : 0,
+                    zIndex: scrollWithPage ? undefined : 10,
+                    display: "grid",
+                    gridTemplateColumns: "45px 1fr 28px 32px 70px",
+                    gap: "4px",
+                    paddingBottom: "10px",
+                    borderBottom: scrollWithPage
+                      ? "0.5px solid hsl(var(--border) / 0.4)"
+                      : "1px solid hsl(var(--border) / 0.9)",
+                    background: scrollWithPage ? "transparent" : "hsl(var(--background))",
+                  }}
+                >
+                  {["Date", "Product", "Qty", "Bal", "Type"].map((label) => (
+                    <div key={label} style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: label === "Date" || label === "Product" ? undefined : "center", whiteSpace: label === "Product" ? "normal" : undefined, wordBreak: label === "Product" ? "break-word" : undefined }}>
+                      {label}
                     </div>
                   ))}
                 </div>
               )}
-            </div>
-          );
-        })}
-        {ordersMoreLoading && (
-          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
-        )}
-        {!ordersHasMore && !ordersLoading && ordersData.length > 0 && (
-          <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
-        )}
-        {/* Bottom sentinel — triggers the next page of orders on scroll */}
-        <div ref={ordersSentinelRef} style={{ height: 1 }} />
-      </div>
-    </div>
-  ) : (
-    <div ref={containerRef} onScroll={handleMainScroll} style={scrollWithPage ? { width: "100%", minWidth: 0 } : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
-        {showFlowToggle && (() => {
-          const flowOrder = ["all", "in", "out"] as const;
-          const activeIdx = flowOrder.indexOf(flowMode);
-          return (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "14px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Past Data</span>
-                {headerAction}
-              </div>
-              <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px" }}>
-                <div style={{ position: "absolute", top: "2px", bottom: "2px", left: "2px", width: "calc((100% - 4px) / 3)", transform: `translateX(${activeIdx * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
-                {flowOrder.map(m => (
-                  <button key={m} onClick={() => setFlowMode(m)} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "40px", padding: "2px 0", fontSize: "8.5px", fontWeight: flowMode === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: flowMode === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
-                    {m === "all" ? "All" : m}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
-        {selectedProduct ? (
-          <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "50px 44px 52px 64px 64px", gap: "4px", paddingTop: "8px", paddingBottom: "10px", borderBottom: scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
-            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
-            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
-            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
-            <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
-            {/* Therapist column has no header — the name is shown as a pill; headerAction (e.g. minimise chevron) sits here */}
-            {!showFlowToggle && headerAction ? (
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{headerAction}</div>
-            ) : (
-              <div />
-            )}
-          </div>
-        ) : (
-          <div style={{ position: scrollWithPage ? "relative" : "sticky", top: scrollWithPage ? undefined : 0, zIndex: scrollWithPage ? undefined : 10, display: "grid", gridTemplateColumns: "45px 1fr 28px 32px 70px", gap: "4px", paddingTop: "0px", paddingBottom: "10px", borderBottom: scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)", background: scrollWithPage ? "transparent" : "hsl(var(--background))" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>Date</div>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>Product</div>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Qty</div>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Bal</div>
-            <div style={{ fontSize: "13px", fontWeight: 700, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>Type</div>
-          </div>
-        )}
-        <div style={scrollWithPage ? undefined : { flex: 1, overflowY: "auto", minHeight: 0 }} onClick={() => changeExpandedRow(null)}>
-          {showFlowToggle && flowRows.length === 0 && (
-            <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>No entries</div>
-          )}
-{flowRows.map((row, idx) => {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
-  const dateStr = formatDate(row.DATE);
-  const prevDateStr = idx > 0 ? formatDate(flowRows[idx - 1].DATE) : null;
-  const showDate = dateStr !== prevDateStr;
-  const dateSeparator = showDate && idx > 0;
-  const nextDateStr = idx < flowRows.length - 1 ? formatDate(flowRows[idx + 1].DATE) : null;
-  const isLastRowBeforeDateChange = nextDateStr !== null && nextDateStr !== dateStr;
-  const isDeleting = deleting === row.id;
-  const expanded = expandedId === row.id;
-  const withinCutoff = (() => { const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0); return rd >= cutoff; })();
-  const gridCols = selectedProduct ? "50px 44px 52px 64px 64px" : "45px 1fr 28px 32px 70px";
-  const canCycleTherapist = !!onTherapistChange && withinCutoff;
-  const pillTherapist = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist.value : row.THERAPIST;
 
-  return (
-    <motion.div
-      key={row.id}
-      style={{ borderBottom: (!dateSeparator && !isLastRowBeforeDateChange) ? "0.5px solid hsl(var(--border) / 0.5)" : "none" }}
-    >
-      <AnimatePresence initial={false}>
-        {!expanded || readOnly ? (
-          <motion.div
-          key="collapsed"
-          layout
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ 
-            duration: 0.35, 
-            ease: "easeInOut"
-          }}
-          style={{ overflow: "hidden" }}
-        >
-            <div
-              onClick={(e) => { if (readOnly) return; e.stopPropagation(); changeExpandedRow(row.id); }}
-              style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "8px 0", borderTop: dateSeparator ? (scrollWithPage ? "0.5px solid hsl(var(--border) / 0.4)" : "1px solid hsl(var(--border) / 0.9)") : "none", borderBottom: "none", marginTop: dateSeparator ? "4px" : "0", alignItems: "start", cursor: readOnly ? "default" : "pointer" }}
-            >
-              {selectedProduct ? (
-                <>
-                  <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                  <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-                    {row.THERAPIST ? (
-                      <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "2px 5px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{row.THERAPIST}</span>
-                    ) : (
-                      <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
-                    )}
+              {/* Row list */}
+              <div
+                style={scrollWithPage ? undefined : { flex: 1, overflowY: "auto", minHeight: 0 }}
+                onClick={() => changeExpandedRow(null)}
+              >
+                {showFlowToggle && flowRows.length === 0 && (
+                  <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>
+                    No entries
                   </div>
-                </>
-              ) : (
-                <>
-                  <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
-                        {row["PRODUCT NAME"] || "—"}
-                      </div>
-                      {!expanded && (row as any)["THERAPIST"] && (
-                        <span style={{ ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists), padding: "2px 6px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em" }}>
-                          {(row as any)["THERAPIST"]}
-                        </span>
-                      )}
-                    </div>
-                    {!expanded && (row as any)["NOTES"] && (
-                      <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", lineHeight: 1.2 }}>
-                        {(row as any)["NOTES"]}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                </>
-              )}
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-  key="expanded"
-  layout
-  initial={{ height: 0, opacity: 0 }}
-  animate={{ height: "auto", opacity: 1 }}
-  exit={{ height: 0, opacity: 0 }}
-  transition={{ 
-    duration: 0.35, 
-    ease: "easeInOut"
-  }}
-  style={{ overflow: "hidden" }}
->
-            <motion.div
-  layout
-  style={{ margin: "2px -6px 0 -6px", padding: "8px 6px 12px 6px", background: "hsl(var(--muted) / 0.35)", borderRadius: "12px" }}
->
-  <div onClick={() => changeExpandedRow(null)} style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "0 0 8px 0", alignItems: "start", cursor: "pointer" }}>
-                {selectedProduct ? (
-                  <>
-                    <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                    <div />
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>{showDate ? dateStr : ""}</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
-                          {row["PRODUCT NAME"] || "—"}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>{row.QTY > 0 ? "+" : ""}{row.QTY}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>{row["ENDING BALANCE"] ?? "—"}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>{row.TYPE || "—"}</div>
-                  </>
                 )}
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "4px", padding: "8px 0 0 0", borderTop: "0.5px solid hsl(var(--border) / 0.2)", alignItems: "center" }}>
-                <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>{fmtDayName(row.DATE)}</div>
-                <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
-                  {onUpdate && withinCutoff && (
-                    <button onClick={(e) => { e.stopPropagation(); const stagedPending = pendingTherapist && pendingTherapist.row.id === row.id ? pendingTherapist : null; commitPendingTherapist(); setEditRow(stagedPending ? { ...row, THERAPIST: stagedPending.value } : row); }} style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase" }}>
-                      Edit
-                    </button>
-                  )}
-                  {withinCutoff && (
-                    <button onClick={(e) => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setConfirmPos({ top: rect.top, left: rect.left }); setConfirmRow(row); }} disabled={isDeleting} style={{ background: "hsl(var(--destructive) / 0.1)", color: "hsl(var(--destructive))", border: "none", cursor: isDeleting ? "default" : "pointer", padding: "6px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", opacity: isDeleting ? 0.5 : 1 }}>
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </button>
-                  )}
-                </div>
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  {canCycleTherapist && therapistCycleList.length > 0 ? (
-                    <button onClick={(e) => { e.stopPropagation(); cycleRowTherapist(row); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}>
-                      <span style={{ ...(pillTherapist ? therapistPillStyle(pillTherapist, therapistCycleList) : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist ? pillTherapist : "NONE"}</span>
-                    </button>
-                  ) : pillTherapist ? (
-                    <span style={{ ...therapistPillStyle(pillTherapist, branchTherapists), padding: "3px 8px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{pillTherapist}</span>
-                  ) : (
-                    <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}></span>
-                  )}
-                </div>
+                {flowRows.map((row, idx) => {
+                  const today = new Date(); today.setHours(0, 0, 0, 0);
+                  const cutoff = new Date(today); cutoff.setDate(today.getDate() - 6);
+                  const rd = new Date(row.DATE); rd.setHours(0, 0, 0, 0);
+                  const withinCutoff = rd >= cutoff;
+
+                  return (
+                    <LogRowItem
+                      key={row.id}
+                      row={row}
+                      idx={idx}
+                      flowRows={flowRows}
+                      expanded={expandedId === row.id}
+                      isDeleting={deleting === row.id}
+                      selectedProduct={selectedProduct}
+                      readOnly={readOnly}
+                      scrollWithPage={scrollWithPage}
+                      pendingTherapist={pendingTherapist}
+                      branchTherapists={branchTherapists}
+                      therapistCycleList={therapistCycleList}
+                      withinCutoff={withinCutoff}
+                      onUpdate={onUpdate}
+                      formatDate={formatDate}
+                      fmtDayName={fmtDayName}
+                      onExpand={(id) => changeExpandedRow(id)}
+                      onCollapse={() => changeExpandedRow(null)}
+                      onEditClick={(r) => {
+                        const stagedPending =
+                          pendingTherapist && pendingTherapist.row.id === r.id
+                            ? pendingTherapist
+                            : null;
+                        commitPendingTherapist();
+                        setEditRow(stagedPending ? { ...r, THERAPIST: stagedPending.value } : r);
+                      }}
+                      onDeleteClick={(r, e) => {
+                        e.stopPropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setConfirmPos({ top: rect.top, left: rect.left });
+                        setConfirmRow(r);
+                      }}
+                      onCycleTherapist={cycleRowTherapist}
+                    />
+                  );
+                })}
+
+                {moreLoading && (
+                  <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>
+                    Loading more…
+                  </div>
+                )}
+                {!hasMore && !moreLoading && onLoadMore && rows.length > 0 && (
+                  <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>
+                    End of history
+                  </div>
+                )}
+                <div ref={mainSentinelRef} style={{ height: 1 }} />
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+
+            {/* Edit modal */}
+            {editRow && onUpdate && (
+              <EditEntryModal
+                row={editRow}
+                branchDisplayName={branchDisplayName}
+                onSave={async (updates) => {
+                  await onUpdate(editRow, updates);
+                  setEditRow(null);
+                }}
+                onClose={() => setEditRow(null)}
+              />
+            )}
+
+            {/* Delete confirm portal */}
+            {confirmRow && confirmPos &&
+              createPortal(
+                <div
+                  onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
+                  style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 1000, background: "rgba(0,0,0,0.1)" }}
+                >
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: "fixed",
+                      top: Math.max(10, confirmPos.top - 40),
+                      left: Math.min(window.innerWidth - 160, confirmPos.left),
+                      background: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "12px",
+                      padding: "8px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      zIndex: 1001,
+                    }}
+                  >
+                    <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit" }}>Are you sure?</span>
+                    <button
+                      onClick={() => handleConfirm(confirmRow)}
+                      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
+                      style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>,
+                document.body
+              )}
+          </div>
         )}
-      </AnimatePresence>
-    </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
-})}
-          {moreLoading && (
-            <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
-          )}
-          {!hasMore && !moreLoading && onLoadMore && rows.length > 0 && (
-            <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>End of history</div>
-          )}
-          {/* Bottom sentinel — triggers the next page of the branch log on scroll */}
-          <div ref={mainSentinelRef} style={{ height: 1 }} />
-        </div>
-      </div>
-
-      {editRow && onUpdate && (
-<EditEntryModal
-  row={editRow}
-  branchDisplayName={branchDisplayName}
-  onSave={async (updates) => {
-    await onUpdate(editRow, updates);
-    setEditRow(null);
-  }}
-  onClose={() => setEditRow(null)}
-/>
-)}
-
-{confirmRow && confirmPos && createPortal(
-<div 
-  onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
-  style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 1000, background: "rgba(0,0,0,0.1)" }}
->
-  <div 
-    onClick={e => e.stopPropagation()}
-    style={{ 
-      position: "fixed", 
-      top: Math.max(10, confirmPos.top - 40), 
-      left: Math.min(window.innerWidth - 160, confirmPos.left), 
-      background: "hsl(var(--background))", 
-      border: "1px solid hsl(var(--border))", 
-      borderRadius: "12px", 
-      padding: "8px", 
-      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      zIndex: 1001
-    }}
-  >
-    <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit" }}>Are you sure?</span>
-    <button 
-      onClick={() => handleConfirm(confirmRow)}
-      style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-    >
-      <Check size={14} />
-    </button>
-    <button 
-      onClick={() => { setConfirmRow(null); setConfirmPos(null); }}
-      style={{ background: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-    >
-      <X size={14} />
-    </button>
-  </div>
-</div>,
-document.body
-)}
-</div>
-);
 };
