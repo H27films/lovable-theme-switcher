@@ -220,87 +220,91 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
               <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"} · {supplierGroups.length} {supplierGroups.length === 1 ? "SUPPLIER" : "SUPPLIERS"}</div>
               {totalPrice > 0 && <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: fg }}>RM {totalPrice.toFixed(2)}</div>}
             </div>
-            {!draftReady ? (
+            </>
+      ) : (
+        /* Collapsed footer bar — Order Summary toggle (left) + DRAFT ORDER pill (right).
+           Once drafted, the DRAFT ORDER pill is replaced by grey "Send … to WhatsApp"
+           pills (one per supplier, Past Data toggle grey) plus a Clear Order button. */
+        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", borderTop: border }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+              onClick={toggleExpand}
+              aria-expanded={expanded}
+              style={{
+                flex: 1, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "space-between",
+                background: "none", border: "none", cursor: "pointer",
+                padding: "5px 0",
+                fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em",
+                fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)",
+              }}
+            >
+              <span>Order Summary</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
+                  {totalItems} {totalItems === 1 ? "Product" : "Products"}
+                </span>
+                <ChevronDown size={14} />
+              </span>
+            </button>
+            {!draftReady && (
               <button
                 onClick={() => setDraftReady(true)}
                 disabled={hasUnresolved}
                 style={{
-                  marginTop: "16px", width: "100%", padding: "12px",
-                  fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                  flexShrink: 0, padding: "10px 16px",
+                  fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit",
                   letterSpacing: "0.12em", textTransform: "uppercase",
                   border: "0.5px solid hsl(var(--foreground))",
                   background: "hsl(var(--foreground))",
                   color: "hsl(var(--background))",
-                  borderRadius: "6px",
+                  borderRadius: "999px",
                   cursor: hasUnresolved ? "default" : "pointer",
                   opacity: hasUnresolved ? 0.5 : 1,
                 }}
               >
                 DRAFT ORDER
               </button>
-            ) : (
-              <div style={{ marginTop: "16px" }}>
-                {supplierGroups.map((group) => (
-                  <button
-                    key={group.supplier}
-                    onClick={() => generateAndSharePDF(
-                      group.supplier,
-                      group.lines.map(({ line }) => ({
-                        productName: line.product["PRODUCT NAME"],
-                        qty: line.qty * (line.product["UNITS/ORDER"] ?? 1),
-                      }))
-                    )}
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      gap: "8px", width: "100%", padding: "12px",
-                      fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
-                      letterSpacing: "0.08em", textTransform: "uppercase",
-                      border: "none", background: "#25D366",
-                      color: "#fff", borderRadius: "6px", cursor: "pointer",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <WhatsAppIcon />
-                    Send {group.supplier} to WhatsApp
-                  </button>
-                ))}
+            )}
+          </div>
+          {draftReady && (
+            <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              {supplierGroups.map((group) => (
                 <button
-                  onClick={() => { setDraftReady(false); setOrderLines([]); }}
+                  key={group.supplier}
+                  onClick={() => generateAndSharePDF(
+                    group.supplier,
+                    group.lines.map(({ line }) => ({
+                      productName: line.product["PRODUCT NAME"],
+                      qty: line.qty * (line.product["UNITS/ORDER"] ?? 1),
+                    }))
+                  )}
                   style={{
-                    width: "100%", padding: "10px",
-                    fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: "8px", width: "100%", padding: "12px",
+                    fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
                     letterSpacing: "0.08em", textTransform: "uppercase",
-                    border: "0.5px solid " + muted, background: "none",
-                    color: muted, borderRadius: "6px", cursor: "pointer",
+                    border: "none", background: "hsl(var(--foreground) / 0.07)",
+                    color: "hsl(var(--foreground))", borderRadius: "999px", cursor: "pointer",
                   }}
                 >
-                  Clear Order
+                  <WhatsAppIcon />
+                  Send {group.supplier} to WhatsApp
                 </button>
-              </div>
-            )}
-            </>
-      ) : (
-        /* Collapsed footer bar */
-        <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "6px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", borderTop: border }}>
-          <button
-            onClick={toggleExpand}
-            aria-expanded={expanded}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-              background: "none", border: "none", cursor: "pointer",
-              padding: "5px 0",
-              fontSize: "clamp(14px, 4vw, 18px)", fontWeight: 300, letterSpacing: "0.08em",
-              fontFamily: "Raleway, inherit", color: "hsl(var(--foreground) / 0.85)",
-            }}
-          >
-            <span>Order Summary</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-                {totalItems} {totalItems === 1 ? "Product" : "Products"}
-              </span>
-              <ChevronDown size={14} />
-            </span>
-          </button>
+              ))}
+              <button
+                onClick={() => { setDraftReady(false); setOrderLines([]); }}
+                style={{
+                  width: "100%", padding: "10px",
+                  fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit",
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  border: "0.5px solid " + muted, background: "none",
+                  color: muted, borderRadius: "6px", cursor: "pointer",
+                }}
+              >
+                Clear Order
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
