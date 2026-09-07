@@ -215,7 +215,17 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const backBlockedFinal = salesViewMode === "month" ? monthBackBlocked : backBlocked;
   const fwdBlockedFinal = salesViewMode === "month" ? monthFwdBlocked : fwdBlocked;
 
-  // Custom bar shape: half-circle top, straight bottom
+  // Lighten a hex colour by mixing toward white (used for bar gradient tops)
+  const lightenHex = (hex: string, amt: number) => {
+    const num = parseInt(hex.replace("#", ""), 16);
+    const ch = (v: number) => Math.min(255, v + amt);
+    const r = ch((num >> 16) & 255), g = ch((num >> 8) & 255), b = ch(num & 255);
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+  };
+
+  // Custom bar shape: half-circle top, straight bottom, vertical gradient from a
+  // lighter tone at the top into the bar's main colour at the base. Day-view bars
+  // over 5k keep their darker highlight colour (gradient is computed from it).
   const makeRoundedBar = (baseColor: string, highlightColor: string, isDay: boolean) =>
     (props: any) => {
       const { x, y, width, height } = props;
@@ -224,7 +234,18 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
       const fill = isDay && value > 5000 ? highlightColor : baseColor;
       const r = Math.min(width / 2, height);
       const d = `M ${x},${y + height} L ${x},${y + r} A ${r},${r} 0 0 1 ${x + width},${y + r} L ${x + width},${y + height} Z`;
-      return <path d={d} fill={fill} cursor="pointer" />;
+      const gradId = `barGrad-${fill.replace("#", "")}`;
+      return (
+        <g>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={lightenHex(fill, 50)} />
+              <stop offset="100%" stopColor={fill} />
+            </linearGradient>
+          </defs>
+          <path d={d} fill={`url(#${gradId})`} cursor="pointer" />
+        </g>
+      );
     };
 
   // ─── SALES HELPERS ───────────────────────────────────────────────
