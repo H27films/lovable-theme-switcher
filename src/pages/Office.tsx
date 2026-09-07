@@ -278,7 +278,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
   return (
     <div style={{
-      height: "100dvh", background: "linear-gradient(to bottom, hsl(38 30% 90%) 0%, hsl(var(--background)) 48px)", color: "hsl(var(--foreground))",
+      height: "100dvh", background: "linear-gradient(to bottom, hsl(38 30% 92%) 0%, hsl(var(--background)) 48px)", color: "hsl(var(--foreground))",
       fontFamily: "'Raleway', sans-serif", display: "flex", flexDirection: "column", overflow: "hidden",
       ...enterStyle,
       ...slideExitStyle(exiting),
