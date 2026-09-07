@@ -65,96 +65,105 @@ export const ExpandedRowContent = ({
   {showDate ? fmtDayName(row.DATE) : ""}
 </div>
 
-        {/* Edit + Delete buttons */}
-        <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>
-          {onUpdate && withinCutoff && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onEditClick(); }}
-              style={{
-                background: "hsl(var(--secondary))",
-                color: "hsl(var(--secondary-foreground))",
-                border: "none",
-                cursor: "pointer",
-                padding: "6px 12px",
-                borderRadius: "999px",
-                fontSize: "11px",
-                fontWeight: 600,
-                fontFamily: "Raleway, inherit",
-                textTransform: "uppercase",
-              }}
-            >
-              Edit
-            </button>
-          )}
-          {withinCutoff && (
-            <button
-              onClick={onDeleteClick}
-              disabled={isDeleting}
-              style={{
-                background: "hsl(var(--destructive) / 0.1)",
-                color: "hsl(var(--destructive))",
-                border: "none",
-                cursor: isDeleting ? "default" : "pointer",
-                padding: "6px 12px",
-                borderRadius: "999px",
-                fontSize: "11px",
-                fontWeight: 600,
-                fontFamily: "Raleway, inherit",
-                textTransform: "uppercase",
-                opacity: isDeleting ? 0.5 : 1,
-              }}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </button>
-          )}
-        </div>
+       {/* Edit + Delete buttons */}
+<div style={{ gridColumn: selectedProduct ? "2 / 5" : "2 / 6", display: "flex", gap: "10px", alignItems: "center" }}>
+  {onUpdate && withinCutoff && (
+    <button
+      onClick={(e) => { e.stopPropagation(); onEditClick(); }}
+      style={{
+        background: "hsl(var(--secondary))",
+        color: "hsl(var(--secondary-foreground))",
+        border: "none",
+        cursor: "pointer",
+        padding: "6px 12px",
+        borderRadius: "999px",
+        fontSize: "11px",
+        fontWeight: 600,
+        fontFamily: "Raleway, inherit",
+        textTransform: "uppercase",
+        lineHeight: 1,
+      }}
+    >
+      Edit
+    </button>
+  )}
+  {withinCutoff && (
+    <button
+      onClick={onDeleteClick}
+      disabled={isDeleting}
+      style={{
+        background: "hsl(var(--destructive) / 0.1)",
+        color: "hsl(var(--destructive))",
+        border: "none",
+        cursor: isDeleting ? "default" : "pointer",
+        padding: "6px 12px",
+        borderRadius: "999px",
+        fontSize: "11px",
+        fontWeight: 600,
+        fontFamily: "Raleway, inherit",
+        textTransform: "uppercase",
+        lineHeight: 1,
+        opacity: isDeleting ? 0.5 : 1,
+      }}
+    >
+      {isDeleting ? "Deleting..." : "Delete"}
+    </button>
+  )}
+  {/* Therapist pill inline after delete — same pill geometry as Edit/Delete
+      so it lines up with them. Rendered as a single button/span (no nested
+      wrapper) with identical padding, radius, font and line-height. */}
+  {canCycleTherapist && therapistCycleList.length > 0 ? (
+    <button
+      onClick={(e) => { e.stopPropagation(); onCycleTherapist(); }}
+      style={{
+        ...(pillTherapist
+          ? therapistPillStyle(pillTherapist, therapistCycleList)
+          : { background: "none", color: "hsl(var(--muted-foreground))" }),
+        border: pillTherapist ? "none" : "0.5px dashed hsl(var(--border))",
+        cursor: "pointer",
+        padding: "6px 12px",
+        borderRadius: "999px",
+        fontSize: "11px",
+        fontWeight: 600,
+        fontFamily: "Raleway, inherit",
+        textTransform: "uppercase",
+        letterSpacing: "0.02em",
+        whiteSpace: "nowrap",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: 1,
+        flexShrink: 0,
+      }}
+    >
+      {pillTherapist ?? "NONE"}
+    </button>
+  ) : pillTherapist ? (
+    <span
+      style={{
+        ...therapistPillStyle(pillTherapist, branchTherapists),
+        padding: "6px 12px",
+        borderRadius: "999px",
+        fontSize: "11px",
+        fontWeight: 600,
+        fontFamily: "Raleway, inherit",
+        textTransform: "uppercase",
+        letterSpacing: "0.02em",
+        whiteSpace: "nowrap",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: 1,
+        flexShrink: 0,
+      }}
+    >
+      {pillTherapist}
+    </span>
+  ) : null}
+</div>
 
-        {/* Therapist pill */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-          {canCycleTherapist && therapistCycleList.length > 0 ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); onCycleTherapist(); }}
-              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}
-            >
-              <span
-                style={{
-                  ...(pillTherapist
-                    ? therapistPillStyle(pillTherapist, therapistCycleList)
-                    : { background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px dashed hsl(var(--border))" }),
-                  padding: "3px 8px",
-                  borderRadius: "999px",
-                  fontSize: "8px",
-                  fontWeight: 600,
-                  fontFamily: "Raleway, inherit",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.02em",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {pillTherapist ?? "NONE"}
-              </span>
-            </button>
-          ) : pillTherapist ? (
-            <span
-              style={{
-                ...therapistPillStyle(pillTherapist, branchTherapists),
-                padding: "3px 8px",
-                borderRadius: "999px",
-                fontSize: "8px",
-                fontWeight: 600,
-                fontFamily: "Raleway, inherit",
-                textTransform: "uppercase",
-                letterSpacing: "0.02em",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {pillTherapist}
-            </span>
-          ) : (
-            <span style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }} />
-          )}
-        </div>
-      </div>
+       
+    </div>
     </div>
   );
 };
