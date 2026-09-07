@@ -487,7 +487,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                     {data.length === 0 ? (
                       <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300 }}>No data</div>
                     ) : (() => {
-                      // Day view: fixed 0-10k; Week view: dynamic 5k increments
+                      // Day view: fixed 0-10k (5k ticks); Week view: dynamic 10k increments
                       let topTick: number;
                       let yTicks: number[];
                       if (salesViewMode === "day") {
@@ -495,8 +495,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                         yTicks = [0, 5000, 10000];
                       } else {
                         const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.total || d.value || 0), 0);
-                        topTick = Math.ceil(Math.max(maxVal, 5000) / 5000) * 5000;
-                        yTicks = Array.from({ length: topTick / 5000 + 1 }, (_, i) => i * 5000);
+                        topTick = Math.ceil(Math.max(maxVal, 10000) / 10000) * 10000;
+                        yTicks = Array.from({ length: topTick / 10000 + 1 }, (_, i) => i * 10000);
                       }
                       const prefix2 = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
                       const filtered2 = salesData.filter(r => r.Branch === key && r.Date?.startsWith(prefix2));
