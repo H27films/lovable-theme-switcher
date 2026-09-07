@@ -11,6 +11,7 @@ interface LogRowItemProps {
   idx: number;
   flowRows: LogRow[];
   expanded: boolean;
+  nextExpanded: boolean;
   isDeleting: boolean;
   selectedProduct: any;
   readOnly: boolean;
@@ -34,6 +35,7 @@ const LogRowItemInner = ({
   idx,
   flowRows,
   expanded,
+  nextExpanded,
   isDeleting,
   selectedProduct,
   readOnly,
@@ -69,9 +71,9 @@ const LogRowItemInner = ({
     <div
     style={{
       borderBottom:
-        !expanded && !dateSeparator && !isLastRowBeforeDateChange
-          ? "0.5px solid hsl(var(--border) / 0.5)"
-          : "none",
+      !expanded && !nextExpanded && !dateSeparator && !isLastRowBeforeDateChange
+        ? "0.5px solid hsl(var(--border) / 0.5)"
+        : "none",
       background: expanded ? "hsl(var(--muted) / 0.35)" : "transparent",
       borderRadius: expanded ? "12px" : "0",
       transition: "background 0.15s ease",

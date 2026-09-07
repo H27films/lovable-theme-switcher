@@ -409,11 +409,12 @@ export const LogTable = ({
 
                   return (
                     <LogRowItem
-                      key={row.id}
-                      row={row}
-                      idx={idx}
-                      flowRows={flowRows}
-                      expanded={expandedId === row.id}
+                    key={row.id}
+                    row={row}
+                    idx={idx}
+                    flowRows={flowRows}
+                    expanded={expandedId === row.id}
+                    nextExpanded={idx < flowRows.length - 1 && flowRows[idx + 1].id === expandedId}
                       isDeleting={deleting === row.id}
                       selectedProduct={selectedProduct}
                       readOnly={readOnly}
