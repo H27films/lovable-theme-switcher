@@ -41,12 +41,17 @@ const hdrStyle: React.CSSProperties = {
 
 // Y-axis tick rendered flush-left so the labels line up with the branch title above each chart.
 // NOTE: Recharts discards `tickFormatter` for function-component ticks, so the "k" formatting
-// is applied here directly (payload.value is the raw tick value).
+// is applied here directly (payload.value is the raw tick value). Round thousands render as
+// "10k"/"5k"; other values keep one decimal ("2.1k") so the Day view's normalised min/max
+// labels stay readable.
 const LeftAlignedYTick = ({ y, payload }: any) => {
   const v = payload.value;
+  const label = v >= 1000
+    ? `${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k`
+    : `${v}`;
   return (
     <text x={0} y={y} dy={4} textAnchor="start" fill="#888" fontSize={10} fontWeight={300} fontFamily="Raleway, inherit">
-      {v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`}
+      {label}
     </text>
   );
 };
@@ -515,16 +520,38 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                     {data.length === 0 ? (
                       <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300 }}>No data</div>
                     ) : (() => {
-                      // Day view: fixed 0-10k (5k ticks); Week view: dynamic 10k increments
+                      // Day view: min–max normalised scale — the month's best day fills the
+                      // chart (100% height) and the slowest day sits at 20%, so the shape of
+                      // the month is readable regardless of absolute values. The >5k darker
+                      // shade rule is value-based and unchanged (it renders wherever 5k lands
+                      // on the relative scale), and the left axis is labelled with the real
+                      // min/max RM values. Falls back to the absolute 0–10k scale if every day
+                      // is identical (normalisation would be undefined).
+                      // Week view: unchanged — dynamic 10k increments.
                       let topTick: number;
                       let yTicks: number[];
+                      let domain: [number, number];
                       if (salesViewMode === "day") {
-                        topTick = 10000;
-                        yTicks = [0, 5000, 10000];
+                        const vals = data.map((d: any) => d.total || d.value || 0);
+                        const vMin = Math.min(...vals);
+                        const vMax = Math.max(...vals);
+                        if (vMax > vMin) {
+                          // Floor chosen so vMin maps to exactly 20% of the chart height:
+                          // (vMin − d0) / (vMax − d0) = 0.2  →  d0 = 1.25·vMin − 0.25·vMax
+                          const d0 = 1.25 * vMin - 0.25 * vMax;
+                          topTick = vMax;
+                          domain = [d0, vMax];
+                          yTicks = [vMin, vMax];
+                        } else {
+                          topTick = 10000;
+                          domain = [0, topTick];
+                          yTicks = [0, 5000, 10000];
+                        }
                       } else {
                         const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.total || d.value || 0), 0);
                         topTick = Math.ceil(Math.max(maxVal, 10000) / 10000) * 10000;
                         yTicks = Array.from({ length: topTick / 10000 + 1 }, (_, i) => i * 10000);
+                        domain = [0, topTick];
                       }
                       const prefix2 = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
                       const filtered2 = salesData.filter(r => r.Branch === key && r.Date?.startsWith(prefix2));
@@ -560,7 +587,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             />
                             <YAxis
                               ticks={yTicks}
-                              domain={[0, topTick]}
+                              domain={domain}
                               interval={0}
                               tick={LeftAlignedYTick}
                               axisLine={false}
