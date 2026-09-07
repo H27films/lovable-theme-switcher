@@ -168,17 +168,20 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
     <div style={expanded ? (overlay ? {
       /* Overlay sheet mode: absolutely positioned full-height sheet anchored just below
          the ORDER top bar (overlayTop) with an opaque page background, so it covers the
-         supplier filter and Add product rows. Scrolling happens inside the sheet. */
+         supplier filter and Add product rows. Content scrolls in the inner area; the
+         draft actions are pinned to the sheet footer. */
       position: "absolute", top: overlayTop, left: 0, right: 0, bottom: 0, zIndex: 60,
       background: "hsl(var(--background))",
-      overflowY: "auto", paddingLeft: "12px", paddingRight: "12px",
+      display: "flex", flexDirection: "column",
+      paddingLeft: "12px", paddingRight: "12px",
       borderTop: border, paddingTop: "20px",
-      paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
-    } : { flexShrink: 1, minHeight: 0, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", borderTop: border, paddingTop: "20px", paddingBottom: "8px" }) : { flexShrink: 0 }}>
+    } : { flexShrink: 1, minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", borderTop: border, paddingTop: "20px" }) : { flexShrink: 0 }}>
       {expanded ? (
         /* Expanded — overlay sheet (default) covering the page from just below the ORDER
            header down, or in-flow block pushing the order list up when overlay is off. */
         <>
+          {/* Scrollable sheet content — order lines + totals scroll above the pinned footer. */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           <div onClick={() => changeExpanded(false)} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px", cursor: "pointer" }}>
             <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
             <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, letterSpacing: "0.08em" }}>{totalItems} {totalItems === 1 ? "Product" : "Products"}</div>
@@ -220,14 +223,17 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
               <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"} · {supplierGroups.length} {supplierGroups.length === 1 ? "SUPPLIER" : "SUPPLIERS"}</div>
               {totalPrice > 0 && <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "Raleway, inherit", color: fg }}>RM {totalPrice.toFixed(2)}</div>}
             </div>
-            {/* Draft actions — bottom of the EXPANDED sheet only. The collapsed page
-               footer stays just "Order Summary · N Products ˅". */}
+          </div>
+          {/* Draft actions — pinned to the FOOTER of the expanded sheet (always at the
+             bottom of the sheet; the order list + totals scroll above it). The collapsed
+             page footer stays just "Order Summary · N Products ˅". */}
+          <div style={{ flexShrink: 0, paddingTop: "12px", paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)", borderTop: border }}>
             {!draftReady ? (
               <button
                 onClick={() => setDraftReady(true)}
                 disabled={hasUnresolved}
                 style={{
-                  width: "100%", marginTop: "24px", padding: "12px",
+                  width: "100%", padding: "12px",
                   fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit",
                   letterSpacing: "0.12em", textTransform: "uppercase",
                   border: "0.5px solid hsl(var(--foreground))",
@@ -241,7 +247,7 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                 DRAFT ORDER
               </button>
             ) : (
-              <div style={{ marginTop: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {supplierGroups.map((group) => (
                   <button
                     key={group.supplier}
@@ -279,6 +285,7 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                 </button>
               </div>
             )}
+          </div>
             </>
       ) : (
         /* Collapsed footer bar — ONLY the "Order Summary · N Products ˅" toggle.
