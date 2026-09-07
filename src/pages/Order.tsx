@@ -11,6 +11,35 @@ import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import OrderSummaryOffice, { type OfficeProduct, type OrderLine } from "@/components/office/OrderSummaryOffice";
 import { BottomNavOffice } from "@/components/office/BottomNavOffice";
 
+// ── DRAFT ORDER PERSISTENCE ───────────────────────────────
+// The draft order survives leaving and re-entering the Order section: every change to
+// orderLines is written to localStorage, and the state is rehydrated (with validation)
+// when the page mounts again.
+const ORDER_LINES_STORAGE_KEY = "office-order-lines-v1";
+
+function loadStoredOrderLines(): OrderLine[] {
+  try {
+    const raw = window.localStorage.getItem(ORDER_LINES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((l: any): l is OrderLine =>
+      l != null &&
+      typeof l === "object" &&
+      l.product != null &&
+      typeof l.product === "object" &&
+      typeof l.product.id === "number" &&
+      typeof l.product["PRODUCT NAME"] === "string" &&
+      typeof l.qty === "number" &&
+      l.qty > 0 &&
+      (l.supplierChoice === null || typeof l.supplierChoice === "string")
+    );
+  } catch {
+    // Corrupt JSON or storage unavailable — start with an empty order.
+    return [];
+  }
+}
+
 interface OrderProps {
   onBack?: () => void;
 }
@@ -64,7 +93,8 @@ export default function Order({ onBack }: OrderProps) {
   const from = location.state?.from;
   const { tablet } = useTabletMode();
   const [products, setProducts] = useState<OfficeProduct[]>([]);
-  const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
+  // Draft order rehydrated from localStorage so items persist across visits.
+  const [orderLines, setOrderLines] = useState<OrderLine[]>(loadStoredOrderLines);
   const [orderSearch, setOrderSearch] = useState("");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
   const [forceOrderDropdown, setForceOrderDropdown] = useState(false);
@@ -136,6 +166,17 @@ export default function Order({ onBack }: OrderProps) {
   useEffect(() => {
     if (orderLines.length === 0 && summaryExpanded) setSummaryExpanded(false);
   }, [orderLines.length, summaryExpanded]);
+
+  // Persist the draft order to localStorage on every change so items, quantities and
+  // supplier choices are still there after leaving and re-entering the Order section.
+  // (Clearing the order writes an empty list, which correctly resets the saved draft.)
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(ORDER_LINES_STORAGE_KEY, JSON.stringify(orderLines));
+    } catch {
+      // Storage unavailable (e.g. private browsing) — the order just won't persist.
+    }
+  }, [orderLines]);
 
   // ── SUMMARY SHEET NAV GESTURE ────────────────────────────
   // The bottom nav is hidden while the expanded Order Summary sheet is open:
