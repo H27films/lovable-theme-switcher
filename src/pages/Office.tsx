@@ -63,11 +63,14 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesMonthFilter, setSalesMonthFilter] = useState<string>(String(new Date().getMonth() + 1).padStart(2, '0'));
   const [salesYearFilter, setSalesYearFilter] = useState<string>(String(new Date().getFullYear()));
-  const [salesViewMode, setSalesViewMode] = useState<"week" | "day">("day");
-  // Reset to week view when "All" months is selected
+  const [salesViewMode, setSalesViewMode] = useState<"week" | "day" | "month">("day");
+  // Month mode: sliding 12-month window ending at this "YYYY-MM" anchor
+  // (null = the latest month that actually has data).
+  const [salesMonthAnchor, setSalesMonthAnchor] = useState<string | null>(null);
+  // Reset to week view when "All" months is selected (Day would mean ~365 bars)
   React.useEffect(() => {
-    if (salesMonthFilter === "all") setSalesViewMode("week");
-  }, [salesMonthFilter]);
+    if (salesMonthFilter === "all" && salesViewMode === "day") setSalesViewMode("week");
+  }, [salesMonthFilter, salesViewMode]);
   // ── SALES PANEL NAV GESTURE ──────────────────────────────
   // The bottom nav is hidden while the Sales panel is open: swipe up from the
   // bottom edge of the screen to reveal it, swipe down to hide it again.
@@ -167,6 +170,15 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   };
 
   const navigateMonth = (dir: 1 | -1) => {
+    // Month mode: chevrons slide the 12-month window by one month instead of
+    // moving the Month/Year filter (which Month mode ignores).
+    if (salesViewMode === "month") {
+      if (!monthWindow) return;
+      if (dir === -1 ? monthBackBlocked : monthFwdBlocked) return;
+      const next = addMonthsKey(monthWindow.anchor, dir);
+      setSalesMonthAnchor(next === salesRange!.max ? null : next);
+      return;
+    }
     const target = prospectiveMonth(dir);
     // No data before the earliest / after the latest month — don't move.
     if (salesRange && (target < salesRange.min || target > salesRange.max)) return;
@@ -176,6 +188,32 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
   const backBlocked = !!salesRange && prospectiveMonth(-1) < salesRange.min;
   const fwdBlocked = !!salesRange && prospectiveMonth(1) > salesRange.max;
+
+  // ── Month mode: sliding 12-month window ─────────────────────────
+  // The window's last bar = anchor (defaults to the latest data month). Months
+  // earlier than the first data month are dropped, so fewer than 12 bars show
+  // when there is less history; back/forward slide the whole window by 1 month.
+  const addMonthsKey = (ym: string, n: number) => {
+    const [y, m] = ym.split("-").map(Number);
+    const d = new Date(y, m - 1 + n, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  };
+  const monthWindow = React.useMemo(() => {
+    if (!salesRange) return null;
+    const anchor = salesMonthAnchor ?? salesRange.max;
+    const start = addMonthsKey(anchor, -11);
+    return {
+      anchor,
+      months: Array.from({ length: 12 }, (_, i) => addMonthsKey(start, i)).filter(k => k >= salesRange!.min),
+    };
+  }, [salesRange, salesMonthAnchor]);
+  // Back allowed only while the shifted window still spans a full 12 months.
+  const monthBackBlocked = !salesRange || !monthWindow || monthWindow.anchor < addMonthsKey(salesRange.min, 12);
+  const monthFwdBlocked = !salesRange || !monthWindow || monthWindow.anchor >= salesRange.max;
+
+  // Chevron disabled state, depending on the active view mode.
+  const backBlockedFinal = salesViewMode === "month" ? monthBackBlocked : backBlocked;
+  const fwdBlockedFinal = salesViewMode === "month" ? monthFwdBlocked : fwdBlocked;
 
   // Custom bar shape: half-circle top, straight bottom
   const makeRoundedBar = (baseColor: string, highlightColor: string, isDay: boolean) =>
@@ -313,6 +351,31 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
       }));
   };
 
+  // Month mode: one bar per calendar month across the sliding 12-month window.
+  const buildMonthlyData = (branch: string) => {
+    if (!monthWindow) return [];
+    const sums: Record<string, number> = {};
+    for (const r of salesData) {
+      if (r.Branch !== branch || !r.Date) continue;
+      const ym = String(r.Date).slice(0, 7);
+      if (!monthWindow.months.includes(ym)) continue;
+      sums[ym] = (sums[ym] || 0) + (Number(r["Total GST"]) || 0);
+    }
+    return monthWindow.months.map(ym => {
+      const y = ym.slice(0, 4);
+      const mm = ym.slice(5, 7);
+      return {
+        week: mm === "01" ? `Jan '${y.slice(2)}` : monthNameShort(mm),
+        total: sums[ym] || 0,
+        period: `${monthNameShort(mm)} ${y}`,
+      };
+    });
+  };
+
+  // Total across the visible month-mode window (box header + pinned grand total).
+  const monthlyWindowTotal = (branch: string) =>
+    buildMonthlyData(branch).reduce((s, d) => s + d.total, 0);
+
   const salesGrandTotal = (branch: string) => {
     return salesData
       .filter(r => { const p = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`; return r.Branch === branch && (r.Date?.startsWith(p) ?? false); })
@@ -384,15 +447,15 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                 <button
                   onClick={() => navigateMonth(-1)}
-                  disabled={backBlocked}
-                  style={{ background: "none", border: "none", cursor: backBlocked ? "default" : "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: backBlocked ? 0.2 : 0.7, lineHeight: 1 }}
+                  disabled={backBlockedFinal}
+                  style={{ background: "none", border: "none", cursor: backBlockedFinal ? "default" : "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: backBlockedFinal ? 0.2 : 0.7, lineHeight: 1 }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
                 <button
                   onClick={() => navigateMonth(1)}
-                  disabled={fwdBlocked}
-                  style={{ background: "none", border: "none", cursor: fwdBlocked ? "default" : "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: fwdBlocked ? 0.2 : 0.7, lineHeight: 1 }}
+                  disabled={fwdBlockedFinal}
+                  style={{ background: "none", border: "none", cursor: fwdBlockedFinal ? "default" : "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: fwdBlockedFinal ? 0.2 : 0.7, lineHeight: 1 }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
@@ -405,10 +468,12 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               <div style={{ position: "relative" }}>
                 <button
                   onClick={() => { setSalesDropdownOpen(v => !v); setSalesYearDropdownOpen(false); }}
+                  disabled={salesViewMode === "month"}
                   style={{
                     background: "transparent", border: "none", padding: "0",
                     fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit",
-                    cursor: "pointer", color: "hsl(var(--foreground))",
+                    cursor: salesViewMode === "month" ? "default" : "pointer",
+                    color: "hsl(var(--foreground))", opacity: salesViewMode === "month" ? 0.3 : 1,
                     display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
                   }}
                 >
@@ -447,10 +512,12 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               <div style={{ position: "relative" }}>
                 <button
                   onClick={() => { setSalesYearDropdownOpen(v => !v); setSalesDropdownOpen(false); }}
+                  disabled={salesViewMode === "month"}
                   style={{
                     background: "transparent", border: "none", padding: "0",
                     fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit",
-                    cursor: "pointer", color: "hsl(var(--muted-foreground))",
+                    cursor: salesViewMode === "month" ? "default" : "pointer",
+                    color: "hsl(var(--muted-foreground))", opacity: salesViewMode === "month" ? 0.3 : 1,
                     display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.04em",
                   }}
                 >
@@ -488,27 +555,30 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               {/* Spacer */}
               <div style={{ flex: 1 }} />
 
-              {/* Week / Day toggle — only when a specific month is selected */}
-              {salesMonthFilter !== "all" && (
-                <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: "0.5px solid hsl(var(--border))" }}>
-                  {(["week", "day"] as const).map(mode => (
+              {/* Week / Day / Month toggle — always available */}
+              <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: "0.5px solid hsl(var(--border))" }}>
+                {(["week", "day", "month"] as const).map(mode => {
+                  const dayDisabled = mode === "day" && salesMonthFilter === "all";
+                  return (
                     <button
                       key={mode}
-                      onClick={() => setSalesViewMode(mode)}
+                      onClick={() => { if (!dayDisabled) setSalesViewMode(mode); }}
+                      disabled={dayDisabled}
                       style={{
                         background: salesViewMode === mode ? "hsl(var(--foreground))" : "transparent",
                         color: salesViewMode === mode ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
                         border: "none", padding: "5px 12px",
                         fontSize: "10px", fontWeight: 400, fontFamily: "Raleway, inherit",
-                        letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
+                        letterSpacing: "0.06em", cursor: dayDisabled ? "default" : "pointer", textTransform: "uppercase",
+                        opacity: dayDisabled ? 0.35 : 1,
                         transition: "background 0.15s, color 0.15s",
                       }}
                     >
-                      {mode === "week" ? "Week" : "Day"}
+                      {mode === "week" ? "Week" : mode === "day" ? "Day" : "Month"}
                     </button>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </div>
 
             {/* Charts + Total pinned to the bottom (fits one iPhone screen) */}
@@ -518,8 +588,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                 <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
               )}
               {!salesLoading && BRANCHES.map(({ key, color, highlight }) => {
-                const data = salesViewMode === "week" ? buildWeeklyData(key) : buildDailyData(key);
-                const total = salesGrandTotal(key);
+                const data = salesViewMode === "month" ? buildMonthlyData(key) : salesViewMode === "week" ? buildWeeklyData(key) : buildDailyData(key);
+                const total = salesViewMode === "month" ? monthlyWindowTotal(key) : salesGrandTotal(key);
                 return (
                   <div key={key} style={{ flex: 1, minHeight: 110, maxHeight: 210, display: "flex", flexDirection: "column", background: "#F2EDE6", borderRadius: "18px", padding: "10px 12px 8px 12px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px", flexShrink: 0 }}>
@@ -542,7 +612,13 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                       let topTick: number;
                       let yTicks: number[];
                       let domain: [number, number];
-                      if (salesViewMode === "day") {
+                      if (salesViewMode === "month") {
+                        // Month view: dynamic scale in 50k increments across the window.
+                        const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.total || 0), 0);
+                        topTick = Math.ceil(Math.max(maxVal, 50000) / 50000) * 50000;
+                        yTicks = Array.from({ length: topTick / 50000 + 1 }, (_, i) => i * 50000);
+                        domain = [0, topTick];
+                      } else if (salesViewMode === "day") {
                         const vMax = Math.max(...data.map((d: any) => d.total || d.value || 0));
                         if (vMax > 0) {
                           topTick = vMax;
@@ -584,7 +660,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             </div>
                           )}
                           <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={data} barCategoryGap={salesViewMode === "week" ? "35%" : "10%"} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                          <BarChart data={data} barCategoryGap={salesViewMode === "month" ? "25%" : salesViewMode === "week" ? (salesMonthFilter === "all" ? "8%" : "35%") : "10%"} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
                               dataKey="week"
@@ -606,7 +682,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             <Bar
                               dataKey="total"
                               isAnimationActive={false}
-                              maxBarSize={salesViewMode === "week" ? 22 : 52}
+                              maxBarSize={salesViewMode === "month" ? 34 : salesViewMode === "week" ? (salesMonthFilter === "all" ? 52 : 22) : 52}
                               cursor="pointer"
                               shape={makeRoundedBar(color, highlight, salesViewMode === "day")}
                               onClick={(barData: any) => {
@@ -635,7 +711,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
               {/* ── Combined grand total — pinned to the bottom of the screen ── */}
               <div style={{ flexShrink: 0, textAlign: "right", padding: "10px 20px calc(10px + env(safe-area-inset-bottom, 0px)) 20px", borderTop: "0.5px solid #d8d0c8" }}>
                 <span style={{ fontSize: "15px", fontWeight: 700, color: "#2a2a2a", fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
-                  Total: RM {BRANCHES.reduce((sum, b) => sum + salesGrandTotal(b.key), 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  Total: RM {BRANCHES.reduce((sum, b) => sum + (salesViewMode === "month" ? monthlyWindowTotal(b.key) : salesGrandTotal(b.key)), 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
