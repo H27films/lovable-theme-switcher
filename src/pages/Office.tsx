@@ -236,6 +236,15 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
     { key: "Nur Yadi", color: "#B7A49C", highlight: "#9A867E" },     // Mocha (darkened step)
   ];
 
+  // Month (12 Months) view: fixed per-branch axis range [floor, ceiling] in RM.
+  // Months below the floor show as a small bump; months above the ceiling clamp
+  // flat at the top of the chart.
+  const MONTH_AXIS_RANGE: Record<string, [number, number]> = {
+    "Boudoir": [30000, 80000],
+    "Chic Nailspa": [80000, 120000],
+    "Nur Yadi": [30000, 80000],
+  };
+
   const fetchSales = React.useCallback(async () => {
     setSalesLoading(true);
     try {
@@ -617,13 +626,13 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                       let yTicks: number[];
                       let domain: [number, number];
                       if (salesViewMode === "month") {
-                        // Month view: the axis starts at 50k (not 0) with 50k increments;
-                        // months under the floor render as a small bump via the clamped
-                        // "plot" value computed below.
-                        const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.total || 0), 0);
-                        topTick = Math.ceil(Math.max(maxVal, 100000) / 50000) * 50000;
-                        yTicks = Array.from({ length: (topTick - 50000) / 50000 + 1 }, (_, i) => 50000 + i * 50000);
-                        domain = [50000, topTick];
+                        // Month view: fixed per-branch scale (floor → ceiling from
+                        // MONTH_AXIS_RANGE). Months under the floor render as a small bump
+                        // and months over the ceiling clamp flat at the top ("plot" below).
+                        const [minV, maxV] = MONTH_AXIS_RANGE[key] ?? [50000, 100000];
+                        topTick = maxV;
+                        yTicks = [minV, maxV];
+                        domain = [minV, maxV];
                       } else if (salesViewMode === "day") {
                         const vMax = Math.max(...data.map((d: any) => d.total || d.value || 0));
                         if (vMax > 0) {
@@ -657,12 +666,14 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                       let monthlyAvg: number | null = null;
                       let chartData = data;
                       if (salesViewMode === "month") {
+                        const [minV, maxV] = MONTH_AXIS_RANGE[key] ?? [50000, 100000];
                         const nowKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
                         const avgVals = data.filter((d: any) => d.total > 0 && d.key !== nowKey).map((d: any) => d.total);
                         if (avgVals.length > 0) monthlyAvg = avgVals.reduce((s: number, v: number) => s + v, 0) / avgVals.length;
-                        if (monthlyAvg !== null && monthlyAvg < 50000) monthlyAvg = null; // below the axis floor
-                        const bump = 50000 + (topTick - 50000) * 0.03;
-                        chartData = data.map((d: any) => ({ ...d, plot: Math.max(d.total, bump) }));
+                        // Hide the line if it falls outside the fixed axis range
+                        if (monthlyAvg !== null && (monthlyAvg < minV || monthlyAvg > maxV)) monthlyAvg = null;
+                        const bump = minV + (maxV - minV) * 0.03;
+                        chartData = data.map((d: any) => ({ ...d, plot: Math.min(Math.max(d.total, bump), maxV) }));
                       }
                       return (
                         <div style={{ position: "relative", flex: 1, minHeight: 0 }} onClick={(e) => e.stopPropagation()}>
