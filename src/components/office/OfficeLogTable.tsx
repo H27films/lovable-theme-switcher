@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sortLogByBalance, LOG_PAGE_SIZE, LOG_MAX_ROWS } from "@/lib/branchSimpleUtils";
+import { motion, AnimatePresence, type Transition } from "framer-motion";
 
 interface LogRow {
   id: number;
@@ -43,6 +44,7 @@ const allDataHeaderStyle: React.CSSProperties = {
 const fmtDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
+const GROUP_TRANSITION: Transition = { type: "spring", stiffness: 280, damping: 26 };
 const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
   const [logRows, setLogRows] = useState<LogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(true);
@@ -239,56 +241,81 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
           const totalValue = isOpen
             ? group.rows.reduce((sum, row) => sum + (Number(row["TOTAL VALUE"] ?? 0)), 0)
             : null;
-
-          return (
-            <div key={group.grn}>
+            
+            return (
               <div
-                onClick={() => toggleGRN(group.grn)}
-                style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "9px 0", borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)", cursor: "pointer", alignItems: "center" }}
+                key={group.grn}
+                style={{
+                  background: isOpen ? "hsl(var(--muted) / 0.35)" : "transparent",
+                  borderRadius: isOpen ? "12px" : "0",
+                  transition: "background 0.15s ease",
+                }}
               >
-                <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", visibility: showDate ? "visible" : "hidden" }}>{fmtDate(group.date)}</div>
-                <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{group.grn}</div>
-                <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {group.supplier}
+                {/* Header row — stable, never animates, just toggles isOpen */}
+                <div
+                  onClick={() => toggleGRN(group.grn)}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px",
+                    gap: "6px",
+                    padding: "9px 0",
+                    borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)",
+                    cursor: "pointer",
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", visibility: showDate ? "visible" : "hidden" }}>{fmtDate(group.date)}</div>
+                  <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", letterSpacing: "0.02em" }}>{group.grn}</div>
+                  <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {group.supplier}
+                  </div>
+                  <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
+                  <div />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
+                    {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </div>
                 </div>
-                <div style={{ fontSize: "14px", fontWeight: isOpen ? 400 : 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{group.rows.length}</div>
-                <div />
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
-                  {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </div>
-              </div>
-
-              {isOpen && (
-                <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
-                  {group.rows.map((row, idx) => {
-                    return (
-                      <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
-                        <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
-                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", whiteSpace: "normal", wordBreak: "break-word" }}>
-                          {row["PRODUCT NAME"]}
-                        </div>
-                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: (row.BRANCH || "").toLowerCase() === "office" ? "hsl(120 45% 30%)" : "hsl(0 60% 35%)", textAlign: "center" }}>
-                          {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
-                        </div>
-                        <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
-                        <div />
+            
+                {/* Expanded content — mounts/unmounts, animates height */}
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="grn-details"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={GROUP_TRANSITION}
+                      style={{ overflow: "hidden" }}
+                    >
+                      <div style={{ paddingBottom: "6px" }}>
+                        {group.rows.map((row, idx) => (
+                          <div key={row.id} style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "5px 0", borderTop: idx > 0 ? "0.5px solid hsl(var(--border) / 0.25)" : "none", alignItems: "center" }}>
+                            <div style={{ visibility: "hidden", fontSize: "14px", fontWeight: 400, fontFamily: "Raleway, inherit" }}>{fmtDate(group.date)}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", gridColumn: "2 / 4", whiteSpace: "normal", wordBreak: "break-word" }}>
+                              {row["PRODUCT NAME"]}
+                            </div>
+                            <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: (row.BRANCH || "").toLowerCase() === "office" ? "hsl(120 45% 30%)" : "hsl(0 60% 35%)", textAlign: "center" }}>
+                              {(row.BRANCH || "").toLowerCase() === "office" ? `+${Math.abs(row.QTY)}` : `-${Math.abs(row.QTY)}`}
+                            </div>
+                            <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", textAlign: "center" }}>{row["OFFICE BALANCE"] ?? "—"}</div>
+                            <div />
+                          </div>
+                        ))}
+                        {totalValue !== null && totalValue > 0 && (
+                          <div style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "7px 0 9px 0", borderTop: "0.5px solid hsl(var(--border) / 0.25)", alignItems: "center" }}>
+                            <div />
+                            <div style={{ gridColumn: "2 / 4", fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "#000000" }}>
+                              Total Value: <span style={{ fontWeight: 700 }}>RM {totalValue.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
-                  {/* Total value footer — sum of the rows' TOTAL VALUE column, black text in the GRN column */}
-                  {isOpen && totalValue !== null && totalValue > 0 && (
-                    <div style={{ display: "grid", gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px", gap: "6px", padding: "7px 0 9px 0", borderTop: "0.5px solid hsl(var(--border) / 0.25)", alignItems: "center" }}>
-                      <div />
-                      <div style={{ gridColumn: "2 / 4", fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: "#000000" }}>
-                        Total Value: <span style={{ fontWeight: 700 }}>RM {totalValue.toFixed(2)}</span>
-                      </div>
-                    </div>
+                    </motion.div>
                   )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                </AnimatePresence>
+              </div>
+            );
+          })}  
         {moreLoading && (
           <div style={{ fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))", padding: "12px 0" }}>Loading more…</div>
         )}
