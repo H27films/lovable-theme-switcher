@@ -41,17 +41,13 @@ const hdrStyle: React.CSSProperties = {
 
 // Y-axis tick rendered flush-left so the labels line up with the branch title above each chart.
 // NOTE: Recharts discards `tickFormatter` for function-component ticks, so the "k" formatting
-// is applied here directly (payload.value is the raw tick value). Round thousands render as
-// "10k"/"5k"; other values keep one decimal ("2.1k") so the Day view's normalised min/max
-// labels stay readable.
+// is applied here directly (payload.value is the raw tick value). Values round to whole
+// thousands with no decimals ("7.6k" → "8k", "8.2k" → "8k").
 const LeftAlignedYTick = ({ y, payload }: any) => {
   const v = payload.value;
-  const label = v >= 1000
-    ? `${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k`
-    : `${v}`;
   return (
     <text x={0} y={y} dy={4} textAnchor="start" fill="#888" fontSize={10} fontWeight={300} fontFamily="Raleway, inherit">
-      {label}
+      {v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`}
     </text>
   );
 };
@@ -288,16 +284,33 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   const buildDailyData = (branch: string) => {
     const prefix = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
     const filtered = salesData.filter(r => r.Branch === branch && r.Date?.startsWith(prefix));
-    const dayMap: Record<string, { total: number; sortKey: string }> = {};
+    // Sum rows per calendar day, keyed by the raw "YYYY-MM-DD" date.
+    const dayMap: Record<string, number> = {};
     filtered.forEach(r => {
-      const d = new Date(r.Date + "T00:00:00");
-      const label = d.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
-      if (!dayMap[label]) dayMap[label] = { total: 0, sortKey: r.Date };
-      dayMap[label].total += Number(r["Total GST"]) || 0;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(r.Date)) return;
+      dayMap[r.Date] = (dayMap[r.Date] || 0) + (Number(r["Total GST"]) || 0);
     });
+    // For a specific month, always cover every calendar day (1st → last) so the
+    // x-axis starts at the 1st and days without sales rows render as RM 0 instead
+    // of disappearing from the chart entirely.
+    const parts = prefix.split("-").map(Number);
+    if (parts.length === 2 && parts[0] > 0 && parts[1] >= 1 && parts[1] <= 12) {
+      const [y, m] = parts;
+      const daysInMonth = new Date(y, m, 0).getDate();
+      return Array.from({ length: daysInMonth }, (_, i) => {
+        const ds = `${prefix}-${String(i + 1).padStart(2, "0")}`;
+        const label = new Date(ds + "T00:00:00").toLocaleDateString("en-MY", { day: "numeric", month: "short" });
+        return { week: label, total: dayMap[ds] || 0 };
+      });
+    }
+    // Fallback ("All" view is week-only so this shouldn't normally render):
+    // keep the old aggregate-what-exists behaviour.
     return Object.entries(dayMap)
-      .sort((a, b) => a[1].sortKey.localeCompare(b[1].sortKey))
-      .map(([day, { total }]) => ({ week: day, total }));
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([ds, total]) => ({
+        week: new Date(ds + "T00:00:00").toLocaleDateString("en-MY", { day: "numeric", month: "short" }),
+        total,
+      }));
   };
 
   const salesGrandTotal = (branch: string) => {
@@ -520,29 +533,23 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                     {data.length === 0 ? (
                       <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "hsl(var(--muted-foreground))", fontWeight: 300 }}>No data</div>
                     ) : (() => {
-                      // Day view: min–max normalised scale — the month's best day fills the
-                      // chart (100% height) and the slowest day sits at 20%, so the shape of
-                      // the month is readable regardless of absolute values. The >5k darker
-                      // shade rule is value-based and unchanged (it renders wherever 5k lands
-                      // on the relative scale), and the left axis is labelled with the real
-                      // min/max RM values. Falls back to the absolute 0–10k scale if every day
-                      // is identical (normalisation would be undefined).
-                      // Week view: unchanged — dynamic 10k increments.
+                      // Day view: relative scale — bars always start at the 0 baseline (never
+                      // floating above the x-axis line) and the month's best day fills the
+                      // chart (100% height); the slowest day shows as a small bump proportional
+                      // to it. Single axis label = best day rounded to the nearest thousand
+                      // ("7.6k" → "8k", "8.2k" → "8k") — no min label. The >5k darker shade
+                      // rule is value-based and unchanged. Week view: unchanged — dynamic 10k.
                       let topTick: number;
                       let yTicks: number[];
                       let domain: [number, number];
                       if (salesViewMode === "day") {
-                        const vals = data.map((d: any) => d.total || d.value || 0);
-                        const vMin = Math.min(...vals);
-                        const vMax = Math.max(...vals);
-                        if (vMax > vMin) {
-                          // Floor chosen so vMin maps to exactly 20% of the chart height:
-                          // (vMin − d0) / (vMax − d0) = 0.2  →  d0 = 1.25·vMin − 0.25·vMax
-                          const d0 = 1.25 * vMin - 0.25 * vMax;
+                        const vMax = Math.max(...data.map((d: any) => d.total || d.value || 0));
+                        if (vMax > 0) {
                           topTick = vMax;
-                          domain = [d0, vMax];
-                          yTicks = [vMin, vMax];
+                          domain = [0, vMax];
+                          yTicks = [vMax];
                         } else {
+                          // No positive values this month — keep the absolute 0–10k scale
                           topTick = 10000;
                           domain = [0, topTick];
                           yTicks = [0, 5000, 10000];
@@ -581,6 +588,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                             <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                             <XAxis
                               dataKey="week"
+                              interval="preserveStart"
                               tick={{ fontSize: 10, fontFamily: "Raleway, inherit", fontWeight: 300, fill: "#888" }}
                               axisLine={false}
                               tickLine={false}
