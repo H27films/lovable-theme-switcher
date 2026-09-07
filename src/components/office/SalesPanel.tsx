@@ -440,15 +440,15 @@ export const SalesPanel = ({ onClose }: SalesPanelProps) => {
 
               {/* Week / Day / Month toggle — grey pill with sliding white indicator,
                   sized like the ALL/IN/OUT toggle on the Product card's Past Data */}
-              <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px" }}>
+              <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "3px 6px" }}>
                 {/* Sliding pill indicator */}
                 <div
                   style={{
                     position: "absolute",
-                    top: "2px",
-                    bottom: "2px",
-                    left: "2px",
-                    width: "calc((100% - 4px) / 3)",
+                    top: "3px",
+                    bottom: "3px",
+                    left: "6px",
+                    width: "calc((100% - 12px) / 3)",
                     transform: `translateX(${(["month", "week", "day"] as const).indexOf(salesViewMode) * 100}%)`,
                     transition: "transform 0.22s ease",
                     borderRadius: "999px",
@@ -467,8 +467,8 @@ export const SalesPanel = ({ onClose }: SalesPanelProps) => {
                         zIndex: 1,
                         border: "none", background: "none",
                         cursor: dayDisabled ? "default" : "pointer",
-                        width: "34px", padding: "2px 0",
-                        fontSize: "8.5px", fontWeight: salesViewMode === mode ? 600 : 400,
+                        width: "42px", padding: "4px 0",
+                        fontSize: "9.5px", fontWeight: salesViewMode === mode ? 600 : 400,
                         letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit",
                         color: salesViewMode === mode ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))",
                         opacity: dayDisabled ? 0.35 : 1,
