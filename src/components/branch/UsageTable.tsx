@@ -70,7 +70,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   // Restore any in-progress draft from localStorage (per branch), then save on every change
   const [usageEntries, setUsageEntries] = useState<EntryLine[]>(() => loadStoredEntries(config.key));
   const [usageSearch, setUsageSearch] = useState("");
-  const [showUsageDropdown, setShowUsageDropdown] = useState(false);
+  const [showUsageDropdown, setShowUsageDropdown] = useState(true);
   const [usageKeyboardArmed, setUsageKeyboardArmed] = useState(false); // false = first tap only opens the dropdown (no keyboard); true = input editable
   const [usageSubmitting, setUsageSubmitting] = useState(false);
   const [usageSuccess, setUsageSuccess] = useState(false);

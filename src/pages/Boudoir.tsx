@@ -502,7 +502,7 @@ const setLogViewToOrders = () => {
             setSelectedProduct={setSelectedProduct}
             showDropdown={showDropdown}
             setShowDropdown={setShowDropdown}
-            autoFocus={true}
+            autoFocus={false}
             closeSearch={closeSearch}
           />
         )}
@@ -651,7 +651,7 @@ const setLogViewToOrders = () => {
           refreshBranchLog={refreshBranchLog} 
           selectedProduct={selectedProduct} 
           setSelectedProduct={setSelectedProduct} 
-          onBack={() => setActivePanel(null)}
+          onBack={goHome}
           onSuccess={goHome}
           onUsageEntriesChange={setUsageEntriesCount}
           isFav={isFav}
@@ -669,7 +669,7 @@ const setLogViewToOrders = () => {
           setProducts={setProducts} 
           branchLog={branchLog} 
           refreshBranchLog={refreshBranchLog} 
-          onBack={() => setActivePanel(null)}
+          onBack={goHome}
           onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
           isFav={isFav}

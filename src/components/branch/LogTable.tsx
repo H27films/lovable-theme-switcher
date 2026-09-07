@@ -323,7 +323,7 @@ export const LogTable = ({
             style={
               scrollWithPage
                 ? { width: "100%", minWidth: 0 }
-                : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "90px" }
+                : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "76px" }
             }
           >
             <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, width: "100%" }}>
