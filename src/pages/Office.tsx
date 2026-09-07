@@ -673,7 +673,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
                         // Hide the line if it falls outside the fixed axis range
                         if (monthlyAvg !== null && (monthlyAvg < minV || monthlyAvg > maxV)) monthlyAvg = null;
                         const bump = minV + (maxV - minV) * 0.03;
-                        chartData = data.map((d: any) => ({ ...d, plot: Math.min(Math.max(d.total, bump), maxV) }));
+                        // Months under RM 1k show as no bar at all (plotted at the axis floor)
+                        chartData = data.map((d: any) => ({ ...d, plot: d.total < 1000 ? minV : Math.min(Math.max(d.total, bump), maxV) }));
                       }
                       return (
                         <div style={{ position: "relative", flex: 1, minHeight: 0 }} onClick={(e) => e.stopPropagation()}>
