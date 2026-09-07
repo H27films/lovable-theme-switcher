@@ -365,7 +365,7 @@ export default function Order({ onBack }: OrderProps) {
                 background: "none", border: "none", cursor: "pointer", padding: 0,
                 fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
                 letterSpacing: "0.1em", textTransform: "uppercase",
-                color: muted, display: "flex", alignItems: "center", gap: "5px",
+                color: fg, display: "flex", alignItems: "center", gap: "5px",
                 minWidth: 0, overflow: "hidden",
               }}
             >
