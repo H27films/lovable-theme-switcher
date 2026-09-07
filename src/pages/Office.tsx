@@ -223,8 +223,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
     return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
   };
 
-  // Custom bar shape: half-circle top, straight bottom, vertical gradient from a
-  // lighter tone at the top into the bar's main colour at the base. Day-view bars
+  // Custom bar shape: half-circle top, straight bottom, vertical gradient from the
+  // bar's main colour at the top into a lighter tone at the base. Day-view bars
   // over 5k keep their darker highlight colour (gradient is computed from it).
   const makeRoundedBar = (baseColor: string, highlightColor: string, isDay: boolean) =>
     (props: any) => {
@@ -239,8 +239,8 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         <g>
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={lightenHex(fill, 50)} />
-              <stop offset="100%" stopColor={fill} />
+              <stop offset="0%" stopColor={fill} />
+              <stop offset="100%" stopColor={lightenHex(fill, 22)} />
             </linearGradient>
           </defs>
           <path d={d} fill={`url(#${gradId})`} cursor="pointer" />
