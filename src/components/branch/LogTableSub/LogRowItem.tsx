@@ -67,16 +67,16 @@ const LogRowItemInner = ({
 
   return (
     <div
-  style={{
-    borderBottom:
-      !dateSeparator && !isLastRowBeforeDateChange
-        ? "0.5px solid hsl(var(--border) / 0.5)"
-        : "none",
-    background: expanded ? "hsl(var(--muted) / 0.35)" : "transparent",
-    borderRadius: expanded ? "12px" : "0",
-    transition: "background 0.15s ease",
-  }}
->
+    style={{
+      borderBottom:
+        !expanded && !dateSeparator && !isLastRowBeforeDateChange
+          ? "0.5px solid hsl(var(--border) / 0.5)"
+          : "none",
+      background: expanded ? "hsl(var(--muted) / 0.35)" : "transparent",
+      borderRadius: expanded ? "12px" : "0",
+      transition: "background 0.15s ease",
+    }}
+  >
       {/* ── Top row — always visible, never animates ───────────────────
           Tapping it toggles expand/collapse. The content is identical
           whether the row is expanded or not so it stays perfectly still. */}
