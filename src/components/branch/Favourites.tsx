@@ -358,15 +358,15 @@ export const Favourites = ({ open, onClose, branch, onSubmitted }: FavouritesPro
 
       {/* Product list */}
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {/* Column headers — BAL is read-only stock; LOW BAL is the editable threshold */}
+        {/* Column headers — PRODUCTS, BAL (read-only stock), LOW BAL (editable threshold) */}
         <div style={{
           display: "flex", alignItems: "center", gap: "10px",
           padding: "16px 16px 8px", borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
         }}>
           <div style={{ width: "16px", flexShrink: 0 }} />
-          <div style={{ flex: 1, marginRight: "8px" }} />
-          <div style={{ width: "36px", flexShrink: 0, textAlign: "right", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>BAL</div>
-          <div style={{ width: "48px", flexShrink: 0, textAlign: "center", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>LOW BAL</div>
+          <div style={{ flex: 1, marginRight: "8px", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--foreground))" }}>PRODUCTS</div>
+          <div style={{ width: "36px", flexShrink: 0, textAlign: "right", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>Bal</div>
+          <div style={{ width: "48px", flexShrink: 0, textAlign: "center", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>Low Bal</div>
         </div>
         {loading ? (
           <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", padding: "24px 16px" }}>
@@ -400,7 +400,7 @@ export const Favourites = ({ open, onClose, branch, onSubmitted }: FavouritesPro
                 <div style={{
                   width: "16px", height: "16px", flexShrink: 0,
                   border: `1.5px solid ${isChecked ? "hsl(var(--foreground))" : "hsl(var(--border))"}`,
-                  borderRadius: "3px",
+                  borderRadius: "50%",
                   background: isChecked ? "hsl(var(--foreground))" : "transparent",
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
