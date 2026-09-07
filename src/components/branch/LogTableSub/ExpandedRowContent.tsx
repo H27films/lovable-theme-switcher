@@ -41,65 +41,14 @@ export const ExpandedRowContent = ({
   onDeleteClick,
   onCycleTherapist,
 }: ExpandedRowContentProps) => {
-  return (
-    <div
-      style={{
-        margin: "2px -6px 0 -6px",
-        padding: "8px 6px 12px 6px",
-        background: "hsl(var(--muted) / 0.35)",
-        borderRadius: "12px",
+    return (
+      <div
+        style={{
+            margin: "0",
+padding: "8px 0 12px 0",
       }}
     >
-      {/* Top half: row data (tap to collapse) */}
-      <div
-        onClick={onCollapse}
-        style={{
-          display: "grid",
-          gridTemplateColumns: gridCols,
-          gap: "4px",
-          padding: "0 0 8px 0",
-          alignItems: "start",
-          cursor: "pointer",
-        }}
-      >
-        {selectedProduct ? (
-          <>
-            <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>
-              {showDate ? dateStr : ""}
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>
-              {row.QTY > 0 ? "+" : ""}{row.QTY}
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
-              {row["ENDING BALANCE"] ?? "—"}
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>
-              {row.TYPE || "—"}
-            </div>
-            <div />
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>
-              {showDate ? dateStr : ""}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-              <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
-                {row["PRODUCT NAME"] || "—"}
-              </div>
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>
-              {row.QTY > 0 ? "+" : ""}{row.QTY}
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
-              {row["ENDING BALANCE"] ?? "—"}
-            </div>
-            <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", textAlign: "center" }}>
-              {row.TYPE || "—"}
-            </div>
-          </>
-        )}
-      </div>
+      
 
       {/* Bottom half: day name, actions, therapist pill */}
       <div
