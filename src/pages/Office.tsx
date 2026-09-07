@@ -366,7 +366,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
       const mm = ym.slice(5, 7);
       return {
         key: ym,
-        week: mm === "01" ? `Jan '${y.slice(2)}` : monthNameShort(mm),
+        week: monthNameShort(mm),
         total: sums[ym] || 0,
         period: `${monthNameShort(mm)} ${y}`,
       };
