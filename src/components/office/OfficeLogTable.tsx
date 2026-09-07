@@ -237,6 +237,7 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
         {!loadingLog && grnGroups.map((group, idx) => {
           const showDate = idx === 0 || grnGroups[idx - 1].date !== group.date;
           const isOpen = expandedGRNs.has(group.grn);
+          const nextOpen = idx < grnGroups.length - 1 && expandedGRNs.has(grnGroups[idx + 1].grn);
           // Sum the per-line TOTAL VALUE column across every row sharing this GRN.
           const totalValue = isOpen
             ? group.rows.reduce((sum, row) => sum + (Number(row["TOTAL VALUE"] ?? 0)), 0)
@@ -259,7 +260,7 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
                     gridTemplateColumns: "54px 1fr 0.7fr 36px 36px 18px",
                     gap: "6px",
                     padding: "9px 0",
-                    borderBottom: isOpen ? "none" : "0.5px solid hsl(var(--border) / 0.4)",
+                    borderBottom: (isOpen || nextOpen) ? "none" : "0.5px solid hsl(var(--border) / 0.4)",
                     cursor: "pointer",
                     alignItems: "center",
                   }}
