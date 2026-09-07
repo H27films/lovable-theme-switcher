@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Star, X, ChevronDown, Minus, Plus } from "lucide-react";
+import { Search, Star, X, ChevronDown, Minus, Plus, MoreVertical } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
@@ -71,6 +71,8 @@ export default function Order({ onBack }: OrderProps) {
   const [orderActiveIndex, setOrderActiveIndex] = useState(-1);
   const [orderSupplierFilter, setOrderSupplierFilter] = useState<string[]>([]);
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
+  // ⋮ toggle — when true the ALL SUPPLIERS filter replaces BELOW PAR in the header.
+  const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
   const [openSupplierIdx, setOpenSupplierIdx] = useState<number | null>(null);
   const [showBelowPar, setShowBelowPar] = useState(false);
   const [belowParList, setBelowParList] = useState<OfficeProduct[]>([]);
@@ -99,7 +101,7 @@ export default function Order({ onBack }: OrderProps) {
 
   // ── ORDER SUMMARY SHEET ──────────────────────────────────
   // Measure the ORDER top bar so the expanded Order Summary sheet starts exactly
-  // below it — covering the ALL SUPPLIERS filter and Add product rows too.
+  // below it — covering the Enter Product search line and everything below it.
   // (ResizeObserver keeps the offset correct across widths / font-size clamps.)
   useEffect(() => {
     const el = topBarRef.current;
@@ -173,7 +175,9 @@ export default function Order({ onBack }: OrderProps) {
         setShowOrderDropdown(false);
         setForceOrderDropdown(false);
       }
-      if (supplierDropdownRef.current && !supplierDropdownRef.current.contains(e.target as Node)) {
+      if (supplierDropdownRef.current &&
+          !supplierDropdownRef.current.contains(e.target as Node) &&
+          !(topBarRef.current && topBarRef.current.contains(e.target as Node))) {
         setShowSupplierDropdown(false);
       }
       setOpenSupplierIdx(null);
@@ -324,152 +328,175 @@ export default function Order({ onBack }: OrderProps) {
       {/* Top bar */}
       <div ref={topBarRef} style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
+        padding: "24px 16px 16px", flexShrink: 0,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, overflow: "hidden" }}>
           <span
             onClick={() => {
               if (from === "office") slideTo("/simple/office", undefined, "back");
               else if (from === "adminportal") slideTo("/simple/admin", undefined, "back");
               else onBack?.();
             }}
-            style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer" }}
+            style={{ fontSize: "clamp(18px, 5vw, 28px)", fontWeight: 300, letterSpacing: "0.08em", color: fg, cursor: "pointer", flexShrink: 0 }}
           >ORDER</span>
-          {/* BELOW PAR button */}
-          <button
-            onClick={() => { setBelowParList(belowParProducts); setShowBelowPar(true); }}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              fontSize: "10px",
-              fontWeight: 600,
-              fontFamily: "Raleway, inherit",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: fg,
-              display: "flex",
-              alignItems: "center",
-              gap: "3px",
-            }}
-          >
-            BELOW PAR {products.length > 0 && `(${belowParProducts.length})`}
-            <ChevronDown size={11} strokeWidth={2} style={{ color: muted }} />
-          </button>
+          {/* BELOW PAR button — temporarily replaced by ALL SUPPLIERS while the ⋮ filter is open */}
+          {supplierFilterOpen ? (
+            <button
+              onClick={() => setShowSupplierDropdown(o => !o)}
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+                fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                letterSpacing: "0.1em", textTransform: "uppercase",
+                color: muted, display: "flex", alignItems: "center", gap: "5px",
+                minWidth: 0, overflow: "hidden",
+              }}
+            >
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {orderSupplierFilter.length === 0 ? "ALL SUPPLIERS" : orderSupplierFilter.join(", ")}
+              </span>
+              <span style={{ fontSize: "12px", lineHeight: 1, flexShrink: 0 }}>›</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => { setBelowParList(belowParProducts); setShowBelowPar(true); }}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                fontSize: "10px",
+                fontWeight: 600,
+                fontFamily: "Raleway, inherit",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: fg,
+                display: "flex",
+                alignItems: "center",
+                gap: "3px",
+              }}
+            >
+              BELOW PAR {products.length > 0 && `(${belowParProducts.length})`}
+              <ChevronDown size={11} strokeWidth={2} style={{ color: muted }} />
+            </button>
+          )}
         </div>
+        {/* ⋮ — opens/closes the ALL SUPPLIERS filter shown in the header */}
+        <button
+          onClick={() => {
+            setSupplierFilterOpen(o => {
+              const next = !o;
+              if (!next) setShowSupplierDropdown(false);
+              return next;
+            });
+          }}
+          aria-label={supplierFilterOpen ? "Close suppliers" : "Open suppliers"}
+          title={supplierFilterOpen ? "Close suppliers" : "Open suppliers"}
+          style={{
+            background: "none", border: "none", cursor: "pointer", padding: "4px",
+            color: supplierFilterOpen ? fg : muted, display: "flex", alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <MoreVertical size={20} strokeWidth={2} />
+        </button>
+      </div>
+
+      {/* Enter Product — full width search line (mirrors the Search page) */}
+      <div ref={orderSearchRef} style={{ position: "relative", padding: "16px 20px 12px", borderBottom: "1px solid hsl(var(--border))", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Search size={15} style={{ color: muted, flexShrink: 0 }} />
+          <input
+            type="text"
+            value={orderSearch}
+            onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); setForceOrderDropdown(false); setOrderActiveIndex(-1); }}
+            onFocus={() => { if (orderSearch.length === 0) setForceOrderDropdown(true); setShowOrderDropdown(true); }}
+            placeholder="Enter Product"
+            onKeyDown={handleOrderKeyDown}
+            style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "15px", fontFamily: "Raleway, inherit", color: fg, caretColor: fg }}
+          />
+          {orderSearch && (
+            <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); setForceOrderDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted }}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        {showOrderDropdown && orderDropdownResults.length > 0 && (
+          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "hsl(var(--background))", maxHeight: "65vh", overflowY: "auto" }}>
+            {orderDropdownResults.map((p, i) => (
+              <div
+                key={p.id}
+                onMouseDown={() => addToOrder(p)}
+                style={{
+                  padding: "10px 20px", cursor: "pointer",
+                  background: i === orderActiveIndex ? "hsl(var(--card))" : "transparent",
+                  borderBottom: i < orderDropdownResults.length - 1 ? border : "none",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {isOfficeFav(p) && <Star size={9} fill="currentColor" style={{ color: fg }} />}
+                    <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: fg }}>{p["PRODUCT NAME"]}</div>
+                  </div>
+                  {p["SUPPLIER"] && <div style={{ fontSize: "11px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
+                </div>
+                <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: getBalanceColor(p["OFFICE BALANCE"], p["PAR"], muted), flexShrink: 0, marginLeft: "8px" }}>
+                  {p["OFFICE BALANCE"] ?? "—"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Scrollable content */}
       <div ref={orderScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 96px)" : "16px" }}>
 
-        {/* Supplier filter */}
-        <div ref={supplierDropdownRef} style={{ marginBottom: "16px" }}>
-          <button
-            onClick={() => setShowSupplierDropdown(o => !o)}
-            style={{
-              background: "none", border: "none", cursor: "pointer", padding: 0,
-              fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
-              letterSpacing: "0.1em", textTransform: "uppercase",
-              color: muted, display: "flex", alignItems: "center", gap: "5px",
-            }}
-          >
-            {orderSupplierFilter.length === 0 ? "ALL SUPPLIERS" : orderSupplierFilter.join(", ")}
-            <span style={{ fontSize: "12px", lineHeight: 1 }}>›</span>
-          </button>
-          {orderSupplierFilter.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "8px" }}>
-              {orderSupplierFilter.map(sup => (
-                <div key={sup} style={{
-                  fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
-                  padding: "3px 8px", borderRadius: "20px", border,
-                  color: fg, display: "flex", alignItems: "center", gap: "4px",
-                }}>
-                  {sup}
-                  <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
-                    <X size={9} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          {showSupplierDropdown && (
-            <div style={{ marginTop: "8px", maxHeight: "180px", overflowY: "auto", borderTop: border, paddingTop: "4px" }}>
-              {allSuppliers.map((sup, i) => {
-                const selected = orderSupplierFilter.includes(sup);
-                return (
-                  <div
-                    key={sup}
-                    onClick={() => { setOrderSupplierFilter(prev => selected ? prev.filter(s => s !== sup) : [...prev, sup]); setShowSupplierDropdown(false); }}
-                    style={{
-                      padding: "9px 0", cursor: "pointer", fontSize: "13px", fontFamily: "Raleway, inherit",
-                      fontWeight: selected ? 500 : 300,
-                      color: selected ? fg : muted,
-                      borderBottom: i < allSuppliers.length - 1 ? border : "none",
-                    }}
-                  >
+        {/* Supplier filter — revealed via the ⋮ in the header while it is open */}
+        {supplierFilterOpen && (
+          <div ref={supplierDropdownRef} style={{ marginBottom: "16px" }}>
+            {orderSupplierFilter.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "8px" }}>
+                {orderSupplierFilter.map(sup => (
+                  <div key={sup} style={{
+                    fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
+                    padding: "3px 8px", borderRadius: "20px", border,
+                    color: fg, display: "flex", alignItems: "center", gap: "4px",
+                  }}>
                     {sup}
+                    <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
+                      <X size={9} />
+                    </button>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Product search */}
-        <div ref={orderSearchRef} style={{ position: "relative", marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: border, paddingBottom: "8px" }}>
-            <Search size={14} style={{ color: muted, flexShrink: 0 }} />
-            <input
-              type="text"
-              value={orderSearch}
-              onChange={e => { setOrderSearch(e.target.value); setShowOrderDropdown(true); setForceOrderDropdown(false); setOrderActiveIndex(-1); }}
-              onFocus={() => { if (orderSearch.length === 0) setForceOrderDropdown(true); setShowOrderDropdown(true); }}
-              placeholder="Add product"
-              onKeyDown={handleOrderKeyDown}
-              style={{ flex: 1, background: "none", border: "none", outline: "none", fontSize: "14px", fontFamily: "Raleway, inherit", color: fg, caretColor: fg }}
-            />
-            {orderSearch && (
-              <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); setForceOrderDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted }}>
-                <X size={13} />
-              </button>
+                ))}
+              </div>
+            )}
+            {showSupplierDropdown && (
+              <div style={{ marginTop: "8px", maxHeight: "180px", overflowY: "auto", borderTop: border, paddingTop: "4px" }}>
+                {allSuppliers.map((sup, i) => {
+                  const selected = orderSupplierFilter.includes(sup);
+                  return (
+                    <div
+                      key={sup}
+                      onClick={() => { setOrderSupplierFilter(prev => selected ? prev.filter(s => s !== sup) : [...prev, sup]); setShowSupplierDropdown(false); }}
+                      style={{
+                        padding: "9px 0", cursor: "pointer", fontSize: "13px", fontFamily: "Raleway, inherit",
+                        fontWeight: selected ? 500 : 300,
+                        color: selected ? fg : muted,
+                        borderBottom: i < allSuppliers.length - 1 ? border : "none",
+                      }}
+                    >
+                      {sup}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
-          {showOrderDropdown && orderDropdownResults.length > 0 && (
-            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "hsl(var(--background))", maxHeight: "65vh", overflowY: "auto" }}>
-              {orderDropdownResults.map((p, i) => (
-                <div
-                  key={p.id}
-                  onMouseDown={() => addToOrder(p)}
-                  style={{
-                    padding: "10px 0", cursor: "pointer",
-                    background: i === orderActiveIndex ? "hsl(var(--card))" : "transparent",
-                    borderBottom: i < orderDropdownResults.length - 1 ? border : "none",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      {isOfficeFav(p) && <Star size={9} fill="currentColor" style={{ color: fg }} />}
-                      <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: fg }}>{p["PRODUCT NAME"]}</div>
-                    </div>
-                    {p["SUPPLIER"] && <div style={{ fontSize: "11px", fontFamily: "Raleway, inherit", color: muted, marginTop: "1px" }}>{p["SUPPLIER"]}</div>}
-                  </div>
-                  <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: getBalanceColor(p["OFFICE BALANCE"], p["PAR"], muted), flexShrink: 0, marginLeft: "8px" }}>
-                    {p["OFFICE BALANCE"] ?? "—"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Order lines */}
-        {orderLines.length === 0 ? (
-          <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, padding: "20px 0" }}>
-            No items added yet
-          </div>
-        ) : (
+        {orderLines.length > 0 && (
           <div>
             {orderLines.map((line, idx) => {
               const siblings = products.filter(s =>
