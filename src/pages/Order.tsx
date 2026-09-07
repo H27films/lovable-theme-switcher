@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Star, X, ChevronDown, Minus, Plus, MoreVertical } from "lucide-react";
+import { Search, Star, X, ChevronDown, Minus, Plus, MoreVertical, Building2 } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { useDropdownKeyboardNavigation } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "@/components/branch/ResultRow";
@@ -354,7 +354,16 @@ export default function Order({ onBack }: OrderProps) {
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {orderSupplierFilter.length === 0 ? "ALL SUPPLIERS" : orderSupplierFilter.join(", ")}
               </span>
-              <span style={{ fontSize: "12px", lineHeight: 1, flexShrink: 0 }}>›</span>
+              {/* Caret — points right when closed, turns DOWN while the dropdown is open */}
+              <ChevronDown
+                size={12}
+                strokeWidth={2.5}
+                style={{
+                  flexShrink: 0,
+                  transform: `rotate(${showSupplierDropdown ? 0 : -90}deg)`,
+                  transition: "transform 0.2s ease",
+                }}
+              />
             </button>
           ) : (
             <button
@@ -400,6 +409,58 @@ export default function Order({ onBack }: OrderProps) {
           <MoreVertical size={20} strokeWidth={2} />
         </button>
       </div>
+
+      {/* ALL SUPPLIERS overlay — drops down from the header, covers everything below
+          (Enter Product line, order lines, everything) so the list has the maximum
+          room on screen and never gets cut off short. */}
+      {showSupplierDropdown && supplierFilterOpen && (
+        <div
+          ref={supplierDropdownRef}
+          style={{
+            position: "absolute", top: topBarH, left: 0, right: 0, bottom: 0,
+            zIndex: 58, background: "hsl(var(--background))",
+            overflowY: "auto", padding: "8px 20px 24px",
+            overscrollBehavior: "contain",
+          }}
+        >
+          {orderSupplierFilter.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", padding: "12px 0", borderBottom: border }}>
+              {orderSupplierFilter.map(sup => (
+                <div key={sup} style={{
+                  fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
+                  padding: "3px 8px", borderRadius: "20px", border,
+                  color: fg, display: "flex", alignItems: "center", gap: "4px",
+                }}>
+                  {sup}
+                  <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
+                    <X size={9} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {allSuppliers.map((sup, i) => {
+            const selected = orderSupplierFilter.includes(sup);
+            return (
+              <div
+                key={sup}
+                onClick={() => { setOrderSupplierFilter(prev => selected ? prev.filter(s => s !== sup) : [...prev, sup]); setShowSupplierDropdown(false); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  padding: "11px 0", cursor: "pointer",
+                  fontSize: "14px", fontFamily: "Raleway, inherit",
+                  fontWeight: selected ? 500 : 300,
+                  color: selected ? fg : muted,
+                  borderBottom: i < allSuppliers.length - 1 ? border : "none",
+                }}
+              >
+                <Building2 size={14} strokeWidth={1.5} style={{ color: "inherit", opacity: 0.4, flexShrink: 0 }} />
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sup}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Enter Product — full width search line (mirrors the Search page) */}
       <div ref={orderSearchRef} style={{ position: "relative", padding: "16px 20px 12px", borderBottom: "1px solid hsl(var(--border))", flexShrink: 0 }}>
@@ -452,46 +513,22 @@ export default function Order({ onBack }: OrderProps) {
       {/* Scrollable content */}
       <div ref={orderScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 96px)" : "16px" }}>
 
-        {/* Supplier filter — revealed via the ⋮ in the header while it is open */}
-        {supplierFilterOpen && (
-          <div ref={supplierDropdownRef} style={{ marginBottom: "16px" }}>
-            {orderSupplierFilter.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "8px" }}>
-                {orderSupplierFilter.map(sup => (
-                  <div key={sup} style={{
-                    fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
-                    padding: "3px 8px", borderRadius: "20px", border,
-                    color: fg, display: "flex", alignItems: "center", gap: "4px",
-                  }}>
-                    {sup}
-                    <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
-                      <X size={9} />
-                    </button>
-                  </div>
-                ))}
+        {/* Selected supplier chips — shown while the ⋮ filter mode is active.
+            The full supplier list overlays the content while it is open. */}
+        {supplierFilterOpen && orderSupplierFilter.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "16px" }}>
+            {orderSupplierFilter.map(sup => (
+              <div key={sup} style={{
+                fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
+                padding: "3px 8px", borderRadius: "20px", border,
+                color: fg, display: "flex", alignItems: "center", gap: "4px",
+              }}>
+                {sup}
+                <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
+                  <X size={9} />
+                </button>
               </div>
-            )}
-            {showSupplierDropdown && (
-              <div style={{ marginTop: "8px", maxHeight: "180px", overflowY: "auto", borderTop: border, paddingTop: "4px" }}>
-                {allSuppliers.map((sup, i) => {
-                  const selected = orderSupplierFilter.includes(sup);
-                  return (
-                    <div
-                      key={sup}
-                      onClick={() => { setOrderSupplierFilter(prev => selected ? prev.filter(s => s !== sup) : [...prev, sup]); setShowSupplierDropdown(false); }}
-                      style={{
-                        padding: "9px 0", cursor: "pointer", fontSize: "13px", fontFamily: "Raleway, inherit",
-                        fontWeight: selected ? 500 : 300,
-                        color: selected ? fg : muted,
-                        borderBottom: i < allSuppliers.length - 1 ? border : "none",
-                      }}
-                    >
-                      {sup}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            ))}
           </div>
         )}
 
