@@ -410,35 +410,37 @@ export default function Order({ onBack }: OrderProps) {
         </button>
       </div>
 
-      {/* ALL SUPPLIERS overlay — drops down from the header, covers everything below
-          (Enter Product line, order lines, everything) so the list has the maximum
-          room on screen and never gets cut off short. */}
+      {/* Selected supplier pills — above the Enter Product line (grey pills, Past Data box style) */}
+      {supplierFilterOpen && orderSupplierFilter.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", padding: "0 20px 10px" }}>
+          {orderSupplierFilter.map(sup => (
+            <div key={sup} style={{
+              fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
+              padding: "4px 10px", borderRadius: "999px",
+              background: "hsl(var(--muted) / 0.3)",
+              color: fg, display: "flex", alignItems: "center", gap: "4px",
+            }}>
+              {sup}
+              <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
+                <X size={9} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ALL SUPPLIERS dropdown — drops down from the header as far as the product
+          dropdown does (65vh), stopping just above the bottom nav — not the full page. */}
       {showSupplierDropdown && supplierFilterOpen && (
         <div
           ref={supplierDropdownRef}
           style={{
-            position: "absolute", top: topBarH, left: 0, right: 0, bottom: 0,
+            position: "absolute", top: topBarH, left: 0, right: 0,
             zIndex: 58, background: "hsl(var(--background))",
-            overflowY: "auto", padding: "8px 20px 24px",
-            overscrollBehavior: "contain",
+            maxHeight: "65vh", overflowY: "auto", padding: "4px 0",
+            boxShadow: "0 12px 24px hsl(0 0% 0% / 0.08)",
           }}
         >
-          {orderSupplierFilter.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", padding: "12px 0", borderBottom: border }}>
-              {orderSupplierFilter.map(sup => (
-                <div key={sup} style={{
-                  fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
-                  padding: "3px 8px", borderRadius: "20px", border,
-                  color: fg, display: "flex", alignItems: "center", gap: "4px",
-                }}>
-                  {sup}
-                  <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
-                    <X size={9} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
           {allSuppliers.map((sup, i) => {
             const selected = orderSupplierFilter.includes(sup);
             return (
@@ -446,8 +448,8 @@ export default function Order({ onBack }: OrderProps) {
                 key={sup}
                 onClick={() => { setOrderSupplierFilter(prev => selected ? prev.filter(s => s !== sup) : [...prev, sup]); setShowSupplierDropdown(false); }}
                 style={{
-                  display: "flex", alignItems: "center", gap: "8px",
-                  padding: "11px 0", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: "10px",
+                  padding: "10px 20px", cursor: "pointer",
                   fontSize: "14px", fontFamily: "Raleway, inherit",
                   fontWeight: selected ? 500 : 300,
                   color: selected ? fg : muted,
@@ -512,25 +514,6 @@ export default function Order({ onBack }: OrderProps) {
 
       {/* Scrollable content */}
       <div ref={orderScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 96px)" : "16px" }}>
-
-        {/* Selected supplier chips — shown while the ⋮ filter mode is active.
-            The full supplier list overlays the content while it is open. */}
-        {supplierFilterOpen && orderSupplierFilter.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "16px" }}>
-            {orderSupplierFilter.map(sup => (
-              <div key={sup} style={{
-                fontSize: "10px", fontFamily: "Raleway, inherit", letterSpacing: "0.05em",
-                padding: "3px 8px", borderRadius: "20px", border,
-                color: fg, display: "flex", alignItems: "center", gap: "4px",
-              }}>
-                {sup}
-                <button onClick={() => setOrderSupplierFilter(prev => prev.filter(s => s !== sup))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: muted, display: "flex" }}>
-                  <X size={9} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Order lines */}
         {orderLines.length > 0 && (
