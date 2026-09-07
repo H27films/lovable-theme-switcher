@@ -45,7 +45,7 @@ export const ExpandedRowContent = ({
       <div
         style={{
             margin: "0",
-padding: "8px 0 12px 0",
+            padding: "4px 0 8px 0",
       }}
     >
       
@@ -56,7 +56,7 @@ padding: "8px 0 12px 0",
           display: "grid",
           gridTemplateColumns: gridCols,
           gap: "4px",
-          padding: "8px 0 0 0",
+          padding: "5px 0 0 0",
           borderTop: "0.5px solid hsl(var(--border) / 0.2)",
           alignItems: "center",
         }}
