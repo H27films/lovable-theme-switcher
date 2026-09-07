@@ -338,7 +338,7 @@ export const Favourites = ({ open, onClose, branch, onSubmitted }: FavouritesPro
       </div>
 
       {/* Add product search — mirrors Order.tsx */}
-      <div style={{ padding: "12px 16px 0", flexShrink: 0 }}>
+      <div style={{ padding: "8px 16px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Search size={14} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
           <input
@@ -365,7 +365,7 @@ export const Favourites = ({ open, onClose, branch, onSubmitted }: FavouritesPro
         }}>
           <div style={{ width: "16px", flexShrink: 0 }} />
           <div style={{ flex: 1, marginRight: "8px", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--foreground))" }}>PRODUCTS</div>
-          <div style={{ width: "36px", flexShrink: 0, textAlign: "right", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>BAL</div>
+          <div style={{ width: "36px", flexShrink: 0, textAlign: "center", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>BAL</div>
           <div style={{ width: "48px", flexShrink: 0, textAlign: "center", fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", color: "hsl(var(--foreground))" }}>LOW</div>
         </div>
         {loading ? (
@@ -426,7 +426,7 @@ export const Favourites = ({ open, onClose, branch, onSubmitted }: FavouritesPro
 
                 {/* Branch balance — Order.tsx-style colouring */}
                 <div style={{
-                  width: "36px", flexShrink: 0, textAlign: "right",
+                  width: "36px", flexShrink: 0, textAlign: "center",
                   fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit",
                   color: balanceColour(balance),
                 }}>
