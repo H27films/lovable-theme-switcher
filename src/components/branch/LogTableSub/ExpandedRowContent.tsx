@@ -62,8 +62,8 @@ padding: "8px 0 12px 0",
         }}
       >
         <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))" }}>
-          {fmtDayName(row.DATE)}
-        </div>
+  {showDate ? fmtDayName(row.DATE) : ""}
+</div>
 
         {/* Edit + Delete buttons */}
         <div style={{ gridColumn: selectedProduct ? "2 / 4" : "2 / 5", display: "flex", gap: "10px", alignItems: "center" }}>

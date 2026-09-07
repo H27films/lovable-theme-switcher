@@ -103,9 +103,9 @@ const LogRowItemInner = ({
       >
         {selectedProduct ? (
           <>
-            <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>
-              {showDate ? dateStr : ""}
-            </div>
+           <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>
+  {showDate ? dateStr : expanded ? fmtDayName(row.DATE) : ""}
+</div>
             <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: row.QTY < 0 ? "hsl(0 70% 50%)" : row.QTY > 0 ? "hsl(142 65% 38%)" : "hsl(var(--foreground))", textAlign: "center" }}>
               {row.QTY > 0 ? "+" : ""}{row.QTY}
             </div>
@@ -128,7 +128,7 @@ const LogRowItemInner = ({
         ) : (
           <>
             <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", alignSelf: "start" }}>
-              {showDate ? dateStr : ""}
+            {showDate ? dateStr : expanded ? fmtDayName(row.DATE) : ""}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
