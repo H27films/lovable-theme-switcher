@@ -116,7 +116,7 @@ const LogRowItemInner = ({
               {row.TYPE || "—"}
             </div>
             <div style={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-              {row.THERAPIST ? (
+              {row.THERAPIST && !expanded ? (
                 <span style={{ ...therapistPillStyle(row.THERAPIST, branchTherapists), padding: "2px 5px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
                   {row.THERAPIST}
                 </span>
@@ -135,7 +135,7 @@ const LogRowItemInner = ({
                 <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", whiteSpace: "normal", wordBreak: "break-word" }}>
                   {row["PRODUCT NAME"] || "—"}
                 </div>
-                {(row as any)["THERAPIST"] && (
+                {!expanded && (row as any)["THERAPIST"] && (
                   <span style={{ ...therapistPillStyle((row as any)["THERAPIST"], branchTherapists), padding: "2px 6px", borderRadius: "999px", fontSize: "8px", fontWeight: 600, fontFamily: "Raleway, inherit", textTransform: "uppercase", letterSpacing: "0.02em" }}>
                     {(row as any)["THERAPIST"]}
                   </span>
