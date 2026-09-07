@@ -83,6 +83,9 @@ export default function Order({ onBack }: OrderProps) {
   const [summaryNavVisible, setSummaryNavVisible] = useState(false);
   // Measured height of the ORDER top bar — the summary sheet starts just below it.
   const [topBarH, setTopBarH] = useState(0);
+  // Measured height of the Enter Product bar — added to the supplier dropdown's
+  // max-height so it extends down exactly as far as the product dropdown does.
+  const [enterBarH, setEnterBarH] = useState(0);
 
   const orderSearchRef = useRef<HTMLDivElement>(null);
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
@@ -114,7 +117,22 @@ export default function Order({ onBack }: OrderProps) {
     return () => ro.disconnect();
   }, []);
 
-  // Collapse the sheet if the order is emptied while it is open (e.g. Clear Order).
+  // Measure the Enter Product bar height so the supplier dropdown (anchored below the
+  // header) extends down exactly as far as the product dropdown (which starts at the
+  // bottom of that bar) does — both end at the same point on screen.
+
+  useEffect(() => {
+    const el = orderSearchRef.current;
+    if (!el) return;
+    const measure = () => setEnterBarH(el.offsetHeight);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Collapse the sheet if the order is emptied while it is open (e.g. Clear Order)..
   useEffect(() => {
     if (orderLines.length === 0 && summaryExpanded) setSummaryExpanded(false);
   }, [orderLines.length, summaryExpanded]);
@@ -429,16 +447,15 @@ export default function Order({ onBack }: OrderProps) {
         </div>
       )}
 
-      {/* ALL SUPPLIERS dropdown — drops down from the header as far as the product
-          dropdown does (65vh), stopping just above the bottom nav — not the full page. */}
+      {/* ALL SUPPLIERS dropdown — part of the page (same background, no floating panel),
+          extends down as far as the product dropdown does — ending at the same point. */}
       {showSupplierDropdown && supplierFilterOpen && (
         <div
           ref={supplierDropdownRef}
           style={{
             position: "absolute", top: topBarH, left: 0, right: 0,
-            zIndex: 58, background: "hsl(var(--background))",
-            maxHeight: "65vh", overflowY: "auto", padding: "4px 0",
-            boxShadow: "0 12px 24px hsl(0 0% 0% / 0.08)",
+            zIndex: 50, background: "hsl(var(--background))",
+            maxHeight: `calc(65vh + ${enterBarH}px)`, overflowY: "auto", padding: "4px 0",
           }}
         >
           {allSuppliers.map((sup, i) => {
@@ -452,7 +469,7 @@ export default function Order({ onBack }: OrderProps) {
                   padding: "10px 20px", cursor: "pointer",
                   fontSize: "14px", fontFamily: "Raleway, inherit",
                   fontWeight: selected ? 500 : 300,
-                  color: selected ? fg : muted,
+                  color: fg,
                   borderBottom: i < allSuppliers.length - 1 ? border : "none",
                 }}
               >
