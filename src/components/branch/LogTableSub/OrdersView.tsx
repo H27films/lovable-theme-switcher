@@ -111,7 +111,7 @@ export const OrdersView = ({ branchLogName, scrollWithPage }: OrdersViewProps) =
 
   const containerStyle: React.CSSProperties = scrollWithPage
     ? { width: "100%", minWidth: 0 }
-    : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "76px" };
+    : { flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: "12px" };
 
   return (
     <div ref={scrollRef} style={containerStyle}>

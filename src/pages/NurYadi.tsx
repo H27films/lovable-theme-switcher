@@ -519,7 +519,7 @@ const setLogViewToOrders = () => {
           />
         )}
         {!searchActive && (
-          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "120px" : "0px" }}>
+          <div style={{ paddingTop: "0px", display: "flex", flexDirection: "column", flex: 1, overflowX: "hidden", overflowY: "auto", minHeight: 0, paddingBottom: selectedProduct ? "120px" : "calc(env(safe-area-inset-bottom, 0px) + 66px)" }}>
             {selectedProduct && (
               <ProductCard 
                 selectedProduct={selectedProduct} 
