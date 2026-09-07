@@ -99,7 +99,7 @@ export default function Order({ onBack }: OrderProps) {
   const red = "hsl(0 84% 60%)";
   const hdrStyle: React.CSSProperties = {
     fontSize: "10px", fontWeight: 600, fontFamily: "Raleway, inherit",
-    letterSpacing: "0.12em", textTransform: "uppercase", color: muted,
+    letterSpacing: "0.12em", textTransform: "uppercase", color: fg,
   };
 
   // ── ORDER SUMMARY SHEET ──────────────────────────────────
@@ -642,10 +642,10 @@ export default function Order({ onBack }: OrderProps) {
           display: "flex", flexDirection: "column",
           zIndex: 100,
         }}>
-          {/* Panel header */}
+          {/* Panel header — no bottom border; the column headers keep a single line below them */}
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "24px 16px 16px", borderBottom: border, flexShrink: 0,
+            padding: "24px 16px 16px", flexShrink: 0,
           }}>
             <div>
               {/* Title is clickable — closes the overlay and returns to the order section
@@ -789,7 +789,7 @@ export default function Order({ onBack }: OrderProps) {
                 border: "0.5px solid hsl(var(--foreground))",
                 background: "hsl(var(--foreground))",
                 color: "hsl(var(--background))",
-                borderRadius: "6px", cursor: "pointer",
+                borderRadius: "999px", cursor: "pointer",
               }}
             >
               DONE · {orderLines.length} {orderLines.length === 1 ? "ITEM" : "ITEMS"} IN ORDER
