@@ -657,14 +657,20 @@ export default function Order({ onBack }: OrderProps) {
                 BELOW PAR
               </div>
               <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, marginTop: "2px" }}>
-                {belowParList.length} {belowParList.length === 1 ? "product" : "products"} · tap to add/remove from order
+                {belowParList.length} {belowParList.length === 1 ? "Product" : "Products"}
               </div>
             </div>
             <button
               onClick={() => setShowBelowPar(false)}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
+              aria-label="Back"
+              title="Back"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: fg, display: "flex", alignItems: "center", touchAction: "manipulation" }}
             >
-              <X size={20} strokeWidth={1.5} />
+              {/* Same left-arrow style as the Search page header */}
+              <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="30" y1="8" x2="1" y2="8" />
+                <polyline points="9,1 1,8 9,15" />
+              </svg>
             </button>
           </div>
 
@@ -711,12 +717,12 @@ export default function Order({ onBack }: OrderProps) {
                       background: inOrder ? "hsl(var(--card))" : "transparent",
                     }}
                   >
-                    {/* Checkbox */}
+                    {/* Checkbox — round circle; filled black with a white tick when in order */}
                     <div style={{
                       width: "16px", height: "16px",
-                      border: `1.5px solid ${inOrder ? red : "hsl(var(--border))"}`,
-                      borderRadius: "3px",
-                      background: inOrder ? red : "transparent",
+                      border: `1.5px solid ${inOrder ? fg : "hsl(var(--border))"}`,
+                      borderRadius: "50%",
+                      background: inOrder ? fg : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
                     }}>
