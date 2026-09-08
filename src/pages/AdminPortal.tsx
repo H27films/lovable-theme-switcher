@@ -9,6 +9,8 @@ import {
   Search as SearchIcon,
 } from "lucide-react";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 const AdminPortal = () => {
   const { tablet } = useTabletMode();
@@ -29,6 +31,22 @@ const AdminPortal = () => {
       slideTo(`/simple/${key}`, { from: "adminportal" }, "forward");
     }
   };
+
+  // Most recent data point in AllFileLog (displayed under "Branches").
+  const [lastLogDate, setLastLogDate] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from("AllFileLog")
+          .select("DATE")
+          .order("DATE", { ascending: false })
+          .limit(1);
+        const latest = data && data[0] ? data[0]["DATE"] : null;
+        setLastLogDate(typeof latest === "string" && latest.length >= 10 ? latest.substring(0, 10) : latest);
+      } catch { setLastLogDate(null); }
+    })();
+  }, []);
 
   return (
     <div
@@ -171,7 +189,7 @@ const AdminPortal = () => {
                   fontWeight: 350,
                   letterSpacing: "0.01em",
                   color: "#000000",
-                  margin: "0 0 12px 4px",
+                  margin: "0 0 2px 4px",
                   fontFamily: "'Raleway', sans-serif",
                   cursor: "pointer",
                   transition: "opacity 0.15s ease",
@@ -181,6 +199,16 @@ const AdminPortal = () => {
               >
                 Branches
               </p>
+
+              {lastLogDate && (
+                <p style={{ fontSize: "12.5px", fontWeight: 300, letterSpacing: "0.12em", color: "#8a8578", margin: "0 0 4px 4px", fontFamily: "'Raleway', sans-serif", textTransform: "uppercase" }}>
+                  {(() => {
+                    const d = new Date(lastLogDate + "T00:00:00");
+                    if (isNaN(d.getTime()) && lastLogDate.length >= 10) return lastLogDate;
+                    return `${["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][d.getMonth()]} ${d.getDate()}`;
+                  })()}
+                </p>
+              )}
 
               <div style={{ marginTop: tablet ? "24px" : "32px" }}>
               {branches.map(({ label, key, icon }, i) => (
