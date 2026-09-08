@@ -83,7 +83,6 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
         let domain: [number, number];
         let chartData: typeof data;
         let monthlyAvg: number | null = null;
-        let weeklyAvg: number | null = null;
 
         if (viewMode === "month") {
           const range = MONTH_AXIS_RANGE[key as keyof typeof MONTH_AXIS_RANGE] ?? [50000, 100000];
@@ -121,14 +120,6 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
           yTicks = Array.from({ length: topTick / 5000 + 1 }, (_, i) => i * 5000);
           domain = [0, topTick];
           chartData = data;
-          const prefix = monthFilter === "all" ? yearFilter : `${yearFilter}-${monthFilter}`;
-          const filtered = salesData.filter(r => r.Branch === key && r.Date?.startsWith(prefix));
-          if (filtered.length >= 2) {
-            const dates = filtered.map(r => new Date(r.Date + "T00:00:00").getTime());
-            const days = Math.max(1, Math.round((Math.max(...dates) - Math.min(...dates)) / 86400000) + 1);
-            const sum = filtered.reduce((s, r) => s + (Number(r["Total GST"]) || 0), 0);
-            weeklyAvg = sum / days * 7;
-          }
         }
 
         const dataKey = viewMode === "month" ? "plot" : "total";
@@ -183,9 +174,6 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
                     }
                   }}
                 />
-                {viewMode === "week" && weeklyAvg !== null && (
-                  <ReferenceLine y={weeklyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
-                )}
                 {viewMode === "month" && monthlyAvg !== null && (
                   <ReferenceLine y={monthlyAvg} stroke="#888" strokeDasharray="4 3" strokeWidth={1} />
                 )}
