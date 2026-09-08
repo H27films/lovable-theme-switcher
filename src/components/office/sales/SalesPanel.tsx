@@ -101,8 +101,9 @@ export const SalesPanel: React.FC<Props> = ({ onClose }) => {
         fwdBlocked={fwdBlockedFinal}
       />
 
-      {/* Charts area */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 14px 16px", paddingTop: 0 }} onClick={() => setTappedBar(null)}>
+      {/* Charts area — flex column with gap (mirrors original wrapper so each card
+          receives real height for the chart and keeps 12px spacing between boxes). */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 16px 6px 16px", display: "flex", flexDirection: "column", gap: "12px" }} onClick={() => setTappedBar(null)}>
         {salesLoading && (
           <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
         )}
@@ -128,9 +129,13 @@ export const SalesPanel: React.FC<Props> = ({ onClose }) => {
       </div>
 
       {/* Pinned grand total */}
-      <div style={{ textAlign: "right", paddingTop: "8px", borderTop: "0.5px solid #d8d0c8", padding: "8px 16px", background: "hsl(var(--background))" }}>
+      <div style={{ flexShrink: 0, textAlign: "right", padding: "10px 20px calc(10px + env(safe-area-inset-bottom, 0px)) 20px", borderTop: "0.5px solid #d8d0c8" }}>
         <span style={{ fontSize: "15px", fontWeight: 700, color: "#2a2a2a", fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
-          Total: RM {salesGrandTotal(salesData, "TOTAL", salesYearFilter, salesMonthFilter).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          Total: RM {
+            ["Boudoir", "Chic Nailspa", "Nur Yadi"].reduce(
+              (sum, k) => sum + salesGrandTotal(salesData, k, salesYearFilter, salesMonthFilter), 0
+            ).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          }
         </span>
       </div>
     </div>

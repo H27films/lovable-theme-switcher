@@ -68,9 +68,11 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
     const total = viewMode === "month" ? monthlyWindowTotal(salesData, key, monthWindow) : salesGrandTotal(salesData, key, yearFilter, monthFilter);
   return (
     <div style={{ flex: 1, minHeight: 110, maxHeight: 210, display: "flex", flexDirection: "column", background: "#F2EDE6", borderRadius: "18px", padding: "10px 12px 8px 12px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
-        <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "#2a2a2a" }}>{key}</span>
-        <span style={{ fontSize: "14px", fontWeight: 300, color: "#2a2a2a", fontFamily: "Raleway, inherit" }}>{total == null ? "—" : `RM ${total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px", flexShrink: 0 }}>
+        <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "#2a2a2a" }}>
+          {({ "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC NAILSPA", "Nur Yadi": "NUR YADI" } as Record<string, string>)[key] ?? key.toUpperCase()}
+        </span>
+        <span style={{ fontSize: "14px", fontWeight: 300, color: "#2a2a2a", fontFamily: "Raleway, inherit", whiteSpace: "nowrap", flexShrink: 0, marginLeft: "8px" }}>{total == null ? "—" : `RM ${total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
       </div>
             {(() => {
         if (data.length === 0) {
