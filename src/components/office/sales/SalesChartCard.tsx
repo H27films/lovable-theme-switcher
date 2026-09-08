@@ -42,7 +42,7 @@ const makeRoundedBar = (baseColor: string, highlightColor: string, isDay: boolea
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={fill} />
-            <stop offset="100%" stopColor={lightenHex(fill, 22)} />
+            <stop offset="100%" stopColor={lightenHex(fill, 10)} />
           </linearGradient>
         </defs>
         <path d={d} fill={`url(#${gradId})`} cursor="pointer" />
@@ -67,8 +67,8 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
   const data = viewMode === "month" ? buildMonthlyData(salesData, key, monthWindow) : viewMode === "week" ? buildWeeklyData(salesData, key, yearFilter, monthFilter) : buildDailyData(salesData, key, yearFilter, monthFilter);
     const total = viewMode === "month" ? monthlyWindowTotal(salesData, key, monthWindow) : salesGrandTotal(salesData, key, yearFilter, monthFilter);
   return (
-    <div style={{ flex: 1, minHeight: 110, maxHeight: 210, display: "flex", flexDirection: "column", background: "#F2EDE6", borderRadius: "18px", padding: "10px 12px 8px 12px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px", flexShrink: 0 }}>
+    <div style={{ flex: 1, minHeight: 110, maxHeight: 300, display: "flex", flexDirection: "column", background: "#F2EDE6", borderRadius: "18px", padding: "4px 12px 8px 12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "2px", flexShrink: 0 }}>
         <span style={{ fontSize: "13px", fontWeight: 400, letterSpacing: "0.06em", fontFamily: "Raleway, inherit", color: "#2a2a2a" }}>
           {({ "Boudoir": "BOUDOIR", "Chic Nailspa": "CHIC NAILSPA", "Nur Yadi": "NUR YADI" } as Record<string, string>)[key] ?? key.toUpperCase()}
         </span>
@@ -86,12 +86,13 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
         let weeklyAvg: number | null = null;
 
         if (viewMode === "month") {
-          const maxVal = data.reduce((m: number, d: any) => Math.max(m, d.total || 0), 0);
           const range = MONTH_AXIS_RANGE[key as keyof typeof MONTH_AXIS_RANGE] ?? [50000, 100000];
-          const [floor] = range;
-          topTick = Math.ceil(Math.max(maxVal, floor) / 50000) * 50000;
-          yTicks = Array.from({ length: (topTick - floor) / 50000 + 1 }, (_, i) => floor + i * 50000);
-          domain = [floor, topTick];
+          const [floor, ceil] = range;
+          // Pin the fixed per-branch ceiling at the very top of the axis (so e.g. 80k /
+          // 130k always sits close to the title), stepping up from the floor by 50k.
+          topTick = ceil;
+          yTicks = Array.from({ length: (ceil - floor) / 50000 + 1 }, (_, i) => floor + i * 50000);
+          domain = [floor, ceil];
           const nowKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
           const avgVals = data.filter((d: any) => d.total > 0 && d.key !== nowKey).map((d: any) => d.total);
           if (avgVals.length > 0) {
@@ -148,7 +149,7 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
               </div>
             )}
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} barCategoryGap={viewMode === "month" ? "25%" : viewMode === "week" ? (monthFilter === "all" ? "8%" : "35%") : "10%"} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+              <BarChart data={chartData} barCategoryGap={viewMode === "month" ? "25%" : viewMode === "week" ? (monthFilter === "all" ? "8%" : "35%") : "10%"} margin={{ top: 14, right: 4, left: 0, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="#e8e8e8" strokeWidth={0.8} />
                 <XAxis
                   dataKey="week"

@@ -22,7 +22,7 @@ export const BRANCHES = [
 // flat at the top of the chart.
 export const MONTH_AXIS_RANGE: Record<string, [number, number]> = {
   "Boudoir": [30000, 80000],
-  "Chic Nailspa": [80000, 120000],
+  "Chic Nailspa": [80000, 130000],
   "Nur Yadi": [30000, 80000],
 };
 
