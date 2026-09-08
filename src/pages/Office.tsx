@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import Sync from "@/components/office/Sync";
 import OfficeLogTable from "@/components/office/OfficeLogTable";
-import { SalesPanel } from "@/components/office/SalesPanel";
+import { SalesPanel } from "@/components/office/sales/SalesPanel";
 import { OfficeHeader } from "@/components/office/OfficeHeader";
 import { BottomNavOffice } from "@/components/office/BottomNavOffice";
 
