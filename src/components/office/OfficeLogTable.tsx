@@ -106,6 +106,12 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
     }
   }, [refreshTrigger, fetchLog]);
 
+  // Switching the view tab (All Data / Branches / Supplier) restarts the list
+  // from the top — the scroll offset would otherwise be kept from the previous tab.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [logView]);
+
   // Append the next page when the user scrolls near the bottom.
   const loadMore = async () => {
     if (moreBusy.current || !hasMore || loadingLog) return;

@@ -161,6 +161,17 @@ export const LogTable = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProduct, viewType, flowMode]);
 
+  // Switching the view tab (All / Salon / Sales / Orders) restarts the list
+  // from the top: the internal scrollers would otherwise keep the previous
+  // tab's scroll offset. (FlowToggle switches already reset naturally — the
+  // viewKey remount replays the view transition.)
+  const rowsScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollWithPage) return;
+    containerRef.current?.scrollTo({ top: 0 });
+    rowsScrollRef.current?.scrollTo({ top: 0 });
+  }, [viewType, scrollWithPage]);
+
   // Flow mode switch: collapse first, then swap filter after a short beat so
   // the collapse animation plays before the new list mounts.
   const changeFlowMode = (m: "all" | "in" | "out") => {
@@ -392,6 +403,7 @@ export const LogTable = ({
 
               {/* Row list */}
               <div
+                ref={rowsScrollRef}
                 style={scrollWithPage ? undefined : { flex: 1, overflowY: "auto", minHeight: 0 }}
                 onClick={() => changeExpandedRow(null)}
               >
