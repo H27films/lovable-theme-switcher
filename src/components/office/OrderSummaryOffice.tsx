@@ -368,36 +368,9 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
               </button>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {/* Primary action — always shown directly. */}
-                <button
-                  onClick={() => generateAndShareFullOrderPDF(
-                    supplierGroups.map(group => ({
-                      supplier: group.supplier,
-                      lines: group.lines.map(({ line }) => ({
-                        productName: line.product["PRODUCT NAME"],
-                        officeBalance: line.product["OFFICE BALANCE"],
-                        boudoirBalance: line.product["BOUDOIR BALANCE"],
-                        chicBalance: line.product["CHIC NAILSPA BALANCE"],
-                        nurYadiBalance: line.product["NUR YADI BALANCE"],
-                      })),
-                    }))
-                  )}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    gap: "8px", width: "100%", padding: "12px",
-                    fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
-                    letterSpacing: "0.08em", textTransform: "uppercase",
-                    border: "none", background: "hsl(var(--foreground) / 0.07)",
-                    color: "hsl(var(--foreground))", borderRadius: "999px", cursor: "pointer",
-                  }}
-                >
-                  <WhatsAppIcon />
-                  Send Order List to Ailing
-                </button>
-
-                {/* Suppliers disclosure — the per-supplier buttons are hidden by
-                    default and replaced by an upward chevron. Tapping it expands
-                    the footer to reveal them (chevron flips down to collapse). */}
+                {/* Suppliers disclosure — sits at the TOP of the draft footer: an
+                    upward chevron when collapsed; tapping it expands the footer to
+                    reveal the per-supplier WhatsApp buttons (chevron flips down). */}
                 {supplierGroups.length > 0 && (
                   <button
                     onClick={() => setShowSupplierSend(v => !v)}
@@ -442,6 +415,33 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                     Send {group.supplier} to WhatsApp
                   </button>
                 ))}
+
+                {/* Primary action — always shown directly, below the chevron. */}
+                <button
+                  onClick={() => generateAndShareFullOrderPDF(
+                    supplierGroups.map(group => ({
+                      supplier: group.supplier,
+                      lines: group.lines.map(({ line }) => ({
+                        productName: line.product["PRODUCT NAME"],
+                        officeBalance: line.product["OFFICE BALANCE"],
+                        boudoirBalance: line.product["BOUDOIR BALANCE"],
+                        chicBalance: line.product["CHIC NAILSPA BALANCE"],
+                        nurYadiBalance: line.product["NUR YADI BALANCE"],
+                      })),
+                    }))
+                  )}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: "8px", width: "100%", padding: "12px",
+                    fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    border: "none", background: "hsl(var(--foreground) / 0.07)",
+                    color: "hsl(var(--foreground))", borderRadius: "999px", cursor: "pointer",
+                  }}
+                >
+                  <WhatsAppIcon />
+                  Send Order List to Ailing
+                </button>
 
                 <button
                   onClick={() => { setDraftReady(false); setOrderLines([]); }}
