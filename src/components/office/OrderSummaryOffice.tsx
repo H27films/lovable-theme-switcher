@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Minus, Plus } from "lucide-react";
+import NumberFlow from "@number-flow/react";
 import jsPDF from "jspdf";
 
 export interface OfficeProduct {
@@ -308,9 +309,17 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                       <div key={idx} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 0", borderBottom: border }}>
                         <div style={{ flex: 1, fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: fg }}>{line.product["PRODUCT NAME"]}</div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} style={{ width: "22px", height: "22px", border: "none", background: "none", cursor: "pointer", fontSize: "16px", color: fg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>−</button>
-                          <div style={{ minWidth: "20px", textAlign: "center", fontSize: "13px", fontFamily: "Raleway, inherit", color: fg }}>{line.qty}</div>
-                          <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} style={{ width: "22px", height: "22px", border: "none", background: "none", cursor: "pointer", fontSize: "16px", color: fg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Raleway, inherit" }}>+</button>
+                          {/* Round-circle stepper + animated qty — same as the Order page's OrderLineItem. */}
+                          <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx && l.qty > 1 ? { ...l, qty: l.qty - 1 } : l))} aria-label="Decrease quantity" style={{ background: "rgba(222, 214, 207, 0.5)", border: "0.5px solid rgba(180, 165, 152, 0.45)", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <Minus size={14} strokeWidth={2.5} />
+                          </button>
+                          {/* Same magnitude-based spin as the Order page qty: digits roll the short way. */}
+                          <span style={{ minWidth: "20px", textAlign: "center", fontSize: "14px", fontFamily: "Raleway, inherit", color: fg }}>
+                            <NumberFlow value={line.qty} trend={(old, val) => (Math.abs(val) >= Math.abs(old) ? 1 : -1)} format={{ useGrouping: false }} willChange />
+                          </span>
+                          <button onClick={() => setOrderLines(prev => prev.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l))} aria-label="Increase quantity" style={{ background: "rgba(222, 214, 207, 0.5)", border: "0.5px solid rgba(180, 165, 152, 0.45)", cursor: "pointer", padding: 0, color: "hsl(var(--foreground))", width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <Plus size={14} strokeWidth={2.5} />
+                          </button>
                         </div>
                         {lineTotal != null && (
                           <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, minWidth: "60px", textAlign: "right" }}>RM {lineTotal.toFixed(2)}</div>
