@@ -132,34 +132,33 @@ async function generateAndShareFullOrderPDF(
   let y = 52;
   const sortedGroups = [...supplierGroups].sort((a, b) => a.supplier.localeCompare(b.supplier));
 
-  // Column x-positions (used for both header row and data rows)
-  const colNo = 15, colProduct = 25, colOff = 145, colBou = 160, colChi = 175, colNur = 195;
-  const productWrapWidth = 115;
+  // Column x-positions — balance columns are centered on these points, not right-aligned.
+  const colNo = 15, colProduct = 25, colOff = 145, colBou = 160, colChi = 175, colNur = 190;
+  const productWrapWidth = 110;
 
-  sortedGroups.forEach((group) => {
+  // Shared column header row — printed once at the top of the table, not per supplier.
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text("#", colNo, y);
+  doc.text("PRODUCT", colProduct, y);
+  doc.text("OFF", colOff, y, { align: "center" });
+  doc.text("BOU", colBou, y, { align: "center" });
+  doc.text("CHI", colChi, y, { align: "center" });
+  doc.text("NUR", colNur, y, { align: "center" });
+  doc.setLineWidth(0.3);
+  doc.line(15, y + 2, 195, y + 2);
+  y += 12;
+
+  sortedGroups.forEach((group, groupIdx) => {
     const sortedLines = [...group.lines].sort((a, b) => a.productName.localeCompare(b.productName));
 
-    if (y > 250) { doc.addPage(); y = 20; }
+    if (y > 260) { doc.addPage(); y = 20; }
 
-    doc.setFontSize(11);
+    // Supplier name row — no repeated column headers underneath it.
+    doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text(group.supplier, 15, y);
-    y += 4;
-    doc.setLineWidth(0.3);
-    doc.line(15, y, 195, y);
     y += 8;
-
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("#", colNo, y);
-    doc.text("PRODUCT", colProduct, y);
-    doc.text("OFF", colOff, y, { align: "right" });
-    doc.text("BOU", colBou, y, { align: "right" });
-    doc.text("CHI", colChi, y, { align: "right" });
-    doc.text("NUR", colNur, y, { align: "right" });
-    doc.setLineWidth(0.2);
-    doc.line(15, y + 2, 195, y + 2);
-    y += 10;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
@@ -168,14 +167,20 @@ async function generateAndShareFullOrderPDF(
       doc.text(String(i + 1), colNo, y);
       const name = doc.splitTextToSize(item.productName, productWrapWidth);
       doc.text(name, colProduct, y);
-      doc.text(item.officeBalance != null ? String(item.officeBalance) : "—", colOff, y, { align: "right" });
-      doc.text(item.boudoirBalance != null ? String(item.boudoirBalance) : "—", colBou, y, { align: "right" });
-      doc.text(item.chicBalance != null ? String(item.chicBalance) : "—", colChi, y, { align: "right" });
-      doc.text(item.nurYadiBalance != null ? String(item.nurYadiBalance) : "—", colNur, y, { align: "right" });
+      doc.text(item.officeBalance != null ? String(item.officeBalance) : "—", colOff, y, { align: "center" });
+      doc.text(item.boudoirBalance != null ? String(item.boudoirBalance) : "—", colBou, y, { align: "center" });
+      doc.text(item.chicBalance != null ? String(item.chicBalance) : "—", colChi, y, { align: "center" });
+      doc.text(item.nurYadiBalance != null ? String(item.nurYadiBalance) : "—", colNur, y, { align: "center" });
       y += name.length > 1 ? name.length * 6 + 2 : 8;
     });
 
-    y += 10;
+    // Thin separator line + gap before the next supplier's list (skip after the last group).
+    if (groupIdx < sortedGroups.length - 1) {
+      y += 4;
+      doc.setLineWidth(0.15);
+      doc.line(15, y, 195, y);
+      y += 10;
+    }
   });
 
   const blob = doc.output("blob");
