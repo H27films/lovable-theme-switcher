@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ChevronLeft } from "lucide-react";
 import type { SalesRow, ViewMode } from "./salesData";
-import { fetchAllSales, computeSalesRange, addMonthsKey, buildMonthWindow, monthWindowBlocked, salesGrandTotal } from "./salesData";
+import { fetchAllSales, computeSalesRange, addMonthsKey, buildMonthWindow, monthWindowBlocked, salesGrandTotal, monthlyWindowTotal } from "./salesData";
 import { SalesControls } from "./SalesControls";
 import { SalesChartCard } from "./SalesChartCard";
 
@@ -69,6 +69,23 @@ export const SalesPanel: React.FC<Props> = ({ onClose }) => {
     return out;
   }, []);
 
+  // Pinned grand total across all 3 branches. In Month mode the charts show a
+  // sliding 12-month window, so the total must aggregate that same window
+  // (matching each card's header total) rather than the single selected
+  // month/year filter. Week/Day modes keep the filter-based sum.
+  const pinnedTotal = useMemo(
+    () =>
+      ["Boudoir", "Chic Nailspa", "Nur Yadi"].reduce(
+        (sum, k) =>
+          sum +
+          (salesViewMode === "month"
+            ? monthlyWindowTotal(salesData, k, monthWindow)
+            : salesGrandTotal(salesData, k, salesYearFilter, salesMonthFilter)),
+        0
+      ),
+    [salesData, salesViewMode, monthWindow, salesYearFilter, salesMonthFilter]
+  );
+
   const fetchSales = useCallback(async () => {
     setSalesLoading(true);
     try { setSalesData(await fetchAllSales()); } catch {}
@@ -131,11 +148,7 @@ export const SalesPanel: React.FC<Props> = ({ onClose }) => {
       {/* Pinned grand total */}
       <div style={{ flexShrink: 0, textAlign: "right", padding: "10px 20px calc(10px + env(safe-area-inset-bottom, 0px)) 20px", borderTop: "0.5px solid #d8d0c8" }}>
         <span style={{ fontSize: "15px", fontWeight: 700, color: "#2a2a2a", fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
-          Total: RM {
-            ["Boudoir", "Chic Nailspa", "Nur Yadi"].reduce(
-              (sum, k) => sum + salesGrandTotal(salesData, k, salesYearFilter, salesMonthFilter), 0
-            ).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          }
+          Total: RM {pinnedTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
     </div>
