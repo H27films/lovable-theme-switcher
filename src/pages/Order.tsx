@@ -260,11 +260,15 @@ export default function Order({ onBack }: OrderProps) {
     return v === true || v === 1 || (typeof v === "string" && v.toUpperCase() === "YES");
   };
 
-  // Products below PAR (OFFICE BALANCE only, non-colour products)
+  // Products below PAR (OFFICE BALANCE only, non-colour products).
+  // Only UOM = "UNIT" rows are orderable — BUNDLE rows (and UOM-less rows) are
+  // never shown here (same rule as the branch pages' product lists), so a
+  // duplicate product+supplier row can never add a bundle to the order.
   const belowParProducts: OfficeProduct[] = (() => {
     const seen = new Map<string, OfficeProduct>();
     for (const p of products) {
       if (isColourProd(p)) continue;
+      if (p["UOM"] !== "UNIT") continue;
       const par = p["PAR"];
       if (!par || par <= 0) continue;
       const bal = p["OFFICE BALANCE"];

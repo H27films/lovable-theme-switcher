@@ -17,6 +17,7 @@ export interface OfficeProduct {
   "NUR YADI BALANCE": number | null;
   "OFFICE FAVOURITE": string | null;
   "UNITS/ORDER": number | null;
+  "UOM": string | null;
   "PAR": number | null;
 }
 
@@ -319,7 +320,7 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                     );
                   })}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: border }}>
-                    <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.lines.length} {group.lines.length === 1 ? "ORDER" : "ORDERS"}</div>
+                  <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.lines.length} {group.lines.length === 1 ? "PRODUCT" : "PRODUCTS"}</div>
                     {groupTotal > 0 && <div style={{ fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", color: fg }}>RM {groupTotal.toFixed(2)}</div>}
                   </div>
                 </div>
