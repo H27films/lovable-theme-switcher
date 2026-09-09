@@ -99,6 +99,107 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   }
 }
 
+async function generateAndShareFullOrderPDF(
+  supplierGroups: {
+    supplier: string;
+    lines: {
+      productName: string;
+      officeBalance: number | null;
+      boudoirBalance: number | null;
+      chicBalance: number | null;
+      nurYadiBalance: number | null;
+    }[];
+  }[]
+): Promise<void> {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const today = new Date();
+  const dateStr = today.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text("CHIC NAILSPA SDN BHD", 15, 20);
+  doc.text("ORDER SHEET", 195, 20, { align: "right" });
+
+  doc.setLineWidth(0.3);
+  doc.line(15, 24, 195, 24);
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(dateStr, 15, 30);
+  doc.text("Contact: Soong Ailing", 15, 36);
+  doc.text("Phone Number: +60123333128", 15, 42);
+
+  let y = 52;
+  const sortedGroups = [...supplierGroups].sort((a, b) => a.supplier.localeCompare(b.supplier));
+
+  // Column x-positions (used for both header row and data rows)
+  const colNo = 15, colProduct = 25, colOff = 145, colBou = 160, colChi = 175, colNur = 195;
+  const productWrapWidth = 115;
+
+  sortedGroups.forEach((group) => {
+    const sortedLines = [...group.lines].sort((a, b) => a.productName.localeCompare(b.productName));
+
+    if (y > 250) { doc.addPage(); y = 20; }
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text(group.supplier, 15, y);
+    y += 4;
+    doc.setLineWidth(0.3);
+    doc.line(15, y, 195, y);
+    y += 8;
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("#", colNo, y);
+    doc.text("PRODUCT", colProduct, y);
+    doc.text("OFF", colOff, y, { align: "right" });
+    doc.text("BOU", colBou, y, { align: "right" });
+    doc.text("CHI", colChi, y, { align: "right" });
+    doc.text("NUR", colNur, y, { align: "right" });
+    doc.setLineWidth(0.2);
+    doc.line(15, y + 2, 195, y + 2);
+    y += 10;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    sortedLines.forEach((item, i) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.text(String(i + 1), colNo, y);
+      const name = doc.splitTextToSize(item.productName, productWrapWidth);
+      doc.text(name, colProduct, y);
+      doc.text(item.officeBalance != null ? String(item.officeBalance) : "—", colOff, y, { align: "right" });
+      doc.text(item.boudoirBalance != null ? String(item.boudoirBalance) : "—", colBou, y, { align: "right" });
+      doc.text(item.chicBalance != null ? String(item.chicBalance) : "—", colChi, y, { align: "right" });
+      doc.text(item.nurYadiBalance != null ? String(item.nurYadiBalance) : "—", colNur, y, { align: "right" });
+      y += name.length > 1 ? name.length * 6 + 2 : 8;
+    });
+
+    y += 10;
+  });
+
+  const blob = doc.output("blob");
+  const filename = "OrderList_Ailing.pdf";
+  const file = new File([blob], filename, { type: "application/pdf" });
+
+  try {
+    if (typeof navigator !== "undefined" && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: "Full Order List" });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  } catch {
+    // user cancelled share, ignore
+  }
+}
+
 interface OrderSummaryProps {
   orderLines: OrderLine[];
   setOrderLines: React.Dispatch<React.SetStateAction<OrderLine[]>>;
@@ -271,6 +372,33 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                     Send {group.supplier} to WhatsApp
                   </button>
                 ))}
+
+                <button
+                  onClick={() => generateAndShareFullOrderPDF(
+                    supplierGroups.map(group => ({
+                      supplier: group.supplier,
+                      lines: group.lines.map(({ line }) => ({
+                        productName: line.product["PRODUCT NAME"],
+                        officeBalance: line.product["OFFICE BALANCE"],
+                        boudoirBalance: line.product["BOUDOIR BALANCE"],
+                        chicBalance: line.product["CHIC NAILSPA BALANCE"],
+                        nurYadiBalance: line.product["NUR YADI BALANCE"],
+                      })),
+                    }))
+                  )}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: "8px", width: "100%", padding: "12px",
+                    fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    border: "none", background: "hsl(var(--foreground) / 0.07)",
+                    color: "hsl(var(--foreground))", borderRadius: "999px", cursor: "pointer",
+                  }}
+                >
+                  <WhatsAppIcon />
+                  Send Order List to Ailing
+                </button>
+
                 <button
                   onClick={() => { setDraftReady(false); setOrderLines([]); }}
                   style={{
