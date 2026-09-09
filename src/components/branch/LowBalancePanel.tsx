@@ -187,14 +187,13 @@ export const LowBalancePanel = ({
                     background: inOrder ? "hsl(var(--card, 0 0% 10%))" : "transparent",
                   }}
                 >
-                  {/* Checkbox */}
+                  {/* Checkbox — round, monochrome (black & white tick) — same as the Favourites rows */}
                   <div style={{
-                    width: "16px", height: "16px",
-                    border: `1.5px solid ${inOrder ? red : "hsl(var(--border, 0 0% 50%))"}`,
-                    borderRadius: "3px",
-                    background: inOrder ? red : "transparent",
+                    width: "16px", height: "16px", flexShrink: 0,
+                    border: `1.5px solid ${inOrder ? "hsl(var(--foreground))" : "hsl(var(--border, 0 0% 50%))"}`,
+                    borderRadius: "50%",
+                    background: inOrder ? "hsl(var(--foreground))" : "transparent",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0,
                   }}>
                     {inOrder && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">

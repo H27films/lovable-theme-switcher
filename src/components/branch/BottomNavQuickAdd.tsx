@@ -118,7 +118,7 @@ export const BottomNavQuickAdd = ({
   const groupShift = quickAddGroupShift(compact);
   const bottomOffset = compact
     ? "env(safe-area-inset-bottom, 0px)"
-    : `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 8}px)`;
+    : `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 4}px)`;
 
   // Glassmorphism tokens copied from BottomNav so the circle reads as part of
   // the same floating bar.

@@ -343,7 +343,7 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
       </div>
 
       {showUsageDropdown && (
-        <div style={{ flex: "1 1 auto", minHeight: 0, marginBottom: usageEntries.length > 0 ? "0px" : "44px", background: "hsl(var(--background))", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "0", paddingBottom: "env(safe-area-inset-bottom, 12px)" }}>
+        <div style={{ flex: "1 1 auto", minHeight: 0, marginBottom: "0px", background: "hsl(var(--background))", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "0", paddingBottom: usageEntries.length > 0 ? "env(safe-area-inset-bottom, 12px)" : "calc(env(safe-area-inset-bottom, 0px) + 66px)" }}>
           {(() => {
             const sectionLabel = (label: string) => (
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>

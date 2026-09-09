@@ -84,7 +84,7 @@ export const BottomNav = ({
         translate: "var(--page-slide-x, 0vw) 0",
         opacity: "var(--page-slide-o, 1)",
         transition: "translate 0.3s ease-in-out, opacity 0.3s ease-in-out",
-        bottom: compact ? "env(safe-area-inset-bottom, 0px)" : `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 8}px)`,
+        bottom: compact ? "env(safe-area-inset-bottom, 0px)" : `calc(env(safe-area-inset-bottom, 0px) + ${raised ? 60 : 4}px)`,
         zIndex: 99999,
         display: "flex",
         alignItems: "center",
