@@ -79,9 +79,14 @@ export default function Search({ onBack }: SearchProps) {
   // Scroll the results area back to the top — used when a selection swaps the
   // dropdown for a result view (product/supplier) or an in-view tab filter
   // changes, so the user never lands mid-list in a fresh view. (Same reset
-  // resetSearch performs for the full landing state.)
+  // resetSearch performs for the full landing state.) The scroller differs by
+  // entry point: Office visits get a viewport-height layout where the inner
+  // results div scrolls; other entry points (Admin Portal / standalone) use the
+  // growing page layout where the document itself scrolls — reset both, the
+  // irrelevant one is always a no-op.
   const scrollResultsToTop = () => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    window.scrollTo({ top: 0 });
   };
 
   // Product detail state
@@ -253,7 +258,7 @@ const handleSelectProduct = (p: Product) => {
     setSelectedSupplier(null);
     setSearchMode("active");
     setShowDropdown(true);
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    scrollResultsToTop();
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
