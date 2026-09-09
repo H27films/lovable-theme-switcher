@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isYes } from "@/lib/branchSimpleUtils";
 import { type BranchConfig, type OfficeProduct } from "@/lib/branchSimple";
@@ -28,6 +28,8 @@ const fg = "hsl(var(--foreground, 0 0% 100%))";
 const muted = "hsl(var(--muted-foreground, 0 0% 50%))";
 const border = "0.5px solid hsl(var(--border, 0 0% 50%))";
 const red = "hsl(0 84% 60%)";
+// Darkish green from the theme (same green the Search page uses for healthy balances).
+const green = "hsl(var(--green, 150 40% 45%))";
 
 const hdrStyle: React.CSSProperties = {
   fontSize: "9px", fontWeight: 700, fontFamily: "Raleway, inherit",
@@ -72,12 +74,19 @@ export const getLowBalanceProducts = (
   );
 };
 
-// Balance display helper: red + bold if at/below PAR (or no balance yet), muted otherwise —
-// same treatment as the OFF balance column in the Office Below Par overlay.
+// Balance display helper — three-way vs PAR:
+//   below PAR (or no balance yet) → red, bold (600)
+//   exactly at PAR                → black (foreground), weight 500
+//   above PAR                     → darkish green, weight 500
+// (green/black are one font-weight step lighter than the red.) Products with no
+// PAR to compare against stay neutral muted at 300 — unchanged from before.
 const balanceCell = (bal: number | null | undefined, par: number | null | undefined) => {
-  const below = !!par && par > 0 && (bal === null || bal === undefined || bal <= par);
+  const hasPar = !!par && par > 0;
+  const below = hasPar && (bal === null || bal === undefined || bal < par);
+  const atPar = hasPar && bal != null && bal === par;
+  const color = below ? red : atPar ? fg : hasPar ? green : muted;
   return (
-    <span style={{ color: below ? red : muted, fontWeight: below ? 600 : 300 }}>
+    <span style={{ color, fontWeight: below ? 600 : hasPar ? 500 : 300 }}>
       {bal ?? "—"}
     </span>
   );
@@ -138,11 +147,17 @@ export const LowBalancePanel = ({
               {lowBalanceProducts.length} {lowBalanceProducts.length === 1 ? "product" : "products"} · tap to add/remove from order
             </div>
           </div>
+          {/* Left arrow — same back-arrow as the branch Order component's header */}
           <button
             onClick={onClose}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: muted, display: "flex", alignItems: "center" }}
+            aria-label="Back to order"
+            title="Back"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: fg, display: "flex", alignItems: "center" }}
           >
-            <X size={20} strokeWidth={1.5} />
+            <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="30" y1="8" x2="1" y2="8" />
+              <polyline points="9,1 1,8 9,15" />
+            </svg>
           </button>
         </div>
 
