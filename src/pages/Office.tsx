@@ -146,8 +146,11 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
 
         </div> 
         
-      {/* ── MIDDLE SCROLLABLE ── */}
-      <div style={{ flex: 1, overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "4px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}>
+      {/* ── MIDDLE — bounded flex box that stops just short of the floating
+          bottom nav (nav top = safe-area + 66px; the 70px clearance leaves the
+          same ~4px gap the branch log table uses), so the log table scrolls
+          inside this region and never renders behind the nav pill ── */}
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", paddingLeft: "12px", paddingRight: "12px", paddingTop: "4px", marginBottom: "calc(env(safe-area-inset-bottom, 0px) + 70px)" }}>
 
         {/* ══ SEARCH + RECENT ══════════════════════════════════════ */}
         <>

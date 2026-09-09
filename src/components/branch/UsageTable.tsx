@@ -343,7 +343,11 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
       </div>
 
       {showUsageDropdown && (
-        <div style={{ flex: "1 1 auto", minHeight: 0, marginBottom: "0px", background: "hsl(var(--background))", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "0", paddingBottom: usageEntries.length > 0 ? "env(safe-area-inset-bottom, 12px)" : "calc(env(safe-area-inset-bottom, 0px) + 66px)" }}>
+        // Stop the scroll area just short of the floating bottom nav (same
+        // 66px + safe-area clearance the branch log table uses) so rows never
+        // render behind the glass nav pill. With draft entries the nav is
+        // hidden (the Submit footer owns the bottom edge), so keep padding only.
+        <div style={{ flex: "1 1 auto", minHeight: 0, marginBottom: usageEntries.length > 0 ? "0px" : "calc(env(safe-area-inset-bottom, 0px) + 66px)", background: "hsl(var(--background))", overflowY: "auto", paddingLeft: "12px", paddingRight: "12px", paddingTop: "0", paddingBottom: usageEntries.length > 0 ? "env(safe-area-inset-bottom, 12px)" : "0px" }}>
           {(() => {
             const sectionLabel = (label: string) => (
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>

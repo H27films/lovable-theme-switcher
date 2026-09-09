@@ -198,7 +198,12 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+    // minHeight: 0 lets this shrink inside the Office page's bounded middle
+    // area, so the inner div below is the real scroll container (sticky header
+    // + infinite scroll behave like the branch LogTable) and the table's scroll
+    // region stops just short of the floating bottom nav instead of running
+    // behind it in the page scroll.
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div ref={scrollRef} onScroll={handleScroll} style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
 
         {/* Sticky header */}

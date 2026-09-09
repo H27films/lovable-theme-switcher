@@ -359,7 +359,7 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
     });
 
   return (
-    <div style={{ minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", display: "flex", flexDirection: "column", background: "hsl(var(--background))", color: fg, fontFamily: "'Raleway', sans-serif", ...enterStyle, ...slideExitStyle(exiting) }}>
+    <div style={{ height: from === "office" ? (tablet ? TABLET_FIT_HEIGHT : "100dvh") : undefined, minHeight: tablet ? TABLET_FIT_HEIGHT : "100dvh", display: "flex", flexDirection: "column", background: "hsl(var(--background))", color: fg, fontFamily: "'Raleway', sans-serif", ...enterStyle, ...slideExitStyle(exiting) }}>
       {/* TOP BAR — with back button */}
       <div style={{
         display: "flex",
@@ -445,8 +445,11 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
         </div>
       </div>
 
-      {/* MIDDLE SCROLLABLE AREA */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 88px)" : "12px" }}>
+      {/* MIDDLE SCROLLABLE AREA — in Office visits this stops just short of the
+          floating bottom nav (nav top = safe-area + 66px; 70px clearance = the
+          same ~4px gap the branch log table uses) so results never render
+          behind the nav pill. Other entry points keep the plain padding. */}
+      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: "12px", marginBottom: from === "office" ? "calc(env(safe-area-inset-bottom, 0px) + 70px)" : "0px" }}>
 
         {/* DROPDOWN — inline, all results shown, NO limits */}
         {dropdownContent && showDropdown && (() => {

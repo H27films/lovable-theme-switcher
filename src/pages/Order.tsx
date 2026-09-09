@@ -776,10 +776,12 @@ export default function Order({ onBack }: OrderProps) {
         <BottomNavOffice
           active="order"
           raised={orderLines.length > 0 && !summaryExpanded}
-          // Hidden while the expanded Order Summary sheet is open (swipe up from the
-          // bottom edge of the page reveals it, swipe down hides it again) and while
-          // the Below Par overlay is open (the nav would otherwise float above it).
-          hidden={(summaryExpanded && !summaryNavVisible) || showBelowPar}
+          // The nav is ONLY shown while the order is empty. As soon as a product
+          // is selected the Order Summary footer exists and the nav hides. While
+          // the expanded sheet is open the bottom-edge swipe can still reveal it
+          // (swipe up shows / swipe down hides); the Below Par overlay always
+          // hides it (the nav would otherwise float above it).
+          hidden={(orderLines.length > 0 && !summaryNavVisible) || showBelowPar}
           onSelect={(key) => {
             if (key === "order") return; // already on the Order page
             if (key === "home") slideTo("/simple/office", undefined, "back");
