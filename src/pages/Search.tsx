@@ -76,12 +76,24 @@ export default function Search({ onBack }: SearchProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Scroll the results area back to the top — used when a selection swaps the
+  // dropdown for a result view (product/supplier) or an in-view tab filter
+  // changes, so the user never lands mid-list in a fresh view. (Same reset
+  // resetSearch performs for the full landing state.)
+  const scrollResultsToTop = () => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  };
+
   // Product detail state
   const [productLog, setProductLog] = useState<ProductLog[]>([]);
   const [productLogLoading, setProductLogLoading] = useState(false);
   // Past Data flow toggle (All / In / Out) — Out = SUPPLIER "OFFICE", In = everything else
   const [flowMode, setFlowMode] = useState<"all" | "in" | "out">("all");
   useEffect(() => { setFlowMode("all"); }, [selectedProduct]);
+  // Tab-style filter switches inside a result view (supplier Products ↔ Past
+  // Data, Past Data All/In/Out) restart the list from the top — same rule as
+  // the LogTable view tabs.
+  useEffect(() => { scrollResultsToTop(); }, [supplierView, flowMode]);
   const grnLog = useMemo(() => productLog.filter(r => r.GRN), [productLog]);
   const flowRows = useMemo(() => {
     if (flowMode === "all") return grnLog;
@@ -208,6 +220,7 @@ const handleSelectProduct = (p: Product) => {
   setShowDropdown(false);
   setSearchMode("result");
   setIsFav(isOfficeFav(p));
+  scrollResultsToTop(); // the dropdown is being swapped for the result view — start it at the top
   fetchProductLog(p["PRODUCT NAME"]);
 };
 
@@ -218,6 +231,7 @@ const handleSelectProduct = (p: Product) => {
     setShowDropdown(false);
     setSearchMode("supplier");
     setSupplierView("products"); // each supplier opens on the product dropdown
+    scrollResultsToTop(); // the dropdown is being swapped for the result view — start it at the top
   };
 
   const handleClear = () => {
