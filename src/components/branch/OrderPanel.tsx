@@ -401,7 +401,7 @@ return createPortal(
         {/* Mode tab — sits between the ORDER title and the Select Product line: a grey
             segmented pill (like the Past Data All/Salon/Sales toggle) with Single/Multi
             options; the active option carries a sliding light thumb. */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", paddingBottom: "4px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", paddingBottom: "4px" }}>
           <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px" }}>
             <div style={{ position: "absolute", top: "2px", bottom: "2px", left: "2px", width: "calc((100% - 4px) / 2)", transform: `translateX(${(["single", "multi"] as const).indexOf(orderMode) * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
             {(["single", "multi"] as const).map(m => (
