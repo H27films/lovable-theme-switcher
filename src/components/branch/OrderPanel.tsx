@@ -45,7 +45,12 @@ export const OrderPanel = ({
 
   const [orderEntries, setOrderEntries] = useState<{ id: number; productName: string; qty: number }[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
-  const [showOrderDropdown, setShowOrderDropdown] = useState(false);
+  // The product dropdown shows by default when the panel opens.
+  const [showOrderDropdown, setShowOrderDropdown] = useState(true);
+  // Select mode: "single" adds one product and closes the dropdown (original behaviour);
+  // "multi" keeps the dropdown open with tick circles on each row for multi-select —
+  // collapse it via the small chevron row just above the submit footer.
+  const [orderMode, setOrderMode] = useState<"single" | "multi">("single");
   const [orderError, setOrderError] = useState<string | null>(null);
   // "Low Balance" overlay (branch counterpart of the Office Below Par section).
   const [showLowBalance, setShowLowBalance] = useState(false);
@@ -178,7 +183,10 @@ export const OrderPanel = ({
       itemCount: showOrderDropdown ? orderFlatItems.length : 0,
       onSelect: idx => {
         const p = orderFlatItems[idx];
-        if (p) handleAddOrderProduct(p);
+        if (!p) return;
+        // Single mode: add + close; Multi mode: toggle the row's tick without closing.
+        if (orderMode === "single") handleAddOrderProduct(p);
+        else toggleMultiOrderProduct(p);
       },
       onClose: () => dismissOrderDropdown(),
     });
@@ -197,6 +205,25 @@ export const OrderPanel = ({
     setShowOrderDropdown(false);
     setOrderSearch("");
     orderInputRef.current?.blur();
+  };
+
+  // Multi-add: row tick circles toggle products in/out of the order WITHOUT closing
+  // the dropdown, so several products can be selected in one pass.
+  const toggleMultiOrderProduct = (p: OfficeProduct) => {
+    const name = p["PRODUCT NAME"];
+    setOrderEntries(prev =>
+      prev.some(e => e.productName === name)
+        ? prev.filter(e => e.productName !== name)
+        : [...prev, { id: Date.now(), productName: name, qty: 1 }]
+    );
+  };
+
+  // MULTI + / SINGLE + toggle on the Select Product line — switches the select mode
+  // and opens the dropdown in it (default is single; the label shows the mode a tap
+  // switches INTO, per the add-more pattern).
+  const switchOrderMode = () => {
+    setOrderMode(prev => (prev === "single" ? "multi" : "single"));
+    setShowOrderDropdown(true);
   };
 
   const closePanel = () => {
@@ -376,6 +403,22 @@ return createPortal(
             </svg>
           </button>
         </div>
+        {/* Mode line — sits between the ORDER title and the Select Product line.
+            Label shows the mode a tap switches INTO (thin text, normal-weight +). */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", paddingTop: "6px" }}>
+          <button
+            onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={e => { e.stopPropagation(); switchOrderMode(); }}
+            aria-label={orderMode === "single" ? "Switch to multi add" : "Switch to single add"}
+            title={orderMode === "single" ? "Multi add" : "Single add"}
+            style={{ background: "none", border: "none", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", color: "hsl(var(--foreground))", padding: "2px 0" }}
+          >
+            <span style={{ fontSize: "12px", fontWeight: 200, letterSpacing: "0.1em", fontFamily: "Raleway, inherit" }}>
+              {orderMode === "single" ? "MULTI" : "SINGLE"}
+            </span>
+            <Plus size={15} strokeWidth={2} />
+          </button>
+        </div>
         <div style={{ borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingBottom: "12px", marginBottom: "0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
 <input
@@ -411,22 +454,36 @@ return createPortal(
             const sectionLabel = (label: string) => (
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
             );
-            const renderRow = (p: OfficeProduct, showStar?: boolean) => (
-              <ResultRow
-                key={p.id}
-                isActive={showOrderDropdown && orderRowIndexById.get(p.id) === orderActiveIdx}
-                onSelect={() => handleAddOrderProduct(p)}
-                style={{ padding: "11px 0", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: orderEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  {showStar && <Star aria-label="favourite" size={11} fill="hsl(var(--foreground))" color="hsl(var(--foreground))" style={{ flexShrink: 0 }} />}
-                  {p["PRODUCT NAME"]}
-                </span>
+            const renderRow = (p: OfficeProduct, showStar?: boolean) => {
+              const selected = orderEntries.some(e => e.productName === p["PRODUCT NAME"]);
+              return (
+                <ResultRow
+                  key={p.id}
+                  isActive={showOrderDropdown && orderRowIndexById.get(p.id) === orderActiveIdx}
+                  onSelect={() => (orderMode === "single" ? handleAddOrderProduct(p) : toggleMultiOrderProduct(p))}
+                  style={{ padding: "11px 0", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: selected ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+                    {/* Multi mode: round tick circle on the left — tapping the row toggles
+                        the product into the order without closing the dropdown */}
+                    {orderMode === "multi" && (
+                      <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: `1.5px solid ${selected ? "hsl(var(--foreground))" : "hsl(var(--border))"}`, background: selected ? "hsl(var(--foreground))" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {selected && (
+                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                            <path d="M2 5l2.5 2.5L8 3" stroke="hsl(var(--background))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                    )}
+                    {showStar && <Star aria-label="favourite" size={11} fill="hsl(var(--foreground))" color="hsl(var(--foreground))" style={{ flexShrink: 0 }} />}
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p["PRODUCT NAME"]}</span>
+                  </span>
                 {(p as any)[BALANCE_KEY] != null && (
                   <span style={{ fontSize: "13px", color: Number((p as any)[BALANCE_KEY]) <= 0 ? "hsl(0 70% 40%)" : "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
                 )}
               </ResultRow>
-            );
+              );
+            };
             const sections: React.ReactNode[] = [];
             if (orderFavs.length > 0)    { sections.push(sectionLabel(config.favouritesLabel)); orderFavs.forEach(p => sections.push(renderRow(p, true))); }
             if (orderRegular.length > 0) { sections.push(sectionLabel("Products"));            orderRegular.forEach(p => sections.push(renderRow(p))); }
@@ -541,6 +598,19 @@ return createPortal(
           overlayTop={summaryOverlayTop}
           onSubmittedExit={onBack}
         />
+      )}
+      {/* Multi mode collapse row — sits just above the submit footer; collapses the
+          dropdown so the selected products (balance + qty steppers) are visible again. */}
+      {!showAllOrders && orderMode === "multi" && showOrderDropdown && (
+        <div
+          onClick={() => setShowOrderDropdown(false)}
+          style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 12px", borderTop: "0.5px solid hsl(var(--border, 0 0% 50%))", cursor: "pointer", background: "hsl(var(--background, 0 0% 0%))" }}
+        >
+          <ChevronUp size={14} style={{ color: "hsl(var(--foreground))" }} />
+          <span style={{ fontSize: "10px", fontWeight: 200, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}>
+            {orderEntries.length} {orderEntries.length === 1 ? "Product" : "Products"} Selected
+          </span>
+        </div>
       )}
       {!showAllOrders && orderEntries.length > 0 && (
         <OrderSubmitFooter count={orderEntries.length} onSubmit={handleOrderSubmit} />
