@@ -10,6 +10,7 @@ import OrderSummaryOffice, { type OfficeProduct, type OrderLine } from "@/compon
 import { BottomNavOffice } from "@/components/office/BottomNavOffice";
 import { BelowParOverlay } from "@/components/office/BelowParOverlay";
 import OrderList from "@/components/office/OrderList";
+import type { OrderOtherRow } from "@/components/office/OrderSummaryOffice";
 import { OrderLineItem } from "@/components/office/OrderLineItem";
 
 // ── DRAFT ORDER PERSISTENCE ───────────────────────────────
@@ -114,12 +115,13 @@ export default function Order({ onBack }: OrderProps) {
   const [summaryNavVisible, setSummaryNavVisible] = useState(false);
   // ── ORDER LIST PANEL ("Send Order List to Ailing") ──
   // The summary's send button now opens this panel instead of sharing the PDF directly.
-  // It collects the two PDF inputs: URGENT ticks (product ids) and the free-text "Other"
-  // write-ins. Both persist while the draft order lives, so re-opening the panel keeps
-  // the previous selections until Clear Order wipes the order.
+  // It collects the two PDF inputs: URGENT ticks (product ids) and the OTHER write-in rows
+  // (Product + Notes). Both persist while the draft order lives, so re-opening the panel
+  // keeps the previous selections until Clear Order wipes the order.
   const [showOrderList, setShowOrderList] = useState(false);
   const [urgentIds, setUrgentIds] = useState<Set<number>>(new Set());
-  const [otherNotes, setOtherNotes] = useState("");
+  // OTHER rows — starts with one empty Product + Notes row; "+ ROW" appends more.
+  const [otherRows, setOtherRows] = useState<OrderOtherRow[]>([{ product: "", notes: "" }]);
   const toggleUrgent = (productId: number) =>
     setUrgentIds(prev => {
       const next = new Set(prev);
@@ -699,8 +701,8 @@ export default function Order({ onBack }: OrderProps) {
           orderLines={orderLines}
           urgentIds={urgentIds}
           onToggleUrgent={toggleUrgent}
-          otherNotes={otherNotes}
-          onOtherNotesChange={setOtherNotes}
+          otherRows={otherRows}
+          onOtherRowsChange={setOtherRows}
           onClose={() => setShowOrderList(false)}
         />
       )}

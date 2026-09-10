@@ -1,13 +1,13 @@
-import { generateAndShareFullOrderPDF, WhatsAppIcon, type OrderLine } from "@/components/office/OrderSummaryOffice";
+import { generateAndShareFullOrderPDF, WhatsAppIcon, type OrderLine, type OrderOtherRow } from "@/components/office/OrderSummaryOffice";
 
 interface OrderListProps {
   orderLines: OrderLine[];
   /** Product ids ticked as URGENT — printed as a dark-red "URGENT" in the PDF's URGENT column. */
   urgentIds: Set<number>;
   onToggleUrgent: (productId: number) => void;
-  /** Free-text write-ins from the OTHER section — printed at the bottom of the PDF. */
-  otherNotes: string;
-  onOtherNotesChange: (value: string) => void;
+  /** OTHER write-in rows (Product + Notes) — printed row-by-row at the bottom of the PDF. */
+  otherRows: OrderOtherRow[];
+  onOtherRowsChange: (rows: OrderOtherRow[]) => void;
   onClose: () => void;
 }
 
@@ -15,10 +15,10 @@ interface OrderListProps {
 // footer's "Send Order List to Ailing" button (which no longer shares the PDF directly).
 // Shows every ordered product A–Z with a round tick circle on the LEFT: ticking a product
 // marks it URGENT, which prints a dark-red "URGENT" in the PDF's URGENT column (before the
-// OFFICE BALANCE column). The OTHER section at the bottom takes free-text write-in items
-// that are appended to the bottom of the PDF. The footer's "Send Order List to Ailing"
-// button generates and shares the full order PDF with those additions.
-export default function OrderList({ orderLines, urgentIds, onToggleUrgent, otherNotes, onOtherNotesChange, onClose }: OrderListProps) {
+// OFFICE BALANCE column). The OTHER section at the bottom takes row-by-row write-in items
+// (Product + Notes) that are appended to the bottom of the PDF. The footer's "Send Order
+// List to Ailing" button generates and shares the full order PDF with those additions.
+export default function OrderList({ orderLines, urgentIds, onToggleUrgent, otherRows, onOtherRowsChange, onClose }: OrderListProps) {
   const fg = "hsl(var(--foreground))";
   const muted = "hsl(var(--muted-foreground))";
   const border = "0.5px solid hsl(var(--border))";
@@ -53,7 +53,7 @@ export default function OrderList({ orderLines, urgentIds, onToggleUrgent, other
           urgent: urgentIds.has(line.product.id),
         })),
       })),
-      { otherNotes }
+      { otherRows }
     );
   };
 
@@ -146,23 +146,68 @@ export default function OrderList({ orderLines, urgentIds, onToggleUrgent, other
           })
         )}
 
-        {/* OTHER — free-text write-in items, appended to the bottom of the PDF */}
+        {/* OTHER — row-by-row write-ins: Product + Notes. The note prints in the PDF's
+            URGENT column and wraps right across the balance columns for that row. */}
         <div style={{ padding: "16px 0 8px" }}>
           <div style={{ fontSize: "13px", fontWeight: 500, fontFamily: "Raleway, inherit", letterSpacing: "0.08em", color: fg, marginBottom: "8px" }}>
             OTHER
           </div>
-          <textarea
-            value={otherNotes}
-            onChange={e => onOtherNotesChange(e.target.value)}
-            placeholder="Write in any other items to add to the order…"
-            rows={4}
+          {otherRows.map((row, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+              <input
+                value={row.product}
+                onChange={e => onOtherRowsChange(otherRows.map((r, j) => j === i ? { ...r, product: e.target.value } : r))}
+                placeholder="Product"
+                style={{
+                  flex: 1, minWidth: 0, boxSizing: "border-box",
+                  background: "hsl(var(--card))", border: border, borderRadius: "8px",
+                  padding: "10px 12px", fontSize: "13px", fontWeight: 300,
+                  fontFamily: "Raleway, inherit", color: fg, outline: "none",
+                }}
+              />
+              <input
+                value={row.notes}
+                onChange={e => onOtherRowsChange(otherRows.map((r, j) => j === i ? { ...r, notes: e.target.value } : r))}
+                placeholder="Notes"
+                style={{
+                  flex: 1, minWidth: 0, boxSizing: "border-box",
+                  background: "hsl(var(--card))", border: border, borderRadius: "8px",
+                  padding: "10px 12px", fontSize: "13px", fontWeight: 300,
+                  fontFamily: "Raleway, inherit", color: fg, outline: "none",
+                }}
+              />
+              {otherRows.length > 1 && (
+                <button
+                  onClick={() => onOtherRowsChange(otherRows.filter((_, j) => j !== i))}
+                  aria-label={`Remove row ${i + 1}`}
+                  title="Remove row"
+                  style={{
+                    width: "22px", height: "22px", borderRadius: "50%",
+                    border: "0.5px solid " + muted, background: "none", color: muted,
+                    cursor: "pointer", flexShrink: 0, display: "flex",
+                    alignItems: "center", justifyContent: "center",
+                    fontSize: "12px", lineHeight: 1, padding: 0,
+                  }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+
+          {/* + ROW — appends another empty Product + Notes row */}
+          <button
+            onClick={() => onOtherRowsChange([...otherRows, { product: "", notes: "" }])}
             style={{
-              width: "100%", boxSizing: "border-box", resize: "none",
-              background: "hsl(var(--card))", border: border, borderRadius: "8px",
-              padding: "10px 12px", fontSize: "13px", fontWeight: 300,
-              fontFamily: "Raleway, inherit", color: fg, lineHeight: 1.5, outline: "none",
+              width: "100%", padding: "10px",
+              fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit",
+              letterSpacing: "0.08em", textTransform: "uppercase",
+              border: "0.5px solid " + muted, background: "none",
+              color: muted, borderRadius: "6px", cursor: "pointer",
             }}
-          />
+          >
+            + Row
+          </button>
           <div style={{ paddingBottom: "24px" }} />
         </div>
       </div>

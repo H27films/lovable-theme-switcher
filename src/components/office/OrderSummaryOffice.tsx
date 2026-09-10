@@ -101,6 +101,14 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   }
 }
 
+// One write-in row of the Order List panel's OTHER section: a free-text product and its note.
+// Printed at the bottom of the PDF — the note in the URGENT column, wrapping right across
+// the balance columns (OFF/BOU/CHI/NUR) when long.
+export interface OrderOtherRow {
+  product: string;
+  notes: string;
+}
+
 export async function generateAndShareFullOrderPDF(
   supplierGroups: {
     supplier: string;
@@ -114,8 +122,10 @@ export async function generateAndShareFullOrderPDF(
       urgent?: boolean;
     }[];
   }[],
-  /** Extra inputs from the Order List panel — free-text write-ins printed at the bottom of the PDF. */
-  options?: { otherNotes?: string }
+  /** Extra inputs from the Order List panel — row-by-row write-ins printed at the bottom
+      of the PDF: each row's note is written in the URGENT column and, when long, wraps
+      right across the balance columns (OFF/BOU/CHI/NUR) for that row. */
+  options?: { otherRows?: OrderOtherRow[] }
 ): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const today = new Date();
@@ -201,10 +211,13 @@ export async function generateAndShareFullOrderPDF(
     }
   });
 
-  // OTHER section — free-text write-in items from the Order List panel, printed at the
-  // bottom of the PDF under an OTHER heading (skipped entirely when the notes are empty).
-  const otherNotes = (options?.otherNotes ?? "").trim();
-  if (otherNotes) {
+  // OTHER section — row-by-row write-in items from the Order List panel: Product + Notes.
+  // Printed at the bottom of the PDF under an OTHER heading: the product goes in the
+  // PRODUCT column, the note is written in the URGENT column and, when long, wraps right
+  // across the balance columns (OFF/BOU/CHI/NUR) for that row. Rows where both fields are
+  // empty are skipped.
+  const otherRows = (options?.otherRows ?? []).filter(r => (r.product ?? "").trim() || (r.notes ?? "").trim());
+  if (otherRows.length > 0) {
     y += 4;
     doc.setLineWidth(0.15);
     doc.line(15, y, 195, y);
@@ -214,16 +227,28 @@ export async function generateAndShareFullOrderPDF(
     doc.setFont("helvetica", "bold");
     doc.text("OTHER", 15, y);
     y += 8;
-    doc.setFont("helvetica", "normal");
+
+    // Row table header — NOTES starts at the URGENT column and spans to the right edge.
     doc.setFontSize(9);
-    otherNotes.split(/\r?\n/).forEach(raw => {
-      if (!raw.trim()) { y += 5; return; } // blank lines become small gaps
-      const wrapped = doc.splitTextToSize(raw.trim(), 175);
-      wrapped.forEach(w => {
-        if (y > 270) { doc.addPage(); y = 20; }
-        doc.text(w, 15, y);
-        y += 6;
-      });
+    doc.setFont("helvetica", "bold");
+    doc.text("#", 15, y);
+    doc.text("PRODUCT", 25, y);
+    doc.text("NOTES", 100, y);
+    doc.setLineWidth(0.2);
+    doc.line(15, y + 2, 195, y + 2);
+    y += 10;
+
+    doc.setFont("helvetica", "normal");
+    otherRows.forEach((row, i) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      const product = doc.splitTextToSize(row.product.trim(), 68);
+      // The note wraps from the URGENT column right across the balance columns (width 95).
+      const notes = doc.splitTextToSize(row.notes.trim(), 95);
+      const rowLines = Math.max(product.length, notes.length);
+      doc.text(String(i + 1), 15, y);
+      doc.text(product, 25, y);
+      doc.text(notes, 100, y);
+      y += rowLines > 1 ? rowLines * 6 + 2 : 8;
     });
   }
 
