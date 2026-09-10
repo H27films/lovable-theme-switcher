@@ -388,7 +388,7 @@ return createPortal(
     display: "flex", flexDirection: "column", overflow: "hidden",
   }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
-        <div ref={orderTitleRef} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
+        <div ref={orderTitleRef} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
           {/* Title + today's date on one line (same arrangement/sizing as the Usage panel) */}
           <span style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
             <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
@@ -404,17 +404,17 @@ return createPortal(
           </button>
         </div>
         {/* Mode line — sits between the ORDER title and the Select Product line.
-            Label shows the mode a tap switches INTO (thin text, normal-weight +). */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", paddingTop: "6px" }}>
+            Label shows the CURRENT mode (thin text, normal-weight +). */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", paddingBottom: "4px" }}>
           <button
             onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
             onClick={e => { e.stopPropagation(); switchOrderMode(); }}
-            aria-label={orderMode === "single" ? "Switch to multi add" : "Switch to single add"}
-            title={orderMode === "single" ? "Multi add" : "Single add"}
+            aria-label={orderMode === "single" ? "Current: single add — switch to multi" : "Current: multi add — switch to single"}
+            title={orderMode === "single" ? "Switch to multi add" : "Switch to single add"}
             style={{ background: "none", border: "none", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", color: "hsl(var(--foreground))", padding: "2px 0" }}
           >
             <span style={{ fontSize: "12px", fontWeight: 200, letterSpacing: "0.1em", fontFamily: "Raleway, inherit" }}>
-              {orderMode === "single" ? "MULTI" : "SINGLE"}
+              {orderMode === "single" ? "SINGLE" : "MULTI"}
             </span>
             <Plus size={15} strokeWidth={2} />
           </button>
