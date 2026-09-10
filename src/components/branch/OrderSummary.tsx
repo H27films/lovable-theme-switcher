@@ -1,4 +1,4 @@
-import { X, ArrowDown, Check, ClipboardCheck, MoreVertical, FileText, Download } from "lucide-react";
+import { X, Check, ClipboardCheck, MoreVertical, Plus, FileText, Download } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useState, useRef, useEffect, type Dispatch, type SetStateAction } from "react";
 import { type BranchConfig } from "@/lib/branchSimple";
@@ -155,14 +155,17 @@ export const OrderSummary = ({
     }}>
       {/* Scrollable content — everything above the pinned footer */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-      {/* Header row — GRN sits right next to the title; the down arrow on the right is
-          the collapse affordance (tapping anywhere on the row minimises the summary). */}
+      {/* Header row — GRN sits right next to the title; "ADD MORE +" on the right is the
+          collapse affordance (tapping anywhere on the row minimises the summary). */}
       <div onClick={() => setExpanded(false)} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px", cursor: "pointer" }}>
         <span style={{ display: "flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
           <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
           <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", letterSpacing: "0.08em", flexShrink: 0 }}>{pendingOrder.grn}</div>
         </span>
-        <ArrowDown size={19} strokeWidth={2.2} style={{ color: "hsl(var(--foreground, 0 0% 100%))", flexShrink: 0 }} />
+        <span style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          <span style={{ fontSize: "14px", fontWeight: 200, letterSpacing: "0.12em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))" }}>ADD MORE</span>
+          <Plus size={18} strokeWidth={2} style={{ color: "hsl(var(--foreground, 0 0% 100%))", flexShrink: 0 }} />
+        </span>
       </div>
       <div style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textTransform: "uppercase", marginBottom: "16px" }}>
         Tap qty to edit
