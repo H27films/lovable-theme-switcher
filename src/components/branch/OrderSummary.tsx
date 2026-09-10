@@ -1,4 +1,5 @@
-import { X, ArrowDown, MoreVertical, FileText, Download } from "lucide-react";
+import { X, ArrowDown, Check, ClipboardCheck, MoreVertical, FileText, Download } from "lucide-react";
+import { createPortal } from "react-dom";
 import { useState, useRef, useEffect, type Dispatch, type SetStateAction } from "react";
 import { type BranchConfig } from "@/lib/branchSimple";
 import { generateGRNPdf, exportToExcel } from "@/lib/grn";
@@ -25,6 +26,10 @@ interface OrderSummaryProps {
   /** Top offset (px) for the expanded overlay sheet — pass the measured ORDER title-row
       bottom so the expanded summary covers the page from just below the header. */
   overlayTop?: number;
+  /** Fired after the tick button's "Order Submitted" animation — closes the summary and
+      returns to the branch home (log table) page. Purely visual: it does NOT confirm the
+      order (that's Confirm Order in the ⋮ popup) or touch the order/log data. */
+  onSubmittedExit?: () => void;
 }
 
 // ⋮ export-menu animation timings — copied from the branch header hamburger menu.
@@ -38,7 +43,7 @@ const MENU_EXIT_DURATION_MS = 200;
 // slim bar pinned above the Past Orders row; expanded (with overlayTop) it renders
 // as a full-height overlay sheet covering everything below the ORDER header.
 export const OrderSummary = ({
-  pendingOrder, setPendingOrder, grnNotes, setGrnNotes, orderConfirming, orderError, config, onConfirm, onReset, overlayTop
+  pendingOrder, setPendingOrder, grnNotes, setGrnNotes, orderConfirming, orderError, config, onConfirm, onReset, overlayTop, onSubmittedExit
 }: OrderSummaryProps) => {
   const [expanded, setExpanded] = useState(false);
   const [editingPendingIdx, setEditingPendingIdx] = useState<number | null>(null);
@@ -88,6 +93,30 @@ export const OrderSummary = ({
     if (exportMenuTimerRef.current !== null) window.clearTimeout(exportMenuTimerRef.current);
   }, []);
 
+  // Quick-submit tick button: a circle with a tick that animates into a wider
+  // "Order Submitted" pill, then kicks off the confirm flow (password modal).
+  const [submitted, setSubmitted] = useState(false);
+  const quickSubmitTimersRef = useRef<number[]>([]);
+
+  useEffect(() => () => {
+    quickSubmitTimersRef.current.forEach(t => window.clearTimeout(t));
+  }, []);
+
+  const handleQuickSubmit = () => {
+    if (submitted || orderConfirming) return;
+    setSubmitted(true);
+    // Let the "Order Submitted" pill read, then close the summary and return to the
+    // branch home (log table) page. The tick does NOT confirm the order, add anything
+    // to the log, or remove items — Confirm Order in the ⋮ popup does all of that.
+    quickSubmitTimersRef.current.push(window.setTimeout(() => {
+      if (onSubmittedExit) onSubmittedExit();
+      else { setSubmitted(false); setExpanded(false); }
+    }, 1400));
+  };
+
+  // Reset asks for confirmation ("Remove Order? Yes / No") before wiping the order.
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+
   // Starts collapsed: a slim bar pinned above the Past Orders row showing the
   // product count. Tapping it expands the full summary; tapping the header
   // row of the expanded summary collapses it back down.
@@ -103,8 +132,9 @@ export const OrderSummary = ({
     );
   }
 
-  // The two export actions shown in the ⋮ popup.
+  // The actions shown in the ⋮ popup — Confirm Order now lives here too.
   const exportItems = [
+    { key: "confirm", label: "Confirm Order", icon: ClipboardCheck, onSelect: () => onConfirm() },
     { key: "grn", label: "GRN PDF", icon: FileText, onSelect: () => generateGRNPdf(pendingOrder.entries, pendingOrder.grn, config, grnNotes) },
     { key: "export", label: "Export", icon: Download, onSelect: () => exportToExcel(pendingOrder.entries, config, pendingOrder.date) },
   ];
@@ -132,7 +162,7 @@ export const OrderSummary = ({
           <div style={{ fontSize: "22px", fontWeight: 300, fontFamily: "Raleway, inherit", letterSpacing: "-0.02em" }}>Order Summary</div>
           <div style={{ fontSize: "11px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", letterSpacing: "0.08em", flexShrink: 0 }}>{pendingOrder.grn}</div>
         </span>
-        <ArrowDown size={16} strokeWidth={2} style={{ color: "hsl(var(--foreground, 0 0% 100%) / 0.6)", flexShrink: 0 }} />
+        <ArrowDown size={19} strokeWidth={2.2} style={{ color: "hsl(var(--foreground, 0 0% 100%))", flexShrink: 0 }} />
       </div>
       <div style={{ fontSize: "11px", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))", textTransform: "uppercase", marginBottom: "16px" }}>
         Tap qty to edit
@@ -188,16 +218,38 @@ export const OrderSummary = ({
       {orderError && <div style={{ fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", marginBottom: "8px" }}>✗ {orderError}</div>}
       </div>
 
-      {/* Pinned footer of the expanded sheet — Confirm Order / Reset on the left, the ⋮
-          export menu on the right (opens upward with the same staggered floating pills
-          as the branch header's hamburger dropdown). */}
+      {/* Pinned footer of the expanded sheet — Reset on the left (asks "Remove Order?"
+          before wiping); on the right the quick-submit tick circle (animates into an
+          "Order Submitted" pill, then runs the confirm flow) and the ⋮ menu with
+          Confirm Order / GRN PDF / Export (same staggered pills as the header dropdown). */}
       <div style={{ flexShrink: 0, paddingTop: "12px", paddingBottom: overlay ? "max(env(safe-area-inset-bottom, 8px), 8px)" : "8px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <button onClick={onConfirm} disabled={orderConfirming} style={{ background: "hsl(var(--foreground, 0 0% 100%))", color: "hsl(var(--background, 0 0% 0%))", border: "none", borderRadius: "6px", cursor: orderConfirming ? "default" : "pointer", padding: "10px 18px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", opacity: orderConfirming ? 0.5 : 1 }}>{orderConfirming ? "Saving..." : "Confirm Order"}</button>
-          <button onClick={onReset} style={{ background: "hsl(var(--foreground, 0 0% 100%))", color: "hsl(var(--background, 0 0% 0%))", border: "none", borderRadius: "6px", cursor: "pointer", padding: "10px 18px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit" }}>Reset</button>
-        </div>
+        <button onClick={() => setConfirmResetOpen(true)} style={{ background: "hsl(var(--foreground, 0 0% 100%))", color: "hsl(var(--background, 0 0% 0%))", border: "none", borderRadius: "6px", cursor: "pointer", padding: "10px 18px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit" }}>Reset</button>
 
-        <div ref={exportMenuRef} style={{ position: "relative", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* Quick-submit: circle with a tick; on click it widens into an
+              "Order Submitted" pill, then triggers the confirm flow. */}
+          <button
+            onClick={handleQuickSubmit}
+            aria-label="Submit order"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: "8px", height: "40px", width: submitted ? 178 : 40,
+              padding: submitted ? "0 16px" : 0,
+              borderRadius: "999px", border: "none",
+              background: "hsl(var(--foreground, 0 0% 100%))",
+              color: "hsl(var(--background, 0 0% 0%))",
+              cursor: submitted ? "default" : "pointer",
+              overflow: "hidden", whiteSpace: "nowrap", flexShrink: 0,
+              transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), padding 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
+            <Check size={18} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", maxWidth: submitted ? 120 : 0, opacity: submitted ? 1 : 0, overflow: "hidden", transition: "max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease 0.12s" }}>
+              {submitted ? "Order Submitted" : ""}
+            </span>
+          </button>
+
+          <div ref={exportMenuRef} style={{ position: "relative", flexShrink: 0 }}>
           <button onClick={() => (exportMenuState === "open" ? closeExportMenu() : openExportMenu())} aria-label="Export options" aria-expanded={exportMenuState === "open"} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground, 0 0% 100%))" }}>
             <MoreVertical size={22} />
           </button>
@@ -232,7 +284,27 @@ export const OrderSummary = ({
             </div>
           )}
         </div>
+        </div>
       </div>
+
+      {/* "Remove Order?" confirmation — Yes wipes the order, No closes. Portalled to the
+          body so it floats above the expanded overlay sheet (same card style as the
+          Order panel's password modal). */}
+      {confirmResetOpen && createPortal(
+        <div onClick={() => setConfirmResetOpen(false)} style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", zIndex: 1001, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "hsl(var(--background))", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "320px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)", border: "1px solid hsl(var(--border))", fontFamily: "Raleway, inherit" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", textAlign: "center", color: "hsl(var(--foreground))", marginBottom: "6px" }}>Remove Order</div>
+            <div style={{ fontSize: "12px", fontWeight: 300, textAlign: "center", color: "hsl(var(--muted-foreground))", marginBottom: "16px" }}>
+              Remove all {pendingOrder.entries.length} {pendingOrder.entries.length === 1 ? "item" : "items"} from this order?
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => { setConfirmResetOpen(false); onReset(); }} style={{ flex: 1, background: "hsl(var(--foreground))", color: "hsl(var(--background))", border: "none", borderRadius: "999px", padding: "12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}>Yes</button>
+              <button onClick={() => setConfirmResetOpen(false)} style={{ flex: 1, background: "none", color: "hsl(var(--muted-foreground))", border: "0.5px solid hsl(var(--border))", borderRadius: "999px", padding: "12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}>No</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

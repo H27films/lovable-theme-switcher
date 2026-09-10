@@ -539,6 +539,7 @@ return createPortal(
           onConfirm={handleConfirmOrder}
           onReset={handleResetOrder}
           overlayTop={summaryOverlayTop}
+          onSubmittedExit={onBack}
         />
       )}
       {!showAllOrders && orderEntries.length > 0 && (
