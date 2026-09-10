@@ -218,38 +218,50 @@ export const OrderSummary = ({
       {orderError && <div style={{ fontSize: "11px", color: "hsl(0 70% 50%)", letterSpacing: "0.04em", marginBottom: "8px" }}>✗ {orderError}</div>}
       </div>
 
-      {/* Pinned footer of the expanded sheet — Reset on the left (asks "Remove Order?"
-          before wiping); on the right the quick-submit tick circle (animates into an
-          "Order Submitted" pill, then runs the confirm flow) and the ⋮ menu with
+      {/* Pinned footer of the expanded sheet — tick circle first, then Reset (white glass;
+          asks "Remove Order?" before wiping), with the ⋮ menu on the right containing
           Confirm Order / GRN PDF / Export (same staggered pills as the header dropdown). */}
       <div style={{ flexShrink: 0, paddingTop: "12px", paddingBottom: overlay ? "max(env(safe-area-inset-bottom, 8px), 8px)" : "8px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-        <button onClick={() => setConfirmResetOpen(true)} style={{ background: "hsl(var(--foreground, 0 0% 100%))", color: "hsl(var(--background, 0 0% 0%))", border: "none", borderRadius: "6px", cursor: "pointer", padding: "10px 18px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit" }}>Reset</button>
-
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* Quick-submit: circle with a tick; on click it widens into an
-              "Order Submitted" pill, then triggers the confirm flow. */}
+          {/* Quick-submit: circle with a perfectly centred tick (the label span contributes
+              zero width AND zero gap while collapsed); on click it widens into an
+              "Order Submitted" pill, then closes the summary back to the branch home. */}
           <button
             onClick={handleQuickSubmit}
             aria-label="Submit order"
             style={{
               display: "flex", alignItems: "center", justifyContent: "center",
-              gap: "8px", height: "40px", width: submitted ? 178 : 40,
+              gap: submitted ? "8px" : 0, height: "40px", width: submitted ? 178 : 40,
               padding: submitted ? "0 16px" : 0,
               borderRadius: "999px", border: "none",
               background: "hsl(var(--foreground, 0 0% 100%))",
               color: "hsl(var(--background, 0 0% 0%))",
               cursor: submitted ? "default" : "pointer",
               overflow: "hidden", whiteSpace: "nowrap", flexShrink: 0,
-              transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), padding 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
+              transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), padding 0.35s cubic-bezier(0.22, 1, 0.36, 1), gap 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            <Check size={18} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", maxWidth: submitted ? 120 : 0, opacity: submitted ? 1 : 0, overflow: "hidden", transition: "max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease 0.12s" }}>
+            <Check size={18} strokeWidth={2.5} style={{ flexShrink: 0, marginLeft: 0 }} />
+            <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", lineHeight: 1, display: "block", maxWidth: submitted ? 120 : 0, opacity: submitted ? 1 : 0, overflow: "hidden", transition: "max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease 0.12s" }}>
               {submitted ? "Order Submitted" : ""}
             </span>
           </button>
 
-          <div ref={exportMenuRef} style={{ position: "relative", flexShrink: 0 }}>
+          <button onClick={() => setConfirmResetOpen(true)} style={{
+            padding: "10px 18px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit",
+            // White glassmorphism — same recipe as the bottom nav but on the light side:
+            // translucent white gradient, backdrop blur + saturation, faint border, soft shadow.
+            background: "linear-gradient(135deg, hsl(var(--background, 0 0% 100%) / 0.6), hsl(var(--background, 0 0% 100%) / 0.35))",
+            backdropFilter: "blur(14px) saturate(160%)",
+            WebkitBackdropFilter: "blur(14px) saturate(160%)",
+            border: "1px solid hsl(var(--foreground, 0 0% 100%) / 0.3)",
+            color: "hsl(var(--foreground, 0 0% 100%))",
+            borderRadius: "999px", cursor: "pointer",
+            boxShadow: "0 4px 18px hsl(0 0% 0% / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.5)",
+          }}>Reset</button>
+        </div>
+
+        <div ref={exportMenuRef} style={{ position: "relative", flexShrink: 0 }}>
           <button onClick={() => (exportMenuState === "open" ? closeExportMenu() : openExportMenu())} aria-label="Export options" aria-expanded={exportMenuState === "open"} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--foreground, 0 0% 100%))" }}>
             <MoreVertical size={22} />
           </button>
@@ -283,7 +295,6 @@ export const OrderSummary = ({
               ))}
             </div>
           )}
-        </div>
         </div>
       </div>
 
