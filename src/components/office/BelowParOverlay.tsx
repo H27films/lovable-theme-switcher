@@ -203,7 +203,7 @@ export function BelowParOverlay({
           onClick={onClose}
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
-            gap: "6px", padding: "8px 16px",
+            gap: "6px", padding: "9px 26px",
             fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit",
             letterSpacing: "0.12em", textTransform: "uppercase",
             border: "0.5px solid hsl(var(--foreground))",
@@ -221,18 +221,13 @@ export function BelowParOverlay({
           onClick={() => onOpenOrderList?.()}
           disabled={!onOpenOrderList}
           style={{
-            padding: "9px 18px",
+            padding: "9px 26px",
             fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit",
             letterSpacing: "0.12em", textTransform: "uppercase",
-            // Black glassmorphism — same recipe as BottomNavOffice: translucent dark
-            // gradient, backdrop blur + saturation, bright top rim, soft drop shadow.
-            background: "linear-gradient(135deg, hsl(var(--foreground) / 0.55), hsl(var(--foreground) / 0.35))",
-            backdropFilter: "blur(14px) saturate(160%)",
-            WebkitBackdropFilter: "blur(14px) saturate(160%)",
-            border: "0.5px solid hsl(var(--foreground) / 0.3)",
+            // Solid black with a slightly transparent white outline.
+            border: "1.5px solid hsl(0 0% 100% / 0.7)",
+            background: "hsl(var(--foreground))",
             color: "hsl(var(--background))",
-            textShadow: "0 1px 2px hsl(0 0% 0% / 0.4)",
-            boxShadow: "0 8px 32px hsl(0 0% 0% / 0.18), inset 0 1px 0 hsl(0 0% 100% / 0.25), inset 0 -1px 0 hsl(0 0% 0% / 0.06)",
             borderRadius: "999px", cursor: "pointer",
             opacity: onOpenOrderList ? 1 : 0.5,
           }}
