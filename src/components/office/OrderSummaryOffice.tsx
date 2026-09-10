@@ -510,13 +510,14 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                     display: "flex", alignItems: "center", justifyContent: "center",
                     gap: "8px", width: "100%", padding: "12px",
                     fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
-                    letterSpacing: "0.08em", textTransform: "uppercase",
-                    border: "none", background: "hsl(var(--foreground) / 0.07)",
-                    color: "hsl(var(--foreground))", borderRadius: "999px", cursor: "pointer",
+                    letterSpacing: "0.12em", textTransform: "uppercase",
+                    border: "0.5px solid hsl(var(--foreground))",
+                    background: "hsl(var(--foreground))",
+                    color: "hsl(var(--background))",
+                    borderRadius: "999px", cursor: "pointer",
                   }}
                 >
-                  <WhatsAppIcon />
-                  Send Order List to Ailing
+                  Order List Panel
                 </button>
 
                 <button

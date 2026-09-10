@@ -16,6 +16,9 @@ interface BelowParOverlayProps {
   setBelowParList: React.Dispatch<React.SetStateAction<OfficeProduct[]>>;
   setEditParProduct: (p: OfficeProduct | null) => void;
   setEditParValue: (v: string) => void;
+  /** Fired by the footer's ORDER LIST button — closes this overlay and opens the Order List
+      panel (every Below-Par item selected here is already in the order, so it appears there). */
+  onOpenOrderList?: () => void;
   balCell: (balance: number | null, par: number | null) => React.ReactNode;
   onClose: () => void;
   fg: string;
@@ -40,6 +43,7 @@ export function BelowParOverlay({
   setBelowParList,
   setEditParProduct,
   setEditParValue,
+  onOpenOrderList,
   balCell,
   onClose,
   fg,
@@ -190,13 +194,17 @@ export function BelowParOverlay({
         <div style={{ paddingBottom: "40px" }} />
       </div>
 
-      {/* Footer: done button */}
-      <div style={{ padding: "12px 16px", borderTop: border, flexShrink: 0 }}>
+      {/* Footer: two smaller buttons edge-aligned in one row — DONE (left, as before)
+          closes the overlay; ORDER LIST (right, black glass) closes the overlay and opens
+          the Order List panel, which already contains every Below-Par item selected here
+          (they're added to the order on selection via toggleBelowPar). */}
+      <div style={{ padding: "12px 16px", borderTop: border, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button
           onClick={onClose}
           style={{
-            width: "100%", padding: "12px",
-            fontSize: "12px", fontWeight: 600, fontFamily: "Raleway, inherit",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: "6px", padding: "8px 16px",
+            fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit",
             letterSpacing: "0.12em", textTransform: "uppercase",
             border: "0.5px solid hsl(var(--foreground))",
             background: "hsl(var(--foreground))",
@@ -204,7 +212,32 @@ export function BelowParOverlay({
             borderRadius: "999px", cursor: "pointer",
           }}
         >
-          DONE · {orderLines.length} {orderLines.length === 1 ? "ITEM" : "ITEMS"} IN ORDER
+          DONE
+          <span style={{ fontSize: "8.5px", fontWeight: 400, letterSpacing: "0.08em", opacity: 0.8 }}>
+            {orderLines.length} {orderLines.length === 1 ? "ITEM" : "ITEMS"} IN ORDER
+          </span>
+        </button>
+        <button
+          onClick={() => onOpenOrderList?.()}
+          disabled={!onOpenOrderList}
+          style={{
+            padding: "9px 18px",
+            fontSize: "11px", fontWeight: 600, fontFamily: "Raleway, inherit",
+            letterSpacing: "0.12em", textTransform: "uppercase",
+            // Black glassmorphism — same recipe as BottomNavOffice: translucent dark
+            // gradient, backdrop blur + saturation, bright top rim, soft drop shadow.
+            background: "linear-gradient(135deg, hsl(var(--foreground) / 0.55), hsl(var(--foreground) / 0.35))",
+            backdropFilter: "blur(14px) saturate(160%)",
+            WebkitBackdropFilter: "blur(14px) saturate(160%)",
+            border: "0.5px solid hsl(var(--foreground) / 0.3)",
+            color: "hsl(var(--background))",
+            textShadow: "0 1px 2px hsl(0 0% 0% / 0.4)",
+            boxShadow: "0 8px 32px hsl(0 0% 0% / 0.18), inset 0 1px 0 hsl(0 0% 100% / 0.25), inset 0 -1px 0 hsl(0 0% 0% / 0.06)",
+            borderRadius: "999px", cursor: "pointer",
+            opacity: onOpenOrderList ? 1 : 0.5,
+          }}
+        >
+          Order List
         </button>
       </div>
     </div>

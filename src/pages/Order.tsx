@@ -686,6 +686,7 @@ export default function Order({ onBack }: OrderProps) {
           setEditParValue={setEditParValue}
           balCell={balCell}
           onClose={() => setShowBelowPar(false)}
+          onOpenOrderList={() => { setShowBelowPar(false); setShowOrderList(true); }}
           fg={fg}
           muted={muted}
           border={border}
