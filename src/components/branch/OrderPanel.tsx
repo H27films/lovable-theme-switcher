@@ -472,7 +472,7 @@ return createPortal(
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p["PRODUCT NAME"]}</span>
                   </span>
                 {(p as any)[BALANCE_KEY] != null && (
-                  <span style={{ fontSize: "13px", color: Number((p as any)[BALANCE_KEY]) <= 0 ? "hsl(0 70% 40%)" : "hsl(145 60% 38%)", marginLeft: "24px" }}>{(p as any)[BALANCE_KEY]}</span>
+                  <span style={{ fontSize: "14px", color: Number((p as any)[BALANCE_KEY]) <= 0 ? "hsl(0 70% 40%)" : "hsl(145 60% 38%)", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
                 )}
               </ResultRow>
               );
