@@ -129,7 +129,9 @@ export async function generateAndShareFullOrderPDF(
 ): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const today = new Date();
-  const dateStr = today.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+  // "DATE: 10 SEPTEMBER 2026" — long-form date, uppercase, bold and slightly bigger
+  // than the old contact/phone block (which is no longer printed).
+  const dateLabel = "DATE: " + today.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase();
 
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
@@ -139,13 +141,12 @@ export async function generateAndShareFullOrderPDF(
   doc.setLineWidth(0.3);
   doc.line(15, 24, 195, 24);
 
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(dateStr, 15, 30);
-  doc.text("Contact: Soong Ailing", 15, 36);
-  doc.text("Phone Number: +60123333128", 15, 42);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text(dateLabel, 15, 30);
 
-  let y = 52;
+  // The contact/phone lines are gone, so the table starts higher up.
+  let y = 42;
   const sortedGroups = [...supplierGroups].sort((a, b) => a.supplier.localeCompare(b.supplier));
 
   // Column x-positions — balance columns are centered on these points, not right-aligned.
