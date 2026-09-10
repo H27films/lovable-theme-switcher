@@ -62,6 +62,24 @@ export const OrderPanel = ({
   const [showPwdModal, setShowPwdModal] = useState(false);
   const [pwdValue, setPwdValue] = useState("");
   const [pwdError, setPwdError] = useState(false);
+  // Expanded Order Summary overlay: measured bottom of the ORDER title row so the
+  // expanded summary covers the panel from just below the header (over the Select
+  // Product row and the Past Orders / Low Balance footer).
+  const orderTitleRef = useRef<HTMLDivElement>(null);
+  const [summaryOverlayTop, setSummaryOverlayTop] = useState(0);
+
+  useEffect(() => {
+    const el = orderTitleRef.current;
+    if (!el) return;
+    // offsetTop/offsetHeight are layout px (unaffected by the tablet zoom), and the
+    // overlay positions in the same zoomed coordinate space — so this stays aligned.
+    // No extra buffer: the sheet starts flush below the title row (minimal gap).
+    const update = () => setSummaryOverlayTop(el.offsetTop + el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
 
   useEffect(() => {
@@ -343,7 +361,7 @@ return createPortal(
     display: "flex", flexDirection: "column", overflow: "hidden",
   }}>
       <div style={{ paddingLeft: "12px", paddingRight: "12px", paddingTop: "28px", paddingBottom: "0", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
+        <div ref={orderTitleRef} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
           {/* Title + today's date on one line (same arrangement/sizing as the Usage panel) */}
           <span style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
             <button onClick={onBack} title="Back to home" style={{ fontSize: "clamp(22px, 6vw, 36px)", fontWeight: 300, letterSpacing: "0.08em", fontFamily: "Raleway, inherit", color: "hsl(var(--foreground, 0 0% 100%))", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>ORDER</button>
@@ -520,6 +538,7 @@ return createPortal(
           config={config}
           onConfirm={handleConfirmOrder}
           onReset={handleResetOrder}
+          overlayTop={summaryOverlayTop}
         />
       )}
       {!showAllOrders && orderEntries.length > 0 && (
