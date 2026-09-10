@@ -218,13 +218,8 @@ export const OrderPanel = ({
     );
   };
 
-  // MULTI + / SINGLE + toggle on the Select Product line — switches the select mode
-  // and opens the dropdown in it (default is single; the label shows the mode a tap
-  // switches INTO, per the add-more pattern).
-  const switchOrderMode = () => {
-    setOrderMode(prev => (prev === "single" ? "multi" : "single"));
-    setShowOrderDropdown(true);
-  };
+  // Select-mode is chosen via the Single/Multi segmented tab above the Select Product
+  // line; switching tabs also (re)opens the dropdown in the chosen mode.
 
   const closePanel = () => {
     onBack();
@@ -403,21 +398,18 @@ return createPortal(
             </svg>
           </button>
         </div>
-        {/* Mode line — sits between the ORDER title and the Select Product line.
-            Label shows the CURRENT mode (thin text, normal-weight +). */}
+        {/* Mode tab — sits between the ORDER title and the Select Product line: a grey
+            segmented pill (like the Past Data All/Salon/Sales toggle) with Single/Multi
+            options; the active option carries a sliding light thumb. */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", paddingBottom: "4px" }}>
-          <button
-            onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
-            onClick={e => { e.stopPropagation(); switchOrderMode(); }}
-            aria-label={orderMode === "single" ? "Current: single add — switch to multi" : "Current: multi add — switch to single"}
-            title={orderMode === "single" ? "Switch to multi add" : "Switch to single add"}
-            style={{ background: "none", border: "none", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", color: "hsl(var(--foreground))", padding: "2px 0" }}
-          >
-            <span style={{ fontSize: "12px", fontWeight: 200, letterSpacing: "0.1em", fontFamily: "Raleway, inherit" }}>
-              {orderMode === "single" ? "SINGLE" : "MULTI"}
-            </span>
-            <Plus size={15} strokeWidth={2} />
-          </button>
+          <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px" }}>
+            <div style={{ position: "absolute", top: "2px", bottom: "2px", left: "2px", width: "calc((100% - 4px) / 2)", transform: `translateX(${(["single", "multi"] as const).indexOf(orderMode) * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
+            {(["single", "multi"] as const).map(m => (
+              <button key={m} onClick={() => { setOrderMode(m); setShowOrderDropdown(true); }} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "58px", padding: "3px 0", fontSize: "9px", fontWeight: orderMode === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: orderMode === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
+                {m === "single" ? "Single" : "Multi"}
+              </button>
+            ))}
+          </div>
         </div>
         <div style={{ borderBottom: "0.5px solid hsl(var(--border, 0 0% 50%))", paddingBottom: "12px", marginBottom: "0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -435,9 +427,10 @@ return createPortal(
               />
 <button
                 onMouseDown={e => { e.preventDefault(); e.stopPropagation(); if (showOrderDropdown) dismissOrderDropdown(); else { setShowOrderDropdown(true); orderInputRef.current?.focus(); } }}
+                aria-label={showOrderDropdown ? "Close product dropdown" : "Open product dropdown"}
                 style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground, 0 0% 50%))", flexShrink: 0, display: "flex", alignItems: "center" }}
               >
-                {showOrderDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {showOrderDropdown ? <ChevronUp size={18} strokeWidth={1.5} /> : <ChevronDown size={18} strokeWidth={1.5} />}
               </button>
 {orderSearch.length > 0 && (
                 <button onClick={() => { setOrderSearch(""); setShowOrderDropdown(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "hsl(var(--muted-foreground, 0 0% 50%))" }}>
