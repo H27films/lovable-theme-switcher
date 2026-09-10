@@ -28,7 +28,7 @@ export interface OrderLine {
   supplierChoice: string | null;
 }
 
-const WhatsAppIcon = () => (
+export const WhatsAppIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
     <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M8.53 7.33C8.37 7.33 8.1 7.39 7.87 7.64C7.65 7.89 7 8.5 7 9.71C7 10.93 7.89 12.1 8 12.27C8.14 12.44 9.76 14.94 12.25 16C12.84 16.27 13.3 16.42 13.66 16.53C14.25 16.72 14.79 16.69 15.22 16.63C15.7 16.56 16.68 16.03 16.89 15.45C17.1 14.87 17.1 14.37 17.04 14.27C16.97 14.17 16.81 14.1 16.56 13.98C16.31 13.86 15.09 13.26 14.87 13.18C14.64 13.1 14.48 13.06 14.31 13.31C14.15 13.55 13.67 14.1 13.53 14.27C13.38 14.44 13.24 14.46 13 14.34C12.74 14.21 11.94 13.95 11 13.11C10.26 12.45 9.77 11.64 9.62 11.39C9.48 11.15 9.61 11.01 9.73 10.9C9.84 10.78 9.99 10.6 10.11 10.45C10.24 10.31 10.28 10.2 10.36 10.04C10.44 9.87 10.4 9.73 10.34 9.61C10.28 9.5 9.79 8.27 9.59 7.77C9.39 7.27 9.19 7.33 9.04 7.32C8.88 7.32 8.72 7.33 8.53 7.33Z" />
   </svg>
@@ -101,7 +101,7 @@ async function generateAndSharePDF(supplier: string, lines: { productName: strin
   }
 }
 
-async function generateAndShareFullOrderPDF(
+export async function generateAndShareFullOrderPDF(
   supplierGroups: {
     supplier: string;
     lines: {
@@ -110,8 +110,12 @@ async function generateAndShareFullOrderPDF(
       boudoirBalance: number | null;
       chicBalance: number | null;
       nurYadiBalance: number | null;
+      /** Ticked in the Order List panel — prints a dark-red "URGENT" in the URGENT column. */
+      urgent?: boolean;
     }[];
-  }[]
+  }[],
+  /** Extra inputs from the Order List panel — free-text write-ins printed at the bottom of the PDF. */
+  options?: { otherNotes?: string }
 ): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const today = new Date();
@@ -135,14 +139,19 @@ async function generateAndShareFullOrderPDF(
   const sortedGroups = [...supplierGroups].sort((a, b) => a.supplier.localeCompare(b.supplier));
 
   // Column x-positions — balance columns are centered on these points, not right-aligned.
-  const colNo = 15, colProduct = 25, colOff = 145, colBou = 160, colChi = 175, colNur = 190;
-  const productWrapWidth = 110;
+  // URGENT sits between PRODUCT and OFFICE BALANCE (OFF): dark-red flag ticked in the
+  // Order List panel. The other columns shifted right→left to make room for it.
+  const colNo = 15, colProduct = 25, colUrgent = 100, colOff = 125, colBou = 145, colChi = 165, colNur = 185;
+  const productWrapWidth = 68;
 
   // Shared column header row — printed once at the top of the table, not per supplier.
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
   doc.text("#", colNo, y);
   doc.text("PRODUCT", colProduct, y);
+  doc.setTextColor(139, 0, 0); // dark red — URGENT column header
+  doc.text("URGENT", colUrgent, y, { align: "center" });
+  doc.setTextColor(0, 0, 0);
   doc.text("OFF", colOff, y, { align: "center" });
   doc.text("BOU", colBou, y, { align: "center" });
   doc.text("CHI", colChi, y, { align: "center" });
@@ -169,6 +178,13 @@ async function generateAndShareFullOrderPDF(
       doc.text(String(i + 1), colNo, y);
       const name = doc.splitTextToSize(item.productName, productWrapWidth);
       doc.text(name, colProduct, y);
+      if (item.urgent) {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(139, 0, 0); // dark red URGENT flag
+        doc.text("URGENT", colUrgent, y, { align: "center" });
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+      }
       doc.text(item.officeBalance != null ? String(item.officeBalance) : "—", colOff, y, { align: "center" });
       doc.text(item.boudoirBalance != null ? String(item.boudoirBalance) : "—", colBou, y, { align: "center" });
       doc.text(item.chicBalance != null ? String(item.chicBalance) : "—", colChi, y, { align: "center" });
@@ -184,6 +200,32 @@ async function generateAndShareFullOrderPDF(
       y += 10;
     }
   });
+
+  // OTHER section — free-text write-in items from the Order List panel, printed at the
+  // bottom of the PDF under an OTHER heading (skipped entirely when the notes are empty).
+  const otherNotes = (options?.otherNotes ?? "").trim();
+  if (otherNotes) {
+    y += 4;
+    doc.setLineWidth(0.15);
+    doc.line(15, y, 195, y);
+    y += 10;
+    if (y > 260) { doc.addPage(); y = 20; }
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("OTHER", 15, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    otherNotes.split(/\r?\n/).forEach(raw => {
+      if (!raw.trim()) { y += 5; return; } // blank lines become small gaps
+      const wrapped = doc.splitTextToSize(raw.trim(), 175);
+      wrapped.forEach(w => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text(w, 15, y);
+        y += 6;
+      });
+    });
+  }
 
   const blob = doc.output("blob");
   const filename = "OrderList_Ailing.pdf";
@@ -217,6 +259,9 @@ interface OrderSummaryProps {
   expanded?: boolean;
   /** Fired on every expand/collapse so the page can react (hide/reveal the bottom nav). */
   onExpandedChange?: (expanded: boolean) => void;
+  /** Fired when the draft footer's "Send Order List to Ailing" button is pressed. When provided it
+      replaces the direct PDF share — the page opens the Order List panel component instead. */
+  onSendToAiling?: () => void;
   /** Overlay mode: the expanded summary renders as a full-height sheet covering the page below `overlayTop` px instead of expanding in-flow. */
   overlay?: boolean;
   /** Top offset (px) for the overlay sheet — pass the measured ORDER top bar height so the sheet starts just below the header. */
@@ -228,7 +273,7 @@ interface OrderSummaryProps {
 // the page; tapping it expands (overlay mode: a full-height sheet starting just below the ORDER top
 // bar so it covers the supplier filter / Add product rows; otherwise in-flow, pushing the order list
 // above it up). Tapping the expanded "Order Summary" header row collapses it back down.
-export default function OrderSummaryOffice({ orderLines, setOrderLines, products, scrollRef, expanded: expandedProp, onExpandedChange, overlay = false, overlayTop = 0 }: OrderSummaryProps) {
+export default function OrderSummaryOffice({ orderLines, setOrderLines, products, scrollRef, expanded: expandedProp, onExpandedChange, onSendToAiling, overlay = false, overlayTop = 0 }: OrderSummaryProps) {
   const [expandedInternal, setExpandedInternal] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
   // Draft footer: per-supplier WhatsApp buttons are hidden by default — only
@@ -416,20 +461,25 @@ export default function OrderSummaryOffice({ orderLines, setOrderLines, products
                   </button>
                 ))}
 
-                {/* Primary action — always shown directly, below the chevron. */}
+                {/* Primary action — always shown directly, below the chevron. With the Order
+                    List panel wired in (onSendToAiling) this OPENS THE PANEL instead of
+                    sharing the PDF directly; the panel's own footer does the share. */}
                 <button
-                  onClick={() => generateAndShareFullOrderPDF(
-                    supplierGroups.map(group => ({
-                      supplier: group.supplier,
-                      lines: group.lines.map(({ line }) => ({
-                        productName: line.product["PRODUCT NAME"],
-                        officeBalance: line.product["OFFICE BALANCE"],
-                        boudoirBalance: line.product["BOUDOIR BALANCE"],
-                        chicBalance: line.product["CHIC NAILSPA BALANCE"],
-                        nurYadiBalance: line.product["NUR YADI BALANCE"],
-                      })),
-                    }))
-                  )}
+                  onClick={() => {
+                    if (onSendToAiling) { onSendToAiling(); return; }
+                    generateAndShareFullOrderPDF(
+                      supplierGroups.map(group => ({
+                        supplier: group.supplier,
+                        lines: group.lines.map(({ line }) => ({
+                          productName: line.product["PRODUCT NAME"],
+                          officeBalance: line.product["OFFICE BALANCE"],
+                          boudoirBalance: line.product["BOUDOIR BALANCE"],
+                          chicBalance: line.product["CHIC NAILSPA BALANCE"],
+                          nurYadiBalance: line.product["NUR YADI BALANCE"],
+                        })),
+                      }))
+                    );
+                  }}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "center",
                     gap: "8px", width: "100%", padding: "12px",

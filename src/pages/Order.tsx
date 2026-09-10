@@ -9,6 +9,7 @@ import { TABLET_FIT_HEIGHT } from "@/components/TabletScaler";
 import OrderSummaryOffice, { type OfficeProduct, type OrderLine } from "@/components/office/OrderSummaryOffice";
 import { BottomNavOffice } from "@/components/office/BottomNavOffice";
 import { BelowParOverlay } from "@/components/office/BelowParOverlay";
+import OrderList from "@/components/office/OrderList";
 import { OrderLineItem } from "@/components/office/OrderLineItem";
 
 // ── DRAFT ORDER PERSISTENCE ───────────────────────────────
@@ -111,6 +112,20 @@ export default function Order({ onBack }: OrderProps) {
   // Expanded Order Summary sheet state + bottom-nav reveal (swipe up from the page bottom).
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [summaryNavVisible, setSummaryNavVisible] = useState(false);
+  // ── ORDER LIST PANEL ("Send Order List to Ailing") ──
+  // The summary's send button now opens this panel instead of sharing the PDF directly.
+  // It collects the two PDF inputs: URGENT ticks (product ids) and the free-text "Other"
+  // write-ins. Both persist while the draft order lives, so re-opening the panel keeps
+  // the previous selections until Clear Order wipes the order.
+  const [showOrderList, setShowOrderList] = useState(false);
+  const [urgentIds, setUrgentIds] = useState<Set<number>>(new Set());
+  const [otherNotes, setOtherNotes] = useState("");
+  const toggleUrgent = (productId: number) =>
+    setUrgentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId); else next.add(productId);
+      return next;
+    });
   // Measured height of the ORDER top bar — the summary sheet starts just below it.
   const [topBarH, setTopBarH] = useState(0);
   // Measured height of the Enter Product bar — added to the supplier dropdown's
@@ -648,6 +663,7 @@ export default function Order({ onBack }: OrderProps) {
           scrollRef={orderScrollRef}
           expanded={summaryExpanded}
           onExpandedChange={setSummaryExpanded}
+          onSendToAiling={() => setShowOrderList(true)}
           overlay
           overlayTop={topBarH}
         />
@@ -672,6 +688,20 @@ export default function Order({ onBack }: OrderProps) {
           muted={muted}
           border={border}
           hdrStyle={hdrStyle}
+        />
+      )}
+
+      {/* ORDER LIST overlay panel — opened from the Order Summary draft footer's
+          "Send Order List to Ailing" button. Ticked products print URGENT (dark red)
+          in the PDF; the Other write-ins print under OTHER at the bottom. */}
+      {showOrderList && (
+        <OrderList
+          orderLines={orderLines}
+          urgentIds={urgentIds}
+          onToggleUrgent={toggleUrgent}
+          otherNotes={otherNotes}
+          onOtherNotesChange={setOtherNotes}
+          onClose={() => setShowOrderList(false)}
         />
       )}
 
@@ -781,7 +811,7 @@ export default function Order({ onBack }: OrderProps) {
           // the expanded sheet is open the bottom-edge swipe can still reveal it
           // (swipe up shows / swipe down hides); the Below Par overlay always
           // hides it (the nav would otherwise float above it).
-          hidden={(orderLines.length > 0 && !summaryNavVisible) || showBelowPar}
+          hidden={(orderLines.length > 0 && !summaryNavVisible) || showBelowPar || showOrderList}
           onSelect={(key) => {
             if (key === "order") return; // already on the Order page
             if (key === "home") slideTo("/simple/office", undefined, "back");
