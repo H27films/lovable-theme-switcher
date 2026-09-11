@@ -577,6 +577,22 @@ return createPortal(
 
        </div>
       )}
+      {/* Multi mode collapse row — sits at the top of the footer stack (above the Order
+          Summary bar / submit footer); collapses the dropdown so the selected products
+          (balance + qty steppers) are visible again. With items selected it takes the
+          mode tab's grey, slightly transparent (no top border) so it reads as
+          "something selected"; empty it stays plain. */}
+      {!showAllOrders && orderMode === "multi" && showOrderDropdown && (
+        <div
+          onClick={() => setShowOrderDropdown(false)}
+          style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 12px", borderTop: orderEntries.length > 0 ? "none" : "0.5px solid hsl(var(--border, 0 0% 50%))", cursor: "pointer", background: orderEntries.length > 0 ? "hsl(var(--foreground) / 0.05)" : "hsl(var(--background, 0 0% 0%))" }}
+        >
+          <ChevronUp size={14} style={{ color: "hsl(var(--foreground))" }} />
+          <span style={{ fontSize: "10px", fontWeight: 200, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}>
+            {orderEntries.length} {orderEntries.length === 1 ? "Product" : "Products"} Selected
+          </span>
+        </div>
+      )}
       {!showAllOrders && pendingOrder && (
         <OrderSummary
           pendingOrder={pendingOrder}
@@ -591,21 +607,6 @@ return createPortal(
           overlayTop={summaryOverlayTop}
           onSubmittedExit={onBack}
         />
-      )}
-      {/* Multi mode collapse row — sits just above the submit footer; collapses the
-          dropdown so the selected products (balance + qty steppers) are visible again.
-          With items selected it takes the mode tab's grey, slightly transparent (no top
-          border) so it reads as "something selected"; empty it stays plain. */}
-      {!showAllOrders && orderMode === "multi" && showOrderDropdown && (
-        <div
-          onClick={() => setShowOrderDropdown(false)}
-          style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 12px", borderTop: orderEntries.length > 0 ? "none" : "0.5px solid hsl(var(--border, 0 0% 50%))", cursor: "pointer", background: orderEntries.length > 0 ? "hsl(var(--foreground) / 0.05)" : "hsl(var(--background, 0 0% 0%))" }}
-        >
-          <ChevronUp size={14} style={{ color: "hsl(var(--foreground))" }} />
-          <span style={{ fontSize: "10px", fontWeight: 200, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground, 0 0% 50%))" }}>
-            {orderEntries.length} {orderEntries.length === 1 ? "Product" : "Products"} Selected
-          </span>
-        </div>
       )}
       {!showAllOrders && orderEntries.length > 0 && (
         <OrderSubmitFooter count={orderEntries.length} onSubmit={handleOrderSubmit} />
