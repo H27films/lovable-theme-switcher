@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence, type Transition } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { type LogRow } from "@/lib/branchSimple";
@@ -8,6 +9,9 @@ interface OrdersViewProps {
   branchLogName: string;
   scrollWithPage: boolean;
 }
+
+// Actions-style spring for the expand/collapse — same recipe as LogRowItem's.
+const ACTIONS_TRANSITION: Transition = { type: "spring", stiffness: 280, damping: 26 };
 
 const fmtOrderDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -235,9 +239,18 @@ export const OrdersView = ({ branchLogName, scrollWithPage }: OrdersViewProps) =
                   </div>
                 </div>
 
-                {/* Expanded GRN items */}
+                {/* Expanded GRN items — slides open/closed with the same spring as
+                    LogRowItem's actions section */}
+                <AnimatePresence initial={false}>
                 {isOpen && (
-                  <div style={{ paddingBottom: "6px" }}>
+                  <motion.div
+                    key="items"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={ACTIONS_TRANSITION}
+                    style={{ overflow: "hidden", paddingBottom: "6px" }}
+                  >
                     {grnRows.map((row, idxRow) => (
                       <div
                         key={row.id}
@@ -266,8 +279,9 @@ export const OrdersView = ({ branchLogName, scrollWithPage }: OrdersViewProps) =
                         <div />
                       </div>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             );
           })}
