@@ -31,11 +31,15 @@ interface OrderPanelProps {
   allowedIds?: Set<number>;
   /** Branch favourite toggle (useBranchFavourites.toggleFavourite) — used by the Low Balance overlay star buttons. */
   toggleFavourite?: (p: any) => void | Promise<void>;
+  /** Fired whenever the OrderSummary's pending order gains/loses its last item —
+   *  lets the page light up the Order icon in the BottomNav while an order waits. */
+  onPendingOrderChange?: (hasPendingOrder: boolean) => void;
 }
 
 export const OrderPanel = ({
   config, products, setProducts, branchLog, refreshBranchLog, onBack, onSuccess, onPastOrdersChange,
-  isFav: propIsFav, lowBalanceOf, isColour: propIsColour, nameOf: propNameOf, allowedIds, toggleFavourite
+  isFav: propIsFav, lowBalanceOf, isColour: propIsColour, nameOf: propNameOf, allowedIds, toggleFavourite,
+  onPendingOrderChange
 }: OrderPanelProps) => {
   const checkFav = propIsFav || makeIsFavourite(config.favouriteKey);
   const checkColour = propIsColour || ((p: any) => isYes(p["Colour"]));
@@ -90,6 +94,12 @@ export const OrderPanel = ({
   useEffect(() => {
     onPastOrdersChange?.(showAllOrders);
   }, [showAllOrders, onPastOrdersChange]);
+
+  // Report pending-order presence up (BottomNav's Order icon glow). Fires on the
+  // initial DB load too, and on every submit/edit-to-empty/confirm/reset change.
+  useEffect(() => {
+    onPendingOrderChange?.(!!pendingOrder && pendingOrder.entries.length > 0);
+  }, [pendingOrder, onPendingOrderChange]);
 
   // Load the submitted-but-unconfirmed order lines for this branch so they're visible
   // across devices (one shared submit per branch, one row per product line).

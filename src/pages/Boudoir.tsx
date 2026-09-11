@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranchFavourites } from "@/hooks/useBranchFavourites";
+import { usePendingOrderExists } from "@/hooks/usePendingOrderExists";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { boudoirConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
@@ -27,6 +28,7 @@ interface BoudoirProps {
 
 const Boudoir = ({ onBack, onBackToMain, products: propProducts }: BoudoirProps) => {
   const { isFav, isColour, allowedIds, nameOf, lowBalanceOf, toggleFavourite } = useBranchFavourites("boudoir");
+  const { hasPendingOrder, setHasPendingOrder } = usePendingOrderExists(boudoirConfig.logBranchName);
   const { tablet } = useTabletMode();
   const BALANCE_KEY = boudoirConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = boudoirConfig.logBranchName;
@@ -614,6 +616,7 @@ const setLogViewToOrders = () => {
             isHome={!activePanel && !searchActive && !selectedProduct}
             withQuickAdd={!activePanel && !searchActive && !selectedProduct}
             raised={isSearchProduct && !pastDataExpanded}
+            orderHasItems={hasPendingOrder}
           />
           {/* Quick Add lives on the branch home view only */}
           {!activePanel && !searchActive && !selectedProduct && (
@@ -638,6 +641,7 @@ const setLogViewToOrders = () => {
             goHome={goHome}
             isHome={!activePanel && !searchActive && !selectedProduct}
             compact
+            orderHasItems={hasPendingOrder}
           />
         </>
       )}
@@ -672,6 +676,7 @@ const setLogViewToOrders = () => {
           onBack={goHome}
           onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
+          onPendingOrderChange={setHasPendingOrder}
           isFav={isFav}
           lowBalanceOf={lowBalanceOf}
           isColour={isColour}

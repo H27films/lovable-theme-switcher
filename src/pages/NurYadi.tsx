@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranchFavourites } from "@/hooks/useBranchFavourites";
+import { usePendingOrderExists } from "@/hooks/usePendingOrderExists";
 import { X, Check, Search as SearchIcon, Star, ChevronRight, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import { nuryadiConfig, type OfficeProduct, type LogRow } from "@/lib/branchSimple";
 import { USAGE_TYPES, THERAPISTS, isYes, typeColumnValue, usagePillValue, sortLogByBalance, sortBranchLogTable, LOG_PAGE_SIZE, LOG_MAX_ROWS, type UsageType } from "@/lib/branchSimpleUtils";
@@ -26,6 +27,7 @@ interface NurYadiProps {
 
 const NurYadi = ({ onBack, onBackToMain, products: propProducts }: NurYadiProps) => {
   const { isFav, isColour, allowedIds, nameOf, lowBalanceOf, toggleFavourite } = useBranchFavourites("nuryadi");
+  const { hasPendingOrder, setHasPendingOrder } = usePendingOrderExists(nuryadiConfig.logBranchName);
   const BALANCE_KEY = nuryadiConfig.balanceKey as keyof OfficeProduct;
   const BRANCH_LOG_NAME = nuryadiConfig.logBranchName;
 
@@ -549,6 +551,7 @@ const setLogViewToOrders = () => {
             goHome={goHome}
             isHome={!activePanel && !searchActive && !selectedProduct}
             withQuickAdd={!activePanel && !searchActive && !selectedProduct}
+            orderHasItems={hasPendingOrder}
           />
           {/* Quick Add lives on the branch home view only */}
           {!activePanel && !searchActive && !selectedProduct && (
@@ -573,6 +576,7 @@ const setLogViewToOrders = () => {
             goHome={goHome}
             isHome={!activePanel && !searchActive && !selectedProduct}
             compact
+            orderHasItems={hasPendingOrder}
           />
         </>
       )}
@@ -607,6 +611,7 @@ const setLogViewToOrders = () => {
           onBack={goHome}
           onSuccess={goHome}
           onPastOrdersChange={setPastOrdersExpanded}
+          onPendingOrderChange={setHasPendingOrder}
           isFav={isFav}
           lowBalanceOf={lowBalanceOf}
           isColour={isColour}

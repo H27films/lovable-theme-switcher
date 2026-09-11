@@ -17,6 +17,10 @@ interface BottomNavProps {
    *  circle) GROUP is what gets centred on screen, keeping the circle inside
    *  the viewport on narrow phones instead of spilling off the right edge. */
   withQuickAdd?: boolean;
+  /** A submitted-but-unconfirmed order exists in the Order Summary — the Order
+   *  cart icon shows a small glowing dot so staff can see there's an order
+   *  waiting without opening the panel. */
+  orderHasItems?: boolean;
 }
 
 const items = [
@@ -53,6 +57,7 @@ export const BottomNav = ({
   compact = false,
   raised = false,
   withQuickAdd = false,
+  orderHasItems = false,
 }: BottomNavProps) => {
   const isActive = (key: string) => {
     if (key === "HOME") return isHome;
@@ -133,7 +138,29 @@ export const BottomNav = ({
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
-            <Icon size={compact ? 18 : 21} strokeWidth={1.5} />
+            {/* Order icon — while a pending order sits in the Order Summary, a small
+                filled dot rides the cart's top-right corner with a soft glow so the
+                tab reads as "order waiting" even when the panel is closed. */}
+            {key === "ORDER" && orderHasItems ? (
+              <span style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon size={compact ? 18 : 21} strokeWidth={1.5} />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -2,
+                    right: -3,
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "hsl(var(--foreground))",
+                    boxShadow: "0 0 7px hsl(var(--foreground) / 0.75), 0 0 2px hsl(var(--foreground) / 0.9)",
+                    pointerEvents: "none",
+                  }}
+                />
+              </span>
+            ) : (
+              <Icon size={compact ? 18 : 21} strokeWidth={1.5} />
+            )}
             <span style={{ fontSize: "9px", fontWeight: 400, letterSpacing: "0.03em", fontFamily: "Raleway, inherit", lineHeight: 1 }}>{label}</span>
           </button>
         );
