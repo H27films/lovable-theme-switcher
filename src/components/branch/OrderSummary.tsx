@@ -231,7 +231,7 @@ export const OrderSummary = ({
             aria-label="Submit order"
             style={{
               display: "flex", alignItems: "center", justifyContent: "center",
-              gap: submitted ? "8px" : 0, height: "40px", width: submitted ? 190 : 40,
+              gap: submitted ? "8px" : 0, height: "40px", width: submitted ? 208 : 40,
               padding: submitted ? "0 16px" : 0,
               borderRadius: "999px", border: "none",
               background: "hsl(var(--foreground, 0 0% 100%))",
@@ -242,7 +242,7 @@ export const OrderSummary = ({
             }}
           >
             <Check size={16} strokeWidth={2.5} style={{ flexShrink: 0, marginLeft: 0 }} />
-            <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", lineHeight: 1, display: "block", maxWidth: submitted ? 132 : 0, opacity: submitted ? 1 : 0, overflow: "hidden", transition: "max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease 0.12s" }}>
+            <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Raleway, inherit", lineHeight: 1, display: "block", maxWidth: submitted ? 150 : 0, opacity: submitted ? 1 : 0, overflow: "hidden", WebkitTextSizeAdjust: "100%", textSizeAdjust: "100%", transition: "max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease 0.12s" }}>
               {submitted ? "Order Submitted" : ""}
             </span>
           </button>
