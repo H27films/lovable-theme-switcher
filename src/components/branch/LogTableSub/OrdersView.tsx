@@ -178,7 +178,16 @@ export const OrdersView = ({ branchLogName, scrollWithPage }: OrdersViewProps) =
             const isOpen = expandedOrderGRNs.has(grn);
             const dateStr = fmtOrderDate(grnRows[0]?.DATE || "");
             return (
-              <div key={grn}>
+              <div
+                key={grn}
+                style={{
+                  // Expanded-group box — same treatment as LogRowItem's expanded row:
+                  // grey tint + rounded corners around the summary row + its items.
+                  background: isOpen ? "hsl(var(--muted) / 0.35)" : "transparent",
+                  borderRadius: isOpen ? "12px" : "0",
+                  transition: "background 0.15s ease",
+                }}
+              >
                 {/* GRN summary row */}
                 <div
                   onClick={() => toggleGRN(grn)}
@@ -228,7 +237,7 @@ export const OrdersView = ({ branchLogName, scrollWithPage }: OrdersViewProps) =
 
                 {/* Expanded GRN items */}
                 {isOpen && (
-                  <div style={{ paddingBottom: "6px", borderBottom: "0.5px solid hsl(var(--border) / 0.4)" }}>
+                  <div style={{ paddingBottom: "6px" }}>
                     {grnRows.map((row, idxRow) => (
                       <div
                         key={row.id}

@@ -264,7 +264,7 @@ export const LowBalancePanel = ({
               border: "0.5px solid hsl(var(--foreground))",
               background: "hsl(var(--foreground))",
               color: "hsl(var(--background))",
-              borderRadius: "6px", cursor: "pointer",
+              borderRadius: "999px", cursor: "pointer",
             }}
           >
             DONE · {orderItemCount} {orderItemCount === 1 ? "ITEM" : "ITEMS"} IN ORDER
