@@ -70,11 +70,11 @@ const AdminPortal = () => {
        <div
          style={{
             position: "absolute",
-            right: "calc(-220px + 20vw)",
-            top: "50%",
+            right: "-11vw",
+            top: "42%",
             transform: "translateY(calc(-50% + 40px))",
-            width: "max(600px, min(900px, 70vw))",
-            height: "max(600px, min(900px, 70vw))",
+            width: "max(260px, min(400px, 30vw))",
+            height: "max(260px, min(400px, 30vw))",
             zIndex: 1,
             opacity: 0.05,
             pointerEvents: "none",
