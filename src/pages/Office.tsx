@@ -142,7 +142,10 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
   >
     {BRANCH_NAME}
   </button>
-  <OfficeHeader onOpenSync={() => setShowSyncPanel(true)} />
+  <OfficeHeader
+    onOpenSync={() => setShowSyncPanel(true)}
+    onOpenSupabase={() => setLogManagerOpen(true)}
+  />
 </div>
 
 
@@ -162,12 +165,6 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             {/* ══ LOG TABLE ══════════════════════════════════════════════ */}
             <OfficeLogTable
               refreshTrigger={logRefreshTrigger}
-              actionSlot={
-                <DataLogManager
-                  onDataChanged={() => setLogRefreshTrigger(prev => prev + 1)}
-                  onOpenChange={setLogManagerOpen}
-                />
-              }
             />
 
 
@@ -187,6 +184,13 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             onProductsUpdated={refreshLocalProducts}
           />
         )}
+
+        {/* ═ SUPABASE DATA MANAGER PANEL ═════════════════════════════ */}
+        <DataLogManager
+          open={logManagerOpen}
+          onClose={() => setLogManagerOpen(false)}
+          onDataChanged={() => setLogRefreshTrigger(prev => prev + 1)}
+        />
 
         {/* ── BOTTOM NAV (Home / Order / Sales / Search / Admin Portal) ── */}
         <BottomNavOffice

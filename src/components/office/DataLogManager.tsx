@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ChevronLeft, MoreVertical } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BRANCH_CONFIGS, type LogRow } from "@/lib/branchSimple";
@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface DataLogManagerProps {
+  /** Whether the panel is shown — owned by the host page (Office header menu). */
+  open: boolean;
+  /** Called when the panel requests to close (back arrow or title tap). */
+  onClose: () => void;
   /** Called after a successful bulk deletion so the host page can refresh its own log views. */
   onDataChanged?: () => void;
-  /** Notified when the panel opens (true) / closes (false) — the Office page hides its bottom nav while open. */
-  onOpenChange?: (open: boolean) => void;
 }
 
 /** AllFileLog.BRANCH values for the three branch tabs. */
@@ -32,8 +34,8 @@ const titleCase = (s: string) =>
 const TABS: { key: TabKey; label: string }[] =
   Object.values(BRANCH_CONFIGS).map(c => ({ key: c.logBranchName as TabKey, label: titleCase(c.displayName) }));
 
-/** Column grid: checkbox | Date | Product | Qty | Bal | Type */
-const GRID = "22px 48px 1fr 36px 36px 54px";
+/** Column grid: Date | Product | Qty | Bal | Type | checkbox */
+const GRID = "48px 1fr 36px 36px 54px 22px";
 
 /** The window of data shown: 7 days including today. */
 const DAYS_SHOWN = 7;
@@ -77,17 +79,16 @@ const sortRows = (list: LogRow[]): LogRow[] =>
 /**
  * DataLogManager — Office-page data-management utility for the AllFileLog table.
  *
- * A ⋮ trigger (rendered inline at the far right of the OfficeLogTable tab row)
- * opens a full-screen panel with one tab per branch (Boudoir / Chic / Nur Yadi)
+ * Opened from the Office header's hamburger menu ("Supabase" entry); a
+ * full-screen panel with one tab per branch (Boudoir / Chic / Nur Yadi)
  * showing that branch's raw log rows for the last 7 days (today inclusive). Rows are multi-selectable via
  * checkbox or row tap, and a footer action bar bulk-deletes the selected rows
  * straight from AllFileLog — deliberately WITHOUT any balance correction
  * (unlike the branch LogTable's reverse flow). Toasts report the outcome and
  * the table refreshes afterwards.
  */
-export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerProps) => {
-  // ── Panel & data state ─────────────────────────────────────────────────
-  const [open, setOpen] = useState(false);
+export const DataLogManager = ({ open, onClose, onDataChanged }: DataLogManagerProps) => {
+  // ── Data state (panel open state is owned by the host page) ────────────
   const [activeTab, setActiveTab] = useState<TabKey>("Boudoir");
   const [rows, setRows] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -128,12 +129,13 @@ export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerPr
     setLoading(false);
   }, [activeTab]);
 
-  // Initial fetch + refetch on tab switch (also resets selection & scroll).
+  // Initial fetch + refetch on tab switch / open (also resets selection & scroll).
   useEffect(() => {
+    if (!open) return;
     setSelected(new Set());
     scrollRef.current?.scrollTo({ top: 0 });
     fetchLog();
-  }, [fetchLog]);
+  }, [fetchLog, open]);
 
   // ── Selection helpers ──────────────────────────────────────────────────
   const toggleRow = (id: number) =>
@@ -202,19 +204,7 @@ export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerPr
     );
   };
 
-  if (!open) {
-    // ── Trigger — ⋮ icon button (matches the header hamburger button) ──
-    return (
-      <button
-        onClick={() => { setOpen(true); onOpenChange?.(true); }}
-        aria-label="Open data log manager"
-        title="Manage data log"
-        style={iconBtnStyle}
-      >
-        <MoreVertical size={20} />
-      </button>
-    );
-  }
+  if (!open) return null;
 
   return (
     <motion.div
@@ -227,25 +217,28 @@ export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerPr
         fontFamily: "'Raleway', sans-serif", display: "flex", flexDirection: "column",
       }}
     >
-      {/* ── Panel header (back arrow, no subtitle — matches the other panels) ── */}
+      {/* ── Panel header — title left-aligned, back arrow on the right ── */}
       <div style={{
         padding: "calc(env(safe-area-inset-top, 0px) + 12px) 12px 10px",
-        display: "flex", alignItems: "center", gap: "10px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
         borderBottom: "0.5px solid hsl(var(--border))", flexShrink: 0,
       }}>
         <button
-          onClick={() => { setOpen(false); onOpenChange?.(false); }}
+          onClick={onClose}
           aria-label="Back"
-          style={iconBtnStyle}
+          style={{
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+            fontFamily: "'Raleway', sans-serif", color: "hsl(var(--foreground))",
+            fontSize: "clamp(20px, 5.5vw, 26px)", fontWeight: 300,
+            letterSpacing: "0.08em", lineHeight: 1.05, textAlign: "left",
+            WebkitTapHighlightColor: "transparent",
+          }}
         >
-          <ChevronLeft size={24} />
+          SUPABASE
         </button>
-        <div style={{
-          fontSize: "clamp(20px, 5.5vw, 26px)", fontWeight: 300,
-          letterSpacing: "0.08em", lineHeight: 1.05,
-        }}>
-          DATA LOG MANAGER
-        </div>
+        <button onClick={onClose} aria-label="Back" style={iconBtnStyle}>
+          <ArrowLeft size={22} />
+        </button>
       </div>
 
       {/* ── Scrollable table area (12px inset — same as the Office page) ── */}
@@ -256,12 +249,12 @@ export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerPr
             {TABS.map(renderTab)}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: GRID, gap: "6px", paddingBottom: "8px", borderBottom: "0.5px solid hsl(var(--border))" }}>
-            <div />
             <div style={{ ...headerStyle }}>Date</div>
             <div style={{ ...headerStyle }}>Product</div>
             <div style={{ ...headerStyle, textAlign: "center" }}>Qty</div>
             <div style={{ ...headerStyle, textAlign: "center" }}>Bal</div>
             <div style={{ ...headerStyle }}>Type</div>
+            <div />
           </div>
         </div>
 
@@ -295,21 +288,6 @@ export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerPr
                 transition: "background 0.15s ease",
               }}
             >
-              {/* Selection checkbox (tap stops propagation — row tap also toggles) */}
-              <span
-                role="checkbox"
-                aria-checked={isSel}
-                onClick={(e) => { e.stopPropagation(); toggleRow(row.id); }}
-                style={{
-                  width: "16px", height: "16px", borderRadius: "50%", flexShrink: 0,
-                  border: `1.5px solid ${isSel ? "hsl(var(--foreground))" : "hsl(var(--border-active))"}`,
-                  background: isSel ? "hsl(var(--foreground))" : "transparent",
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  transition: "background 0.12s ease, border-color 0.12s ease",
-                }}
-              >
-                {isSel && <Check size={11} strokeWidth={3} color="hsl(var(--background))" />}
-              </span>
               <div style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", visibility: showDate ? "visible" : "hidden" }}>
                 {fmtDate(row.DATE)}
               </div>
@@ -325,6 +303,21 @@ export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerPr
               <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {row.TYPE || "—"}
               </div>
+              {/* Selection checkbox (right side; tap stops propagation — row tap also toggles) */}
+              <span
+                role="checkbox"
+                aria-checked={isSel}
+                onClick={(e) => { e.stopPropagation(); toggleRow(row.id); }}
+                style={{
+                  width: "16px", height: "16px", borderRadius: "50%", flexShrink: 0,
+                  border: `1.5px solid ${isSel ? "hsl(var(--foreground))" : "hsl(var(--border-active))"}`,
+                  background: isSel ? "hsl(var(--foreground))" : "transparent",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  transition: "background 0.12s ease, border-color 0.12s ease",
+                }}
+              >
+                {isSel && <Check size={11} strokeWidth={3} color="hsl(var(--background))" />}
+              </span>
             </div>
           );
         })}
@@ -342,22 +335,22 @@ export const DataLogManager = ({ onDataChanged, onOpenChange }: DataLogManagerPr
           padding: "10px 16px calc(env(safe-area-inset-bottom, 0px) + 10px)",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
         }}>
-          <span style={{ fontSize: "13px", fontWeight: 400, fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
-            {selected.size} row{selected.size === 1 ? "" : "s"} selected
-          </span>
           <button
             onClick={() => setConfirmOpen(true)}
             disabled={deleting}
             style={{
               background: "hsl(0 60% 45%)", border: "none", borderRadius: "999px",
               padding: "9px 22px", cursor: deleting ? "default" : "pointer",
-              fontFamily: "Raleway, sans-serif", fontSize: "12px", fontWeight: 600,
+              fontFamily: "Raleway, sans-serif", fontSize: "12px", fontWeight: 700,
               letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff",
               opacity: deleting ? 0.6 : 1, WebkitTapHighlightColor: "transparent",
             }}
           >
             {deleting ? "Deleting…" : "Delete"}
           </button>
+          <span style={{ fontSize: "13px", fontWeight: 600, fontFamily: "Raleway, inherit", letterSpacing: "0.02em" }}>
+            {selected.size} row{selected.size === 1 ? "" : "s"} selected
+          </span>
         </div>
       )}
 

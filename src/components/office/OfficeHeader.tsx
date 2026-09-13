@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Menu, Tablet, Laptop, Settings as SettingsIcon, RefreshCw, type LucideIcon } from "lucide-react";
+import { Menu, Tablet, Laptop, Settings as SettingsIcon, RefreshCw, Database, type LucideIcon } from "lucide-react";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { SettingsModalOffice } from "./SettingsModalOffice";
 
 interface OfficeHeaderProps {
   /** Open the Office Sync panel (state lives on the Office page) from the menu. */
   onOpenSync?: () => void;
+  /** Open the Supabase data manager panel (state lives on the Office page) from the menu. */
+  onOpenSupabase?: () => void;
 }
 
 /** One entry in the floating hamburger menu (Apple Books–style segmented pills) */
@@ -24,7 +26,7 @@ const MENU_ENTRY_STAGGER_MS = 50;
 const MENU_EXIT_STAGGER_MS = 40;
 const MENU_EXIT_DURATION_MS = 200;
 
-export const OfficeHeader = ({ onOpenSync }: OfficeHeaderProps) => {
+export const OfficeHeader = ({ onOpenSync, onOpenSupabase }: OfficeHeaderProps) => {
   /** "closed" → unmounted; "open" → staggered pop-in; "closing" → reverse staggered collapse */
   const [menuState, setMenuState] = useState<"closed" | "open" | "closing">("closed");
   const closeTimerRef = useRef<number | null>(null);
@@ -46,6 +48,12 @@ export const OfficeHeader = ({ onOpenSync }: OfficeHeaderProps) => {
       label: tablet ? "Phone View" : "Tablet View",
       icon: tablet ? Tablet : Laptop,
       onSelect: () => toggleTablet(),
+    },
+    {
+      key: "supabase",
+      label: "Supabase",
+      icon: Database,
+      onSelect: () => onOpenSupabase?.(),
     },
     {
       key: "settings",

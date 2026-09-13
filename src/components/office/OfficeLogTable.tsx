@@ -30,8 +30,6 @@ type LogView = "all" | "branches" | "supplier";
 
 interface OfficeLogTableProps {
   refreshTrigger?: number;
-  /** Extra control rendered at the far right of the view-tab row (e.g. the DataLogManager ⋮ trigger). */
-  actionSlot?: React.ReactNode;
 }
 
 const allDataHeaderStyle: React.CSSProperties = {
@@ -47,7 +45,7 @@ const fmtDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 const GROUP_TRANSITION: Transition = { type: "spring", stiffness: 280, damping: 26 };
-const OfficeLogTable = ({ refreshTrigger, actionSlot }: OfficeLogTableProps) => {
+const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
   const [logRows, setLogRows] = useState<LogRow[]>([]);
   const [loadingLog, setLoadingLog] = useState(true);
   const [moreLoading, setMoreLoading] = useState(false);
@@ -224,11 +222,6 @@ const OfficeLogTable = ({ refreshTrigger, actionSlot }: OfficeLogTableProps) => 
             {renderViewTab("all", "All Data")}
             {renderViewTab("branches", "Branches")}
             {renderViewTab("supplier", "Supplier")}
-            {actionSlot && (
-              <div style={{ marginLeft: "auto", alignSelf: "center", flexShrink: 0 }}>
-                {actionSlot}
-              </div>
-            )}
           </div>
           <div style={{
             display: "grid",
