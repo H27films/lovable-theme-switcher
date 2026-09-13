@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSlideExit, useSlideEnter, slideExitStyle } from "@/hooks/useSlideTransition";
 import Sync from "@/components/office/Sync";
 import OfficeLogTable from "@/components/office/OfficeLogTable";
+import { DataLogManager } from "@/components/office/DataLogManager";
 import { SalesPanel } from "@/components/office/sales/SalesPanel";
 import { OfficeHeader } from "@/components/office/OfficeHeader";
 import { BottomNavOffice } from "@/components/office/BottomNavOffice";
@@ -110,8 +111,9 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Log table refresh trigger ────────────────────────────────
+  // ── Log table refresh trigger + Data Log Manager open state ──
   const [logRefreshTrigger, setLogRefreshTrigger] = useState(0);
+  const [logManagerOpen, setLogManagerOpen] = useState(false);
 
   const dim: React.CSSProperties = { color: "hsl(var(--muted-foreground))" };
 
@@ -160,6 +162,12 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
             {/* ══ LOG TABLE ══════════════════════════════════════════════ */}
             <OfficeLogTable
               refreshTrigger={logRefreshTrigger}
+              actionSlot={
+                <DataLogManager
+                  onDataChanged={() => setLogRefreshTrigger(prev => prev + 1)}
+                  onOpenChange={setLogManagerOpen}
+                />
+              }
             />
 
 
@@ -183,7 +191,7 @@ const Office = ({ onBack, onBackToMain, products = [] }: OfficeProps) => {
         {/* ── BOTTOM NAV (Home / Order / Sales / Search / Admin Portal) ── */}
         <BottomNavOffice
           active={showSalesPanel ? "sales" : "home"}
-          hidden={showSalesPanel && !salesNavVisible}
+          hidden={(showSalesPanel && !salesNavVisible) || logManagerOpen}
           onSelect={(key) => {
             if (key === "home") { setShowSalesPanel(false); setShowSyncPanel(false); }
             else if (key === "order") slideTo("/simple/order", { from: "office" }, "forward");
