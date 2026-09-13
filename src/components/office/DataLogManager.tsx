@@ -78,8 +78,8 @@ const sortRows = (list: LogRow[]): LogRow[] =>
  * DataLogManager — Office-page data-management utility for the AllFileLog table.
  *
  * A ⋮ trigger (rendered inline at the far right of the OfficeLogTable tab row)
- * opens a full-screen panel with one tab per branch (Boudoir / Chic / Nur Yadi
- * + Office) showing that branch's raw log rows. Rows are multi-selectable via
+ * opens a full-screen panel with one tab per branch (Boudoir / Chic / Nur Yadi)
+ * showing that branch's raw log rows for the last 7 days (today inclusive). Rows are multi-selectable via
  * checkbox or row tap, and a footer action bar bulk-deletes the selected rows
  * straight from AllFileLog — deliberately WITHOUT any balance correction
  * (unlike the branch LogTable's reverse flow). Toasts report the outcome and
