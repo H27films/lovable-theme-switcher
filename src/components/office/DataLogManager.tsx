@@ -4,16 +4,6 @@ import { ArrowLeft, Check } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BRANCH_CONFIGS, type LogRow } from "@/lib/branchSimple";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface DataLogManagerProps {
   /** Whether the panel is shown — owned by the host page (Office header menu). */
@@ -339,10 +329,10 @@ export const DataLogManager = ({ open, onClose, onDataChanged }: DataLogManagerP
             onClick={() => setConfirmOpen(true)}
             disabled={deleting}
             style={{
-              background: "hsl(0 60% 45%)", border: "none", borderRadius: "999px",
+              background: "hsl(var(--primary))", border: "none", borderRadius: "999px",
               padding: "9px 22px", cursor: deleting ? "default" : "pointer",
               fontFamily: "Raleway, sans-serif", fontSize: "12px", fontWeight: 700,
-              letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff",
+              letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--primary-foreground))",
               opacity: deleting ? 0.6 : 1, WebkitTapHighlightColor: "transparent",
             }}
           >
@@ -354,55 +344,69 @@ export const DataLogManager = ({ open, onClose, onDataChanged }: DataLogManagerP
         </div>
       )}
 
-      {/* ── Delete confirmation ── */}
-      <AlertDialog
-        open={confirmOpen}
-        onOpenChange={(o) => { if (!deleting) setConfirmOpen(o); }}
-      >
-        <AlertDialogContent
+      {/* ── Delete confirmation — rendered INSIDE the panel (an AlertDialog
+             portal would land behind the panel's z-index 100000 overlay) ── */}
+      {confirmOpen && (
+        <div
+          onClick={() => { if (!deleting) setConfirmOpen(false); }}
           style={{
-            fontFamily: "'Raleway', sans-serif",
-            background: "hsl(var(--background))",
-            border: "1px solid hsl(var(--border-active))",
-            borderRadius: "14px",
+            position: "fixed", inset: 0, zIndex: 100002,
+            background: "rgba(0, 0, 0, 0.45)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "24px", fontFamily: "'Raleway', sans-serif",
           }}
         >
-          <AlertDialogHeader>
-            <AlertDialogTitle style={{ fontWeight: 400, letterSpacing: "0.04em" }}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            style={{
+              background: "hsl(var(--background))",
+              border: "1px solid hsl(var(--border-active))",
+              borderRadius: "14px",
+              padding: "20px",
+              width: "100%", maxWidth: "360px",
+              display: "flex", flexDirection: "column", gap: "14px",
+              boxShadow: "0 20px 50px hsl(0 0% 0% / 0.3)",
+            }}
+          >
+            <div style={{ fontSize: "16px", fontWeight: 600, letterSpacing: "0.02em", color: "hsl(var(--foreground))" }}>
               Delete {selected.size} row{selected.size === 1 ? "" : "s"}?
-            </AlertDialogTitle>
-            <AlertDialogDescription style={{ fontWeight: 300, lineHeight: 1.5 }}>
+            </div>
+            <div style={{ fontSize: "13px", fontWeight: 300, lineHeight: 1.5, color: "hsl(var(--muted-foreground))" }}>
               Are you sure? This will remove the selected data permanently. Balances will not be recalculated.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              style={{
-                background: "none", border: "1px solid hsl(var(--border-active))",
-                borderRadius: "999px", padding: "8px 18px", cursor: "pointer",
-                fontFamily: "Raleway, sans-serif", fontSize: "12px", fontWeight: 400,
-                letterSpacing: "0.08em", textTransform: "uppercase",
-                color: "hsl(var(--muted-foreground))",
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={deleting}
-              onClick={(e) => { e.preventDefault(); deleteSelected(); }}
-              style={{
-                background: "hsl(0 60% 45%)", border: "none", borderRadius: "999px",
-                padding: "8px 18px", cursor: deleting ? "default" : "pointer",
-                fontFamily: "Raleway, sans-serif", fontSize: "12px", fontWeight: 600,
-                letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff",
-                opacity: deleting ? 0.6 : 1,
-              }}
-            >
-              {deleting ? "Deleting…" : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                onClick={() => setConfirmOpen(false)}
+                disabled={deleting}
+                style={{
+                  background: "none", border: "1px solid hsl(var(--border-active))",
+                  borderRadius: "999px", padding: "8px 18px", cursor: "pointer",
+                  fontFamily: "Raleway, sans-serif", fontSize: "12px", fontWeight: 400,
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  color: "hsl(var(--muted-foreground))", opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteSelected}
+                disabled={deleting}
+                style={{
+                  background: "hsl(var(--primary))", border: "none", borderRadius: "999px",
+                  padding: "8px 18px", cursor: deleting ? "default" : "pointer",
+                  fontFamily: "Raleway, sans-serif", fontSize: "12px", fontWeight: 600,
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  color: "hsl(var(--primary-foreground))", opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };
