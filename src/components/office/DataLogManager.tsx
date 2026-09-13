@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BRANCH_CONFIGS, type LogRow } from "@/lib/branchSimple";
@@ -40,20 +40,6 @@ const headerStyle: React.CSSProperties = {
   color: "#000000",
   letterSpacing: "0.08em",
   textTransform: "capitalize",
-};
-
-const iconBtnStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "40px",
-  height: "40px",
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-  padding: 0,
-  color: "hsl(var(--foreground))",
-  WebkitTapHighlightColor: "transparent",
 };
 
 const fmtDate = (dateStr: string) =>
@@ -226,8 +212,17 @@ export const DataLogManager = ({ open, onClose, onDataChanged }: DataLogManagerP
         >
           SUPABASE
         </button>
-        <button onClick={onClose} aria-label="Back" style={iconBtnStyle}>
-          <ArrowLeft size={22} />
+        <button
+          onClick={onClose}
+          aria-label="Back"
+          title="Back"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "hsl(var(--foreground))", display: "flex", alignItems: "center", touchAction: "manipulation" }}
+        >
+          {/* Long left arrow — identical to the Search page's back arrow */}
+          <svg width="36" height="16" viewBox="0 0 36 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="30" y1="8" x2="1" y2="8" />
+            <polyline points="9,1 1,8 9,15" />
+          </svg>
         </button>
       </div>
 
