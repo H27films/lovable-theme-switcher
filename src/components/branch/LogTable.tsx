@@ -431,6 +431,7 @@ export const LogTable = ({
                       selectedProduct={selectedProduct}
                       readOnly={readOnly}
                       scrollWithPage={scrollWithPage}
+                      showTypeIcons={viewType === "all" && !selectedProduct}
                       pendingTherapist={pendingTherapist}
                       branchTherapists={branchTherapists}
                       therapistCycleList={therapistCycleList}

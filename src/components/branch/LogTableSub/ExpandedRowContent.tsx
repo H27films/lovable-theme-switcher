@@ -15,6 +15,8 @@ interface ExpandedRowContentProps {
   canCycleTherapist: boolean;
   therapistCycleList: string[];
   branchTherapists: string[];
+  /** Show the Order/Sale type icons after the therapist pill (All Data tab only). */
+  showTypeIcons: boolean;
   onUpdate?: unknown;
   onCollapse: () => void;
   onEditClick: () => void;
@@ -35,6 +37,7 @@ export const ExpandedRowContent = ({
   canCycleTherapist,
   therapistCycleList,
   branchTherapists,
+  showTypeIcons,
   onUpdate,
   onCollapse,
   onEditClick,
@@ -160,6 +163,22 @@ export const ExpandedRowContent = ({
       {pillTherapist}
     </span>
   ) : null}
+  {/* Order / Sale type icon — same rule as the collapsed row's icon, sized to
+      sit inline with the expanded row's therapist pill. */}
+  {showTypeIcons && (row.TYPE || "").trim().toUpperCase() === "ORDER" && (
+    <img
+      src="/Order.svg"
+      alt="Order"
+      style={{ width: "16px", height: "16px", flexShrink: 0, display: "inline-block" }}
+    />
+  )}
+  {showTypeIcons && (row.TYPE || "").trim().toUpperCase() === "CUSTOMER" && (
+    <img
+      src="/Sale.svg"
+      alt="Sale"
+      style={{ width: "19px", height: "19px", flexShrink: 0, display: "inline-block" }}
+    />
+  )}
 </div>
 
        

@@ -16,6 +16,8 @@ interface LogRowItemProps {
   selectedProduct: any;
   readOnly: boolean;
   scrollWithPage: boolean;
+  /** Show the Order/Sale type icons (branch All Data tab only). */
+  showTypeIcons: boolean;
   pendingTherapist: { row: LogRow; value: string | null } | null;
   branchTherapists: string[];
   therapistCycleList: string[];
@@ -40,6 +42,7 @@ const LogRowItemInner = ({
   selectedProduct,
   readOnly,
   scrollWithPage,
+  showTypeIcons,
   pendingTherapist,
   branchTherapists,
   therapistCycleList,
@@ -142,18 +145,18 @@ const LogRowItemInner = ({
                     {(row as any)["THERAPIST"]}
                   </span>
                 )}
-                {!expanded && (row.TYPE || "").trim().toUpperCase() === "ORDER" && (
+                {!expanded && showTypeIcons && (row.TYPE || "").trim().toUpperCase() === "ORDER" && (
                   <img
                     src="/Order.svg"
                     alt="Order"
                     style={{ width: "16px", height: "16px", flexShrink: 0, display: "inline-block" }}
                   />
                 )}
-                {!expanded && (row.TYPE || "").trim().toUpperCase() === "CUSTOMER" && (
+                {!expanded && showTypeIcons && (row.TYPE || "").trim().toUpperCase() === "CUSTOMER" && (
                   <img
                     src="/Sale.svg"
                     alt="Sale"
-                    style={{ width: "16px", height: "16px", flexShrink: 0, display: "inline-block" }}
+                    style={{ width: "19px", height: "19px", flexShrink: 0, display: "inline-block" }}
                   />
                 )}
               </div>
@@ -202,6 +205,7 @@ const LogRowItemInner = ({
               canCycleTherapist={canCycleTherapist}
               therapistCycleList={therapistCycleList}
               branchTherapists={branchTherapists}
+              showTypeIcons={showTypeIcons}
               onUpdate={onUpdate}
               onCollapse={onCollapse}
               onEditClick={() => onEditClick(row)}
