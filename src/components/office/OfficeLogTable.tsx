@@ -163,6 +163,13 @@ const OfficeLogTable = ({ refreshTrigger }: OfficeLogTableProps) => {
         map.set(grn, { grn, date: row.DATE, branch: row.BRANCH, supplier: row.SUPPLIER ?? "—", rows: [] });
       map.get(grn)!.rows.push(row);
     }
+    // Within each GRN, expanded rows list alphabetically by product name
+    // (A–Z) regardless of DB insert order — same as the branch Orders tab.
+    for (const group of map.values()) {
+      group.rows.sort((a, b) =>
+        (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "")
+      );
+    }
     return Array.from(map.values());
   })();
 
