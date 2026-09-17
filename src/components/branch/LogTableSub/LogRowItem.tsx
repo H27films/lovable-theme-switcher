@@ -142,6 +142,13 @@ const LogRowItemInner = ({
                     {(row as any)["THERAPIST"]}
                   </span>
                 )}
+                {!expanded && (row.TYPE || "").trim().toUpperCase() === "ORDER" && (
+                  <img
+                    src="/Order.svg"
+                    alt="Order"
+                    style={{ width: "12px", height: "12px", flexShrink: 0, opacity: 0.75, display: "inline-block" }}
+                  />
+                )}
               </div>
               {(row as any)["NOTES"] && (
                 <span style={{ fontSize: "11px", fontWeight: 400, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", lineHeight: 1.2 }}>
