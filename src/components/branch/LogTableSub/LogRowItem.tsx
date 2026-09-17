@@ -146,7 +146,14 @@ const LogRowItemInner = ({
                   <img
                     src="/Order.svg"
                     alt="Order"
-                    style={{ width: "12px", height: "12px", flexShrink: 0, opacity: 0.75, display: "inline-block" }}
+                    style={{ width: "16px", height: "16px", flexShrink: 0, display: "inline-block" }}
+                  />
+                )}
+                {!expanded && (row.TYPE || "").trim().toUpperCase() === "CUSTOMER" && (
+                  <img
+                    src="/Sale.svg"
+                    alt="Sale"
+                    style={{ width: "16px", height: "16px", flexShrink: 0, display: "inline-block" }}
                   />
                 )}
               </div>
