@@ -102,13 +102,19 @@ export const OrdersView = ({ branchLogName, scrollWithPage }: OrdersViewProps) =
     });
   };
 
-  // Group rows by GRN
+  // Group rows by GRN — within each GRN, items are listed alphabetically by
+  // product name so the expanded row reads A–Z regardless of DB insert order.
   const orderGroups: [string, LogRow[]][] = (() => {
     const map = new Map<string, LogRow[]>();
     for (const row of ordersData) {
       const grn = row.GRN || `no-grn-${row.id}`;
       if (!map.has(grn)) map.set(grn, []);
       map.get(grn)!.push(row);
+    }
+    for (const rows of map.values()) {
+      rows.sort((a, b) =>
+        (a["PRODUCT NAME"] || "").localeCompare(b["PRODUCT NAME"] || "")
+      );
     }
     return Array.from(map.entries());
   })();
