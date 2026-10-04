@@ -14,15 +14,19 @@ interface DataLogManagerProps {
   onDataChanged?: () => void;
 }
 
-/** AllFileLog.BRANCH values for the three branch tabs. */
-type TabKey = "Boudoir" | "Chic Nailspa" | "Nur Yadi";
+/** AllFileLog.BRANCH values for the branch tabs + the Office's own log rows. */
+type TabKey = "Boudoir" | "Chic Nailspa" | "Nur Yadi" | "Office";
 
 /** Tab labels: branch display names, word-capitalised (Boudoir / Chic / Nur Yadi). */
 const titleCase = (s: string) =>
   s.toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
 
-const TABS: { key: TabKey; label: string }[] =
-  Object.values(BRANCH_CONFIGS).map(c => ({ key: c.logBranchName as TabKey, label: titleCase(c.displayName) }));
+const TABS: { key: TabKey; label: string }[] = [
+  ...Object.values(BRANCH_CONFIGS).map(c => ({ key: c.logBranchName as TabKey, label: titleCase(c.displayName) })),
+  // Office's own stock movements are logged under AllFileLog.BRANCH = "Office"
+  // (they are not in BRANCH_CONFIGS, which only covers the three branches).
+  { key: "Office", label: "Office" },
+];
 
 /** Column grid: Date | Product | Qty | Bal | Type | checkbox */
 const GRID = "48px 1fr 36px 36px 54px 22px";
@@ -56,8 +60,9 @@ const sortRows = (list: LogRow[]): LogRow[] =>
  * DataLogManager — Office-page data-management utility for the AllFileLog table.
  *
  * Opened from the Office header's hamburger menu ("Supabase" entry); a
- * full-screen panel with one tab per branch (Boudoir / Chic / Nur Yadi)
- * showing that branch's raw log rows for the last 7 days (today inclusive). Rows are multi-selectable via
+ * full-screen panel with one tab per branch (Boudoir / Chic / Nur Yadi) plus
+ * an Office tab for the Office's own stock movements, each showing that
+ * source's raw log rows for the last 7 days (today inclusive). Rows are multi-selectable via
  * checkbox or row tap, and a footer action bar bulk-deletes the selected rows
  * straight from AllFileLog — deliberately WITHOUT any balance correction
  * (unlike the branch LogTable's reverse flow). Toasts report the outcome and
@@ -253,6 +258,8 @@ export const DataLogManager = ({ open, onClose, onDataChanged }: DataLogManagerP
         {!loading && rows.map((row, idx) => {
           const isSel = selected.has(row.id);
           const qty = row.QTY ?? 0;
+          // Branch rows carry "ENDING BALANCE"; the Office's own rows carry "OFFICE BALANCE".
+          const balance = activeTab === "Office" ? row["OFFICE BALANCE"] : row["ENDING BALANCE"];
           // Date grouping: the date only prints on the first row of each day —
           // repeated dates stay in the grid (invisible) to keep rows aligned.
           const showDate = idx === 0 || rows[idx - 1].DATE !== row.DATE;
@@ -283,7 +290,7 @@ export const DataLogManager = ({ open, onClose, onDataChanged }: DataLogManagerP
                 {qty > 0 ? "+" : ""}{qty}
               </div>
               <div style={{ fontSize: "13px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--foreground))", textAlign: "center" }}>
-                {row["ENDING BALANCE"] ?? "—"}
+                {balance ?? "—"}
               </div>
               <div style={{ fontSize: "10px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {row.TYPE || "—"}
