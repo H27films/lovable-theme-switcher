@@ -147,6 +147,7 @@ export const ProductCard = ({ selectedProduct, balanceKey, favouriteKey, onToggl
           <ProductImage
             productId={selectedProduct.id}
             imageUrl={(selectedProduct as any).IMAGES ?? null}
+            productName={selectedProduct["PRODUCT NAME"]}
             onUpdated={onImageUpdated}
           />
         </div>

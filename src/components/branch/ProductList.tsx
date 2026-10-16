@@ -4,6 +4,7 @@ import { isYes } from "@/lib/branchSimpleUtils";
 import { type OfficeProduct } from "@/lib/branchSimple";
 import { dropdownNavChannelStore } from "@/hooks/useDropdownKeyboardNavigation";
 import { ResultRow } from "./ResultRow";
+import { ProductNoteChip } from "./ProductNoteChip";
 
 interface ProductListProps {
   products: any[];
@@ -64,11 +65,14 @@ const ProductRow = ({
             {nameOf ? nameOf(p) : p["PRODUCT NAME"]}
           </div>
         </div>
-        {bal != null && (
-          <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number(bal) > 0 ? "hsl(142 65% 30%)" : Number(bal) < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))", marginLeft: "8px", flexShrink: 0 }}>
-            {bal}
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, marginLeft: "8px" }}>
+          {bal != null && (
+            <div style={{ fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: Number(bal) > 0 ? "hsl(142 65% 30%)" : Number(bal) < 0 ? "hsl(0 70% 50%)" : "hsl(var(--foreground))" }}>
+              {bal}
+            </div>
+          )}
+          <ProductNoteChip productName={p["PRODUCT NAME"]} />
+        </div>
       </div>
     </ResultRow>
   );

@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useProductNote } from "@/hooks/useProductNote";
+import { ProductNotePanel } from "./ProductNotePanel";
 
 const STORAGE_BUCKET = "PRODUCT_IMAGES";
 const MAX_INPUT_BYTES = 15 * 1024 * 1024; // reject absurd files before decoding
@@ -23,8 +25,7 @@ interface ProductImageProps {
   /** Thumbnail square size in px (default 64) */
   size?: number;
   /** Product name — when provided, enables the Product Note feature (info icon
-   *  next to the image controls) backed by the public "Notes" table. Branch
-   *  ProductCard does not pass this, so those cards are unaffected. */
+   *  next to the image controls) backed by the public "Notes" table. */
   productName?: string | null;
 }
 
@@ -88,92 +89,9 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
   const [bust, setBust] = useState(() => cacheBustMap.get(productId) ?? 0);
   const [zoomOpen, setZoomOpen] = useState(false);
 
-  // Product note state (Notes table, keyed by PRODUCT NAME)
-  const [showNotes, setShowNotes] = useState(false);
-  const [note, setNote] = useState<string | null>(null); // null = not fetched yet
-  const [loadingNote, setLoadingNote] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [savingNote, setSavingNote] = useState(false);
-  const [noteError, setNoteError] = useState<string | null>(null);
-  const [editingNote, setEditingNote] = useState(false);
-
-  const fetchNote = async () => {
-    const resolvedName = productName?.trim();
-    if (!resolvedName) {
-      console.log("[ProductImage] fetchNote: no productName, skipping");
-      setNote(null);
-      setLoadingNote(false);
-      return;
-    }
-    setLoadingNote(true);
-    setNoteError(null);
-    try {
-      console.log("[ProductImage] fetchNote: looking up note for", JSON.stringify(resolvedName));
-      // Use case-insensitive match so "Ocean 88 Aqua Cream (2.2kg)" finds
-      // rows stored with any capitalisation of the product name.
-      const { data, error: dbError } = await (supabase as any)
-        .from("Notes")
-        .select("NOTES")
-        .ilike("PRODUCT NAME", resolvedName)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (dbError) throw dbError;
-      console.log("[ProductImage] fetchNote: raw data ->", data);
-      setNote(data?.[0]?.NOTES ?? null);
-    } catch (err) {
-      console.error("[ProductImage] fetchNote error:", err);
-      setNote(null);
-    } finally {
-      setLoadingNote(false);
-    }
-  };
-
-  const saveNote = async () => {
-    if (!productName) return;
-    setSavingNote(true);
-    setNoteError(null);
-    try {
-      if (note !== null) {
-        const { error: dbError } = await (supabase as any)
-          .from("Notes")
-          .update({ "NOTES": noteText })
-          .ilike("PRODUCT NAME", productName?.trim() ?? productName);
-        if (dbError) throw dbError;
-      } else {
-        const { error: dbError } = await (supabase as any)
-          .from("Notes")
-          .insert({ "PRODUCT NAME": productName, "NOTES": noteText });
-        if (dbError) throw dbError;
-      }
-      setNote(noteText);
-      setNoteText("");
-      setEditingNote(false);
-    } catch (err) {
-      setNoteError(err instanceof Error ? err.message : "Could not save the product note");
-    } finally {
-      setSavingNote(false);
-    }
-  };
-
-  const openNotes = () => {
-    if (showNotes) {
-      closeNotes();
-      return;
-    }
-    setNoteError(null);
-    setEditingNote(false);
-    setNoteText("");
-    setShowNotes(true);
-    fetchNote();
-  };
-
-  const closeNotes = () => {
-    setShowNotes(false);
-    setEditingNote(false);
-    setNote(null);
-    setNoteText("");
-    setNoteError(null);
-  };
+  // Product note state (Notes table, keyed by PRODUCT NAME) — shared with the
+  // branch search chips via useProductNote so every surface hits the same row.
+  const productNote = useProductNote(productName);
 
   // Reset the broken-image fallback when a different product/image arrives
   useEffect(() => {
@@ -324,97 +242,6 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
     fontFamily: "Raleway, inherit",
   };
 
-  const notesPanelStyle: React.CSSProperties = {
-    width: "100%",
-    background: "hsl(var(--foreground) / 0.07)",
-    border: "none",
-    borderRadius: "12px",
-    padding: "10px",
-    marginTop: "10px",
-    boxSizing: "border-box",
-    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.12)",
-    textAlign: "left",
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-  };
-
-  const notesBoxStyle: React.CSSProperties = {
-    background: "transparent",
-    border: "none",
-    borderRadius: 0,
-    padding: 0,
-    fontSize: "13px",
-    lineHeight: 1.5,
-    color: "hsl(var(--foreground))",
-    whiteSpace: "pre-wrap",
-    fontFamily: "Raleway, inherit",
-  };
-
-  const noteTextareaStyle: React.CSSProperties = {
-    width: "100%",
-    height: "110px",
-    border: "0.5px solid hsl(var(--border))",
-    borderRadius: "8px",
-    padding: "8px 10px",
-    fontSize: "13px",
-    lineHeight: 1.5,
-    color: "hsl(var(--foreground))",
-    background: "hsl(var(--background))",
-    outline: "none",
-    resize: "none",
-    boxSizing: "border-box",
-    fontFamily: "Raleway, inherit",
-  };
-
-  const noteSaveBtnStyle: React.CSSProperties = {
-    background: "hsl(var(--foreground))",
-    border: "none",
-    borderRadius: "6px",
-    padding: "4px 12px",
-    fontSize: "12px",
-    fontWeight: 600,
-    color: "hsl(var(--background))",
-    cursor: "pointer",
-    flexShrink: 0,
-  };
-
-  const noteCancelBtnStyle: React.CSSProperties = {
-    background: "none",
-    border: "none",
-    color: "hsl(var(--muted-foreground))",
-    fontSize: "12px",
-    cursor: "pointer",
-    flexShrink: 0,
-  };
-
-  // "Edit" white pill shown on the same bottom line as × (inside the panel box)
-  const noteEditBtnStyle: React.CSSProperties = {
-    background: "hsl(0 0% 98%)",
-    border: "none",
-    borderRadius: "999px",
-    color: "hsl(var(--foreground))",
-    fontSize: "12px",
-    fontFamily: "Raleway, inherit",
-    fontWeight: 600,
-    cursor: "pointer",
-    padding: "5px 14px",
-    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.15)",
-    flexShrink: 0,
-  };
-
-  // Close (×) button at the bottom-right of the notes panel box
-  const noteCloseBtnStyle: React.CSSProperties = {
-    background: "none",
-    border: "none",
-    color: "hsl(var(--muted-foreground))",
-    cursor: "pointer",
-    padding: 0,
-    fontSize: "16px",
-    lineHeight: 1,
-    flexShrink: 0,
-  };
-
   return (
     <div style={{ position: "relative", flexShrink: 0, width: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
       <input
@@ -459,7 +286,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
           {productName && (
             <button
               type="button"
-              onClick={openNotes}
+              onClick={productNote.toggle}
               title="Product note"
               style={infoBtnStyle}
             >
@@ -480,7 +307,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
           {productName && (
             <button
               type="button"
-              onClick={openNotes}
+              onClick={productNote.toggle}
               title="Product note"
               style={infoBtnStyle}
             >
@@ -496,81 +323,8 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
         </div>
       )}
 
-      {showNotes && productName && (
-        <div style={notesPanelStyle}>
-          {loadingNote ? (
-            <>
-              <div style={{ fontSize: "12px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Loading note…</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                <button type="button" onClick={closeNotes} title="Close note" style={noteCloseBtnStyle}>
-                  &times;
-                </button>
-              </div>
-            </>
-          ) : note !== null && !editingNote ? (
-            <>
-              <div style={notesBoxStyle}>{note}</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingNote(true);
-                    setNoteText(note ?? "");
-                  }}
-                  style={noteEditBtnStyle}
-                >
-                  Edit
-                </button>
-                <button type="button" onClick={closeNotes} title="Close note" style={noteCloseBtnStyle}>
-                  &times;
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <textarea
-                value={noteText}
-                onChange={e => setNoteText(e.target.value)}
-                placeholder="Type a note for this product…"
-                style={noteTextareaStyle}
-              />
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (note !== null) {
-                        setEditingNote(false);
-                      } else {
-                        closeNotes();
-                      }
-                    }}
-                    style={noteCancelBtnStyle}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={saveNote}
-                    disabled={savingNote || !noteText.trim()}
-                    style={noteSaveBtnStyle}
-                  >
-                    Save
-                  </button>
-                  {savingNote && (
-                    <span style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Saving…</span>
-                  )}
-                </div>
-                <button type="button" onClick={closeNotes} title="Close note" style={noteCloseBtnStyle}>
-                  &times;
-                </button>
-              </div>
-            </>
-          )}
-          {noteError && (
-            <div style={{ fontSize: "11px", color: "hsl(0 70% 50%)", marginTop: "6px", fontFamily: "Raleway, inherit" }}>{noteError}</div>
-          )}
-        </div>
+      {productNote.showNotes && productName && (
+        <ProductNotePanel api={productNote} />
       )}
 
       {/* Enlarged view — tap anywhere (or Escape) to close */}
