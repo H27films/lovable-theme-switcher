@@ -95,6 +95,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [noteError, setNoteError] = useState<string | null>(null);
+  const [editingNote, setEditingNote] = useState(false);
 
   const fetchNote = async () => {
     const resolvedName = productName?.trim();
@@ -146,6 +147,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
       }
       setNote(noteText);
       setNoteText("");
+      setEditingNote(false);
     } catch (err) {
       setNoteError(err instanceof Error ? err.message : "Could not save the product note");
     } finally {
@@ -154,13 +156,20 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
   };
 
   const openNotes = () => {
+    if (showNotes) {
+      closeNotes();
+      return;
+    }
     setNoteError(null);
+    setEditingNote(false);
+    setNoteText("");
     setShowNotes(true);
     fetchNote();
   };
 
   const closeNotes = () => {
     setShowNotes(false);
+    setEditingNote(false);
     setNote(null);
     setNoteText("");
     setNoteError(null);
@@ -317,7 +326,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
 
   const notesPanelStyle: React.CSSProperties = {
     width: "100%",
-    background: "hsl(var(--background))",
+    background: "hsl(var(--foreground) / 0.07)",
     border: "none",
     borderRadius: "12px",
     padding: "10px",
@@ -377,6 +386,31 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
     fontSize: "12px",
     cursor: "pointer",
     flexShrink: 0,
+  };
+
+  // "Edit" link shown below an existing note (inside the panel box)
+  const noteEditBtnStyle: React.CSSProperties = {
+    background: "none",
+    border: "none",
+    color: "hsl(var(--foreground))",
+    fontSize: "12px",
+    cursor: "pointer",
+    padding: 0,
+    fontFamily: "Raleway, inherit",
+    textDecoration: "underline",
+    alignSelf: "flex-start",
+  };
+
+  // Close (×) button that sits inside the top-right of the notes panel box
+  const noteCloseBtnStyle: React.CSSProperties = {
+    background: "none",
+    border: "none",
+    color: "hsl(var(--muted-foreground))",
+    cursor: "pointer",
+    padding: 0,
+    fontSize: "16px",
+    lineHeight: 1,
+    alignSelf: "flex-end",
   };
 
   return (
