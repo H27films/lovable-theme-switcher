@@ -735,6 +735,7 @@ const colours = allMatched.filter(p => !isOfficeFav(p) && isColourProduct(p)).so
               <ProductImage
                 productId={selectedProduct.id}
                 imageUrl={selectedProduct.IMAGES ?? null}
+                productName={selectedProduct["PRODUCT NAME"]}
                 onUpdated={handleProductImageUpdated}
               />
             </div>

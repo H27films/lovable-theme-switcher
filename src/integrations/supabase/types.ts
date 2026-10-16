@@ -149,6 +149,27 @@ export type Database = {
         }
         Relationships: []
       }
+      Notes: {
+        Row: {
+          "PRODUCT NAME": string | null
+          "NOTES": string | null
+          created_at: string | null
+          id: number
+        }
+        Insert: {
+          "PRODUCT NAME"?: string | null
+          "NOTES"?: string | null
+          created_at?: string | null
+          id?: number
+        }
+        Update: {
+          "PRODUCT NAME"?: string | null
+          "NOTES"?: string | null
+          created_at?: string | null
+          id?: number
+        }
+        Relationships: []
+      }
       app_users: {
         Row: {
           assigned_branch: string | null
