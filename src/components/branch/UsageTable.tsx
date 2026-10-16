@@ -71,6 +71,10 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
   const [usageEntries, setUsageEntries] = useState<EntryLine[]>(() => loadStoredEntries(config.key));
   const [usageSearch, setUsageSearch] = useState("");
   const [showUsageDropdown, setShowUsageDropdown] = useState(true);
+  // Select mode: "single" adds one product and closes the dropdown (original behaviour);
+  // "multi" keeps the dropdown open with tick circles on each row for multi-select —
+  // collapse it via the small chevron row just above the submit footer.
+  const [usageMode, setUsageMode] = useState<"single" | "multi">("single");
   const [usageKeyboardArmed, setUsageKeyboardArmed] = useState(false); // false = first tap only opens the dropdown (no keyboard); true = input editable
   const [usageSubmitting, setUsageSubmitting] = useState(false);
   const [usageSuccess, setUsageSuccess] = useState(false);
@@ -130,6 +134,26 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
     usageInputRef.current?.blur();
   };
 
+  // Multi-add: row tick circles toggle products in/out of the usage entries WITHOUT closing
+  // the dropdown, so several products can be selected in one pass.
+  const toggleMultiUsageProduct = (p: OfficeProduct) => {
+    const name = p["PRODUCT NAME"];
+    setUsageEntries(prev =>
+      prev.some(e => e.productName === name)
+        ? prev.filter(e => e.productName !== name)
+        : [...prev, {
+            id: Date.now(),
+            productName: name,
+            type: "Salon Use",
+            qty: -1,
+            therapist: "THERAPIST",
+            note: "",
+            noteOpen: false,
+            sellingPrice: "",
+          }]
+    );
+  };
+
   const dismissUsageDropdown = () => {
     setShowUsageDropdown(false);
     setUsageSearch("");
@@ -154,7 +178,10 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
       itemCount: showUsageDropdown ? usageFlatItems.length : 0,
       onSelect: idx => {
         const p = usageFlatItems[idx];
-        if (p) handleAddUsageProduct(p);
+        if (!p) return;
+        // Single mode: add + close; Multi mode: toggle the row's tick without closing.
+        if (usageMode === "single") handleAddUsageProduct(p);
+        else toggleMultiUsageProduct(p);
       },
       onClose: () => dismissUsageDropdown(),
     });
@@ -305,7 +332,19 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
             </svg>
           </button>
         </div>
-
+        {/* Mode tab — sits between the USAGE title and the Select Product line: a grey
+            segmented pill (like the Order Panel) with Single/Multi options; the active option
+            carries a sliding light thumb. */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", paddingBottom: "4px" }}>
+          <div style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "hsl(var(--foreground) / 0.07)", borderRadius: "999px", padding: "2px" }}>
+            <div style={{ position: "absolute", top: "2px", bottom: "2px", left: "2px", width: "calc((100% - 4px) / 2)", transform: `translateX(${(["single", "multi"] as const).indexOf(usageMode) * 100}%)`, transition: "transform 0.22s ease", borderRadius: "999px", background: "hsl(0 0% 98%)" }} />
+            {(["single", "multi"] as const).map(m => (
+              <button key={m} onClick={() => { setUsageMode(m); setShowUsageDropdown(true); }} style={{ position: "relative", zIndex: 1, border: "none", background: "none", cursor: "pointer", width: "58px", padding: "3px 0", fontSize: "9px", fontWeight: usageMode === m ? 600 : 400, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: usageMode === m ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))", transition: "color 0.2s ease" }}>
+                {m === "single" ? "Single" : "Multi"}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{ borderBottom: "0.5px solid hsl(var(--border))", paddingBottom: "12px", marginBottom: "0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <input
@@ -352,22 +391,36 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
             const sectionLabel = (label: string) => (
               <div key={label} style={{ paddingTop: "12px", paddingBottom: "4px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>{label}</div>
             );
-            const renderRow = (p: OfficeProduct, showStar?: boolean) => (
-              <ResultRow
-                key={p.id}
-                isActive={showUsageDropdown && usageRowIndexById.get(p.id) === usageActiveIdx}
-                onSelect={() => handleAddUsageProduct(p)}
-                style={{ padding: "11px 0", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: usageEntries.find(e => e.productName === p["PRODUCT NAME"]) ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  {showStar && <Star aria-label="favourite" size={11} fill="hsl(var(--foreground))" color="hsl(var(--foreground))" style={{ flexShrink: 0 }} />}
-                  {p["PRODUCT NAME"]}
-                </span>
-                {(p as any)[BALANCE_KEY] != null && (
-                  <span style={{ fontSize: "13px", color: Number((p as any)[BALANCE_KEY]) <= 0 ? "hsl(0 70% 40%)" : "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
-                )}
-              </ResultRow>
-            );
+            const renderRow = (p: OfficeProduct, showStar?: boolean) => {
+              const selected = usageEntries.some(e => e.productName === p["PRODUCT NAME"]);
+              return (
+                <ResultRow
+                  key={p.id}
+                  isActive={showUsageDropdown && usageRowIndexById.get(p.id) === usageActiveIdx}
+                  onSelect={() => (usageMode === "single" ? handleAddUsageProduct(p) : toggleMultiUsageProduct(p))}
+                  style={{ padding: "11px 0", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "14px", fontWeight: 300, fontFamily: "Raleway, inherit", color: selected ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))" }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+                    {/* Multi mode: round tick circle on the left — tapping the row toggles
+                        the product into the usage entries without closing the dropdown */}
+                    {usageMode === "multi" && (
+                      <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: `1.5px solid ${selected ? "hsl(var(--foreground))" : "hsl(var(--border))"}`, background: selected ? "hsl(var(--foreground))" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {selected && (
+                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                            <path d="M2 5l2.5 2.5L8 3" stroke="hsl(var(--background))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                    )}
+                    {showStar && <Star aria-label="favourite" size={11} fill="hsl(var(--foreground))" color="hsl(var(--foreground))" style={{ flexShrink: 0 }} />}
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p["PRODUCT NAME"]}</span>
+                  </span>
+                  {(p as any)[BALANCE_KEY] != null && (
+                    <span style={{ fontSize: "13px", color: Number((p as any)[BALANCE_KEY]) <= 0 ? "hsl(0 70% 40%)" : "hsl(var(--muted-foreground))", marginLeft: "8px" }}>{(p as any)[BALANCE_KEY]}</span>
+                  )}
+                </ResultRow>
+              );
+            };
             const sections: React.ReactNode[] = [];
             if (usageFavs.length > 0)    { sections.push(sectionLabel(config.favouritesLabel)); usageFavs.forEach(p => sections.push(renderRow(p, true))); }
             if (usageRegular.length > 0) { sections.push(sectionLabel("Products"));           usageRegular.forEach(p => sections.push(renderRow(p))); }
@@ -377,6 +430,18 @@ export const UsageTable = ({ config, products, setProducts, refreshBranchLog, se
           })()}
         </div>
       )}
+      {usageMode === "multi" && showUsageDropdown && (
+        <div
+          onClick={() => setShowUsageDropdown(false)}
+          style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 12px", cursor: "pointer", background: "hsl(var(--foreground) / 0.05)" }}
+        >
+          <ChevronUp size={14} style={{ color: "hsl(var(--foreground))" }} />
+          <span style={{ fontSize: "10px", fontWeight: 200, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))" }}>
+            {usageEntries.length} {usageEntries.length === 1 ? "Product" : "Products"} Selected
+          </span>
+        </div>
+      )}
+
 
       <div style={{ flex: 1, display: showUsageDropdown ? "none" : "block", overflowY: "auto", minHeight: 0, paddingLeft: "12px", paddingRight: "12px", paddingTop: "12px" }} onClick={() => setShowUsageDropdown(false)}>
         {usageEntries.map(entry => {
