@@ -464,16 +464,6 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
               i
             </button>
           )}
-          {showNotes && (
-            <button
-              type="button"
-              onClick={closeNotes}
-              title="Close note"
-              style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))", padding: 0, fontSize: "16px", lineHeight: 1 }}
-            >
-              &times;
-            </button>
-          )}
         </div>
       ) : (
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -495,16 +485,6 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
               i
             </button>
           )}
-          {showNotes && (
-            <button
-              type="button"
-              onClick={closeNotes}
-              title="Close note"
-              style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))", padding: 0, fontSize: "16px", lineHeight: 1 }}
-            >
-              &times;
-            </button>
-          )}
         </div>
       )}
 
@@ -516,10 +496,30 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
 
       {showNotes && productName && (
         <div style={notesPanelStyle}>
+          <button
+            type="button"
+            onClick={closeNotes}
+            title="Close note"
+            style={noteCloseBtnStyle}
+          >
+            &times;
+          </button>
           {loadingNote ? (
             <div style={{ fontSize: "12px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Loading note…</div>
-          ) : note !== null ? (
-            <div style={notesBoxStyle}>{note}</div>
+          ) : note !== null && !editingNote ? (
+            <>
+              <div style={notesBoxStyle}>{note}</div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingNote(true);
+                  setNoteText(note ?? "");
+                }}
+                style={noteEditBtnStyle}
+              >
+                Edit
+              </button>
+            </>
           ) : (
             <>
               <textarea
@@ -531,7 +531,13 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
                 <button
                   type="button"
-                  onClick={closeNotes}
+                  onClick={() => {
+                    if (note !== null) {
+                      setEditingNote(false);
+                    } else {
+                      closeNotes();
+                    }
+                  }}
                   style={noteCancelBtnStyle}
                 >
                   Cancel
