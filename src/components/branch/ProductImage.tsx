@@ -388,20 +388,22 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
     flexShrink: 0,
   };
 
-  // "Edit" link shown below an existing note (inside the panel box)
+  // "Edit" white pill shown on the same bottom line as × (inside the panel box)
   const noteEditBtnStyle: React.CSSProperties = {
-    background: "none",
+    background: "hsl(0 0% 98%)",
     border: "none",
+    borderRadius: "999px",
     color: "hsl(var(--foreground))",
     fontSize: "12px",
-    cursor: "pointer",
-    padding: 0,
     fontFamily: "Raleway, inherit",
-    textDecoration: "underline",
-    alignSelf: "flex-start",
+    fontWeight: 600,
+    cursor: "pointer",
+    padding: "5px 14px",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.15)",
+    flexShrink: 0,
   };
 
-  // Close (×) button that sits inside the top-right of the notes panel box
+  // Close (×) button at the bottom-right of the notes panel box
   const noteCloseBtnStyle: React.CSSProperties = {
     background: "none",
     border: "none",
@@ -410,7 +412,7 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
     padding: 0,
     fontSize: "16px",
     lineHeight: 1,
-    alignSelf: "flex-end",
+    flexShrink: 0,
   };
 
   return (
@@ -496,29 +498,33 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
 
       {showNotes && productName && (
         <div style={notesPanelStyle}>
-          <button
-            type="button"
-            onClick={closeNotes}
-            title="Close note"
-            style={noteCloseBtnStyle}
-          >
-            &times;
-          </button>
           {loadingNote ? (
-            <div style={{ fontSize: "12px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Loading note…</div>
+            <>
+              <div style={{ fontSize: "12px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Loading note…</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                <button type="button" onClick={closeNotes} title="Close note" style={noteCloseBtnStyle}>
+                  &times;
+                </button>
+              </div>
+            </>
           ) : note !== null && !editingNote ? (
             <>
               <div style={notesBoxStyle}>{note}</div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingNote(true);
-                  setNoteText(note ?? "");
-                }}
-                style={noteEditBtnStyle}
-              >
-                Edit
-              </button>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingNote(true);
+                    setNoteText(note ?? "");
+                  }}
+                  style={noteEditBtnStyle}
+                >
+                  Edit
+                </button>
+                <button type="button" onClick={closeNotes} title="Close note" style={noteCloseBtnStyle}>
+                  &times;
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -528,31 +534,36 @@ export const ProductImage = ({ productId, imageUrl, onUpdated, size = 64, produc
                 placeholder="Type a note for this product…"
                 style={noteTextareaStyle}
               />
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (note !== null) {
-                      setEditingNote(false);
-                    } else {
-                      closeNotes();
-                    }
-                  }}
-                  style={noteCancelBtnStyle}
-                >
-                  Cancel
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (note !== null) {
+                        setEditingNote(false);
+                      } else {
+                        closeNotes();
+                      }
+                    }}
+                    style={noteCancelBtnStyle}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveNote}
+                    disabled={savingNote || !noteText.trim()}
+                    style={noteSaveBtnStyle}
+                  >
+                    Save
+                  </button>
+                  {savingNote && (
+                    <span style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Saving…</span>
+                  )}
+                </div>
+                <button type="button" onClick={closeNotes} title="Close note" style={noteCloseBtnStyle}>
+                  &times;
                 </button>
-                <button
-                  type="button"
-                  onClick={saveNote}
-                  disabled={savingNote || !noteText.trim()}
-                  style={noteSaveBtnStyle}
-                >
-                  Save
-                </button>
-                {savingNote && (
-                  <span style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", fontFamily: "Raleway, inherit" }}>Saving…</span>
-                )}
               </div>
             </>
           )}
