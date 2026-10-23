@@ -297,7 +297,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
             style={{
               position: "absolute", top: "3px", bottom: "3px", left: "6px",
               width: "calc((100% - 12px) / 3)",
-              transform: `translateX(${"["}\month, week, day${"]"}.indexOf(salesViewMode) * 100}%)`,
+              transform: `translateX(${["month", "week", "day"].indexOf(salesViewMode) * 100}%)`,
               transition: "transform 0.22s ease", borderRadius: "999px",
               background: "hsl(0 0% 98%)",
             }}
@@ -308,16 +308,16 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
               <button
                 key={mode}
                 onClick={() => { if (!dayDisabled) setSalesViewMode(mode); }}
-                disabled={dayDisabled}
+                disabled={salesMonthFilter === "all" && mode === "day"}
                 style={{
                   position: "relative", zIndex: 1,
                   border: "none", background: "none",
-                  cursor: dayDisabled ? "default" : "pointer",
+                  cursor: salesMonthFilter === "all" && mode === "day" ? "default" : "pointer",
                   width: "42px", padding: "4px 0",
                   fontSize: "9.5px", fontWeight: salesViewMode === mode ? 600 : 400,
                   letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit",
                   color: salesViewMode === mode ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))",
-                  opacity: dayDisabled ? 0.35 : 1,
+                  opacity: salesMonthFilter === "all" && mode === "day" ? 0.35 : 1,
                   transition: "color 0.2s ease",
                 }}
               >
