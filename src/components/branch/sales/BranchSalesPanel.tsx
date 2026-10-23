@@ -248,6 +248,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
+      </div>
 
       <div style={{ padding: "10px 20px 8px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
         {salesViewMode === "month" ? (
