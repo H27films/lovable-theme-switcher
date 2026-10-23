@@ -297,7 +297,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
             style={{
               position: "absolute", top: "3px", bottom: "3px", left: "6px",
               width: "calc((100% - 12px) / 3)",
-              transform: `translateX(${["month", "week", "day"].indexOf(salesViewMode) * 100}%)`,
+              transform: `translateX(${"["}\month, week, day${"]"}.indexOf(salesViewMode) * 100}%)`,
               transition: "transform 0.22s ease", borderRadius: "999px",
               background: "hsl(0 0% 98%)",
             }}
