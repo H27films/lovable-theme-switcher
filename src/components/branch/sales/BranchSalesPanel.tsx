@@ -302,7 +302,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
               background: "hsl(0 0% 98%)",
             }}
           />
-          {["month", "week", "day"].map(mode => {
+          {["month", "week", "day"].map((mode: ViewMode) => {
             const dayDisabled = mode === "day" && salesMonthFilter === "all";
             return (
               <button
