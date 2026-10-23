@@ -67,7 +67,6 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
   }, [salesMonthFilter]);
 
   const branchData = useMemo(() => salesData.filter(r => r.Branch === branchName), [salesData, branchName]);
-
   const salesRange = useMemo(() => computeSalesRange(branchData as any), [branchData]);
   const monthWindow = useMemo(() => buildMonthWindow(salesRange, salesMonthAnchor), [salesRange, salesMonthAnchor]);
   const { back: monthBackBlocked, fwd: monthFwdBlocked } = useMemo(() => monthWindowBlocked(salesRange, monthWindow), [salesRange, monthWindow]);
@@ -110,12 +109,6 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
     return Array.from(years).sort((a, b) => b.localeCompare(a));
   }, [branchData]);
 
-  const salesMonths = useMemo(() => {
-    const out: string[] = [];
-    for (let m = 1; m <= 12; m++) out.push(String(m).padStart(2, "0"));
-    return out;
-  }, []);
-
   const chartData = useMemo(() => {
     if (salesViewMode === "month") {
       if (!monthWindow) return [];
@@ -137,7 +130,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
       const filtered = branchData.filter(r => r.Date?.startsWith(prefix));
       const weekMap: Record<string, { total: number; sortKey: string; period: string }> = {};
       filtered.forEach(r => {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(r.Date)) return;
+        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(r.Date)) return;
         const d = new Date(r.Date + "T00:00:00");
         const day = d.getDay();
         const diff = day === 0 ? -6 : 1 - day;
@@ -156,7 +149,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
       const filtered = branchData.filter(r => r.Date?.startsWith(prefix));
       const dayMap: Record<string, number> = {};
       filtered.forEach(r => {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(r.Date)) return;
+        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(r.Date)) return;
         dayMap[r.Date] = (dayMap[r.Date] || 0) + (Number(r["Total GST"]) || 0);
       });
       const parts = prefix.split("-").map(Number);
@@ -203,6 +196,28 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
 
   const fetchSales = useCallback(async () => {
     setSalesLoading(true);
+    try {
+      let allData: any[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data: pageData } = await (supabase as any)
+          .from("Cash").select("*")
+          .order("Date", { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (!pageData || pageData.length === 0) break;
+        allData = allData.concat(pageData);
+        if (pageData.length < pageSize) break;
+        from += pageSize;
+      }
+      setSalesData(allData);
+    } catch {}
+    setSalesLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (salesData.length === 0) fetchSales();
+  }, []);
 
   return (
     <div style={{
@@ -230,6 +245,10 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
             disabled={fwdBlockedFinal}
             style={{ background: "none", border: "none", cursor: fwdBlockedFinal ? "default" : "pointer", padding: "6px", color: "hsl(var(--foreground))", opacity: fwdBlockedFinal ? 0.2 : 0.7, lineHeight: 1 }}
           >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
       <div style={{ padding: "10px 20px 8px 20px", display: "flex", alignItems: "center", gap: "6px" }}>
         {salesViewMode === "month" ? (
           <span style={{ fontSize: "16px", fontWeight: 300, fontFamily: "Raleway, inherit", color: "hsl(var(--muted-foreground))", letterSpacing: "0.04em" }}>12 Months</span>
@@ -289,6 +308,25 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
                 key={mode}
                 onClick={() => { if (!dayDisabled) setSalesViewMode(mode); }}
                 disabled={dayDisabled}
+                style={{
+                  position: "relative", zIndex: 1,
+                  border: "none", background: "none",
+                  cursor: dayDisabled ? "default" : "pointer",
+                  width: "42px", padding: "4px 0",
+                  fontSize: "9.5px", fontWeight: salesViewMode === mode ? 600 : 400,
+                  letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit",
+                  color: salesViewMode === mode ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))",
+                  opacity: dayDisabled ? 0.35 : 1,
+                  transition: "color 0.2s ease",
+                }}
+              >
+                {mode === "month" ? "Month" : mode === "week" ? "Week" : "Day"}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 16px 6px 16px" }}>
         {salesLoading ? (
           <div style={{ textAlign: "center", padding: "40px", fontSize: "12px", fontWeight: 300, color: "hsl(var(--muted-foreground))" }}>Loading...</div>
@@ -304,16 +342,6 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
             </div>
 
             <div style={{ background: "#F2EDE6", borderRadius: "18px", padding: "4px 12px 8px 12px", minHeight: 220, maxHeight: 420, position: "relative" }}>
-                style={{
-                  position: "relative", zIndex: 1,
-                  border: "none", background: "none",
-                  cursor: dayDisabled ? "default" : "pointer",
-                  width: "42px", padding: "4px 0",
-                  fontSize: "9.5px", fontWeight: salesViewMode === mode ? 600 : 400,
-                  letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Raleway, inherit",
-                  color: salesViewMode === mode ? "hsl(0 0% 10%)" : "hsl(var(--muted-foreground))",
-                  opacity: dayDisabled ? 0.35 : 1,
-                  transition: "color 0.2s ease",
               {chartData.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px", color: "hsl(var(--muted-foreground))", fontSize: "12px", fontFamily: "Raleway, inherit" }}>No sales data</div>
               ) : (
@@ -348,12 +376,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
                 </ResponsiveContainer>
               )}
             </div>
-                }}
-              >
-                {mode === "month" ? "Month" : mode === "week" ? "Week" : "Day"}
-              </button>
-            );
-          })}
+
             <div style={{ marginTop: "16px", borderRadius: "12px", overflow: "hidden", border: "0.5px solid hsl(var(--border))" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px", fontFamily: "Raleway, inherit" }}>
                 <thead>
