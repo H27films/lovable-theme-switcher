@@ -17,6 +17,7 @@ import { ProductList } from "@/components/branch/ProductList";
 import { UsageTable } from "@/components/branch/UsageTable";
 import { OrderPanel } from "@/components/branch/OrderPanel";
 import { LogTable } from "@/components/branch/LogTable";
+import { BranchSalesPanel } from "@/components/branch/sales/BranchSalesPanel";
 import { BottomNavQuickAdd } from "@/components/branch/BottomNavQuickAdd";
 
 interface ChicProps {
@@ -46,7 +47,7 @@ const [selectedProduct, setSelectedProduct] = useState<OfficeProduct | null>(nul
     const [search, setSearch] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchActive, setSearchActive] = useState(false);
-    const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | null>(null);
+    const [activePanel, setActivePanel] = useState<"USAGE" | "ORDER" | "SALES" | null>(null);
     const [logView, setLogView] = useState<"all" | "usage" | "sale" | "orders">("all");
     const [usageEntriesCount, setUsageEntriesCount] = useState(0);
     const [pastOrdersExpanded, setPastOrdersExpanded] = useState(false);
@@ -473,7 +474,7 @@ const setLogViewToOrders = () => {
       ...slideExitStyle(exiting),
     }}>
 {/* Header */}
-        <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? chicConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
+        <BranchHeader branch={chicConfig.displayName} onBack={handleHeaderBack} onSalesSelect={() => setActivePanel("SALES")} titleOverride={(searchActive || isSearchProduct) ? "SEARCH" : undefined} secondaryLabel={(searchActive || isSearchProduct) ? chicConfig.displayName : undefined} onFavouritesSubmitted={goHome} />
 
         {/* Log view tabs - below the header on the landing view */}
         {!searchActive && !selectedProduct && (
@@ -541,7 +542,7 @@ const setLogViewToOrders = () => {
         )}
       </div>
 
-      {!editModalOpen && (activePanel !== "ORDER" && !isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0)))) && (
+      {!editModalOpen && (activePanel !== "ORDER" && activePanel !== "SALES" && !isSearchProduct && (searchActive || (!selectedProduct && !(activePanel === "USAGE" && usageEntriesCount > 0)))) && (
         <>
           <BottomNav
             activePanel={activePanel}
@@ -566,7 +567,7 @@ const setLogViewToOrders = () => {
         </>
       )}
 
-      {!editModalOpen && ((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && isSearchProduct)) && (
+      {!editModalOpen && ((activePanel === "ORDER" && pastOrdersExpanded) || (activePanel !== "ORDER" && activePanel !== "SALES" && isSearchProduct)) && (
         <>
           <BottomNav
             activePanel={activePanel}
@@ -619,6 +620,12 @@ const setLogViewToOrders = () => {
           allowedIds={allowedIds}
           toggleFavourite={toggleFavourite}
         />,
+        document.body
+      )}
+
+      {/* SALES Panel */}
+      {activePanel === "SALES" && createPortal(
+        <BranchSalesPanel branchName="Chic Nailspa" onClose={() => setActivePanel(null)} />,
         document.body
       )}
 

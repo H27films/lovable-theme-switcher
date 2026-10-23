@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Menu, Tablet, Laptop, Settings as SettingsIcon, Star, KeyRound, type LucideIcon } from "lucide-react";
+import { Menu, Tablet, Laptop, BarChart3, Settings as SettingsIcon, Star, KeyRound, type LucideIcon } from "lucide-react";
 import { useTabletMode } from "@/hooks/useTabletMode";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { SettingsModal } from "./SettingsModal";
@@ -32,6 +32,8 @@ const MENU_EXIT_DURATION_MS = 200;
 interface BranchHeaderProps {
   branch: string;
   onBack: () => void;
+  /** Called when the user taps Sales from the dropdown menu. */
+  onSalesSelect?: () => void;
   /** Replaces the big title text (menu/favourites logic stays keyed off `branch`) */
   titleOverride?: string;
   /** Small lighter label shown to the right of the title (e.g. branch name on the search view) */
@@ -40,7 +42,7 @@ interface BranchHeaderProps {
   onFavouritesSubmitted?: () => void;
 }
 
-export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, onFavouritesSubmitted }: BranchHeaderProps) => {
+export const BranchHeader = ({ branch, onBack, onSalesSelect, titleOverride, secondaryLabel, onFavouritesSubmitted }: BranchHeaderProps) => {
   /** "closed" → unmounted; "open" → staggered pop-in; "closing" → reverse staggered collapse */
   const [menuState, setMenuState] = useState<"closed" | "open" | "closing">("closed");
   const closeTimerRef = useRef<number | null>(null);
@@ -60,6 +62,12 @@ export const BranchHeader = ({ branch, onBack, titleOverride, secondaryLabel, on
       label: tablet ? "Phone View" : "Tablet View",
       icon: tablet ? Tablet : Laptop,
       onSelect: () => toggleTablet(),
+    },
+    {
+      key: "sales",
+      label: "Sales",
+      icon: BarChart3,
+      onSelect: () => onSalesSelect?.(),
     },
     {
       key: "settings",
