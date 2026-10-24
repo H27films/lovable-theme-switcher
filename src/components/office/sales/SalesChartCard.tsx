@@ -126,7 +126,7 @@ export const SalesChartCard = ({ branchKey: key, color, highlight, salesData, vi
                 const maxBarSize = viewMode === "month" ? 34 : viewMode === "week" ? (monthFilter === "all" ? 52 : 22) : 52;
 
         return (
-          <div style={{ position: "relative", flex: 1 }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ position: "relative", height: 220 }} onClick={(e) => e.stopPropagation()}>
             {tappedBar?.branchKey === key && (
               <div style={{
                 position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)",
