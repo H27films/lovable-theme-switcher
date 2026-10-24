@@ -40,11 +40,13 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
     if (salesMonthFilter === "all") setSalesViewMode("week");
   }, [salesMonthFilter]);
 
-  // Per-branch data slice (used for table + range calculations)
-  const branchData = useMemo(
-    () => salesData.filter((r) => r.Branch === branchName),
-    [salesData, branchName]
-  );
+  // Per-branch data slice (used for table + range calculations).
+  // Uses a case-insensitive, trimmed comparison because the DB may store
+  // branch names inconsistently (e.g. "Boudoir" vs "BOUDOIR").
+  const branchData = useMemo(() => {
+    const target = branchName.trim().toLowerCase();
+    return salesData.filter((r) => String(r.Branch ?? "").trim().toLowerCase() === target);
+  }, [salesData, branchName]);
   const salesRange = useMemo(() => computeSalesRange(branchData), [branchData]);
   const monthWindow = useMemo(
     () => buildMonthWindow(salesRange, salesMonthAnchor),
@@ -108,14 +110,20 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
   const fetchSales = useCallback(async () => {
     setSalesLoading(true);
     try {
-      setSalesData(await fetchAllSales());
-    } catch {}
+      const data = await fetchAllSales();
+      setSalesData(data);
+    } catch {
+      // ignore
+    }
     setSalesLoading(false);
   }, []);
 
   useEffect(() => {
-    if (salesData.length === 0) fetchSales();
-  }, []);
+    if (salesData.length === 0) {
+      fetchSales();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchSales]);
 
   const branchColors = BRANCH_COLORS[branchName] || { color: "#A48D78", highlight: "#6B5545" };
 
@@ -136,9 +144,10 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
       if (!d) return;
       if (!dateMap[d]) dateMap[d] = { total: 0, credit: 0, qr: 0, cash: 0 };
       dateMap[d].total += Number(r["Total GST"]) || 0;
-      dateMap[d].credit += Number((r as any).Credit) || 0;
-      dateMap[d].qr += Number((r as any).QR) || 0;
-      dateMap[d].cash += Number((r as any).Cash) || 0;
+      const rr = r as unknown as Record<string, unknown>;
+      dateMap[d].credit += Number(rr.Credit) || 0;
+      dateMap[d].qr += Number(rr.QR) || 0;
+      dateMap[d].cash += Number(rr.Cash) || 0;
     });
     return Object.entries(dateMap)
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -150,15 +159,24 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
     [filteredRows]
   );
   const grandCredit = useMemo(
-    () => filteredRows.reduce((s, r) => s + (Number((r as any).Credit) || 0), 0),
+    () => filteredRows.reduce((s, r) => {
+      const rr = r as unknown as Record<string, unknown>;
+      return s + (Number(rr.Credit) || 0);
+    }, 0),
     [filteredRows]
   );
   const grandQR = useMemo(
-    () => filteredRows.reduce((s, r) => s + (Number((r as any).QR) || 0), 0),
+    () => filteredRows.reduce((s, r) => {
+      const rr = r as unknown as Record<string, unknown>;
+      return s + (Number(rr.QR) || 0);
+    }, 0),
     [filteredRows]
   );
   const grandCash = useMemo(
-    () => filteredRows.reduce((s, r) => s + (Number((r as any).Cash) || 0), 0),
+    () => filteredRows.reduce((s, r) => {
+      const rr = r as unknown as Record<string, unknown>;
+      return s + (Number(rr.Cash) || 0);
+    }, 0),
     [filteredRows]
   );
 

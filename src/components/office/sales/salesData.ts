@@ -5,6 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 // types, constants, the Cash-table fetch, month-window maths and the
 // week/day/month series builders. No JSX lives here.
 
+// Case-insensitive comparison for branch names (the DB may store
+// "Boudoir" / "BOUDOIR" / "boudoir" inconsistently).
+const isBranchMatch = (rowBranch: string | null | undefined, branch: string) =>
+  String(rowBranch ?? "").trim().toLowerCase() === branch.trim().toLowerCase();
+
 export type SalesRow = { Branch: string; Date: string; "Total GST": number };
 export type ViewMode = "month" | "week" | "day";
 
@@ -141,7 +146,7 @@ export const buildWeeklyData = (salesData: SalesRow[], branch: string, salesYear
 
 export const buildDailyData = (salesData: SalesRow[], branch: string, salesYearFilter: string, salesMonthFilter: string) => {
   const prefix = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`;
-  const filtered = salesData.filter(r => r.Branch === branch && r.Date?.startsWith(prefix));
+  const filtered = salesData.filter(r => isBranchMatch(r.Branch, branch) && r.Date?.startsWith(prefix));
   // Sum rows per calendar day, keyed by the raw "YYYY-MM-DD" date.
   const dayMap: Record<string, number> = {};
   filtered.forEach(r => {
@@ -176,7 +181,7 @@ export const buildMonthlyData = (salesData: SalesRow[], branch: string, monthWin
   if (!monthWindow) return [];
   const sums: Record<string, number> = {};
   for (const r of salesData) {
-    if (r.Branch !== branch || !r.Date) continue;
+    if (!isBranchMatch(r.Branch, branch) || !r.Date) continue;
     const ym = String(r.Date).slice(0, 7);
     if (!monthWindow.months.includes(ym)) continue;
     sums[ym] = (sums[ym] || 0) + (Number(r["Total GST"]) || 0);
@@ -199,6 +204,6 @@ export const monthlyWindowTotal = (salesData: SalesRow[], branch: string, monthW
 
 export const salesGrandTotal = (salesData: SalesRow[], branch: string, salesYearFilter: string, salesMonthFilter: string) => {
   return salesData
-    .filter(r => { const p = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`; return r.Branch === branch && (r.Date?.startsWith(p) ?? false); })
+    .filter(r => { const p = salesMonthFilter === "all" ? salesYearFilter : `${salesYearFilter}-${salesMonthFilter}`; return isBranchMatch(r.Branch, branch) && (r.Date?.startsWith(p) ?? false); })
     .reduce((s, r) => s + (Number(r["Total GST"]) || 0), 0);
 };
