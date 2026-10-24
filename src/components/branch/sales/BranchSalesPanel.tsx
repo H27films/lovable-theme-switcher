@@ -259,7 +259,7 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
               >
                 <thead>
                   <tr>
-                    <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 500, color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>Date</th>
+                    <th style={{ padding: "8px 14px", textAlign: "left", fontWeight: 500, color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>Date</th>
                     <th style={{ padding: "8px 10px", textAlign: "center", fontWeight: 500, color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>Total</th>
                     <th style={{ padding: "8px 10px", textAlign: "center", fontWeight: 500, color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>Credit</th>
                     <th style={{ padding: "8px 10px", textAlign: "center", fontWeight: 500, color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>QR</th>
@@ -275,19 +275,19 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
                     tableData.map((row) => (
                       <tr key={row.date}>
                         <td style={{ padding: "7px 10px", textAlign: "left", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "13px", fontFamily: "Raleway, inherit" }}>
-                          {new Date(row.date).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(row.date).toLocaleDateString("en-MY", { day: "numeric", month: "short" })}
                         </td>
-                        <td style={{ padding: "7px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "13px", fontFamily: "Raleway, inherit" }}>
-                          RM {row.total.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td style={{ padding: "6px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>
+                          RM {row.total.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </td>
-                        <td style={{ padding: "7px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "13px", fontFamily: "Raleway, inherit" }}>
-                          RM {row.credit.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td style={{ padding: "6px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>
+                          RM {row.credit.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </td>
-                        <td style={{ padding: "7px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "13px", fontFamily: "Raleway, inherit" }}>
-                          RM {row.qr.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td style={{ padding: "6px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>
+                          RM {row.qr.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </td>
-                        <td style={{ padding: "7px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "13px", fontFamily: "Raleway, inherit" }}>
-                          RM {row.cash.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td style={{ padding: "6px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontWeight: 300, fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>
+                          RM {row.cash.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))
@@ -296,10 +296,10 @@ export const BranchSalesPanel: React.FC<Props> = ({ branchName, onClose }) => {
                 <tfoot>
                   <tr style={{ background: "hsl(var(--background) / 0.3)", fontWeight: 600 }}>
                     <td style={{ padding: "8px 10px", textAlign: "left", color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>Total</td>
-                    <td style={{ padding: "8px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>RM {grandTotal.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>RM {grandCredit.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>RM {grandQR.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "13px", fontFamily: "Raleway, inherit" }}>RM {grandCash.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "8px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>RM {grandTotal.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "8px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>RM {grandCredit.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "8px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>RM {grandQR.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "8px 8px", textAlign: "center", color: "hsl(var(--foreground))", fontSize: "11px", fontFamily: "Raleway, inherit", whiteSpace: "nowrap" }}>RM {grandCash.toLocaleString("en-MY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>
